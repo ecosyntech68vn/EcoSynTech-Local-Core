@@ -201,47 +201,47 @@ const WebSocketClient = {
   
   handleMessage(data) {
     switch (data.type) {
-      case 'connected':
-        console.log('[WS] Client ID:', data.clientId);
-        break;
+    case 'connected':
+      console.log('[WS] Client ID:', data.clientId);
+      break;
         
-      case 'sensor-update':
-        if (IoTSystem && IoTSystem.handleSensorData) {
-          IoTSystem.handleSensorData(data.data);
-        }
-        break;
+    case 'sensor-update':
+      if (IoTSystem && IoTSystem.handleSensorData) {
+        IoTSystem.handleSensorData(data.data);
+      }
+      break;
         
-      case 'alert':
-        if (data.action === 'created' && IoTSystem && IoTSystem.handleAlert) {
-          IoTSystem.handleAlert(data.data);
-        }
-        break;
+    case 'alert':
+      if (data.action === 'created' && IoTSystem && IoTSystem.handleAlert) {
+        IoTSystem.handleAlert(data.data);
+      }
+      break;
         
-      case 'device-update':
-      case 'device':
-        if (IoTSystem && IoTSystem.handleDeviceUpdate) {
-          IoTSystem.handleDeviceUpdate(data.data);
-        }
-        break;
+    case 'device-update':
+    case 'device':
+      if (IoTSystem && IoTSystem.handleDeviceUpdate) {
+        IoTSystem.handleDeviceUpdate(data.data);
+      }
+      break;
         
-      case 'rule-triggered':
-      case 'rule':
-        if (IoTSystem && IoTSystem.handleRuleUpdate) {
-          IoTSystem.handleRuleUpdate(data);
-        }
-        break;
+    case 'rule-triggered':
+    case 'rule':
+      if (IoTSystem && IoTSystem.handleRuleUpdate) {
+        IoTSystem.handleRuleUpdate(data);
+      }
+      break;
         
-      case 'history':
-        if (IoTSystem && IoTSystem.handleHistoryUpdate) {
-          IoTSystem.handleHistoryUpdate(data.data);
-        }
-        break;
+    case 'history':
+      if (IoTSystem && IoTSystem.handleHistoryUpdate) {
+        IoTSystem.handleHistoryUpdate(data.data);
+      }
+      break;
         
-      case 'pong':
-        break;
+    case 'pong':
+      break;
         
-      default:
-        console.log('[WS] Unknown message type:', data.type);
+    default:
+      console.log('[WS] Unknown message type:', data.type);
     }
   },
   
@@ -658,10 +658,12 @@ const IoTSystem = {
   },
   
   updateStatsDisplay(stats) {
-    const onlineDevices = document.querySelector('.device-stat .device-count.online');
-    const offlineDevices = document.querySelector('.device-stat .device-count.offline');
+    const onlineEls = document.querySelectorAll('.device-count.online');
+    const offlineEls = document.querySelectorAll('.device-count.offline');
     
     if (stats.devices) {
+      onlineEls.forEach(el => { el.textContent = stats.devices.online; });
+      offlineEls.forEach(el => { el.textContent = stats.devices.offline; });
       const totalOnline = document.querySelectorAll('.iot-status span')[1];
       if (totalOnline) {
         totalOnline.textContent = `${stats.devices.total} thiết bị`;

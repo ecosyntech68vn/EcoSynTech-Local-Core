@@ -12,7 +12,7 @@ function initWebSocket(server) {
     path: '/ws'
   });
 
-  wss.on('connection', (ws, req) => {
+  wss.on('connection', (ws, _req) => {
     const clientId = `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     ws.clientId = clientId;
     ws.isAlive = true;
@@ -72,20 +72,20 @@ function initWebSocket(server) {
 
 function handleClientMessage(ws, data) {
   switch (data.type) {
-    case 'auth':
-      handleAuth(ws, data);
-      break;
-    case 'ping':
-      ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
-      break;
-    case 'subscribe':
-      handleSubscribe(ws, data);
-      break;
-    case 'unsubscribe':
-      handleUnsubscribe(ws, data);
-      break;
-    default:
-      ws.send(JSON.stringify({ type: 'error', message: `Unknown message type: ${data.type}` }));
+  case 'auth':
+    handleAuth(ws, data);
+    break;
+  case 'ping':
+    ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
+    break;
+  case 'subscribe':
+    handleSubscribe(ws, data);
+    break;
+  case 'unsubscribe':
+    handleUnsubscribe(ws, data);
+    break;
+  default:
+    ws.send(JSON.stringify({ type: 'error', message: `Unknown message type: ${data.type}` }));
   }
 }
 

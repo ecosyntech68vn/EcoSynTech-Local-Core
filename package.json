@@ -10,7 +10,8 @@
     "lint": "eslint src/",
     "build": "node --check server.js",
     "all": "npm install && npm run lint && npm test && npm run build",
-    "test:ci": "jest --coverage --passWithNoTests"
+    "test:ci": "jest --coverage --passWithNoTests",
+    "bootstrap": "node bootstrap.js"
   },
   "keywords": [
     "iot",

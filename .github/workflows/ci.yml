@@ -1,0 +1,53 @@
+name: CI
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+on:
+  push:
+    branches: [ main, '**' ]
+  pull_request:
+    branches: [ '**' ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm run test:ci
+
+      - name: Build
+        run: npm run build
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/final-all-in'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: PR All-In Release (auto)
+        run: node scripts/pr-auto-merge.js
+        env:
+          GH_PAT_FOR_PR: ${{ secrets.GH_PAT }}
+          NOTIFY_CHANNEL: telegram,email
+          PR_HEAD: final-all-in
+          PR_BASE: main
+          PR_TITLE: "Release All-In 2.0.0"
+          PR_BODY: "All-In release with PR automation, bootstrap, dockerization, runbook, and tests."

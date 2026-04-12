@@ -90,6 +90,22 @@ function createApp() {
   app.use('/api/webhooks', webhooksRoutes);
   app.use('/api/stats', statsRoutes);
   app.use('/api/auth', authRoutes);
+
+  // Health endpoints for deployment health and readiness
+  app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString(), version: require('./package.json').version });
+  });
+
+  app.get('/readiness', async (req, res) => {
+    try {
+      if (global.db && typeof global.db.query === 'function') {
+        await global.db.query('SELECT 1');
+      }
+      res.status(200).json({ status: 'ready' });
+    } catch (err) {
+      res.status(503).json({ status: 'not_ready', error: err?.message || String(err) });
+    }
+  });
   
   app.post('/api/export', (req, res) => {
     const exportData = {
@@ -376,6 +392,8 @@ function checkRules() {
   }
 }
 
-startServer();
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
 
 module.exports = { createApp };

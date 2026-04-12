@@ -992,8 +992,15 @@
         </button>
         <div class="connection-status" id="ws-status">
           <span class="status-dot"></span>
-          <span>Connecting...</span>
+          <span>WebSocket</span>
         </div>
+        <div class="connection-status mqtt" id="mqtt-status">
+          <span class="status-dot"></span>
+          <span>MQTT</span>
+        </div>
+        <button class="esp32-guide-btn" onclick="showESP32Guide()">
+          📋 ESP32 Guide
+        </button>
       </div>
     </div>
 
@@ -1930,9 +1937,243 @@
       alert('Tính năng thêm quy tắc sẽ sớm ra mắt!');
     }
 
+    function showESP32Guide() {
+      const modal = document.createElement('div');
+      modal.className = 'esp32-modal';
+      modal.innerHTML = `
+        <div class="esp32-modal-content">
+          <div class="esp32-modal-header">
+            <h2>📡 ESP32 Firmware Guide</h2>
+            <button onclick="this.closest('.esp32-modal').remove()" class="close-btn">×</button>
+          </div>
+          <div class="esp32-modal-body">
+            <section>
+              <h3>🔌 MQTT Broker Configuration</h3>
+              <div class="config-box">
+                <p><strong>Broker:</strong> <code>broker.hivemq.com</code></p>
+                <p><strong>Port:</strong> <code>8884</code> (WebSocket SSL)</p>
+                <p><strong>Protocol:</strong> MQTT over TLS</p>
+              </div>
+            </section>
+
+            <section>
+              <h3>📋 Topic Structure</h3>
+              <div class="config-box">
+                <p><strong>Subscribe:</strong></p>
+                <code>ecosyn/commands/{device_id}</code>
+                <p><strong>Publish Sensor:</strong></p>
+                <code>ecosyn/sensors/{sensor_type}</code>
+                <p><strong>Publish Alert:</strong></p>
+                <code>ecosyn/alerts/{alert_type}</code>
+              </div>
+            </section>
+
+            <section>
+              <h3>💻 ESP32 Arduino Code</h3>
+              <pre class="code-block">
+#include &lt;WiFi.h&gt;
+#include &lt;PubSubClient.h&gt;
+#include &lt;DHT.h&gt;
+
+const char* ssid = "YOUR_WIFI";
+const char* password = "YOUR_WIFI_PASS";
+const char* mqtt_server = "broker.hivemq.com";
+const int mqtt_port = 8884;
+
+#define DHTPIN 4
+#define DHTTYPE DHT22
+DHT dht(DHTPIN, DHTTYPE);
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+  setup_wifi();
+  client.setServer(mqtt_server, mqtt_port);
+  client.setCallback(callback);
+}
+
+void loop() {
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
+  
+  // Read sensors
+  float temp = dht.readTemperature();
+  float hum = dht.readHumidity();
+  
+  // Publish to MQTT
+  char payload[128];
+  sprintf(payload, "{\"sensor\":\"temperature\",\"value\":%.1f,\"unit\":\"°C\"}", temp);
+  client.publish("ecosyn/sensors/temperature", payload);
+  
+  sprintf(payload, "{\"sensor\":\"humidity\",\"value\":%.1f,\"unit\":\"%\"}", hum);
+  client.publish("ecosyn/sensors/humidity", payload);
+  
+  delay(5000);
+}
+
+void callback(char* topic, byte* message, unsigned int length) {
+  // Handle commands
+  if (String(topic).indexOf("commands") != -1) {
+    // Parse and execute command
+  }
+}
+              </pre>
+            </section>
+
+            <section>
+              <h3>📦 Required Libraries</h3>
+              <div class="lib-list">
+                <span class="lib-item">WiFi.h</span>
+                <span class="lib-item">PubSubClient.h</span>
+                <span class="lib-item">DHT.h</span>
+              </div>
+            </section>
+
+            <section>
+              <h3>🌐 HiveMQ Cloud Free Tier</h3>
+              <div class="config-box">
+                <p>HiveMQ Cloud cung cấp <strong>Free Tier</strong> với:</p>
+                <ul>
+                  <li>100 concurrent connections</li>
+                  <li> unlimited messages</li>
+                  <li>TLS/SSL encryption</li>
+                  <li>WebSocket support</li>
+                </ul>
+                <p><a href="https://www.hivemq.com/cloud/" target="_blank">Đăng ký tại đây →</a></p>
+              </div>
+            </section>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+      });
+    }
+
+    function updateMQTTStatus(connected) {
+      const mqttEl = document.getElementById('mqtt-status');
+      if (mqttEl) {
+        const dot = mqttEl.querySelector('.status-dot');
+        if (connected) {
+          dot.classList.add('connected');
+          mqttEl.querySelector('span:last-child').textContent = 'MQTT ✓';
+        } else {
+          dot.classList.remove('connected');
+          mqttEl.querySelector('span:last-child').textContent = 'MQTT';
+        }
+      }
+    }
+
+    // Update MQTT status from WebSocket messages
+    window.updateMQTTStatus = updateMQTTStatus;
+
     // Init on load
     document.addEventListener('DOMContentLoaded', initDashboard);
   </script>
+
+  <style>
+    .esp32-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .esp32-modal-content {
+      background: var(--bg-card, #fff);
+      border-radius: 16px;
+      max-width: 700px;
+      max-height: 90vh;
+      overflow-y: auto;
+      width: 100%;
+    }
+    .esp32-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .esp32-modal-header h2 { margin: 0; }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 2rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+    }
+    .esp32-modal-body {
+      padding: 1.5rem;
+    }
+    .esp32-modal-body section {
+      margin-bottom: 2rem;
+    }
+    .esp32-modal-body h3 {
+      margin-bottom: 0.75rem;
+      color: var(--text-primary);
+    }
+    .config-box {
+      background: var(--bg-secondary, #f5f5f5);
+      padding: 1rem;
+      border-radius: 10px;
+    }
+    .config-box code {
+      display: block;
+      background: #2d2d2d;
+      color: #98c379;
+      padding: 0.5rem;
+      border-radius: 6px;
+      margin: 0.5rem 0;
+      font-size: 0.85rem;
+    }
+    .code-block {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.8rem;
+      line-height: 1.4;
+    }
+    .lib-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .lib-item {
+      background: var(--accent-color);
+      color: white;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+    .esp32-guide-btn {
+      padding: 0.5rem 1rem;
+      background: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+    .esp32-guide-btn:hover {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+    .connection-status.mqtt {
+      background: rgba(88, 179, 104, 0.15);
+    }
+  </style>
 
   <script src="app.js" defer></script>
 </body>

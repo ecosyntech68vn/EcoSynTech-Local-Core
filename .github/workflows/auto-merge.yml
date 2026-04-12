@@ -8,9 +8,10 @@ jobs:
   automerge:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
       - name: Enable Auto Merge
-        uses: peter-evans/enable-pull-request-automerge@v2
+        uses: peter-evans/enable-pull-request-automerge@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          merge_method: merge
+          token: ${{ secrets.GH_PAT }}
+          merge-method: squash
+          squash-commit-title: 'PR #{{number}} {{title}}'
+          squash-commit-message: 'PR #{{number}} {{title}}'

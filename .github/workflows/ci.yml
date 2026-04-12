@@ -1,9 +1,4 @@
 name: CI
-permissions:
-  contents: write
-  pull-requests: write
-  actions: read
-  checks: read
 
 on:
   push:
@@ -17,8 +12,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -45,46 +38,29 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: main
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Generate Runbook PDF
-        run: |
-          echo "Generating Runbook PDF..."
-          if command -v pandoc &> /dev/null; then
-            pandoc docs/customer-deployment.md -s -o docs/customer-deployment.pdf || echo "Pandoc failed"
-          else
-            echo "Pandoc not available, skipping PDF"
-          fi
-          ls -la docs/ || true
 
       - name: Create PR
         id: create-pr
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GH_PAT }}
+          result-encoding: string
           script: |
             const branch = 'final-all-in';
-            const { data: existingPR } = await github.rest.pulls.list({
+            
+            // Check if PR already exists
+            const { data: existingPRs } = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
               head: `${context.repo.owner}:${branch}`
-            }).catch(() => ({ data: [] }));
+            });
             
-            if (existingPR.length > 0) {
-              console.log(`PR already exists: ${existingPR[0].html_url}`);
-              core.setOutput('pr_url', existingPR[0].html_url);
-              core.setOutput('pr_number', existingPR[0].number.toString());
+            let prNumber, prUrl;
+            
+            if (existingPRs.length > 0) {
+              prNumber = existingPRs[0].number;
+              prUrl = existingPRs[0].html_url;
+              console.log(`PR already exists: ${prUrl}`);
             } else {
               const { data: pr } = await github.rest.pulls.create({
                 owner: context.repo.owner,
@@ -94,30 +70,22 @@ jobs:
                 base: 'main',
                 body: '## All-In Release\n\n- PR automation\n- Bootstrap system\n- Docker deployment\n- Customer runbook\n- Comprehensive tests'
               });
-              console.log(`PR created: ${pr.html_url}`);
-              core.setOutput('pr_url', pr.html_url);
-              core.setOutput('pr_number', pr.number.toString());
-              
-              // Enable auto-merge
-              try {
-                await github.rest.pulls.merge({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  pull_number: pr.number
-                });
-                console.log('PR merged successfully');
-              } catch (e) {
-                console.log('Merge will be done manually or via auto-merge');
-              }
+              prNumber = pr.number;
+              prUrl = pr.html_url;
+              console.log(`PR created: ${prUrl}`);
             }
+            
+            // Set outputs
+            core.setOutput('pr_number', prNumber.toString());
+            core.setOutput('pr_url', prUrl);
 
       - name: Send Telegram Notification
         if: steps.create-pr.outputs.pr_url != ''
         run: |
+          PR_URL="${{ steps.create-pr.outputs.pr_url }}"
+          PR_NUM="${{ steps.create-pr.outputs.pr_number }}"
           if [ -n "$TELEGRAM_BOT_TOKEN" ] && [ -n "$TELEGRAM_CHAT_ID" ]; then
-            PR_URL="${{ steps.create-pr.outputs.pr_url }}"
-            PR_NUM="${{ steps.create-pr.outputs.pr_number }}"
-            TEXT="✅ *PR Created:* ${PR_URL}%0A%23${PR_NUM}%0AHead: final-all-in → main"
+            TEXT="✅ *PR Created!*%0A%23${PR_NUM}%0A${PR_URL}%0AHead: final-all-in → main"
             curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${TEXT}&parse_mode=Markdown" || echo "Telegram notification failed"
           fi
         env:

@@ -21,6 +21,8 @@ const alertsRoutes = require('./src/routes/alerts');
 const webhooksRoutes = require('./src/routes/webhooks');
 const statsRoutes = require('./src/routes/stats');
 const authRoutes = require('./src/routes/auth');
+const webhookRoutes = require('./src/routes/webhook');
+const traceabilityRoutes = require('./src/routes/traceability');
 
 function createApp() {
   const app = express();
@@ -90,6 +92,8 @@ function createApp() {
   app.use('/api/webhooks', webhooksRoutes);
   app.use('/api/stats', statsRoutes);
   app.use('/api/auth', authRoutes);
+  app.use('/api/webhook', webhookRoutes);
+  app.use('/api/traceability', traceabilityRoutes);
 
   // Health endpoints for deployment health and readiness
   app.get('/health', (req, res) => {

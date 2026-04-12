@@ -18,17 +18,18 @@ beforeAll(async () => {
 
 describe('Extended API Coverage', () => {
   test('Create device (ext)', async () => {
-    const id = `dev-ext-${Date.now()}`
-    const payload = { id, name: 'Ext Test Device', type: 'sensor', zone: 'zone1', config: { test: true } }
+    const payload = { name: 'Ext Test Device', type: 'Sensor', zone: 'zone1', metadata: { test: true } }
     const res = await request(app).post('/api/devices').set('Authorization', `Bearer ${token}`).send(payload)
     expect(res.status).toBe(201)
-    createdDeviceId = res.body?.id || id
+    createdDeviceId = res.body?.device?.id
+    expect(createdDeviceId).toBeTruthy()
   })
 
   test('List devices contains created', async () => {
     const res = await request(app).get('/api/devices').set('Authorization', `Bearer ${token}`)
     expect(res.status).toBe(200)
-    const found = Array.isArray(res.body) ? res.body.find(d => d.id === createdDeviceId) : null
+    const body = res.body?.devices || res.body
+    const found = Array.isArray(body) ? body.find(d => d.id === createdDeviceId) : null
     expect(found).toBeTruthy()
   })
 

@@ -12,6 +12,6 @@ jobs:
         uses: peter-evans/enable-pull-request-automerge@v3
         with:
           token: ${{ secrets.GH_PAT }}
-          merge-method: squash
-          squash-commit-title: 'PR #{{number}} {{title}}'
-          squash-commit-message: 'PR #{{number}} {{title}}'
+          repository: ${{ github.repository }}
+          pull-request-number: ${{ github.event.pull_request.number }}
+          merge-method: merge

@@ -48,62 +48,89 @@ async function main() {
   const title = process.env.PR_TITLE || 'feat: End-to-End Test Suite + CI/CD';
   const body = process.env.PR_BODY || 'End-to-end tests, webhook tests, seed data, and CI/CD pipeline implemented.';
 
-  // Create PR
-  const api = `https://api.github.com/repos/${owner}/${repo}/pulls`;
-  const payload = { title, head, base, body };
-  let resp;
+  // Idempotent PR: check if an open PR already exists for this head/base
+  let existingPR = null;
   try {
+    const listApi = `https://api.github.com/repos/${owner}/${repo}/pulls?state=open&head=${encodeURIComponent(head)}&base=${encodeURIComponent(base)}`;
     if (typeof fetch === 'function') {
-      resp = await fetch(api, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/vnd.github+json'
-        },
-        body: JSON.stringify(payload)
+      const respList = await fetch(listApi, {
+        headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
       });
+      const prs = await respList.json();
+      if (Array.isArray(prs) && prs.length > 0) existingPR = prs[0];
     } else {
-      // Fallback using https module
-      const https = require('https');
-      const { URL } = require('url');
-      const urlObj = new URL(api);
-      const options = {
-        hostname: urlObj.hostname,
-        port: urlObj.port || (urlObj.protocol === 'https:' ? 443 : 80),
-        path: urlObj.pathname + (urlObj.search || ''),
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/vnd.github+json'
-        }
-      };
-      const payloadStr = JSON.stringify(payload);
-      resp = await new Promise((resolve, reject) => {
-        const req = https.request(options, (res) => {
-          let data = '';
-          res.on('data', (chunk) => (data += chunk));
-          res.on('end', () => {
-            resolve({ status: res.statusCode, text: data, json: () => JSON.parse(data) });
-          });
-        });
-        req.on('error', reject);
-        req.write(payloadStr);
-        req.end();
-      });
+      // Basic fallback: ignore if cannot fetch in this environment
     }
   } catch (e) {
-    console.error('Failed to create PR:', e.message);
-    process.exit(1);
+    // Ignore network errors in CI; we'll try to create PR anyway
   }
 
-  const pr = await resp.json();
-  if (resp.status !== 201) {
-    console.error('PR creation failed:', pr);
-    process.exit(1);
+  // Create or reuse PR (idempotent)
+  const api = `https://api.github.com/repos/${owner}/${repo}/pulls`;
+  const payload = { title, head, base, body };
+  let pr = null;
+  try {
+    if (existingPR) {
+      pr = existingPR;
+      console.log(`Using existing PR: ${pr.html_url} (#${pr.number})`);
+    } else {
+      // Create PR
+      let resp;
+      try {
+        if (typeof fetch === 'function') {
+          resp = await fetch(api, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/vnd.github+json'
+            },
+            body: JSON.stringify(payload)
+          });
+        } else {
+          // Fallback using https module
+          const https = require('https');
+          const { URL } = require('url');
+          const urlObj = new URL(api);
+          const options = {
+            hostname: urlObj.hostname,
+            port: urlObj.port || (urlObj.protocol === 'https:' ? 443 : 80),
+            path: urlObj.pathname + (urlObj.search || ''),
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/vnd.github+json'
+            }
+          };
+          const payloadStr = JSON.stringify(payload);
+          resp = await new Promise((resolve, reject) => {
+            const req = https.request(options, (res) => {
+              let data = '';
+              res.on('data', (chunk) => (data += chunk));
+              res.on('end', () => {
+                resolve({ status: res.statusCode, text: data, json: () => JSON.parse(data) });
+              });
+            });
+            req.on('error', reject);
+            req.write(payloadStr);
+            req.end();
+          });
+        }
+      } catch (e) {
+        console.error('Failed to create PR:', e.message);
+        process.exit(1);
+      }
+      pr = await resp.json();
+      if (resp.status !== 201) {
+        console.error('PR creation failed:', pr);
+        process.exit(1);
+      }
+      console.log(`PR created: ${pr.html_url} (#${pr.number})`);
+    }
+  } catch (e) {
+    // fallthrough
   }
-  console.log(`PR created: ${pr.html_url} (#${pr.number})`);
   // Notify via preferred channels (Telegram/Slack/GAS/Email) using a cross-channel notifier
   try {
     const { execSync } = require('child_process');

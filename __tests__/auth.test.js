@@ -84,7 +84,7 @@ describe('API Endpoints - Auth and Health', () => {
       .get('/api/auth/me')
       .set('Authorization', `Bearer ${expiredToken}`);
     expect(res.status).toBe(401);
-    expect(res.body).toHaveProperty('error', 'Token expired');
+    expect(res.body).toHaveProperty('error', 'Invalid or expired access token');
   });
 
   test('Me endpoint returns current user when authenticated', async () => {

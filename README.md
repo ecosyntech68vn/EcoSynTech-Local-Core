@@ -1,6 +1,6 @@
 # EcoSynTech IoT Platform
 
-Hệ thống IoT toàn diện cho nông nghiệp thông minh - **Version 2.1.0**
+Hệ thống IoT toàn diện cho nông nghiệp thông minh - **Version 2.1.1**
 
 ## Tính năng chính
 
@@ -270,6 +270,15 @@ GET /api/docs        - Swagger UI
 GET /api/docs/json   - OpenAPI spec
 ```
 
+### Firmware Integration (ESP32 V8.5.0)
+```
+POST /api/firmware/webhook       - Receive sensor data from ESP32
+GET  /api/firmware/devices/:id   - Get device firmware info
+POST /api/firmware/devices/:id/command - Send command to device
+GET  /api/firmware/devices/:id/history - Device history
+POST /api/firmware/batch/:id/attach - Attach device to batch
+```
+
 ---
 
 ## Kiến trúc
@@ -303,7 +312,9 @@ ecosyntech-web/
 │   │   └── docs.js       # Swagger docs
 │   ├── websocket/        # WebSocket handlers
 │   │   └── index.js
-│   └── integrations.js   # InfluxDB & MQTT bridge
+│   ├── integrations.js    # InfluxDB & MQTT bridge
+│   └── modules/
+│       └── iot-engine.js # Advisory Engine, Smart Control
 ├── data/                 # SQLite database (auto-created)
 ├── logs/                 # Application logs (auto-created)
 ├── install.sh           # Linux/Mac auto-installer
@@ -324,12 +335,14 @@ npm run lint    # Kiểm tra code style
 npm test        # Chạy tests
 npm run build   # Kiểm tra syntax
 
-All-In Release 2.1.0
+All-In Release 2.1.1
 - Analytics: Dashboard KPIs, sensor history, PDF/Excel export
 - Device Management: OTA firmware, QR provisioning, remote config
 - Agriculture: ETo calculation, auto irrigation, crop management
 - Security: IP whitelist, audit logging, API keys, sessions
 - Integration: Swagger docs, InfluxDB/MQTT bridge support
+- Firmware Integration: ESP32 V8.5.0 webhook, HMAC security, Advisory Engine
+- Smart Control: Real-time rules evaluation, Telegram notifications
 - See RELEASE_NOTES.md for full details.
 ```
 

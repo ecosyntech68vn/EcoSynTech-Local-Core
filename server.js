@@ -28,6 +28,7 @@ const devicemgmtRoutes = require('./src/routes/devicemgmt');
 const agricultureRoutes = require('./src/routes/agriculture');
 const securityRoutes = require('./src/routes/security');
 const docsRoutes = require('./src/routes/docs');
+const firmwareRoutes = require('./src/routes/firmware');
 
 function createApp() {
   const app = express();
@@ -104,6 +105,7 @@ function createApp() {
   app.use('/api/agriculture', agricultureRoutes);
   app.use('/api/security', securityRoutes);
   app.use('/api/docs', docsRoutes);
+  app.use('/api/firmware', firmwareRoutes);
 
   // Health endpoints for deployment health and readiness
   app.get('/health', (req, res) => {

@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getAll, getOne, runQuery } = require('../config/database');
 const { asyncHandler } = require('../middleware/errorHandler');
-const { authenticate } = require('../middleware/auth');
+const { auth: authenticate } = require('../middleware/auth');
 const { v4: uuidv4 } = require('uuid');
 
 router.get('/ip-whitelist', authenticate, asyncHandler(async (req, res) => {

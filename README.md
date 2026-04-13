@@ -1,6 +1,6 @@
 # EcoSynTech IoT Platform
 
-Hệ thống IoT toàn diện cho nông nghiệp thông minh - **Version 2.0.0**
+Hệ thống IoT toàn diện cho nông nghiệp thông minh - **Version 2.1.0**
 
 ## Tính năng chính
 
@@ -12,6 +12,9 @@ Hệ thống IoT toàn diện cho nông nghiệp thông minh - **Version 2.0.0**
 - **Rate Limiting** và Security (Helmet, CORS)
 - **Webhook Integration** với signature verification
 - **Structured Architecture** (Routes, Middleware, Config)
+- **Swagger API Documentation** (/api/docs)
+- **InfluxDB Integration** cho time-series data
+- **MQTT Bridge** cho external brokers
 
 ### Frontend (Vanilla JS)
 - **Dark/Light Mode** với system preference detection
@@ -211,6 +214,62 @@ Server Messages:
 - { type: "device-update", data: {...} }
 ```
 
+### Analytics & Dashboard
+```
+GET  /api/analytics/dashboard      - Dashboard KPIs
+GET  /api/analytics/kpis           - System KPIs
+GET  /api/analytics/sensor-history - Sensor history data
+GET  /api/analytics/export/pdf      - Export PDF report
+GET  /api/analytics/export/excel   - Export Excel report
+```
+
+### Device Management
+```
+GET    /api/device-mgmt/ota/firmwares     - List firmwares
+POST   /api/device-mgmt/ota/firmwares    - Upload firmware
+GET    /api/device-mgmt/ota/devices/:id  - Check device firmware
+POST   /api/device-mgmt/ota/deploy       - Deploy OTA update
+GET    /api/device-mgmt/qr/provision     - Generate QR provisioning
+POST   /api/device-mgmt/qr/activate       - Activate device via QR
+GET    /api/device-mgmt/:id/config        - Get device config
+PUT    /api/device-mgmt/:id/config        - Update device config
+POST   /api/device-mgmt/:id/remote-command - Send command
+```
+
+### Agriculture
+```
+GET  /api/agriculture/eto                  - ETo calculation
+GET  /api/agriculture/irrigation-schedule  - Auto irrigation recommendation
+POST /api/agriculture/auto-irrigation       - Enable/disable auto irrigation
+GET  /api/agriculture/crops                - List crops
+POST /api/agriculture/crops                - Add new crop
+GET  /api/agriculture/crops/:id            - Get crop details
+POST /api/agriculture/crops/:id/harvest    - Record harvest
+GET  /api/agriculture/reports/daily        - Daily report
+GET  /api/agriculture/reports/yield        - Yield report
+```
+
+### Security
+```
+GET    /api/security/ip-whitelist     - List IP whitelist
+POST   /api/security/ip-whitelist     - Add IP to whitelist
+DELETE /api/security/ip-whitelist/:id - Remove IP
+GET    /api/security/audit-log       - View audit logs
+GET    /api/security/security-scan    - Security scan results
+GET    /api/security/sessions        - List active sessions
+DELETE /api/security/sessions/:id     - Terminate session
+GET    /api/security/api-keys        - List API keys
+POST   /api/security/api-keys        - Create API key
+DELETE /api/security/api-keys/:id    - Revoke API key
+GET    /api/security/rate-limit-status - Rate limit status
+```
+
+### Documentation
+```
+GET /api/docs        - Swagger UI
+GET /api/docs/json   - OpenAPI spec
+```
+
 ---
 
 ## Kiến trúc
@@ -221,9 +280,9 @@ ecosyntech-web/
 ├── src/
 │   ├── config/           # Configuration
 │   │   ├── index.js      # Environment config
-│   │   ├── logger.js    # Winston logger
+│   │   ├── logger.js     # Winston logger
 │   │   └── database.js   # SQLite setup (sql.js)
-│   ├── middleware/        # Express middleware
+│   ├── middleware/       # Express middleware
 │   │   ├── auth.js       # JWT authentication
 │   │   ├── errorHandler.js
 │   │   └── validation.js  # Joi validation
@@ -236,9 +295,15 @@ ecosyntech-web/
 │   │   ├── history.js
 │   │   ├── alerts.js
 │   │   ├── webhooks.js
-│   │   └── stats.js
-│   └── websocket/       # WebSocket handlers
-│       └── index.js
+│   │   ├── stats.js
+│   │   ├── analytics.js   # Dashboard & KPIs
+│   │   ├── devicemgmt.js  # OTA, QR, remote config
+│   │   ├── agriculture.js # ETo, irrigation, crops
+│   │   ├── security.js   # IP whitelist, audit logs
+│   │   └── docs.js       # Swagger docs
+│   ├── websocket/        # WebSocket handlers
+│   │   └── index.js
+│   └── integrations.js   # InfluxDB & MQTT bridge
 ├── data/                 # SQLite database (auto-created)
 ├── logs/                 # Application logs (auto-created)
 ├── install.sh           # Linux/Mac auto-installer
@@ -259,8 +324,13 @@ npm run lint    # Kiểm tra code style
 npm test        # Chạy tests
 npm run build   # Kiểm tra syntax
 
-All-In Release 2.0.0
-- This release contains an all-in-one deployment package for customers (Dockerized, bootstrap automation, PR automation) and comprehensive test suites. See RELEASE_NOTES.md for full details.
+All-In Release 2.1.0
+- Analytics: Dashboard KPIs, sensor history, PDF/Excel export
+- Device Management: OTA firmware, QR provisioning, remote config
+- Agriculture: ETo calculation, auto irrigation, crop management
+- Security: IP whitelist, audit logging, API keys, sessions
+- Integration: Swagger docs, InfluxDB/MQTT bridge support
+- See RELEASE_NOTES.md for full details.
 ```
 
 ---

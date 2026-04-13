@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { getAll, getOne, runQuery } = require('../config/database');
 const { asyncHandler } = require('../middleware/errorHandler');
-const { authenticate } = require('../middleware/auth');
+const { auth: authenticate } = require('../middleware/auth');
 
 router.get('/sensor-history', authenticate, asyncHandler(async (req, res) => {
   const { sensorType, startDate, endDate, interval = 'hour' } = req.query;

@@ -1,24 +1,21 @@
 :root {
-  --ink-950: #173126;
-  --ink-800: #295040;
-  --ink-700: #3b6854;
-  --mint-100: #f4fbf7;
-  --mint-150: #edf7f1;
-  --mint-200: #dff1e7;
-  --mint-300: #c8e4d6;
-  --mint-500: #74b68f;
-  --mint-600: #4e9b73;
-  --mint-700: #2d7c58;
-  --sage-100: #f7f5ee;
-  --sage-300: #dfd8bf;
-  --sand-500: #bda56f;
+  /* Green Modern Theme - Xanh lá hiện đại */
+  --primary-dark: #0D4D2B;
+  --primary: #1A7F42;
+  --primary-light: #2EA65D;
+  --accent: #4ADE80;
+  
+  --bg-dark: #0a2f1c;
+  --bg-card: #115233;
+  --bg-card-hover: #166b40;
+  
+  --text-light: #f0fdf4;
+  --text-muted: #bbf7d0;
+  --text-dark: #14532d;
+  
   --white: #ffffff;
-  --shadow-soft: 0 20px 60px rgba(31, 60, 48, 0.09);
-  --shadow-strong: 0 28px 90px rgba(27, 53, 42, 0.16);
-  --radius-lg: 28px;
-  --radius-md: 20px;
-  --radius-sm: 14px;
-  --container: min(1180px, calc(100vw - 48px));
+  --border: rgba(255,255,255,0.15);
+  --shadow: 0 8px 32px rgba(0,0,0,0.3);
 }
 
 * {
@@ -33,11 +30,12 @@ html {
 
 body {
   font-family: "Manrope", sans-serif;
-  color: var(--ink-950);
-  background:
-    radial-gradient(circle at top left, rgba(223, 241, 231, 0.95), transparent 35%),
-    radial-gradient(circle at top right, rgba(223, 241, 231, 0.6), transparent 30%),
-    linear-gradient(180deg, #fbfffc 0%, #f3f8f4 100%);
+  color: var(--text-light);
+  background: 
+    radial-gradient(ellipse at top, #14532d 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, #0D4D2B 0%, transparent 50%),
+    linear-gradient(180deg, #0a2f1c 0%, #0f3d28 50%, #0a2f1c 100%);
+  min-height: 100vh;
   line-height: 1.6;
 }
 
@@ -98,18 +96,11 @@ button {
   gap: 20px;
   margin-top: 16px;
   padding: 14px 18px;
-  background: rgba(255, 255, 255, 0.78);
-  border: 1px solid rgba(61, 101, 83, 0.12);
+  background: rgba(13, 77, 43, 0.9);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 999px;
-  box-shadow: 0 12px 36px rgba(23, 49, 38, 0.08);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.3);
   backdrop-filter: blur(18px);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
 }
 
 .brand-mark {
@@ -118,12 +109,20 @@ button {
   width: 42px;
   height: 42px;
   border-radius: 14px;
-  background: linear-gradient(135deg, var(--mint-600), var(--mint-500));
+  background: linear-gradient(135deg, var(--primary-light), var(--primary));
   color: var(--white);
   font-family: "Fraunces", serif;
   font-size: 1.1rem;
   font-weight: 700;
-  box-shadow: 0 12px 24px rgba(78, 155, 115, 0.25);
+  box-shadow: 0 12px 24px rgba(46, 166, 93, 0.4);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  color: var(--text-light);
 }
 
 .brand strong,
@@ -131,9 +130,13 @@ button {
   display: block;
   font-family: "Fraunces", serif;
   font-size: 1.15rem;
+  color: var(--text-light);
 }
 
 .brand small {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
   display: block;
   color: var(--ink-700);
   font-size: 0.78rem;
@@ -146,9 +149,15 @@ button {
 }
 
 .nav a {
-  color: var(--ink-800);
+  color: var(--text-light);
   font-size: 0.95rem;
   font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.nav a:hover {
+  color: var(--accent);
 }
 
 .topbar-actions {
@@ -182,19 +191,28 @@ button {
 
 .cta {
   color: var(--white);
-  background: linear-gradient(135deg, var(--mint-700), var(--mint-600));
-  box-shadow: 0 18px 36px rgba(45, 124, 88, 0.22);
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  box-shadow: 0 18px 36px rgba(46, 166, 93, 0.3);
 }
 
 .ghost {
-  color: var(--ink-950);
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid rgba(61, 101, 83, 0.14);
+  color: var(--text-light);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.ghost:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .cart-button {
   color: var(--white);
-  background: var(--ink-950);
+  background: var(--primary);
+}
+
+.cart-button:hover {
+  background: var(--primary-light);
 }
 
 .cart-count {
@@ -204,7 +222,7 @@ button {
   place-items: center;
   padding: 0 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.3);
   font-size: 0.9rem;
 }
 
@@ -245,7 +263,7 @@ main {
   letter-spacing: 0.16em;
   font-size: 0.74rem;
   font-weight: 800;
-  color: var(--mint-700);
+  color: var(--accent);
 }
 
 h1,
@@ -254,6 +272,7 @@ h3,
 h4 {
   font-family: "Fraunces", serif;
   line-height: 1.08;
+  color: var(--text-light);
 }
 
 h1 {
@@ -270,7 +289,7 @@ h3 {
 
 .lead {
   max-width: 62ch;
-  color: var(--ink-800);
+  color: var(--text-muted);
   font-size: 1.05rem;
 }
 
@@ -480,11 +499,13 @@ h3 {
 .trust {
   margin-top: 32px;
   padding: 24px 28px;
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(13, 77, 43, 0.4);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
 }
 
 .trust p {
-  color: var(--ink-800);
+  color: var(--text-muted);
 }
 
 .trust-row span {
@@ -493,8 +514,8 @@ h3 {
   align-items: center;
   padding: 0 16px;
   border-radius: 999px;
-  background: var(--mint-150);
-  color: var(--ink-800);
+  background: rgba(255,255,255,0.1);
+  color: var(--text-light);
   font-weight: 700;
 }
 

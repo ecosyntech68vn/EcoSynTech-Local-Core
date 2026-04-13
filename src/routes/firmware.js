@@ -5,7 +5,10 @@ const { v4: uuidv4 } = require('uuid');
 const { getAll, getOne, runQuery } = require('../config/database');
 const logger = require('../config/logger');
 const { hmacAuth } = require('../middleware/auth');
-const { AdvisoryEngine, SmartControlEngine } = require('../modules/iot-engine');
+const { AdvisoryEngine, SmartControlEngine, sendTelegramNotification } = require('../modules/iot-engine');
+
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 const HMAC_SECRET = process.env.HMAC_SECRET || 'CEOTAQUANGTHUAN_TADUYANH_CTYTNHHDUYANH_ECOSYNTECH_2026';
 const TIMEOUT_WINDOW = 300000;
@@ -130,6 +133,15 @@ async function processFirmwareData(payload, deviceId) {
       [uuidv4(), alert.type, alert.level, alert.type, alert.value, alert.message, new Date().toISOString()]
     );
   });
+
+  if (advisory.alerts.length > 0 && TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
+    const criticalAlerts = advisory.alerts.filter(a => a.level === 'critical');
+    if (criticalAlerts.length > 0) {
+      const alertText = criticalAlerts.map(a => `• ${a.type}: ${a.value} - ${a.message}`).join('\n');
+      const msg = `<b>⚠️ Cảnh báo IoT</b>\n\n${alertText}\n\n<i>Thiết bị: ${deviceId}</i>`;
+      sendTelegramNotification(TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, msg);
+    }
+  }
 
   return { sensors: readings.length, alerts: advisory.alerts.length };
 }

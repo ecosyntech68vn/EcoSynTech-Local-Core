@@ -3,8 +3,10 @@ const logger = require('./config/logger');
 
 let influxClient = null;
 let mqttClient = null;
+let appConfig = null;
 
 function initIntegrations(config) {
+  appConfig = config;
   initInfluxDB(config.influx);
   initMQTTBridge(config.mqtt);
 }
@@ -29,7 +31,7 @@ async function writeSensorDataToInflux(sensorType, value, tags = {}) {
   
   try {
     const { Point } = require('@influxdata/influxdb-client');
-    const writeApi = influxClient.getWriteApi(config.influx.org, config.influx.bucket);
+    const writeApi = influxClient.getWriteApi(appConfig.influx.org, appConfig.influx.bucket);
     
     const point = new Point('sensor_data')
       .tag('type', sensorType)

@@ -141,7 +141,7 @@ router.delete('/api-keys/:id', authenticate, asyncHandler(async (req, res) => {
 }));
 
 router.get('/rate-limit-status', authenticate, asyncHandler(async (req, res) => {
-  const settings = getOne("SELECT value FROM settings WHERE key = 'rate_limit_config'");
+  const settings = getOne('SELECT value FROM settings WHERE key = \'rate_limit_config\'');
   const stats = getOne(`
     SELECT COUNT(*) as hits FROM audit_logs 
     WHERE action = 'rate_limit_check' AND timestamp >= datetime('now', '-1 hour')

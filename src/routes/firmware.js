@@ -57,7 +57,7 @@ router.post('/webhook', async (req, res) => {
       runQuery('UPDATE devices SET status = ?, last_seen = ? WHERE id = ?', ['online', new Date().toISOString(), _did]);
     }
 
-    let response = { success: true };
+    const response = { success: true };
 
     if (payload.sensor_data && Array.isArray(payload.sensor_data)) {
       const processResult = await processFirmwareData(payload, _did);

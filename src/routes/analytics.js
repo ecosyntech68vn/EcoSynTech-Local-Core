@@ -40,7 +40,7 @@ router.get('/dashboard', authenticate, asyncHandler(async (req, res) => {
   const devices = getOne('SELECT COUNT(*) as total, SUM(CASE WHEN status = "online" THEN 1 ELSE 0 END) as online FROM devices');
   const sensors = getAll('SELECT type, value, unit FROM sensors');
   const alerts = getAll('SELECT * FROM alerts ORDER BY timestamp DESC LIMIT 10');
-  const recentHistory = getAll("SELECT * FROM history ORDER BY timestamp DESC LIMIT 20");
+  const recentHistory = getAll('SELECT * FROM history ORDER BY timestamp DESC LIMIT 20');
   
   const rules = getAll('SELECT * FROM rules WHERE enabled = 1');
   const schedules = getAll('SELECT * FROM schedules WHERE enabled = 1');
@@ -136,7 +136,7 @@ router.get('/export/pdf', authenticate, asyncHandler(async (req, res) => {
   
   const sensors = getAll('SELECT * FROM sensors');
   const devices = getAll('SELECT * FROM devices');
-  const alerts = getAll("SELECT * FROM alerts WHERE timestamp >= datetime('now', '-7 days')");
+  const alerts = getAll('SELECT * FROM alerts WHERE timestamp >= datetime(\'now\', \'-7 days\')');
 
   const doc = new PDFDocument();
   res.setHeader('Content-Type', 'application/pdf');
@@ -197,7 +197,7 @@ router.get('/export/excel', authenticate, asyncHandler(async (req, res) => {
     { header: 'Message', key: 'message' },
     { header: 'Timestamp', key: 'timestamp' }
   ];
-  getAll("SELECT * FROM alerts ORDER BY timestamp DESC LIMIT 100").forEach(a => alertsSheet.addRow(a));
+  getAll('SELECT * FROM alerts ORDER BY timestamp DESC LIMIT 100').forEach(a => alertsSheet.addRow(a));
   
   res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   res.setHeader('Content-Disposition', 'attachment; filename=ecosyntech-report.xlsx');

@@ -104,7 +104,7 @@ function createTables() {
     )
   `);
 
-  db.run(`CREATE INDEX IF NOT EXISTS idx_rules_enabled ON rules(enabled)`);
+  db.run('CREATE INDEX IF NOT EXISTS idx_rules_enabled ON rules(enabled)');
 
   db.run(`
     CREATE TABLE IF NOT EXISTS schedules (
@@ -258,9 +258,11 @@ function createTables() {
   `);
 
   try {
-    db.run(`CREATE INDEX idx_rule_history_rule_id ON rule_history(rule_id)`);
-    db.run(`CREATE INDEX idx_rule_history_executed_at ON rule_history(executed_at)`);
-  } catch(e) {}
+    db.run('CREATE INDEX idx_rule_history_rule_id ON rule_history(rule_id)');
+    db.run('CREATE INDEX idx_rule_history_executed_at ON rule_history(executed_at)');
+  } catch (e) {
+    logger.warn('[Database] Index creation skipped:', e.message);
+  }
 
   db.run(`
     CREATE TABLE IF NOT EXISTS sensor_readings (

@@ -15,8 +15,8 @@ const OTA_CONFIG = {
 };
 
 router.get('/config', asyncHandler(async (req, res) => {
-  const settings = getOne("SELECT value FROM settings WHERE key = 'ota_config'");
-  const driveSettings = getOne("SELECT value FROM settings WHERE key = 'ota_drive_config'");
+  const settings = getOne('SELECT value FROM settings WHERE key = \'ota_config\'');
+  const driveSettings = getOne('SELECT value FROM settings WHERE key = \'ota_drive_config\'');
   
   res.json({
     success: true,
@@ -373,16 +373,16 @@ router.get('/ota/manifest', asyncHandler(async (req, res) => {
 router.get('/ota/stats', authenticate, asyncHandler(async (req, res) => {
   const totalDevices = getOne('SELECT COUNT(*) as count FROM devices');
   const updatedDevices = getOne(
-    "SELECT COUNT(*) as count FROM devices WHERE json_extract(config, '$.firmware_version') IS NOT NULL"
+    'SELECT COUNT(*) as count FROM devices WHERE json_extract(config, \'$.firmware_version\') IS NOT NULL'
   );
   const last24h = getOne(
-    "SELECT COUNT(*) as count FROM ota_history WHERE checked_at >= datetime('now', '-24 hours')"
+    'SELECT COUNT(*) as count FROM ota_history WHERE checked_at >= datetime(\'now\', \'-24 hours\')'
   );
   const successful = getOne(
-    "SELECT COUNT(*) as count FROM ota_history WHERE status = 'success'"
+    'SELECT COUNT(*) as count FROM ota_history WHERE status = \'success\''
   );
   const fromDrive = getOne(
-    "SELECT COUNT(*) as count FROM device_firmwares WHERE description LIKE '%Drive%' OR description LIKE '%GAS%'"
+    'SELECT COUNT(*) as count FROM device_firmwares WHERE description LIKE \'%Drive%\' OR description LIKE \'%GAS%\''
   );
   
   res.json({

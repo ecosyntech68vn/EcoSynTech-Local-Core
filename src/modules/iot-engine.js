@@ -177,18 +177,18 @@ class SmartControlEngine {
     const hysteresis = condition.hysteresis || 0;
 
     switch (condition.operator) {
-      case '>': 
-        return hysteresis > 0 ? value > threshold + hysteresis : value > threshold;
-      case '<': 
-        return hysteresis > 0 ? value < threshold - hysteresis : value < threshold;
-      case '>=': return value >= threshold;
-      case '<=': return value <= threshold;
-      case '==': return Math.abs(value - threshold) < 0.01;
-      case '!=': return Math.abs(value - threshold) >= 0.01;
-      case 'between':
-        return value >= (condition.min || threshold - 1) && value <= (condition.max || threshold + 1);
-      default:
-        return false;
+    case '>': 
+      return hysteresis > 0 ? value > threshold + hysteresis : value > threshold;
+    case '<': 
+      return hysteresis > 0 ? value < threshold - hysteresis : value < threshold;
+    case '>=': return value >= threshold;
+    case '<=': return value <= threshold;
+    case '==': return Math.abs(value - threshold) < 0.01;
+    case '!=': return Math.abs(value - threshold) >= 0.01;
+    case 'between':
+      return value >= (condition.min || threshold - 1) && value <= (condition.max || threshold + 1);
+    default:
+      return false;
     }
   }
 
@@ -284,41 +284,41 @@ class SmartControlEngine {
     }
 
     switch (action.action) {
-      case 'relay_on':
-      case 'relay1_on':
-      case 'relay2_on':
-        return { status: 'executed', type: 'relay', command: 'on', target: action.target };
+    case 'relay_on':
+    case 'relay1_on':
+    case 'relay2_on':
+      return { status: 'executed', type: 'relay', command: 'on', target: action.target };
       
-      case 'relay_off':
-      case 'relay1_off':
-      case 'relay2_off':
-        return { status: 'executed', type: 'relay', command: 'off', target: action.target };
+    case 'relay_off':
+    case 'relay1_off':
+    case 'relay2_off':
+      return { status: 'executed', type: 'relay', command: 'off', target: action.target };
       
-      case 'alert':
-        runQuery(
-          'INSERT INTO alerts (id, type, severity, sensor, value, message, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [require('uuid').v4(), 'rule', 'warning', 'system', 0, `Rule triggered: ${action.rule_name}`, new Date().toISOString()]
-        );
-        return { status: 'executed', type: 'alert' };
+    case 'alert':
+      runQuery(
+        'INSERT INTO alerts (id, type, severity, sensor, value, message, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [require('uuid').v4(), 'rule', 'warning', 'system', 0, `Rule triggered: ${action.rule_name}`, new Date().toISOString()]
+      );
+      return { status: 'executed', type: 'alert' };
       
-      case 'webhook':
-        return { status: 'executed', type: 'webhook', target: action.target };
+    case 'webhook':
+      return { status: 'executed', type: 'webhook', target: action.target };
       
-      case 'notification':
-        return { status: 'executed', type: 'notification' };
+    case 'notification':
+      return { status: 'executed', type: 'notification' };
       
-      case 'irrigate':
-      case 'irrigate_emergency':
-        return { status: 'executed', type: 'irrigation', command: action.action };
+    case 'irrigate':
+    case 'irrigate_emergency':
+      return { status: 'executed', type: 'irrigation', command: action.action };
       
-      case 'fan_on':
-      case 'fan_off':
-      case 'ventilate':
-        return { status: 'executed', type: 'fan', command: action.action };
+    case 'fan_on':
+    case 'fan_off':
+    case 'ventilate':
+      return { status: 'executed', type: 'fan', command: action.action };
       
-      default:
-        logger.warn(`[SmartControl] Unknown action type: ${action.action}`);
-        return { status: 'unknown_action' };
+    default:
+      logger.warn(`[SmartControl] Unknown action type: ${action.action}`);
+      return { status: 'unknown_action' };
     }
   }
 
@@ -337,7 +337,7 @@ class SmartControlEngine {
     const total = getOne('SELECT COUNT(*) as count FROM rules');
     const enabled = getOne('SELECT COUNT(*) as count FROM rules WHERE enabled = 1');
     const triggeredToday = getOne(
-      "SELECT COUNT(*) as count FROM rule_history WHERE DATE(executed_at) = DATE('now') AND triggered = 1"
+      'SELECT COUNT(*) as count FROM rule_history WHERE DATE(executed_at) = DATE(\'now\') AND triggered = 1'
     );
     const avgTrigger = getOne(
       'SELECT AVG(trigger_count) as avg FROM rules WHERE trigger_count > 0'
@@ -370,8 +370,8 @@ class SmartControlEngine {
       `INSERT INTO rules (id, name, description, enabled, condition, action, cooldown_minutes, hysteresis, time_window, priority, target_device, created_at) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [id, name, options.description || '', ruleData.enabled, ruleData.condition, ruleData.action, 
-       ruleData.cooldown_minutes, ruleData.hysteresis, ruleData.time_window, ruleData.priority, 
-       ruleData.target_device, new Date().toISOString()]
+        ruleData.cooldown_minutes, ruleData.hysteresis, ruleData.time_window, ruleData.priority, 
+        ruleData.target_device, new Date().toISOString()]
     );
 
     logger.info(`[SmartControl] Rule created: ${name} (${id})`);

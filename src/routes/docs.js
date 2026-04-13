@@ -9,7 +9,7 @@ const options = {
     info: {
       title: 'EcoSynTech IoT API',
       version: '2.0.0',
-      description: 'REST API for IoT Agriculture Platform',
+      description: 'REST API for IoT Agriculture Platform'
     },
     servers: [
       { url: 'http://localhost:3000', description: 'Development' }
@@ -25,7 +25,7 @@ const options = {
     },
     security: [{ bearerAuth: [] }]
   },
-  apis: ['./src/routes/*.js'],
+  apis: ['./src/routes/*.js']
 };
 
 const specs = swaggerJsdoc(options);

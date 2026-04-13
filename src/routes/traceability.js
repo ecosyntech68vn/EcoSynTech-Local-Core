@@ -314,7 +314,7 @@ router.get('/stats', auth, async (req, res) => {
     const totalBatches = getOne('SELECT COUNT(*) as count FROM traceability_batches');
     const activeBatches = getOne('SELECT COUNT(*) as count FROM traceability_batches WHERE status = \'active\'');
     const harvestedBatches = getOne('SELECT COUNT(*) as count FROM traceability_batches WHERE status = \'harvested\'');
-    const exportedBatches = getOne("SELECT COUNT(*) as count FROM traceability_batches WHERE status = 'exported'");
+    const exportedBatches = getOne('SELECT COUNT(*) as count FROM traceability_batches WHERE status = \'exported\'');
     const totalStages = getOne('SELECT COUNT(*) as count FROM traceability_stages');
 
     const byProductType = getAll(

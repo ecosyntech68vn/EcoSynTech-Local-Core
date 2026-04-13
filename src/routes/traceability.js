@@ -314,6 +314,7 @@ router.get('/stats', auth, async (req, res) => {
     const totalBatches = getOne('SELECT COUNT(*) as count FROM traceability_batches');
     const activeBatches = getOne('SELECT COUNT(*) as count FROM traceability_batches WHERE status = \'active\'');
     const harvestedBatches = getOne('SELECT COUNT(*) as count FROM traceability_batches WHERE status = \'harvested\'');
+    const exportedBatches = getOne("SELECT COUNT(*) as count FROM traceability_batches WHERE status = 'exported'");
     const totalStages = getOne('SELECT COUNT(*) as count FROM traceability_stages');
 
     const byProductType = getAll(
@@ -333,6 +334,7 @@ router.get('/stats', auth, async (req, res) => {
         total_batches: totalBatches?.count || 0,
         active_batches: activeBatches?.count || 0,
         harvested_batches: harvestedBatches?.count || 0,
+        exported_batches: exportedBatches?.count || 0,
         total_stages: totalStages?.count || 0,
         by_product_type: byProductType
       },
@@ -341,6 +343,137 @@ router.get('/stats', auth, async (req, res) => {
   } catch (err) {
     logger.error('[Traceability] Stats error:', err);
     res.status(500).json({ error: 'Failed to fetch statistics' });
+  }
+});
+
+// POST /api/traceability/batch/:code/export - Mark batch as exported/sold
+router.post('/batch/:code/export', auth, async (req, res) => {
+  try {
+    const batch = getOne('SELECT * FROM traceability_batches WHERE batch_code = ?', [req.params.code]);
+    if (!batch) {
+      return res.status(404).json({ error: 'Batch not found' });
+    }
+
+    if (batch.status !== 'harvested') {
+      return res.status(400).json({ error: 'Batch must be harvested before export' });
+    }
+
+    const { buyer_name, buyer_contact, export_price, export_unit, notes } = req.body;
+
+    runQuery(
+      `UPDATE traceability_batches SET 
+        status = ?, buyer_name = ?, buyer_contact = ?, 
+        export_price = ?, export_unit = ?, export_date = ?, 
+        metadata = ?, updated_at = ? WHERE id = ?`,
+      [
+        'exported',
+        buyer_name || '',
+        buyer_contact || '',
+        export_price || null,
+        export_unit || 'kg',
+        new Date().toISOString(),
+        JSON.stringify({ ...JSON.parse(batch.metadata || '{}'), export_notes: notes }),
+        new Date().toISOString(),
+        batch.id
+      ]
+    );
+
+    logger.info(`[Traceability] Batch exported: ${req.params.code} to ${buyer_name}`);
+
+    res.json({
+      success: true,
+      message: 'Batch exported successfully',
+      batch_code: req.params.code,
+      export_date: new Date().toISOString(),
+      buyer: buyer_name
+    });
+  } catch (err) {
+    logger.error('[Traceability] Export error:', err);
+    res.status(500).json({ error: 'Failed to export batch' });
+  }
+});
+
+// POST /api/traceability/batch/:code/ certify - Add certification
+router.post('/batch/:code/certify', auth, async (req, res) => {
+  try {
+    const batch = getOne('SELECT * FROM traceability_batches WHERE batch_code = ?', [req.params.code]);
+    if (!batch) {
+      return res.status(404).json({ error: 'Batch not found' });
+    }
+
+    const { certification_name, certification_body, certification_date, certification_expire, certificate_number } = req.body;
+
+    const existingCerts = JSON.parse(batch.farm_certifications || '[]');
+    const newCert = {
+      name: certification_name,
+      body: certification_body,
+      date: certification_date || new Date().toISOString(),
+      expire: certification_expire,
+      number: certificate_number,
+      added_at: new Date().toISOString()
+    };
+
+    runQuery(
+      'UPDATE traceability_batches SET farm_certifications = ?, updated_at = ? WHERE id = ?',
+      [JSON.stringify([...existingCerts, newCert]), new Date().toISOString(), batch.id]
+    );
+
+    logger.info(`[Traceability] Certification added: ${certification_name} for ${req.params.code}`);
+
+    res.json({
+      success: true,
+      message: 'Certification added successfully',
+      certification: newCert
+    });
+  } catch (err) {
+    logger.error('[Traceability] Certification error:', err);
+    res.status(500).json({ error: 'Failed to add certification' });
+  }
+});
+
+// GET /api/traceability/batch/:code/full - Get full traceability timeline
+router.get('/batch/:code/full', async (req, res) => {
+  try {
+    const batch = getOne('SELECT * FROM traceability_batches WHERE batch_code = ?', [req.params.code]);
+    
+    if (!batch) {
+      return res.status(404).json({ error: 'Batch not found' });
+    }
+
+    const stages = getAll(
+      'SELECT * FROM traceability_stages WHERE batch_id = ? ORDER BY stage_order ASC',
+      [batch.id]
+    );
+
+    const readings = getAll(
+      'SELECT * FROM traceability_readings WHERE batch_id = ? ORDER BY timestamp DESC',
+      [batch.id]
+    );
+
+    const device = getOne('SELECT * FROM devices WHERE zone = ?', [batch.batch_code]);
+
+    res.json({
+      success: true,
+      batch: {
+        ...batch,
+        metadata: JSON.parse(batch.metadata || '{}'),
+        farm_certifications: JSON.parse(batch.farm_certifications || '[]')
+      },
+      timeline: [
+        { stage: 'Gieo trồng', date: batch.planting_date, status: 'completed' },
+        ...stages.map(s => ({ stage: s.stage_name, date: s.created_at, description: s.description, performed_by: s.performed_by })),
+        { stage: 'Thu hoạch', date: batch.harvest_date, quantity: batch.harvest_quantity, status: batch.harvest_date ? 'completed' : 'pending' },
+        ...(batch.export_date ? [{ stage: 'Xuất bán', date: batch.export_date, buyer: batch.buyer_name, price: batch.export_price, status: 'completed' }] : [])
+      ],
+      sensor_readings: readings,
+      device_info: device ? { id: device.id, name: device.name, status: device.status } : null,
+      certifications: JSON.parse(batch.farm_certifications || '[]'),
+      trace_url: `${BASE_URL}/trace/${batch.batch_code}`,
+      qr_code_url: `${BASE_URL}/api/traceability/batch/${batch.batch_code}/qr`
+    });
+  } catch (err) {
+    logger.error('[Traceability] Full timeline error:', err);
+    res.status(500).json({ error: 'Failed to fetch full timeline' });
   }
 });
 

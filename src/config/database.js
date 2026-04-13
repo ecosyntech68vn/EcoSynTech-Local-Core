@@ -93,12 +93,18 @@ function createTables() {
       condition TEXT NOT NULL,
       action TEXT NOT NULL,
       cooldown_minutes INTEGER DEFAULT 30,
+      hysteresis REAL DEFAULT 0,
+      time_window TEXT,
+      priority TEXT DEFAULT 'normal',
+      target_device TEXT,
       trigger_count INTEGER DEFAULT 0,
       last_triggered TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  db.run(`CREATE INDEX IF NOT EXISTS idx_rules_enabled ON rules(enabled)`);
 
   db.run(`
     CREATE TABLE IF NOT EXISTS schedules (
@@ -242,6 +248,11 @@ function createTables() {
       FOREIGN KEY (rule_id) REFERENCES rules(id)
     )
   `);
+
+  try {
+    db.run(`CREATE INDEX idx_rule_history_rule_id ON rule_history(rule_id)`);
+    db.run(`CREATE INDEX idx_rule_history_executed_at ON rule_history(executed_at)`);
+  } catch(e) {}
 
   db.run(`
     CREATE TABLE IF NOT EXISTS sensor_readings (

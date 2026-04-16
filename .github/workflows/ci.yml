@@ -13,7 +13,7 @@ jobs:
       NODE_ENV: test
       HMAC_SECRET: test-hmac-secret-for-ci
       JWT_SECRET: test-jwt-secret-for-ci
-      WEBHOOK_SECRET: test-webhook-secret-for-ci
+      WEBHOOK_SECRET: webhook-secret
       DB_PATH: ./data/ecosyntech.db
     steps:
       - name: Checkout

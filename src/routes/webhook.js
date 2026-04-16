@@ -117,7 +117,7 @@ router.post('/batch', async (req, res) => {
     metrics.envelopeVerificationsTotal.inc({ outcome: 'success' });
     metrics.envelopeVerificationsByRoute.inc({ route, outcome: 'success' });
 
-    const { device_id, batches, config, rules } = payload;
+    const { device_id } = payload;
 
     logger.info(`[Webhook] Batch config from ${device_id}`);
 
@@ -228,7 +228,7 @@ router.post('/command-result', async (req, res) => {
     metrics.envelopeVerificationsTotal.inc({ outcome: 'success' });
     metrics.envelopeVerificationsByRoute.inc({ route, outcome: 'success' });
 
-    const { device_id, command_id, status, note } = payload;
+    const { command_id, status, note } = payload;
 
     if (command_id) {
       runQuery(

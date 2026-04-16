@@ -3,7 +3,7 @@ const crypto = require('crypto');
 // Canonical envelope utilities: sign and verify payloads with nonce replay guard
 
 const NONCE_WINDOW_SEC = 1200; // 20 minutes
-let seenNonces = new Map();
+const seenNonces = new Map();
 
 function cleanupNonces() {
   const now = Date.now();

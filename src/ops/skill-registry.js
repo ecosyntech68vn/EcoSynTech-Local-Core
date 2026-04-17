@@ -60,6 +60,7 @@ var multiFarmManager = require('../skills/iot/multi-farm-manager.skill');
 
 var reportGenerator = require('../skills/communication/report-generator.skill');
 var voiceNotifier = require('../skills/communication/voice-notifier.skill');
+var voiceAssistant = require('../skills/communication/voice-assistant.skill');
 
 var languageSwitcher = require('../skills/communication/language-switcher.skill');
 
@@ -123,6 +124,7 @@ var skills = [
   multiFarmManager,
   reportGenerator,
   voiceNotifier,
+  voiceAssistant,
   languageSwitcher,
   cleanupAgent,
   logRotator,

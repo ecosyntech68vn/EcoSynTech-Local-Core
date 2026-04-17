@@ -9,16 +9,126 @@
 
 > **🚀 Slogan:** *"Cắm là chạy - Nông nghiệp thông minh cho mọi người"*
 
-### 🎯 Điểm khác biệt
+---
+
+## ⭐ ĐIỂM KHÁC BIỆT CỐT LÕI
+
+### 🔑 "Cắm là chạy" - Đơn giản nhất thị trường
 
 | Đặc điểm | ECOSYNTECH | Giải pháp khác |
 |----------|-----------|----------------|
-| **Setup** | Cắm USB/WiFi là chạy | Cần kỹ sư IT |
+| **Setup** | 5 phút, cắm WiFi là chạy | Cần kỹ sư IT, 2-3 ngày |
+| **Backend** | ✅ **Tùy chọn** - dùng GAS free hoặc Web API | Bắt buộc server |
+| **Database** | ✅ **Tùy chọn** - Google Sheets miễn phí hoặc SQLite | Phải trả hosting |
 | **Giao diện** | Tiếng Việt | Tiếng Anh |
-| **Giá** | Free → Pro | 5-10 triệu/tháng |
-| **Blockchain** | Aptos (optional) | Không có |
-| **QR Traceability** | Tự động từ gieo trồng | Thủ công |
-| **AI Advisory** | Tích hợp miễn phí | Phụ phí |
+| **Giá** | **Free** → 99k/tháng | 5-10 triệu/tháng |
+
+### 🎯 3 Lựa chọn Deploy (tùy nhu cầu):
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    ECOSYNTECH DEPLOY OPTIONS                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  🅰️ MINIMAL (Free)          🅱️ STANDARD              🅾️ FULL   │
+│  ─────────────              ──────────            ──────────    │
+│  ESP32 + GAS               ESP32 + GAS           ESP32 + GAS   │
+│  (Google Sheets)           + Web Backend         + Web Backend │
+│  100% Free                 99k/tháng            299k/tháng   │
+│                                                                  │
+│  ✅ Sensor data            ✅ + 58 Skills         ✅ + AI      │
+│  ✅ Telegram Bot           ✅ + QR Code          ✅ + All     │
+│  ✅ QR Traceability        ✅ + Auto control      ✅ + Full    │
+│  ✅ Smart Control          ✅ + i18n              ✅ + Custom  │
+│                                                                  │
+│  📌 Ai cũng dùng được!    📌 Nông trại nhỏ      📌 Doanh nghiệp│
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🤖 58 SKILLS TỰ ĐỘNG HÓA 95% VẬN HÀNH
+
+### 🎯 Tự động hóa toàn diện - Không cần ngồi máy!
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    58 SKILLS = 95% TỰ ĐỘNG                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   🔧 VẬN HÀNH (20 skills)          🧠 GIÁM SÁT (15 skills)              │
+│   ━━━━━━━━━━━━━━━━━━━━━           ━━━━━━━━━━━━━━━━━━━━              │
+│   ✓ Rules Engine                  ✓ System Health Scorer              │
+│   ✓ Schedules Engine              ✓ AI Weather Prediction               │
+│   ✓ Webhook Dispatch              ✓ Anomaly Predictor                 │
+│   ✓ OTA Orchestrator               ✓ KPI Drift Monitor                  │
+│   ✓ Command Router                ✓ Root Cause Analyzer               │
+│   ✓ Report Export                 ✓ Auto Backup                        │
+│                                                                             │
+│   🔒 BẢO MẬT (8 skills)            🌾 NÔNG NGHIỆP (5 skills)            │
+│   ━━━━━━━━━━━━━━━━━              ━━━━━━━━━━━━━━━━━━                  │
+│   ✓ RBAC Guard                    ✓ Weather Decision                   │
+│   ✓ Audit Trail                   ✓ Water Optimization                 │
+│   ✓ Vulnerability Scanner         ✓ Crop Growth Tracker               │
+│   ✓ Intrusion Detector            ✓ Pest Alert                         │
+│   ✓ Rate Limit Guard               ✓ Fertilizer Scheduler               │
+│                                                                             │
+│   🔄 TỰ SỬA LỖI (6 skills)         📡 IoT (3 skills)                    │
+│   ━━━━━━━━━━━━━━━━━━━             ━━━━━━━━━━━━━━                       │
+│   ✓ Auto Retry                    ✓ Energy Saver                      │
+│   ✓ Reconnect Bridge              ✓ Predictive Maintenance             │
+│   ✓ Reset Device                  ✓ Multi-Farm Manager                │
+│   ✓ Clear Cache                                                          │
+│   ✓ Rollback OTA                                                          │
+│   ✓ Auto Acknowledge                                                      │
+│                                                                             │
+│   📦 TRACEABILITY (3)           📢 GIAO TIẾP (4)                        │
+│   ━━━━━━━━━━━━━━━               ━━━━━━━━━━━━━━                        │
+│   ✓ QR Generator                 ✓ Telegram Notifier                   │
+│   ✓ Aptos Blockchain             ✓ Report Generator                    │
+│   ✓ Aptos Integration            ✓ Voice Notifier                     │
+│                                  ✓ Language Switcher                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 📊 Bạn làm gì mỗi ngày với 58 skills?
+
+| Trước (Không có ECOSYNTECH) | Sau (Với ECOSYNTECH) |
+|-----------------------------|----------------------|
+| ❌ Kiểm tra sensor thủ công | ✅ Auto monitor 24/7 |
+| ❌ Bật tắt máy bơm tay | ✅ Smart Control tự động |
+| ❌ Phát hiện lỗi muộn | ✅ Auto detect + fix |
+| ❌ Viết báo cáo mất 1h | ✅ Auto export report |
+| ❌ Theo dõi nhiều thiết bị | ✅ Central control |
+| ❌ Lo lắng khi đi xa | ✅ Telegram alerts |
+
+**👉 95% công việc được tự động - Bạn chỉ cần kiểm tra dashboard!**
+
+---
+
+### 🛠️ Skills tự sửa lỗi (không cần can thiệp):
+
+| Skill | Chức năng |
+|-------|-----------|
+| **retry-job** | Tự động retry khi request fail |
+| **reconnect-bridge** | Tự reconnect khi mất kết nối |
+| **reset-device** | Reset thiết bị khi stuck |
+| **clear-cache** | Clear memory khi đầy |
+| **rollback-ota** | Rollback firmware nếu lỗi |
+| **auto-acknowledge** | Auto ack alerts nhỏ |
+
+---
+
+### 🧠 Skills AI thông minh:
+
+| Skill | Chức năng |
+|-------|-----------|
+| **ai-predict-weather** | Dự đoán thời tiết 24h |
+| **anomaly-predictor** | Phát hiện bất thường |
+| **predictive-maintenance** | Dự đoán hỏng thiết bị |
+| **root-cause-analyzer** | Phân tích nguyên nhân lỗi |
+| **system-health-scorer** | Chấm điểm sức khỏe hệ thống |
 
 ---
 
@@ -90,6 +200,41 @@
 ---
 
 ## 💡 TÍNH NĂNG NỔI BẬT
+
+### 🎯 Tại sao "Cắm là chạy"?
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    "CẮM LÀ CHẠY" - SETUP TRONG 5 PHÚT                       │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│   1️⃣  Cấp nguồn 12V                                                    │
+│        ↓                                                                  │
+│   2️⃣  Kết nối WiFi (nhập tên + mật khẩu)                                  │
+│        ↓                                                                  │
+│   3️⃣  Cắm sensor (cắm là nhận)                                         │
+│        ↓                                                                  │
+│   4️⃣  Scan QR code trên thiết bị                                        │
+│        ↓                                                                  │
+│   5️⃣  Bắt đầu giám sát!                                                 │
+│                                                                             │
+│   ✨ KHÔNG cần laptop, KHÔNG cần code, KHÔNG cần kỹ sư IT!              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 💰 Chi phí - Không có gì rẻ hơn!
+
+| Thành phần | ECOSYNTECH | Chi phí |
+|-----------|------------|---------|
+| **Backend** | Google Apps Script (Free) | **0đ** |
+| **Database** | Google Sheets (Free) | **0đ** |
+| **Hosting** | Không cần | **0đ** |
+| **Domain** | Không cần | **0đ** |
+| **Telegram Bot** | Miễn phí | **0đ** |
+| **QR Code** | Tự tạo | **0đ** |
+| **AI Advisory** | Tích hợp sẵn | **0đ** |
+
+**👉 Bạn chỉ cần trả tiền thiết bị ESP32 (~300-500k) và bắt đầu!**
 
 ### 🌟 QR Code Traceability - Truy xuất nguồn gốc
 

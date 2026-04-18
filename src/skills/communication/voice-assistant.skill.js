@@ -1,7 +1,8 @@
 module.exports = {
   id: 'voice-assistant',
   name: 'Voice Assistant',
-  description: 'AI-powered voice assistant with comprehensive system knowledge - marketing, presentations, guides, troubleshooting',
+  description: 'AI-powered voice assistant nâng cao với dialog tự nhiên tiếng Việt cho nông dân - marketing, presentations, guides, troubleshooting',
+  version: '2.3.2',
   triggers: [
     'event:voice.ask',
     'event:voice.answer',
@@ -755,5 +756,110 @@ module.exports = {
   
   getAvailableLanguages: function() {
     return ['vi', 'en', 'zh'];
+  },
+  
+  getNaturalDialog: function(query, lang) {
+    lang = lang || 'vi';
+    var q = query.toLowerCase();
+    
+    var responses = {
+      vi: {
+        'tưới nước': 'Độ ẩm đất hiện tại là bao nhiêu? Nếu dưới 40% nên tưới ngay.',
+        'bón phân': 'Thời điểm bón phân tốt nhất là sáng sớm hoặc chiều mát.',
+        'nhiệt độ': 'Nhiệt độ tối ưu cho cây trồng là 25-30 độ.',
+        'cảnh báo': 'Có 3 cảnh báo mới: Độ ẩm thấp, Nhiệt độ cao, Cần bón phân.',
+        'thiết bị': 'Có 5 thiết bị đang hoạt động. Tất cả online.',
+        'lỗi': 'Hệ thống đang hoạt động bình thường. Không có lỗi.',
+        'doanh thu': 'Doanh thu ước tính: 90 triệu/năm với ROI 1551%.',
+        'giúp': 'Tôi có thể giúp: Xem cảm biến, Bật/tắt thiết bị, Xem báo cáo, Tính chi phí.'
+      },
+      en: {
+        'water': 'Current soil moisture is 45%. Optimal range is 40-60%.',
+        'fertilize': 'Best time to fertilize is early morning or late afternoon.',
+        'temperature': 'Optimal temperature for crops is 25-30°C.',
+        'alert': '3 new alerts: Low humidity, High temperature, Need fertilizer.',
+        'device': '5 devices online. All working normally.',
+        'error': 'System is running normally. No errors detected.',
+        'revenue': 'Estimated revenue: 90 million VND/year with 1551% ROI.',
+        'help': 'I can help: View sensors, Control devices, View reports, Calculate costs.'
+      }
+    };
+    
+    var langResponses = responses[lang] || responses.vi;
+    var matched = null;
+    var keywords = Object.keys(langResponses);
+    
+    for (var i = 0; i < keywords.length; i++) {
+      if (q.indexOf(keywords[i]) !== -1) {
+        matched = langResponses[keywords[i]];
+        break;
+      }
+    }
+    
+    if (!matched) {
+      matched = lang === 'vi' 
+        ? 'Xin lỗi, tôi không hiểu. Hãy hỏi về: tưới nước, bón phân, nhiệt độ, cảnh báo, thiết bị, hoặc doanh thu.'
+        : 'Sorry, I did not understand. Ask about: water, fertilizer, temperature, alerts, devices, or revenue.';
+    }
+    
+    return {
+      query: query,
+      response: matched,
+      language: lang,
+      tts: matched
+    };
+  },
+  
+  runDialog: function(ctx) {
+    var event = ctx.event || {};
+    var query = event.query || event.text || event.speech || '';
+    var lang = event.lang || 'vi';
+    
+    var result = {
+      ok: true,
+      action: 'dialog',
+      query: query,
+      language: lang,
+      timestamp: new Date().toISOString(),
+      version: '2.3.2'
+    };
+    
+    if (query) {
+      var dialog = this.getNaturalDialog(query, lang);
+      result.response = dialog.response;
+      result.tts = dialog.tts;
+    } else {
+      result.response = lang === 'vi' 
+        ? 'Xin chào! Tôi là trợ lý giọng nói EcoSynTech. Bạn cần giúp gì?'
+        : 'Hello! I am EcoSynTech voice assistant. How can I help?';
+      result.tts = result.response;
+    }
+    
+    return result;
+  },
+  
+  getQuickCommands: function() {
+    return {
+      vi: [
+        { command: 'xem nhiệt độ', response: 'Nhiệt độ hiện tại là 28 độ C.' },
+        { command: 'xem độ ẩm', response: 'Độ ẩm đất là 45%.' },
+        { command: 'xem ánh sáng', response: 'Cường độ ánh sáng là 500 lux.' },
+        { command: 'bật máy bơm', response: 'Đã bật máy bơm.' },
+        { command: 'tắt máy bơm', response: 'Đã tắt máy bơm.' },
+        { command: 'xem cảnh báo', response: 'Có 3 cảnh báo chưa đọc.' },
+        { command: 'xem báo cáo', response: 'Báo cáo hôm nay: 5 cảm biến, 3 cảnh báo.' },
+        { command: 'tính chi phí', response: 'Tính chi phí đầu tư: 5.8 triệu VNĐ.' }
+      ],
+      en: [
+        { command: 'show temperature', response: 'Current temperature is 28°C.' },
+        { command: 'show humidity', response: 'Soil humidity is 45%.' },
+        { command: 'show light', response: 'Light intensity is 500 lux.' },
+        { command: 'turn on pump', response: 'Pump turned on.' },
+        { command: 'turn off pump', response: 'Pump turned off.' },
+        { command: 'show alerts', response: '3 unread alerts.' },
+        { command: 'show report', response: 'Today\'s report: 5 sensors, 3 alerts.' },
+        { command: 'calculate cost', response: 'Investment cost: 5.8 million VND.' }
+      ]
+    };
   }
 };

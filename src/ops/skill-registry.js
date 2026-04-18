@@ -77,6 +77,9 @@ var aiRAG = require('../skills/ai/ai-rag.skill');
 var aiConversation = require('../skills/ai/ai-conversation.skill');
 var roiCalculator = require('../skills/ai/roi-calculator.skill');
 var dbSqliteIot = require('../skills/maintenance/db-sqlite-iot.skill');
+var hybridSync = require('../skills/sync/hybrid-sync.skill');
+var mobileDashboard = require('../skills/dashboard/mobile-dashboard.skill');
+var costCalculator = require('../skills/ai/cost-calculator.skill');
 
 var skills = [
   versionDrift,
@@ -141,8 +144,11 @@ var skills = [
   aiInference,
   aiRAG,
   aiConversation,
-  roiCalculator,
+roiCalculator,
   dbSqliteIot,
+  hybridSync,
+  mobileDashboard,
+  costCalculator,
 ];
 
 function buildRegistry() {

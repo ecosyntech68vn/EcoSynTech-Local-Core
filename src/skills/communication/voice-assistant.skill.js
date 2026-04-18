@@ -1,616 +1,748 @@
 module.exports = {
   id: 'voice-assistant',
   name: 'Voice Assistant',
-  description: 'AI-powered voice assistant with full system knowledge - answers questions, provides guides, and troubleshooting',
+  description: 'AI-powered voice assistant with comprehensive system knowledge - marketing, presentations, guides, troubleshooting',
   triggers: [
     'event:voice.ask',
     'event:voice.answer',
+    'event:voice.present',
     'event:voice.guide',
     'event:voice.config',
-    'event:voice.input',
-    'event:voice.alert',
-    'event:voice.confirm',
-    'event:voice.help',
-    'event:voice.admin',
-    'event:voice.monitor',
-    'event:voice.troubleshoot',
-    'event:voice.userdata',
+    'event:voice.demo',
     'event:voice.about',
     'event:voice.faq',
+    'event:voice.feature',
+    'event:voice.walkthrough',
     'cron:5m'
   ],
   riskLevel: 'low',
   canAutoFix: false,
   
-  knowledge: {
-    vi: {
-      system: {
-        name: 'ECOSYNTECH FARM OS',
-        version: 'V2.3.2',
-        description: 'Nền tảng nông nghiệp thông Minh 4.0',
-        features: [
-          '60 skills tự động hóa',
-          'QR truy xuất nguồn gốc',
-          'Aptos Blockchain (tùy chọn)',
-          'i18n đa ngôn ngữ',
-          'Tối ưu RAM 512MB'
-        ],
-        pricing: {
-          free: '0đ - Thử nghiệm',
-          basic: '99K/tháng - Nông dân/HTX',
-          pro: '299K/tháng - Doanh nghiệp'
-        }
-      },
-      hardware: {
-        esp32: {
-          name: 'ESP32 V8.5.0',
-          cpu: 'Dual-core 240MHz',
-          flash: '4MB',
-          ram: '512KB',
-          relay: '8 kênh 10A',
-          sensor: '12 ports',
-          display: 'OLED 0.96"',
-          power: '12V DC'
-        }
-      },
-      software: {
-        backend: 'Node.js Express V2.3.2',
-        database: 'SQLite',
-        skills: 60,
-        api: 'REST + WebSocket'
-      },
-      connectivity: {
-        wifi: '802.11 b/g/n 2.4GHz',
-        bluetooth: 'BLE 4.2',
-        mqtt: 'Hỗ trợ',
-        webhook: 'Hỗ trợ'
-      }
-    },
-    en: {
-      system: {
-        name: 'ECOSYNTECH FARM OS',
-        version: 'V2.3.2',
-        description: 'Comprehensive Smart Agriculture 4.0 Platform',
-        features: [
-          '60 automation skills',
-          'QR Traceability',
-          'Aptos Blockchain (optional)',
-          'i18n multi-language',
-          'RAM Optimized 512MB'
-        ],
-        pricing: {
-          free: 'Free - Trial',
-          basic: '99K/month - Farmer/Cooperative',
-          pro: '299K/month - Enterprise'
-        }
-      },
-      hardware: {
-        esp32: {
-          name: 'ESP32 V8.5.0',
-          cpu: 'Dual-core 240MHz',
-          flash: '4MB',
-          ram: '512KB',
-          relay: '8 channels 10A',
-          sensor: '12 ports',
-          display: 'OLED 0.96"',
-          power: '12V DC'
-        }
-      },
-      software: {
-        backend: 'Node.js Express V2.3.2',
-        database: 'SQLite',
-        skills: 60,
-        api: 'REST + WebSocket'
-      },
-      connectivity: {
-        wifi: '802.11 b/g/n 2.4GHz',
-        bluetooth: 'BLE 4.2',
-        mqtt: 'Supported',
-        webhook: 'Supported'
-      }
-    },
-    zh: {
-      system: {
-        name: 'ECOSYNTECH FARM OS',
-        version: 'V2.3.2',
-        description: '智慧农业4.0综合平台',
-        features: [
-          '60个自动化技能',
-          '二维码溯源',
-          'Aptos区块链(可选)',
-          'i18n多语言',
-          '512MB内存优化'
-        ],
-        pricing: {
-          free: '免费 - 试用',
-          basic: '99K/月 - 农民/合作社',
-          pro: '299K/月 - 企业'
-        }
-      },
-      hardware: {
-        esp32: {
-          name: 'ESP32 V8.5.0',
-          cpu: '双核240MHz',
-          flash: '4MB',
-          ram: '512KB',
-          relay: '8通道10A',
-          sensor: '12端口',
-          display: 'OLED 0.96寸',
-          power: '12V直流'
-        }
-      },
-      software: {
-        backend: 'Node.js Express V2.3.2',
-        database: 'SQLite',
-        skills: 60,
-        api: 'REST + WebSocket'
-      },
-      connectivity: {
-        wifi: '802.11 b/g/n 2.4GHz',
-        bluetooth: 'BLE 4.2',
-        mqtt: '支持',
-        webhook: '支持'
-      }
-    }
-  },
-  
   run: function(ctx) {
     var event = ctx.event || {};
-    var action = event.action || event.type?.replace('voice.', '') || 'answer';
+    var action = event.action || event.type?.replace('voice.', '') || 'present';
     var lang = event.lang || 'vi';
-    var question = event.question || event.query || '';
     var topic = event.topic || event.data?.topic || '';
+    var feature = event.feature || event.data?.feature || '';
     
     var result = {
       ok: true,
       action: action,
       language: lang,
       timestamp: new Date().toISOString(),
-      ttsOutput: null,
-      response: null,
-      suggestions: [],
-      sources: []
+      sections: [],
+      totalDuration: 0,
+      ttsOutput: null
     };
     
     switch (action) {
-      case 'ask':
-      case 'answer':
-        result.response = this.answerQuestion(question, topic, lang);
-        result.ttsOutput = result.response;
-        result.suggestions = this.getSuggestions(question, lang);
-        result.sources = this.getSources(question, lang);
-        break;
-        
-      case 'guide':
-        result.response = this.getGuideContent(topic, lang);
-        result.ttsOutput = result.response;
-        break;
-        
-      case 'config':
-        result.response = this.getConfigGuide(event.deviceType || topic, lang);
-        result.ttsOutput = result.response;
+      case 'present':
+      case 'demo':
+        result.sections = this.getFullPresentation(topic, lang);
+        result.ttsOutput = this.compilePresentation(result.sections, lang);
         break;
         
       case 'about':
-        result.response = this.getAbout(lang);
-        result.ttsOutput = result.response;
+        result.sections = this.getAboutSection(lang);
+        result.ttsOutput = this.compileSection(result.sections, lang);
+        break;
+        
+      case 'feature':
+        result.sections = this.getFeatureDeepDive(feature, lang);
+        result.ttsOutput = this.compileSection(result.sections, lang);
+        break;
+        
+      case 'walkthrough':
+        result.sections = this.getWalkthrough(topic, lang);
+        result.ttsOutput = this.compileSection(result.sections, lang);
+        break;
+        
+      case 'guide':
+        result.sections = this.getUserGuide(feature, lang);
+        result.ttsOutput = this.compileSection(result.sections, lang);
         break;
         
       case 'faq':
-        result.response = this.getFAQ(event.faqId, lang);
-        result.ttsOutput = result.response;
+        result.sections = this.getFAQDeep(feature, lang);
+        result.ttsOutput = this.compileSection(result.sections, lang);
         break;
         
-      case 'admin':
-      case 'monitor':
-      case 'troubleshoot':
-        result.response = this.getGuideContent(action + '.' + topic, lang);
-        result.ttsOutput = result.response;
-        break;
-        
-      case 'userdata':
-        result.response = this.formatUserData(event.data, lang);
-        result.ttsOutput = result.response;
-        break;
-        
-      case 'input':
-        result.response = this.generateInputPrompt(event.field, lang);
-        result.ttsOutput = result.response;
-        break;
-        
-      case 'alert':
-        result.response = this.formatAlert(event.data, lang);
-        result.ttsOutput = result.response;
-        break;
-        
-      case 'confirm':
-        result.response = this.generateConfirmation(event.message, lang);
-        result.ttsOutput = result.response;
-        break;
-        
-      case 'help':
-        result.response = this.getHelpTopics(lang);
-        result.ttsOutput = result.response;
+      case 'ask':
+      case 'answer':
+        result.sections = this.answerComprehensive(topic, feature, lang);
+        result.ttsOutput = this.compileSection(result.sections, lang);
         break;
         
       default:
-        result.response = this.getDefaultResponse(lang);
-        result.ttsOutput = result.response;
+        result.sections = this.getQuickIntro(lang);
+        result.ttsOutput = this.compileSection(result.sections, lang);
     }
     
+    result.totalDuration = result.sections.length * 2;
     return result;
   },
   
-  answerQuestion: function(question, topic, lang) {
-    var q = (question || '').toLowerCase();
-    var t = (topic || '').toLowerCase();
+  getFullPresentation: function(topic, lang) {
+    var allTopics = ['overview', 'all', ''];
+    var isAll = allTopics.indexOf(topic) !== -1;
     
-    var answers = {
+    var sections = [];
+    
+    sections.push(this.getAboutSection(lang));
+    sections.push(this.getFeaturesSection(lang));
+    sections.push(this.getPricingSection(lang));
+    sections.push(this.getBenefitsSection(lang));
+    sections.push(this.getTechnicalSection(lang));
+    
+    return sections;
+  },
+  
+  getAboutSection: function(lang) {
+    var content = {
       vi: {
-        'gia': 'Giá của ECOSYNTECH rất hợp lý. Gói Free hoàn toàn miễn phí. Gói Basic 99K/tháng, Gói Pro 299K/tháng. Năm đầu chỉ cần mua thiết bị 300-500K VNĐ.',
-        'chiphi': 'Chi phí rất thấp. Thiết bị 300-500K, backend và database miễn phí (Google Apps Script). Tổng năm đầu chỉ 300-500K VNĐ.',
-        'cấu hình': 'Cấu hình rất đơn giản. Kết nối WiFi, cắm sensor, scan QR, bắt đầu. Mất 5 phút.',
-        'cài đặt': 'Cài đặt: npm install, npm start. Hoặc dùng script: bash scripts/setup-ai.sh',
-        'cai dat': 'Cài đặt: npm install, npm start. Hoặc dùng script: bash scripts/setup-ai.sh',
-        'setup': 'Setup: git clone, npm install, npm start. Chi tiết xem README.md',
-        'wifi': 'Kết nối WiFi 2.4GHz, nhập SSID và password, lưu.',
-        'cảm biến': 'Hỗ trợ DHT22, DS18B20, Soil moisture, pH, EC, Light sensor. Cắm vào port tương ứng.',
-        'sensor': 'Hỗ trợ DHT22, DS18B20, Soil moisture, pH, EC, Light sensor. Cắm vào port tương ứng.',
-        'relay': 'Có 8 relay 10A. Điều khiển máy bơm, đèn, quạt theo ngưỡng hoặc thủ công.',
-        'telegram': 'Telegram bot nhận cảnh báo. Dùng /start, /status, /sensors, /alerts để tương tác.',
-        'bot': 'Telegram bot nhận cảnh báo. Dùng /start, /status, /sensors, /alerts để tương tác.',
-        'qr': 'QR tự tạo khi tạo batch. Scan để truy xuất nguồn gốc từ gieo trồng đến xuất bán.',
-        'blockchain': 'Aptos Blockchain ghi hash khi thu hoạch, xuất bán, chứng nhận. Bật trong .env',
-        'ai': 'Có AI Advisory dự đoán thời tiết, phát hiện bất thường. Tích hợp sẵn.',
-        'skills': 'Có 60 skills tự động hóa. Bao gồm vận hành, giám sát, sửa lỗi, nông nghiệp.',
-        '60': 'Có 60 skills tự động hóa. Bao gồm vận hành, giám sát, sửa lỗi, nông nghiệp.',
-        'api': 'REST API tại /api/* . Xem API_REFERENCE.md chi tiết.',
-        'ram': 'Chạy được trên 512MB RAM. Tối ưu cho thiết bị thấp.',
-        'hướng dẫn': 'Xem OPERATIONS.md hoặc dùng voice assistant. Gõ /help để xem hướng dẫn.',
-        'help': 'Gõ /help để xem hướng dẫn. Xem OPERATIONS.md hoặc dùng voice assistant.',
-        'troubleshoot': 'Xem OPERATIONS.md phần troubleshooting. Hoặc hỏi voice assistant về vấn đề cụ thể.',
-        'lỗi': 'Liên hệ support hoặc xem OPERATIONS.md. Restart bằng npm start nếu cần.',
-        'default': 'ECOSYNTECH là nền tảng nông nghiệp thông minh với 60 skills tự động. Hỏi cụ thể hơn được không?'
+        title: 'GIỚI THIỆU ECOSYNTECH FARM OS',
+        sections: [
+          'Chào mừng quý khách!',
+          'ECOSYNTECH FARM OS là nền tảng nông nghiệp thông minh 4.0 hoàn chỉnh do EcoSynTech Global phát triển.',
+          'Chúng tôi mang đến giải pháp toàn diện cho mọi quy mô trồng trọt, từ vườn rau gia đình 5 mét vuông đến trang trại hàng hecta.',
+          'Điểm khác biệt cốt lõi: Cắm là chạy - chỉ trong 5 phút, bất kỳ ai cũng có thể sử dụng mà không cần kiến thức IT.',
+          'Hệ thống tự động hóa 95% công việc, giúp nông dân tiết kiệm thời gian, giảm chi phí, tăng năng suất.'
+        ]
       },
       en: {
-        'price': 'ECOSYNTECH pricing: Free - $0, Basic - 99K/month, Pro - 299K/month. First year only device cost 300-500K.',
-        'cost': 'Very low cost. Device 300-500K, backend free (GAS). Total first year only 300-500K VND.',
-        'setup': 'Setup: git clone, npm install, npm start. Run bash scripts/setup-ai.sh for AI.',
-        'install': 'Setup: git clone, npm install, npm start. Run bash scripts/setup-ai.sh for AI.',
-        'wifi': 'Connect WiFi 2.4GHz, enter SSID and password, save.',
-        'sensor': 'Supports DHT22, DS18B20, Soil moisture, pH, EC, Light sensor. Plug into corresponding port.',
-        'relay': '8 relays 10A. Control pump, light, fan by threshold or manual.',
-        'telegram': 'Telegram bot for alerts. Use /start, /status, /sensors, /alerts.',
-        'qr': 'Auto QR when create batch. Scan to trace from planting to sale.',
-        'blockchain': 'Aptos Blockchain hashes on harvest, export, certify. Enable in .env',
-        'ai': 'AI Advisory for weather prediction, anomaly detection. Included.',
-        'skills': '60 automation skills. Operations, monitoring, troubleshooting, agriculture.',
-        '60': '60 automation skills. Operations, monitoring, troubleshooting, agriculture.',
-        'api': 'REST API at /api/*. See API_REFERENCE.md.',
-        'ram': 'Works on 512MB RAM. Optimized for low-end devices.',
-        'help': 'Type /help for guide. See OPERATIONS.md or use voice assistant.',
-        'troubleshoot': 'See OPERATIONS.md troubleshooting section. Or ask voice assistant.',
-        'default': 'ECOSYNTECH is smart agriculture platform with 60 skills. Ask more specific?'
+        title: 'INTRODUCTION TO ECOSYNTECH FARM OS',
+        sections: [
+          'Welcome!',
+          'ECOSYNTECH FARM OS is a comprehensive Smart Agriculture 4.0 platform developed by EcoSynTech Global.',
+          'We provide solutions for all scales, from 5 sqm home gardens to large farms.',
+          'Key difference: Plug and play - anyone can use in just 5 minutes without IT knowledge.',
+          'System automates 95% of work, helping farmers save time, reduce costs, increase productivity.'
+        ]
       },
       zh: {
-        'price': 'ECOSYNTECH价格：免费-0元，基础版-99K/月，专业版-299K/月。第一年只需设备费300-500K。',
-        'cost': '成本很低。设备300-500K，后端免费（GAS）。第一年总计仅300-500K。',
-        'setup': '安装：git clone, npm install, npm start。运行bash scripts/setup-ai.sh安装AI。',
-        'install': '安装：git clone, npm install, npm start。运行bash scripts/setup-ai.sh安装AI。',
-        'wifi': '连接WiFi 2.4GHz，输入SSID和密码，保存。',
-        'sensor': '支持DHT22、DS18B20、土壤湿度、pH、EC、光传感器。插入对应端口。',
-        'relay': '8个继电器10A。按阈值或手动控制泵、灯、风扇。',
-        'telegram': 'Telegram机器人接收警报。使用/start、/status、/sensors、/alerts。',
-        'qr': '创建批次时自动生成二维码。扫描从种植到销售全程溯源。',
-        'blockchain': 'Aptos区块链在收获、出口、认证时记录哈希。在.env中启用。',
-        'ai': 'AI顾问预测天气、检测异常。已内置。',
-        'skills': '60个自动化技能。运营、监控、故障排除、农业。',
-        '60': '60个自动化技能。运营、监控、故障排除、农业。',
-        'api': 'REST API在/api/*。详见API_REFERENCE.md。',
-        'ram': '512MB内存可运行。针对低端设备优化。',
-        'help': '输入/help获取指南。查看OPERATIONS.md或使用语音助手。',
-        'troubleshoot': '查看OPERATIONS.md故障排除部分。或询问语音助手。',
-        'default': 'ECOSYNTECH是具有60个技能的智慧农业平台。请更具体地提问？'
+        title: 'ECOSYNTECH FARM OS简介',
+        sections: [
+          '欢迎各位！',
+          'ECOSYNTECH FARM OS是由EcoSynTech开发的智慧农业4.0综合平台。',
+          '我们为各种规模提供解决方案，从5平方米的家庭菜园到大型农场。',
+          '核心优势：即插即用 - 任何人只需5分钟即可使用，无需IT知识。',
+          '系统自动化95%的工作，帮助农民节省时间、降低成本、提高产量。'
+        ]
       }
     };
     
-    var langAnswers = answers[lang] || answers.vi;
-    
-    for (var key in langAnswers) {
-      if (q.indexOf(key) !== -1 || t.indexOf(key) !== -1) {
-        return langAnswers[key];
-      }
-    }
-    
-    return langAnswers['default'];
+    return content[lang] || content.vi;
   },
   
-  getAbout: function(lang) {
-    var about = {
-      vi: 'ECOSYNTECH FARM OS V2.3.2 là nền tảng nông nghiệp thông minh 4.0 do EcoSynTech Global phát triển. Điểm nổi bật: 60 skills tự động hóa, QR truy xuất nguồn gốc, Aptos Blockchain (tùy chọn), i18n đa ngôn ngữ, tối ưu RAM 512MB. Chi phí thấp nhất: Free đến 99K/tháng.',
-      en: 'ECOSYNTECH FARM OS V2.3.2 is Smart Agriculture 4.0 platform by EcoSynTech Global. Features: 60 automation skills, QR Traceability, Aptos Blockchain (optional), i18n, 512MB RAM optimized. Lowest cost: Free to 99K/month.',
-      zh: 'ECOSYNTECH FARM OS V2.3.2是EcoSynTech开发的智慧农业4.0平台。功能：60个自动化技能、二维码溯源、Aptos区块链（可选）、i18n、512MB内存优化。最低成本：免费至99K/月。'
+  getFeaturesSection: function(lang) {
+    var content = {
+      vi: {
+        title: 'TÍNH NĂNG NỔI BẬT',
+        sections: [
+          '1. 60 SKILLS TỰ ĐỘNG HÓA:',
+          '   - Skills vận hành: Rules Engine, Scheduler, Webhook, OTA, Command Router',
+          '   - Skills giám sát: AI Weather, Anomaly Detection, Health Score, KPI Drift',
+          '   - Skills sửa lỗi: Auto Retry, Reconnect, Reset, Clear Cache, Rollback',
+          '   - Skills nông nghiệp: Weather Decision, Water Optimization, Crop Tracker, Pest Alert',
+          '',
+          '2. QR TRUY XUẤT NGUỒN GỐC:',
+          '   - Tự động tạo QR khi tạo lô',
+          '   - Truy xuất từ gieo trồng đến xuất bán',
+          '   - Khách hàng scan QR xem toàn bộ journey',
+          '   - Tích hợp Blockchain (tùy chọn)',
+          '',
+          '3. AI ADVISORY:',
+          '   - Dự đoán thời tiết 24h',
+          '   - Phát hiện bất thường',
+          '   - Khuyến nghị tưới nước',
+          '   - Cảnh báo sâu bệnh',
+          '',
+          '4. SMART CONTROL:',
+          '   - Bật/tắt máy bơm tự động theo ngưỡng',
+          '   - Hỗ trợ hysteresis, cooldown',
+          '   - Manual override khi cần',
+          '',
+          '5. TELEGRAM BOT:',
+          '   - Nhận cảnh báo real-time',
+          '   - Điều khiển từ xa',
+          '   - Xem dữ liệu sensors',
+          ''
+        ]
+      },
+      en: {
+        title: 'KEY FEATURES',
+        sections: [
+          '1. 60 AUTOMATION SKILLS:',
+          '   - Operations: Rules Engine, Scheduler, Webhook, OTA, Command Router',
+          '   - Monitoring: AI Weather, Anomaly Detection, Health Score',
+          '   - Troubleshooting: Auto Retry, Reconnect, Reset, Clear Cache',
+          '   - Agriculture: Weather Decision, Water Optimization, Crop Tracker',
+          '',
+          '2. QR TRACEABILITY:',
+          '   - Auto QR when create batch',
+          '   - Trace from planting to sale',
+          '   - Customer scans QR to view journey',
+          '   - Blockchain integration (optional)',
+          '',
+          '3. AI ADVISORY:',
+          '   - Weather prediction 24h',
+          '   - Anomaly detection',
+          '   - Irrigation recommendations',
+          '   - Pest alerts',
+          '',
+          '4. SMART CONTROL:',
+          '   - Auto pump on/off by threshold',
+          '   - Support hysteresis, cooldown',
+          '   - Manual override available',
+          '',
+          '5. TELEGRAM BOT:',
+          '   - Real-time alerts',
+          '   - Remote control',
+          '   - View sensor data'
+        ]
+      },
+      zh: {
+        title: '核心功能',
+        sections: [
+          '1. 60个自动化技能：',
+          '   - 运营：规则引擎、调度器、Webhook、OTA、命令路由',
+          '   - 监控：AI天气、异常检测、健康评分',
+          '   - 故障排除：自动重试、重连、重置、清除缓存',
+          '   - 农业：天气决策、水分优化、作物追踪',
+          '',
+          '2. 二维码溯源：',
+          '   - 创建批次时自动生成二维码',
+          '   - 从种植到销售全程溯源',
+          '   - 客户扫描二维码查看过程',
+          '   - 区块链集成（可选）',
+          '',
+          '3. AI顾问：',
+          '   - 24小时天气预测',
+          '   - 异常检测',
+          '   - 灌溉建议',
+          '   - 病虫害警报',
+          '',
+          '4. 智能控制：',
+          '   - 按阈值自动开关泵',
+          '   - 支持滞后、冷却',
+          '   - 可手动覆盖',
+          '',
+          '5. Telegram机器人：',
+          '   - 实时警报',
+          '   - 远程控制',
+          '   - 查看传感器数据'
+        ]
+      }
     };
     
-    return about[lang] || about.vi;
+    return content[lang] || content.vi;
   },
   
-  getFAQ: function(faqId, lang) {
+  getPricingSection: function(lang) {
+    var content = {
+      vi: {
+        title: 'BẢNG GIÁ & CHI PHÍ',
+        sections: [
+          'CHI PHÍ THỰC TẾ - THẤP NHẤT VIỆT NAM:',
+          '',
+          'Thiết bị ESP32: 300.000 - 500.000 VNĐ (mua một lần)',
+          'Backend: MIỄN PHÍ (Google Apps Script)',
+          'Database: MIỄN PHÍ (Google Sheets)',
+          'Hosting: KHÔNG CẦN',
+          'Telegram: MIỄN PHÍ',
+          'QR Code: TỰ TẠO',
+          'AI Advisory: TÍCH HỢP SẴN',
+          '',
+          'TỔNG NĂM ĐẦU: CHỈ 300-500K VNĐ!',
+          '',
+          'BẢNG GIÁ 3 GÓI:',
+          '',
+          'GÓI FREE - 0 VNĐ:',
+          '• 3 cảm biến, 1 thiết bị',
+          '• Telegram Bot',
+          '• Smart Control cơ bản',
+          '• Dành cho: Thử nghiệm',
+          '',
+          'GÓI BASIC - 99K/THÁNG:',
+          '• 10 cảm biến, 5 thiết bị',
+          '• QR Traceability',
+          '• Blockchain (tùy chọn)',
+          '• Auto backup',
+          '• Dành cho: Nông dân, HTX quy mô nhỏ',
+          '',
+          'GÓI PRO - 299K/THÁNG:',
+          '• Không giới hạn',
+          '• Multi-farm',
+          '• AI nâng cao',
+          '• VIP Support',
+          '• Dành cho: Doanh nghiệp, xuất khẩu'
+        ]
+      },
+      en: {
+        title: 'PRICING & COSTS',
+        sections: [
+          'ACTUAL COST - LOWEST IN VIETNAM:',
+          '',
+          'ESP32 Device: 300K-500K VND (one-time)',
+          'Backend: FREE (Google Apps Script)',
+          'Database: FREE (Google Sheets)',
+          'Hosting: NOT NEEDED',
+          'Telegram: FREE',
+          'QR Code: AUTO GENERATE',
+          'AI Advisory: INCLUDED',
+          '',
+          'TOTAL FIRST YEAR: ONLY 300-500K VND!',
+          '',
+          '3 PACKAGES:',
+          '',
+          'FREE - 0 VND:',
+          '• 3 sensors, 1 device',
+          '• Telegram Bot',
+          '• Basic Smart Control',
+          '• For: Trial',
+          '',
+          'BASIC - 99K/MONTH:',
+          '• 10 sensors, 5 devices',
+          '• QR Traceability',
+          '• Blockchain (optional)',
+          '• Auto backup',
+          '• For: Farmers, small cooperatives',
+          '',
+          'PRO - 299K/MONTH:',
+          '• Unlimited',
+          '• Multi-farm',
+          '• Advanced AI',
+          '• VIP Support',
+          'For: Enterprises, export'
+        ]
+      },
+      zh: {
+        title: '价格与费用',
+        sections: [
+          '实际成�� - ��南最低：',
+          '',
+          'ESP32设备：300K-500K越南盾（一次性）',
+          '后端：免费（Google Apps Script）',
+          '数据库：免费（Google Sheets）',
+          '托管：不需要',
+          'Telegram：免费',
+          '二维码：自动生成',
+          'AI顾问：已内置',
+          '',
+          '第一年总计：仅300-500K越南盾！',
+          '',
+          '三个套餐：',
+          '',
+          '免费 - 0越南盾：',
+          '• 3个传感器，1个设备',
+          '• Telegram机器人',
+          '• 基本智能控制',
+          '• 适用于：试用',
+          '',
+          '基础版 - 99K/月：',
+          '• 10个传感器，5个设备',
+          '• 二维码溯源',
+          '• 区块链（可选）',
+          '• 自动备份',
+          '• 适用于：小农户、合作社',
+          '',
+          '专业版 - 299K/月：',
+          '• 无限制',
+          '• 多农场',
+          '• 高级AI',
+          '• VIP支持',
+          '• 适用于：企业、出口'
+        ]
+      }
+    };
+    
+    return content[lang] || content.vi;
+  },
+  
+  getBenefitsSection: function(lang) {
+    var content = {
+      vi: {
+        title: 'LỢI ÍCH & GIÁ TRỊ',
+        sections: [
+          'GIẢI PHÓNG SỨC LAO ĐỘNG:',
+          '• Không cần ngồi máy 24/7',
+          '• Tự động giám sát cảm biến',
+          '• Tự động bật/tắt máy bơm',
+          '• Auto export báo cáo',
+          '',
+          'GIẢM CHI PHÍ:',
+          '• Backend & Database miễn phí',
+          '• Không cần thuê server',
+          '• Không cần IT maintain',
+          '• Chi phí năm đầu chỉ 300-500K',
+          '',
+          'TĂNG NĂNG SUẤT:',
+          '• Theo dõi realtime',
+          '• Phát hiện vấn đề sớm',
+          '• Quyết định dựa trên dữ liệu',
+          '• QR xuất khẩu giá cao hơn',
+          '',
+          'AN TÂM:',
+          '• Telegram alerts khi vắng mặt',
+          '• Backup tự động',
+          '• Skills tự sửa lỗi',
+          '• Hỗ trợ tiếng Việt'
+        ]
+      },
+      en: {
+        title: 'BENEFITS & VALUE',
+        sections: [
+          'LABOR SAVING:',
+          '• No need to monitor 24/7',
+          '• Auto sensor monitoring',
+          '• Auto pump on/off',
+          '• Auto report export',
+          '',
+          'COST REDUCTION:',
+          '• Backend & Database free',
+          '• No server rental',
+          '• No IT maintenance',
+          '• First year only 300-500K',
+          '',
+          'INCREASE PRODUCTIVITY:',
+          '• Realtime tracking',
+          '• Early problem detection',
+          '• Data-based decisions',
+          '• QR export commands higher price',
+          '',
+          'PEACE OF MIND:',
+          '• Telegram alerts when away',
+          '• Auto backup',
+          '• Self-healing skills',
+          '• Vietnamese support'
+        ]
+      },
+      zh: {
+        title: '效益与价值',
+        sections: [
+          '节省劳动力：',
+          '• 无需24/7监控',
+          '• 自动传感器监控',
+          '• 自动开关泵',
+          '• 自动导出报告',
+          '',
+          '降低成本：',
+          '• 后端和数据库免费',
+          '• 无需租用服务器',
+          '• 无需IT维护',
+          '• 第一年仅300-500K',
+          '',
+          '提高产量：',
+          '• 实时追踪',
+          '• 早期问题检测',
+          '• 基于数据的决策',
+          '• 二维码出口更高价',
+          '',
+          '安心：',
+          '• 外出时Telegram警报',
+          '• 自动备份',
+          '• 自我��复��能',
+          '• 越南语支持'
+        ]
+      }
+    };
+    
+    return content[lang] || content.vi;
+  },
+  
+  getTechnicalSection: function(lang) {
+    var content = {
+      vi: {
+        title: 'THÔNG SỐ KỸ THUẬT',
+        sections: [
+          'THIẾT BỊ:',
+          '• ESP32 V8.5.0 - Dual-core 240MHz',
+          '• 8 Relay 10A',
+          '• 12 Cổng cảm biến',
+          '• OLED 0.96" Display',
+          '• 4MB Flash, 512KB RAM',
+          '• WiFi 2.4GHz, BLE 4.2',
+          '• Nguồn 12V DC',
+          '',
+          'BACKEND:',
+          '• Node.js Express V2.3.2',
+          '• SQLite Database',
+          '• 60 Skills Automation',
+          '• REST + WebSocket API',
+          '• JWT, RBAC Security',
+          '• i18n (VI/EN/ZH)',
+          '',
+          'YÊU CẦU HỆ THỐNG:',
+          '• RAM tối thiểu: 512MB',
+          '• Windows 7+ compatible',
+          '• Không cần card đồ họa'
+        ]
+      },
+      en: {
+        title: 'TECHNICAL SPECIFICATIONS',
+        sections: [
+          'DEVICE:',
+          '• ESP32 V8.5.0 - Dual-core 240MHz',
+          '• 8 Relay 10A',
+          '• 12 Sensor Ports',
+          '• OLED 0.96" Display',
+          '• 4MB Flash, 512KB RAM',
+          '• WiFi 2.4GHz, BLE 4.2',
+          '• 12V DC Power',
+          '',
+          'BACKEND:',
+          '• Node.js Express V2.3.2',
+          '• SQLite Database',
+          '• 60 Automation Skills',
+          '• REST + WebSocket API',
+          '• JWT, RBAC Security',
+          '• i18n (VI/EN/ZH)',
+          '',
+          'SYSTEM REQUIREMENTS:',
+          '• Minimum RAM: 512MB',
+          '• Windows 7+ compatible',
+          '• No graphics card needed'
+        ]
+      },
+      zh: {
+        title: '技术规格',
+        sections: [
+          '设备：',
+          '• ESP32 V8.5.0 - 双核240MHz',
+          '• 8个继电器10A',
+          '• 12个传感器端口',
+          '• OLED 0.96寸显示屏',
+          '• 4MB闪存，512KB内存',
+          '• WiFi 2.4GHz，蓝牙4.2',
+          '• 12V直流电源',
+          '',
+          '后端：',
+          '• Node.js Express V2.3.2',
+          '• SQLite数据库',
+          '• 60个自动化技能',
+          '• REST + WebSocket API',
+          '• JWT、RBAC安全',
+          '• i18n（越南语/英语/中文）',
+          '',
+          '系统要求：',
+          '• 最低内存：512MB',
+          '• Windows 7+兼容',
+          '• 无需显卡'
+        ]
+      }
+    };
+    
+    return content[lang] || content.vi;
+  },
+  
+  getFeatureDeepDive: function(feature, lang) {
+    var guides = {
+      qr: {
+        vi: {
+          title: 'HƯỚNG DẪN QR TRUY XUẤT',
+          sections: [
+            'Bước 1: Tạo lô mới',
+            '   - Vào mục Truy xuất nguồn gốc',
+            '   - Nhập thông tin: tên lô, cây trồng, ngày gieo',
+            '   - Hệ thống tự động tạo mã QR',
+            '',
+            'Bước 2: Ghi nhận giai đoạn',
+            '   - Mỗi giai đoạn: gieo, chăm sóc, thu hoạch',
+            '   - Thêm ghi chú, hình ảnh (tùy chọn)',
+            '   - Timestamp tự động',
+            '',
+            'Bước 3: Thu hoạch & Xuất bán',
+            '   - Tạo event thu hoạch',
+            '   - Tạo event xuất bán',
+            '   - QR in nhãn dán lên sản phẩm',
+            '',
+            'Bước 4: Khách hàng truy xuất',
+            '   - Scan QR bằng điện thoại',
+            '   - Xem toàn bộ hành trình',
+            '   - Xem nguồn gốc, ngày gieo, quy trình'
+          ]
+        }
+      },
+      telegram: {
+        vi: {
+          title: 'HƯỚNG DẪN TELEGRAM BOT',
+          sections: [
+            'Các lệnh cơ bản:',
+            '',
+            '/start - Khởi động bot, đăng ký nhận thông báo',
+            '/status - Xem trạng thái hệ thống',
+            '/sensors - Xem dữ liệu cảm biến mới nhất',
+            '/alerts - Xem các cảnh báo đang hoạt động',
+            '/batches - Xem danh sách lô hàng',
+            '/devices - Xem thiết bị đang hoạt động',
+            '/rules - Xem các quy tắc đang chạy',
+            '/controls - Điều khiển relay thủ công',
+            '/help - Xem hướng dẫn đầy đủ',
+            '',
+            'Cách nhận cảnh báo:',
+            '1. /start để đăng ký',
+            '2. Bot sẽ gửi.alert khi có vấn đề',
+            '3. Có thể bật/tắt thông báo tùy chọn'
+          ]
+        }
+      },
+      automation: {
+        vi: {
+          title: 'HƯỚNG DẪN SMART CONTROL',
+          sections: [
+            'Tạo rule tự động:',
+            '1. Vào mục Quy tắc > Thêm mới',
+            '2. Đặt tên: "Tưới khi đất khô"',
+            '3. Điều kiện: soil_moisture < 30',
+            '4. Hành động: relay1_on',
+            '5. Thời gian: 300 giây (5 phút)',
+            '6. Cooldown: 1800 giây (30 phút)',
+            '7. Lưu',
+            '',
+            'Các điều kiện hỗ trợ:',
+            '• temperature > / < giá trị',
+            '• humidity > / < giá trị',
+            '• soil_moisture > / < giá trị',
+            '• pH > / < giá trị',
+            '• Light level > / < giá trị',
+            '',
+            'Các hành động:',
+            '• relay1_on / relay1_off',
+            '• relay2_on / relay2_off',
+            '• ... up to relay8'
+          ]
+        }
+      }
+    };
+    
+    var content = guides[feature];
+    return content ? content[lang] || content.vi : this.getFeaturesSection(lang);
+  },
+  
+  getWalkthrough: function(topic, lang) {
+    var walks = {
+      first: {
+        vi: {
+          title: 'HƯỚNG DẪN BẮT ĐẦU',
+          sections: [
+            'Bước 1: Kết nối thiết bị',
+            '   - Cấp nguồn 12V cho ESP32',
+            '   - Đèn LED sáng, màn hình hiển thị',
+            '',
+            'Bước 2: Kết nối WiFi',
+            '   - Truy cập 192.168.4.1 (AP mode)',
+            '   - Nhập SSID và password WiFi nhà',
+            '   - Lưu và đợi kết nối',
+            '',
+            'Bước 3: Kết nối cảm biến',
+            '   - DHT22 → Port 1 (nhiệt độ, độ ẩm)',
+            '   - Soil → Port 2 (độ ẩm đất)',
+            '   - Cắm là nhận, không cần cấu hình',
+            '',
+            'Bước 4: Truy cập Dashboard',
+            '   - Mở trình duyệt, vào địa chỉ IP',
+            '   - Đăng nhập (mặc định admin/admin)',
+            '   - Xem dữ liệu sensors',
+            '',
+            'Bước 5: Telegram (tùy chọn)',
+            '   - Tìm bot qua tên',
+            '   - /start để đăng ký',
+            '   - Nhận alerts từ xa'
+          ]
+        }
+      }
+    };
+    
+    return walks[topic] ? walks[topic][lang] : walks.first[lang];
+  },
+  
+  getUserGuide: function(feature, lang) {
+    return this.getFeatureDeepDive(feature, lang);
+  },
+  
+  getFAQDeep: function(faqId, lang) {
     var faqs = {
       vi: {
-        '1': 'Câu hỏi: Làm sao bắt đầu? Trả lời: git clone, npm install, npm start. Xem README.md hướng dẫn chi tiết.',
-        '2': 'Câu hỏi: Cần bao nhiêu chi phí? Trả lời: Thiết bị 300-500K, còn lại miễn phí. Năm đầu chỉ 300-500K.',
-        '3': 'Câu hỏi: Có cần kiến thức IT không? Trả lời: Không. Cắm là chạy trong 5 phút.',
-        '4': 'Câu hỏi: Thiết bị có bền không? Trả lời: ESP32 chính hãng, bảo hành 12 tháng.',
-        '5': 'Câu hỏi: Hỗ trợ những cảm biến nào? Trả lời: DHT22, DS18B20, Soil, pH, EC, Light sensor.'
-      },
-      en: {
-        '1': 'Q: How to start? A: git clone, npm install, npm start. See README.md.',
-        '2': 'Q: How much cost? A: Device 300-500K, rest free. First year only 300-500K.',
-        '3': 'Q: Need IT knowledge? A: No. Plug and play in 5 minutes.',
-        '4': 'Q: Is device durable? A: ESP32 official, 12 month warranty.',
-        '5': 'Q: What sensors supported? A: DHT22, DS18B20, Soil, pH, EC, Light sensor.'
-      },
-      zh: {
-        '1': '问题：如何开始？答案：git clone, npm install, npm start。详见README.md。',
-        '2': '问题：多少费用？答案：设备300-500K，其余免费。第一年仅300-500K。',
-        '3': '问题：需要IT知识吗？答案：不需要。5分钟即插即用。',
-        '4': '问题：设备耐用吗？答案：ESP32正品，12个月保修。',
-        '5': '问题：支持哪些传感器？答案：DHT22、DS18B20、土壤、pH、EC、光传感器。'
+        title: 'CÂU HỎI THƯỜNG GẶP',
+        sections: [
+          'Hỏi: Có cần internet không?',
+          'Trả lời: Có, cần WiFi 2.4GHz để gửi dữ liệu. Nếu mất kết nối, ESP32 vẫn lưu local và gửi lại sau.',
+          '',
+          'Hỏi: Nếu mất điện thì sao?',
+          'Trả lời: ESP32 tự khởi động lại khi có điện. Không cần can thiệp.',
+          '',
+          'Hỏi: Có thể dùng pin dự phòng không?',
+          'Trả lời: Có, hỗ trợ input 12V từ pin/ắc quy. Có thêm module UPS.',
+          '',
+          'Hỏi: Bao xa thì gửi dữ liệu?',
+          'Trả lời: Phụ thuộc WiFi. Trong nhà 20-50m, ngoài trời giảm. Có thể dùng repeater WiFi.',
+          '',
+          'Hỏi: Cảm biến có chống nước không?',
+          'Trả lời: DHT22 có vỏ nhựa chống ẩm. Soil cần chôn trong đất.',
+          '',
+          'Hỏi: Có thể mở rộng thêm cảm biến không?',
+          'Trả lời: Có, thêm multiplexer hoặc dùng ESP32 mới với nhiều port hơn.',
+          '',
+          'Hỏi: Dữ liệu lưu ở đâu?',
+          'Trả lời: Google Sheets (nếu dùng GAS) hoặc SQLite local.',
+          '',
+          'Hỏi: Blockchain để làm gì?',
+          'Trả lời: Ghi nhận hash khi thu hoạch, xuất bán. Tăng giá trị xuất khẩu, minh bạch.'
+        ]
       }
     };
     
-    var langFAQs = faqs[lang] || faqs.vi;
-    return faqs[lang] || 'Xem FAQ list: 1) Bắt đầu 2) Chi phí 3) IT 4) Bền 5) Sensor';
+    return faqs[lang] || faqs.vi;
   },
   
-  getHelpTopics: function(lang) {
-    var topics = {
-      vi: [
-        'Cấu hình thiết bị - Cách kết nối WiFi, cảm biến, relay',
-        'Thêm cảm biến mới - Hướng dẫn thêm và cấu hình',
-        'Thiết lập cảnh báo - Tạo ngưỡng và nhận alert',
-        'Tạo QR truy xuất - Tạo mã cho lô hàng',
-        'Điều khiển thiết bị - Bật/tắt relay',
-        'Xem báo cáo - Xuất dữ liệu',
-        'Cài đặt AI - Cài Ollama local',
-        'Xem hướng dẫn chi tiết - Xem OPERATIONS.md'
-      ],
-      en: [
-        'Device config - Connect WiFi, sensors, relays',
-        'Add sensor - How to add and configure',
-        'Set alerts - Create thresholds and receive alerts',
-        'Create QR - Generate QR for batch',
-        'Control device - On/off relays',
-        'View reports - Export data',
-        'Install AI - Install local Ollama',
-        'View detailed guide - See OPERATIONS.md'
-      ],
-      zh: [
-        '设备配置 - 连接WiFi、传感器、继电器',
-        '添加传感器 - 如何添加和配置',
-        '设置警报 - 创建阈值和接收警报',
-        '创建二维码 - 为批次生成二维码',
-        '控制设备 - 开关继电器',
-        '查看报告 - 导出数据',
-        '安装AI - 安装本地Ollama',
-        '查看详细指南 - 查看OPERATIONS.md'
-      ]
-    };
-    
-    return topics[lang] || topics.vi;
-  },
-  
-  getSuggestions: function(question, lang) {
-    var q = (question || '').toLowerCase();
-    var suggestions = {
-      vi: [
-        'Giá bao nhiêu?',
-        'Cách cài đặt?',
-        'Cần những gì?',
-        'Hỗ trợ cảm biến nào?',
-        'Cách s��� d��ng telegram bot?'
-      ],
-      en: [
-        'How much does it cost?',
-        'How to install?',
-        'What do I need?',
-        'What sensors are supported?',
-        'How to use telegram bot?'
-      ],
-      zh: [
-        '要多少钱？',
-        '如何安装？',
-        '我需要什么？',
-        '支持哪些传感器？',
-        '如何使用telegram机器人？'
-      ]
-    };
-    
-    return suggestions[lang] || suggestions.vi;
-  },
-  
-  getSources: function(question, lang) {
-    return [
-      'README.md',
-      'OPERATIONS.md', 
-      'API_REFERENCE.md',
-      'MARKETING.md'
-    ];
-  },
-  
-  getGuideContent: function(topic, lang) {
-    var guides = {
+  getQuickIntro: function(lang) {
+    var intros = {
       vi: {
-        'setup': 'Hướng dẫn setup: 1. git clone về. 2. npm install. 3. npm start. Chi tiết xem README.md',
-        'sensor': 'Thêm cảm biến: Vào dashboard > Thiết bị > Thêm > Chọn loại > Lưu',
-        'relay': 'Điều khiển relay: Vào dashboard > Điều khiển > Bật/tắt. Hoặc cấu hình auto.',
-        'alert': 'Tạo cảnh báo: Vào dashboard > Cảnh báo > Thêm ngưỡng > Lưu',
-        'qr': 'Tạo QR: Vào dashboard > Truy xuất > Tạo lô > QR tự tạo',
-        'telegram': 'Telegram: /start, /status, /sensors, /alerts, /devices, /rules',
-        'welcome': 'Chào mừng đến với ECOSYNTECH! Hệ thống nông nghiệp thông minh 4.0 với 60 skills tự động.'
-      },
-      en: {
-        'setup': 'Setup guide: 1. git clone. 2. npm install. 3. npm start. See README.md',
-        'sensor': 'Add sensor: Dashboard > Devices > Add > Select type > Save',
-        'relay': 'Control relay: Dashboard > Control > On/off. Or configure auto.',
-        'alert': 'Create alert: Dashboard > Alerts > Add threshold > Save',
-        'qr': 'Create QR: Dashboard > Traceability > Create batch > QR auto',
-        'telegram': 'Telegram: /start, /status, /sensors, /alerts, /devices, /rules',
-        'welcome': 'Welcome to ECOSYNTECH! Smart Agriculture 4.0 with 60 skills.'
-      },
-      zh: {
-        'setup': '安装指南：1. git clone。2. npm install。3. npm start。详见README.md',
-        'sensor': '添加传感器：仪表板>设备>添加>选择类型>保存',
-        'relay': '控制继电器：仪表板>控制>开关。或配置自动。',
-        'alert': '创建警报：仪表板>警报>添加阈值>保存',
-        'qr': '创建二维码：仪表板>溯源>创建批次>二维码自动生成',
-        'telegram': 'Telegram：/start、/status、/sensors、/alerts、/devices、/rules',
-        'welcome': '欢迎使用ECOSYNTECH！具有60个技能的智慧农业4.0。'
+        title: 'ECOSYNTECH FARM OS',
+        sections: [
+          'Chào mừng! Tôi là voice assistant.',
+          'Có thể trả lời về: giá cả, tính năng, cách sử dụng, khắc phục lỗi.',
+          'Hỏi về: giá, cài đặt, cảm biến, QR, telegram, automation,...',
+          'Hoặc nói "present" để xem giới thiệu đầy đủ.'
+        ]
       }
     };
     
-    var langGuides = guides[lang] || guides.vi;
-    var content = langGuides[topic] || langGuides['setup'];
-    return content;
+    return intros[lang] || intros.vi;
   },
   
-  getConfigGuide: function(deviceType, lang) {
-    var configs = {
-      vi: {
-        'esp32': 'Cấu hình ESP32: 1. Chọn WiFi mode. 2. Nhập SSID/password. 3. Cấu hình MQTT (nếu dùng). 4. Đặt interval. 5. Lưu.',
-        'dht22': 'Cấu hình DHT22: 1. VCC→3.3V. 2. GND→GND. 3. Data→GPIO. 4. Thêm vào dashboard.',
-        'relay': 'Cấu hình relay: 1. Kết nối vào GPIO. 2. Đặt tên. 3. Chọn chế độ. 4. Lưu.',
-        'default': 'Cấu hình: Xem OPERATIONS.md hoặc hỏi cụ thể hơn.'
-      },
-      en: {
-        'esp32': 'ESP32 config: 1. Select WiFi mode. 2. Enter SSID/password. 3. Configure MQTT (if used). 4. Set interval. 5. Save.',
-        'dht22': 'DHT22 config: 1. VCC→3.3V. 2. GND→GND. 3. Data→GPIO. 4. Add to dashboard.',
-        'relay': 'Relay config: 1. Connect to GPIO. 2. Set name. 3. Select mode. 4. Save.',
-        'default': 'Config: See OPERATIONS.md or ask more specific.'
-      },
-      zh: {
-        'esp32': 'ESP32配置：1.选择WiFi模式。2.输入SSID/密码。3.配置MQTT（如果使用）。4.设置间隔。5.保存。',
-        'dht22': 'DHT22���置：1.VCC→3.3V。2.GND→GND。3.Data→GPIO。4.添加到仪表板。',
-        'relay': '继电器配置：1.连接到GPIO。2.设置名称。3.选择模式。4.保存。',
-        'default': '配置：查看OPERATIONS.md或更具体地提问。'
-      }
-    };
+  answerComprehensive: function(question, topic, lang) {
+    var sections = [];
     
-    var langConfigs = configs[lang] || configs.vi;
-    return langConfigs[deviceType] || langConfigs['default'];
+    sections.push({
+      title: 'TRẢ LỜI: ' + (question || topic).toUpperCase(),
+      sections: ['Đang tìm thông tin...']
+    });
+    
+    return { title: '', sections: [] };
   },
   
-  getDefaultResponse: function(lang) {
-    var responses = {
-      vi: 'Tôi là voice assistant của ECOSYNTECH. Có thể trả lời về: giá cả, cách cài đặt, cấu hình, sử dụng. Bạn hỏi gì?',
-      en: 'I am ECOSYNTECH voice assistant. Can answer about: pricing, install, config, usage. What do you want to know?',
-      zh: '我是ECOSYNTECH语音助手。可以回答：价格、安装、配置、使用。你想知道什么？'
-    };
+  compileSection: function(section, lang) {
+    var text = section.title || '';
+    var sections = section.sections || [];
     
-    return responses[lang] || responses.vi;
+    for (var i = 0; i < sections.length; i++) {
+      text += '\n' + sections[i];
+    }
+    
+    return text;
   },
   
-  generateInputPrompt: function(field, lang) {
-    var prompts = {
-      vi: {
-        'wifi_ssid': 'Vui lòng nói tên WiFi',
-        'wifi_password': 'Vui lòng nói mật khẩu WiFi',
-        'device_name': 'Vui lòng nói tên thiết bị',
-        'batch_code': 'Vui lòng nói mã lô hàng',
-        'threshold': 'Vui lòng nói giá trị ngưỡng',
-        'confirm': 'Xác nhận? Nói "có" hoặc "không"'
-      },
-      en: {
-        'wifi_ssid': 'Please say your WiFi name',
-        'wifi_password': 'Please say your WiFi password',
-        'device_name': 'Please say device name',
-        'batch_code': 'Please say batch code',
-        'threshold': 'Please say threshold value',
-        'confirm': 'Confirm? Say "yes" or "no"'
-      },
-      zh: {
-        'wifi_ssid': '请说出WiFi名称',
-        'wifi_password': '请说出WiFi密码',
-        'device_name': '请说出设备名称',
-        'batch_code': '请说出批次代码',
-        'threshold': '请说出阈值',
-        'confirm': '确认？请说"是"或"否"'
-      }
-    };
+  compilePresentation: function(sections, lang) {
+    var text = '';
     
-    var langPrompts = prompts[lang] || prompts.vi;
-    return langPrompts[field] || langPrompts['confirm'];
-  },
-  
-  formatAlert: function(data, lang) {
-    var alerts = {
-      vi: {
-        'critical': 'Cảnh báo nghiêm trọng: ',
-        'high': 'Cảnh báo cao: ',
-        'medium': 'Cảnh báo: ',
-        'low': 'Thông báo: '
-      },
-      en: {
-        'critical': 'Critical alert: ',
-        'high': 'High alert: ',
-        'medium': 'Alert: ',
-        'low': 'Notification: '
-      },
-      zh: {
-        'critical': '严重警报：',
-        'high': '高警报：',
-        'medium': '警报：',
-        'low': '通知：'
-      }
-    };
+    for (var i = 0; i < sections.length; i++) {
+      var section = sections[i];
+      text += '\n\n' + (section.title || '');
+      text += '\n' + (section.sections || []).join('\n');
+    }
     
-    var langAlerts = alerts[lang] || alerts.vi;
-    var severity = data?.severity || 'medium';
-    var message = data?.message || data?.alert || '';
-    
-    return langAlerts[severity] + message;
-  },
-  
-  generateConfirmation: function(message, lang) {
-    var confirms = {
-      vi: 'Xác nhận: ' + message + '. Nói "có" để đồng ý, "không" để hủy.',
-      en: 'Confirm: ' + message + '. Say "yes" to confirm, "no" to cancel.',
-      zh: '确认：' + message + '。请说"是"确认，"否"取消。'
-    };
-    
-    return confirms[lang] || confirms.vi;
-  },
-  
-  formatUserData: function(data, lang) {
-    var templates = {
-      vi: {
-        'status': 'Trạng thái: ' + (data?.status || 'Hoạt động bình thường'),
-        'sensors': 'Cảm biến - Nhiệt: ' + (data?.temp || '---') + 'độ, Ẩm: ' + (data?.humidity || '---') + '%',
-        'devices': 'Thiết bị: ' + (data?.deviceCount || '0') + ' hoạt động',
-        'alerts': 'Cảnh báo: ' + (data?.alertCount || '0') + ' chưa đọc'
-      },
-      en: {
-        'status': 'Status: ' + (data?.status || 'Normal'),
-        'sensors': 'Sensors - Temp: ' + (data?.temp || '---') + ', Humidity: ' + (data?.humidity || '---') + '%',
-        'devices': 'Devices: ' + (data?.deviceCount || '0') + ' active',
-        'alerts': 'Alerts: ' + (data?.alertCount || '0') + ' unread'
-      },
-      zh: {
-        'status': '状态：' + (data?.status || '正常'),
-        'sensors': '传感器 - 温度：' + (data?.temp || '---') + '，湿度：' + (data?.humidity || '---') + '%',
-        'devices': '设备：' + (data?.deviceCount || '0') + ' 运行中',
-        'alerts': '警报：' + (data?.alertCount || '0') + ' 未读'
-      }
-    };
-    
-    var langTemplates = templates[lang] || templates.vi;
-    var type = data?.type || 'status';
-    return langTemplates[type] || langTemplates['status'];
-  },
-  
-  getKnowledge: function(type, lang) {
-    return this.knowledge[lang]?.[type] || this.knowledge.vi?.[type] || {};
+    return text;
   },
   
   speak: function(text, lang) {
@@ -623,13 +755,5 @@ module.exports = {
   
   getAvailableLanguages: function() {
     return ['vi', 'en', 'zh'];
-  },
-  
-  getTopics: function() {
-    return [
-      'system', 'hardware', 'software', 'pricing',
-      'setup', 'install', 'config', 'wifi', 
-      'sensor', 'relay', 'telegram', 'qr', 'blockchain', 'ai', 'skills'
-    ];
   }
 };

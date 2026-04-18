@@ -4,9 +4,8 @@ module.exports = {
   description: 'Free AI inference using Ollama, LM Studio, or compatible APIs for local/cloud AI',
   triggers: [
     'event:ai.inference',
-    'event:ai.chat',
     'event:ai.complete',
-    'cron:10m'
+    'cron:30m'
   ],
   riskLevel: 'low',
   canAutoFix: false,

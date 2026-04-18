@@ -1,7 +1,7 @@
 # 🚀 ECOSYNTECH FARM OS
 ## Nền Tảng Nông Nghiệp Thông Minh 4.0
 
-Hệ thống IoT nông nghiệp thông minh toàn diện với **60 skills tự động hóa**, **QR Code Traceability** và **Aptos Blockchain**.
+Hệ thống IoT nông nghiệp thông minh toàn diện với **62 skills tự động hóa**, **QR Code Traceability**, **AI RAG** và **Aptos Blockchain**.
 
 ---
 
@@ -36,7 +36,7 @@ Hệ thống IoT nông nghiệp thông minh toàn diện với **60 skills tự 
 
 ## 🚀 CÀI ĐẶT
 
-### Yêu cầu
+### Yêu cầu hệ thống
 
 - Node.js 14+
 - 512MB RAM tối thiểu

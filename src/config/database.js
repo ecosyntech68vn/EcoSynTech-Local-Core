@@ -476,6 +476,66 @@ function createTables() {
     )
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inventory (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      category TEXT,
+      unit TEXT,
+      quantity REAL DEFAULT 0,
+      min_quantity REAL DEFAULT 0,
+      cost_per_unit REAL DEFAULT 0,
+      supplier TEXT,
+      farm_id TEXT,
+      expiry_date TEXT,
+      status TEXT DEFAULT 'active',
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inventory_log (
+      id TEXT PRIMARY KEY,
+      inventory_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      quantity REAL NOT NULL,
+      notes TEXT,
+      created_by TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (inventory_id) REFERENCES inventory(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      category TEXT NOT NULL,
+      amount REAL NOT NULL,
+      description TEXT,
+      farm_id TEXT,
+      date TEXT NOT NULL,
+      payment_method TEXT,
+      reference_id TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance_summary (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      year INTEGER NOT NULL,
+      month INTEGER NOT NULL,
+      income REAL DEFAULT 0,
+      expenses REAL DEFAULT 0,
+      workers_cost REAL DEFAULT 0,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(farm_id, year, month)
+    )
+  `);
+
   logger.info('Database tables created');
 }
 

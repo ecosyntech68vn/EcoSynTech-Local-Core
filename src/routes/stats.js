@@ -3,6 +3,8 @@ const router = express.Router();
 const { getAll, getOne } = require('../config/database');
 const { asyncHandler } = require('../middleware/errorHandler');
 
+const healthReportEnabled = !!(process.env.WEBLOCAL_WEBAPP_URL && process.env.WEBLOCAL_API_KEY);
+
 router.get('/', asyncHandler(async (req, res) => {
   const devices = getOne('SELECT COUNT(*) as count, SUM(CASE WHEN status = "online" THEN 1 ELSE 0 END) as online FROM devices');
   const rules = getOne('SELECT COUNT(*) as count, SUM(CASE WHEN enabled = 1 THEN 1 ELSE 0 END) as active FROM rules');
@@ -38,6 +40,11 @@ router.get('/', asyncHandler(async (req, res) => {
       total: history?.total || 0
     },
     sensors: sensorStats,
+    healthReport: {
+      enabled: healthReportEnabled,
+      customerId: process.env.CUSTOMER_ID || null,
+      intervalMin: parseInt(process.env.HEALTH_REPORT_INTERVAL_MIN || '30', 10)
+    },
     uptime: process.uptime(),
     memory: process.memoryUsage(),
     timestamp: new Date().toISOString()

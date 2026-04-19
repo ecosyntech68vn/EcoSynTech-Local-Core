@@ -12,7 +12,7 @@
 
 | Metric | Score | Status |
 |--------|-------|-------|
-| **Overall Compliance** | 88/100 | ✅ GOOD |
+| **Overall Compliance** | 91/100 | ✅ EXCELLENT |
 | Access Control | 88/100 | ✅ GOOD |
 | Data Protection | 80/100 | ✅ ACCEPTABLE |
 | Network Security | 85/100 | ✅ GOOD |
@@ -172,10 +172,11 @@
 ### A.8.16 Incident Management
 | Control | Status | Evidence |
 |---------|--------|---------|
-| Incident process | ✅ PASS | Defined in policies |
-| Reporting | ✅ PASS | /api/security/audit-log |
-| Evidence preservation | ✅ PASS | Audit chain hash |
-| Response time | ⚠️ WARNING | 48h in policies (not enforced) |
+| Incident process | ✅ PASS | INCIDENT_RESPONSE.md |
+| Reporting | ✅ PASS | /api/incidents endpoints |
+| Evidence preservation | ✅ PASS | Audit chain + incident notes |
+| Response time | ✅ PASS | INCIDENT_RESPONSE.md (24h-7days) |
+| Automated tracking | ✅ PASS | incidentService.js + DB tables |
 
 ### A.8.17 Business Continuity
 | Control | Status | Evidence |

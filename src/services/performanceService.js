@@ -90,7 +90,7 @@ async function getSensorDataByZone(zoneId = null) {
       value: s.value,
       unit: s.unit,
       timestamp: s.timestamp
-    }));
+    });
   });
 
   const result = sensorByType;

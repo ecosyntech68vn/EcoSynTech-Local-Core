@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
-const { db, getAll, getOne, run } = require('../../config/database');
-const { auth } = require('../../middleware/auth');
+const { db, getAll, getOne, run } = require('../config/database');
+const { auth } = require('../middleware/auth');
 
 // =====================================================
 // ORGANIZATIONS
@@ -38,7 +38,7 @@ router.post('/organizations', auth, async (req, res) => {
     const { name, email, phone, address, settings } = req.body;
     if (!name) return res.status(400).json({ ok: false, error: 'name is required' });
     const id = `org-${uuidv4().slice(0, 8)}`;
-    const { db } = require('../../config/database');
+    const { db } = require('../config/database');
     db.run(`INSERT INTO organizations (id, name, email, phone, address, settings_json, status, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [id, name, email, phone, address, settings ? JSON.stringify(settings) : null]
@@ -55,7 +55,7 @@ router.put('/organizations/:id', auth, async (req, res) => {
     const existing = getOne('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
     if (!existing) return res.status(404).json({ ok: false, error: 'Organization not found' });
     const { name, email, phone, address, settings, status } = req.body;
-    const { db } = require('../../config/database');
+    const { db } = require('../config/database');
     db.run(`UPDATE organizations SET 
            name = COALESCE(?, name), email = COALESCE(?, email), phone = COALESCE(?, phone),
            address = COALESCE(?, address), settings_json = COALESCE(?, settings_json),
@@ -73,7 +73,7 @@ router.delete('/organizations/:id', auth, async (req, res) => {
   try {
     const existing = getOne('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
     if (!existing) return res.status(404).json({ ok: false, error: 'Organization not found' });
-    const { db } = require('../../config/database');
+    const { db } = require('../config/database');
     db.run('UPDATE organizations SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', ['deleted', req.params.id]);
     res.json({ ok: true, message: 'Organization deactivated' });
   } catch (error) {
@@ -117,7 +117,7 @@ router.post('/plans', auth, async (req, res) => {
     const { farm_id, name, description, season, year, start_date, end_date, crop_id, status } = req.body;
     if (!name || !farm_id) return res.status(400).json({ ok: false, error: 'name and farm_id are required' });
     const id = `plan-${uuidv4().slice(0, 8)}`;
-    const { db } = require('../../config/database');
+    const { db } = require('../config/database');
     db.run(`INSERT INTO plans (id, farm_id, name, description, season, year, start_date, end_date, crop_id, status, progress, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [id, farm_id, name, description, season, year || new Date().getFullYear(), start_date, end_date, crop_id]
@@ -134,7 +134,7 @@ router.put('/plans/:id', auth, async (req, res) => {
     const existing = getOne('SELECT * FROM plans WHERE id = ?', [req.params.id]);
     if (!existing) return res.status(404).json({ ok: false, error: 'Plan not found' });
     const { name, description, season, year, start_date, end_date, crop_id, status, progress } = req.body;
-    const { db } = require('../../config/database');
+    const { db } = require('../config/database');
     db.run(`UPDATE plans SET 
            name = COALESCE(?, name), description = COALESCE(?, description), season = COALESCE(?, season),
            year = COALESCE(?, year), start_date = COALESCE(?, start_date), end_date = COALESCE(?, end_date),
@@ -186,7 +186,7 @@ router.post('/assets', auth, async (req, res) => {
     const { farm_id, area_id, parent_id, name, type, model, serial_number, purchase_date, purchase_price, status } = req.body;
     if (!name || !type) return res.status(400).json({ ok: false, error: 'name and type are required' });
     const id = `asset-${uuidv4().slice(0, 8)}`;
-    const { db } = require('../../config/database');
+    const { db } = require('../config/database');
     db.run(`INSERT INTO assets (id, farm_id, area_id, parent_id, name, type, model, serial_number, purchase_date, purchase_price, status, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [id, farm_id, area_id, parent_id, name, type, model, serial_number, purchase_date, purchase_price]
@@ -206,7 +206,7 @@ router.put('/assets/:id', auth, async (req, res) => {
     const existing = getOne('SELECT * FROM assets WHERE id = ?', [req.params.id]);
     if (!existing) return res.status(404).json({ ok: false, error: 'Asset not found' });
     const { name, type, model, serial_number, status, location, notes } = req.body;
-    const { db } = require('../../config/database');
+    const { db } = require('../config/database');
     const updates = [];
     const params = [];
     if (name !== undefined) { updates.push('name = ?'); params.push(name); }
@@ -260,7 +260,7 @@ router.post('/quantities', auth, async (req, res) => {
     const { farm_id, area_id, crop_id, type, quantity, unit, quality_grade, notes, record_date } = req.body;
     if (!quantity || !type) return res.status(400).json({ ok: false, error: 'quantity and type are required' });
     const id = `qty-${uuidv4().slice(0, 8)}`;
-    const { db } = require('../../config/database');
+    const { db } = require('../config/database');
     db.run(`INSERT INTO quantities (id, farm_id, area_id, crop_id, type, quantity, unit, quality_grade, notes, record_date, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [id, farm_id, area_id, crop_id, type, quantity, unit, quality_grade, notes, record_date]
@@ -352,7 +352,7 @@ router.post('/quantities', auth, async (req, res) => {
     const { farm_id, area_id, crop_id, type, quantity, unit, quality_grade, notes, record_date } = req.body;
     if (!quantity || !type) return res.status(400).json({ ok: false, error: 'quantity and type are required' });
     const id = `qty-${uuidv4().slice(0, 8)}`;
-    const { db } = require('../../config/database');
+    const { db } = require('../config/database');
     db.run(`INSERT INTO quantities (id, farm_id, area_id, crop_id, type, quantity, unit, quality_grade, notes, record_date, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [id, farm_id, area_id, crop_id, type, quantity, unit, quality_grade, notes, record_date]
@@ -393,7 +393,7 @@ router.post('/logs', auth, async (req, res) => {
     const { farm_id, area_id, asset_id, worker_id, type, description, value, attachments, timestamp } = req.body;
     if (!type || !description) return res.status(400).json({ ok: false, error: 'type and description are required' });
     const id = `log-${uuidv4().slice(0, 8)}`;
-    const { db } = require('../../config/database');
+    const { db } = require('../config/database');
     db.run(`INSERT INTO logs (id, farm_id, area_id, asset_id, worker_id, type, description, value, attachments_json, timestamp, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
       [id, farm_id, area_id, asset_id, worker_id, type, description, value, attachments ? JSON.stringify(attachments) : null, timestamp]

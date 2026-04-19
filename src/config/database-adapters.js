@@ -104,10 +104,85 @@ function createTables() {
     hash TEXT
   )`);
 
+  db.run(`CREATE TABLE IF NOT EXISTS rules (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    enabled INTEGER DEFAULT 1,
+    condition TEXT NOT NULL,
+    action TEXT NOT NULL,
+    cooldown_minutes INTEGER DEFAULT 30,
+    hysteresis REAL DEFAULT 0,
+    time_window TEXT,
+    priority TEXT DEFAULT 'normal',
+    target_device TEXT,
+    trigger_count INTEGER DEFAULT 0,
+    last_triggered TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS schedules (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    time TEXT NOT NULL,
+    duration INTEGER DEFAULT 60,
+    zones TEXT DEFAULT '[]',
+    enabled INTEGER DEFAULT 1,
+    days TEXT DEFAULT '[]',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS history (
+    id TEXT PRIMARY KEY,
+    action TEXT NOT NULL,
+    trigger TEXT,
+    status TEXT DEFAULT 'success',
+    timestamp TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS alerts (
+    id TEXT PRIMARY KEY,
+    type TEXT NOT NULL,
+    severity TEXT DEFAULT 'info',
+    message TEXT NOT NULL,
+    device_id TEXT,
+    zone_id TEXT,
+    acknowledged INTEGER DEFAULT 0,
+    timestamp TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS organizations (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT,
+    status TEXT DEFAULT 'active',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS zones (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    farm_id TEXT,
+    area REAL,
+    crop_type TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
+
+  db.run(`CREATE TABLE IF NOT EXISTS tenants (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    plan TEXT DEFAULT 'free',
+    status TEXT DEFAULT 'active',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )`);
+
   db.run(`CREATE INDEX IF NOT EXISTS idx_devices_farm ON devices(farm_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_sensors_device ON sensors(device_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_audit_logs_hash ON audit_logs(hash)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_rules_enabled ON rules(enabled)`);
 }
 
 function seedInitialData() {

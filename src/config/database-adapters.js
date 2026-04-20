@@ -184,11 +184,11 @@ function createTables() {
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
   )`);
 
-  db.run(`CREATE INDEX IF NOT EXISTS idx_devices_farm ON devices(farm_id)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_sensors_device ON sensors(device_id)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_audit_logs_hash ON audit_logs(hash)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_rules_enabled ON rules(enabled)`);
+  db.run('CREATE INDEX IF NOT EXISTS idx_devices_farm ON devices(farm_id)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_sensors_device ON sensors(device_id)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_audit_logs_hash ON audit_logs(hash)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_rules_enabled ON rules(enabled)');
 }
 
 function seedInitialData() {
@@ -196,7 +196,7 @@ function seedInitialData() {
   const bcrypt = require('bcryptjs');
   const hashedPassword = bcrypt.hashSync('admin123', 10);
   
-  db.run(`INSERT OR IGNORE INTO users (id, email, password, name, role) VALUES (?, ?, ?, ?, ?)`,
+  db.run('INSERT OR IGNORE INTO users (id, email, password, name, role) VALUES (?, ?, ?, ?, ?)',
     ['usr_admin', 'admin@ecosyntech.com', hashedPassword, 'Administrator', 'admin']);
   
   logger.info('[SQLite] Seeded initial data');
@@ -285,7 +285,7 @@ async function initPostgresDatabase() {
     database: process.env.PG_DATABASE || 'ecosyntech',
     user: process.env.PG_USER || 'postgres',
     password: process.env.PG_PASSWORD,
-    max: 20,
+    max: 20
   });
   
   await pool.query(`
@@ -352,10 +352,10 @@ async function initPostgresDatabase() {
     )
   `);
   
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_devices_farm ON devices(farm_id)`);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_sensors_device ON sensors(device_id)`);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp)`);
-  await pool.query(`CREATE INDEX IF NOT EXISTS idx_audit_logs_hash ON audit_logs(hash)`);
+  await pool.query('CREATE INDEX IF NOT EXISTS idx_devices_farm ON devices(farm_id)');
+  await pool.query('CREATE INDEX IF NOT EXISTS idx_sensors_device ON sensors(device_id)');
+  await pool.query('CREATE INDEX IF NOT EXISTS idx_audit_logs_timestamp ON audit_logs(timestamp)');
+  await pool.query('CREATE INDEX IF NOT EXISTS idx_audit_logs_hash ON audit_logs(hash)');
   
   logger.info('[PostgreSQL] Database initialized');
   return pool;

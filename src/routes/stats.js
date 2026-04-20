@@ -18,8 +18,8 @@ const healthReportEnabled = !!(process.env.WEBLOCAL_WEBAPP_URL && process.env.WE
 router.get('/', asyncHandler(async (req, res) => {
   const { farm_id, date_from, date_to } = req.query;
   
-  let deviceFilter = farm_id ? `WHERE farm_id = "${farm_id}"` : '';
-  let deviceQuery = deviceFilter 
+  const deviceFilter = farm_id ? `WHERE farm_id = "${farm_id}"` : '';
+  const deviceQuery = deviceFilter 
     ? `SELECT COUNT(*) as count, SUM(CASE WHEN status = "online" THEN 1 ELSE 0 END) as online FROM devices ${deviceFilter}`
     : 'SELECT COUNT(*) as count, SUM(CASE WHEN status = "online" THEN 1 ELSE 0 END) as online FROM devices';
   

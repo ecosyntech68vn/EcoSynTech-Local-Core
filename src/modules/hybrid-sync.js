@@ -30,12 +30,12 @@ module.exports = {
   
   getPendingChanges: function(db, since) {
     since = since || new Date(0).toISOString();
-    var changes = [];
+    const changes = [];
     
     if (db && db.prepare) {
       try {
-        var query = "SELECT * FROM sync_queue WHERE timestamp > ? ORDER BY timestamp ASC LIMIT ?";
-        var rows = db.prepare(query).all(since, this.config.batchSize);
+        const query = 'SELECT * FROM sync_queue WHERE timestamp > ? ORDER BY timestamp ASC LIMIT ?';
+        const rows = db.prepare(query).all(since, this.config.batchSize);
         
         rows.forEach(function(row) {
           changes.push({
@@ -56,11 +56,11 @@ module.exports = {
   },
   
   queueChange: function(db, table, operation, recordId, data) {
-    var timestamp = new Date().toISOString();
+    const timestamp = new Date().toISOString();
     
     if (db && db.run) {
       try {
-        var sql = "INSERT INTO sync_queue (table, operation, record_id, data, timestamp) VALUES (?, ?, ?, ?, ?)";
+        const sql = 'INSERT INTO sync_queue (table, operation, record_id, data, timestamp) VALUES (?, ?, ?, ?, ?)';
         db.run(sql, [table, operation, recordId, JSON.stringify(data), timestamp]);
         
         this.state.pendingChanges.push({
@@ -80,11 +80,11 @@ module.exports = {
   },
   
   sync: function(ctx) {
-    var self = this;
-    var db = ctx.db;
-    var cloudEndpoint = ctx.config.cloudEndpoint;
+    const self = this;
+    const db = ctx.db;
+    const cloudEndpoint = ctx.config.cloudEndpoint;
     
-    var result = {
+    const result = {
       timestamp: new Date().toISOString(),
       status: 'idle',
       uploaded: 0,
@@ -104,11 +104,11 @@ module.exports = {
     result.status = 'syncing';
     this.state.syncStatus = 'syncing';
     
-    var since = this.state.lastSync || new Date(0).toISOString();
-    var changes = this.getPendingChanges(db, since);
+    const since = this.state.lastSync || new Date(0).toISOString();
+    const changes = this.getPendingChanges(db, since);
     
     if (changes.length > 0 && cloudEndpoint) {
-      var uploaded = 0;
+      let uploaded = 0;
       
       changes.forEach(function(change) {
         if (change.error) {
@@ -117,7 +117,7 @@ module.exports = {
         }
         
         try {
-          var synced = self.uploadChange(cloudEndpoint, change);
+          const synced = self.uploadChange(cloudEndpoint, change);
           if (synced.ok) {
             uploaded++;
             self.markSynced(db, change.id);
@@ -136,7 +136,7 @@ module.exports = {
     }
     
     if (cloudEndpoint) {
-      var downloaded = this.downloadChanges(cloudEndpoint, since);
+      const downloaded = this.downloadChanges(cloudEndpoint, since);
       result.downloaded = downloaded.count;
       this.state.stats.downloaded += downloaded.count;
       
@@ -165,13 +165,13 @@ module.exports = {
   markSynced: function(db, changeId) {
     if (db && db.run) {
       try {
-        db.run("DELETE FROM sync_queue WHERE id = ?", [changeId]);
+        db.run('DELETE FROM sync_queue WHERE id = ?', [changeId]);
       } catch (e) {}
     }
   },
   
   resolveConflict: function(db, localChange, serverVersion) {
-    var resolution = this.config.conflictResolution;
+    const resolution = this.config.conflictResolution;
     
     if (resolution === 'last-write-wins') {
       return { resolved: true, strategy: 'server-wins' };
@@ -184,21 +184,21 @@ module.exports = {
     if (!db || !db.run) return { ok: false };
     
     try {
-      var table = change.table;
-      var recordId = change.recordId;
-      var data = change.data;
-      var operation = change.operation;
+      const table = change.table;
+      const recordId = change.recordId;
+      const data = change.data;
+      const operation = change.operation;
       
       switch (operation) {
-        case 'INSERT':
-          db.run("INSERT OR REPLACE INTO " + table + " VALUES (?, ?, ?)", [recordId, JSON.stringify(data), new Date().toISOString()]);
-          break;
-        case 'UPDATE':
-          db.run("UPDATE " + table + " SET data = ?, updated = ? WHERE id = ?", [JSON.stringify(data), new Date().toISOString(), recordId]);
-          break;
-        case 'DELETE':
-          db.run("DELETE FROM " + table + " WHERE id = ?", [recordId]);
-          break;
+      case 'INSERT':
+        db.run('INSERT OR REPLACE INTO ' + table + ' VALUES (?, ?, ?)', [recordId, JSON.stringify(data), new Date().toISOString()]);
+        break;
+      case 'UPDATE':
+        db.run('UPDATE ' + table + ' SET data = ?, updated = ? WHERE id = ?', [JSON.stringify(data), new Date().toISOString(), recordId]);
+        break;
+      case 'DELETE':
+        db.run('DELETE FROM ' + table + ' WHERE id = ?', [recordId]);
+        break;
       }
       
       return { ok: true };

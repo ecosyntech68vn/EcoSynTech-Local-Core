@@ -132,11 +132,11 @@ module.exports = {
   
   getResponse: function(guide) {
     return {
-      message: `📖 **HƯỚNG DẪN CÀI ĐẶT**\n\n` +
+      message: '📖 **HƯỚNG DẪN CÀI ĐẶT**\n\n' +
         `⏱️ Thời gian: ${guide.duration}\n` +
         `📊 Độ khó: ${guide.difficulty}\n\n` +
         guide.steps.map(s => `${s.step}. ${s.icon} ${s.title}`).join('\n') + '\n\n' +
-        `❓ Cần hỗ trợ? Gọi: 1900 xxxx`,
+        '❓ Cần hỗ trợ? Gọi: 1900 xxxx',
       guide: guide
     };
   }

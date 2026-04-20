@@ -12,7 +12,7 @@ module.exports = {
       ok: true,
       action: attempts < 3 ? 'retry' : 'escalate',
       attempts,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

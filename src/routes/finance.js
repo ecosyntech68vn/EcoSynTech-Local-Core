@@ -89,15 +89,15 @@ async function updateMonthlySummary(farmId, date) {
   if (!date) return;
   const [year, month] = date.split('-').map(Number);
   const income = getOne(
-    "SELECT SUM(amount) as total FROM finance WHERE type = 'income' AND farm_id = ? AND strftime('%Y', date) = ? AND strftime('%m', date) = ?",
+    'SELECT SUM(amount) as total FROM finance WHERE type = \'income\' AND farm_id = ? AND strftime(\'%Y\', date) = ? AND strftime(\'%m\', date) = ?',
     [farmId, year.toString(), month.toString().padStart(2, '0')]
   );
   const expenses = getOne(
-    "SELECT SUM(amount) as total FROM finance WHERE type = 'expense' AND farm_id = ? AND strftime('%Y', date) = ? AND strftime('%m', date) = ?",
+    'SELECT SUM(amount) as total FROM finance WHERE type = \'expense\' AND farm_id = ? AND strftime(\'%Y\', date) = ? AND strftime(\'%m\', date) = ?',
     [farmId, year.toString(), month.toString().padStart(2, '0')]
   );
   const workersCost = getOne(
-    "SELECT SUM(daily_rate) as total FROM finance WHERE category = 'workers' AND farm_id = ? AND strftime('%Y', date) = ? AND strftime('%m', date) = ?",
+    'SELECT SUM(daily_rate) as total FROM finance WHERE category = \'workers\' AND farm_id = ? AND strftime(\'%Y\', date) = ? AND strftime(\'%m\', date) = ?',
     [farmId, year.toString(), month.toString().padStart(2, '0')]
   );
   
@@ -116,11 +116,11 @@ router.get('/report', auth, async (req, res) => {
     const currentMonth = parseInt(month || new Date().getMonth() + 1);
     
     const incomeByCategory = getAll(
-      "SELECT category, SUM(amount) as total FROM finance WHERE type = 'income' AND farm_id = ? AND strftime('%Y', date) = ? AND strftime('%m', date) = ? GROUP BY category",
+      'SELECT category, SUM(amount) as total FROM finance WHERE type = \'income\' AND farm_id = ? AND strftime(\'%Y\', date) = ? AND strftime(\'%m\', date) = ? GROUP BY category',
       [farm_id, currentYear.toString(), currentMonth.toString().padStart(2, '0')]
     );
     const expenseByCategory = getAll(
-      "SELECT category, SUM(amount) as total FROM finance WHERE type = 'expense' AND farm_id = ? AND strftime('%Y', date) = ? AND strftime('%m', date) = ? GROUP BY category",
+      'SELECT category, SUM(amount) as total FROM finance WHERE type = \'expense\' AND farm_id = ? AND strftime(\'%Y\', date) = ? AND strftime(\'%m\', date) = ? GROUP BY category',
       [farm_id, currentYear.toString(), currentMonth.toString().padStart(2, '0')]
     );
     

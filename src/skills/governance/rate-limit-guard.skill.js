@@ -12,7 +12,7 @@ module.exports = {
       ok,
       rate,
       recommendation: ok ? 'Rate is within normal range.' : 'Consider temporary throttling or queueing.',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

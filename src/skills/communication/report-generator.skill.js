@@ -5,27 +5,27 @@ module.exports = {
   riskLevel: 'low',
   canAutoFix: false,
   run: function(ctx) {
-    var stateStore = ctx.stateStore;
-    var baseUrl = ctx.baseUrl || 'http://localhost:3000';
+    const stateStore = ctx.stateStore;
+    const baseUrl = ctx.baseUrl || 'http://localhost:3000';
     
-    var period = ctx.event.period || 'daily';
-    var alerts = stateStore.get('alerts') || [];
-    var incidents = stateStore.get('incidents') || [];
-    var sensors = stateStore.get('sensors') || {};
-    var beats = stateStore.get('beats') || {};
+    const period = ctx.event.period || 'daily';
+    const alerts = stateStore.get('alerts') || [];
+    const incidents = stateStore.get('incidents') || [];
+    const sensors = stateStore.get('sensors') || {};
+    const beats = stateStore.get('beats') || {};
     
-    var filterTime = period === 'daily' ? 86400000 : (period === 'weekly' ? 604800000 : 2592000000);
-    var recentAlerts = alerts.filter(function(a) { return Date.now() - a.ts < filterTime; });
-    var recentIncidents = incidents.filter(function(i) { return Date.now() - new Date(i.createdAt).getTime() < filterTime; });
+    const filterTime = period === 'daily' ? 86400000 : (period === 'weekly' ? 604800000 : 2592000000);
+    const recentAlerts = alerts.filter(function(a) { return Date.now() - a.ts < filterTime; });
+    const recentIncidents = incidents.filter(function(i) { return Date.now() - new Date(i.createdAt).getTime() < filterTime; });
     
-    var sensorKeys = Object.keys(sensors);
-    var avgTemp = 0;
+    const sensorKeys = Object.keys(sensors);
+    let avgTemp = 0;
     if (sensors.temperature) avgTemp = sensors.temperature;
     
-    var wsHealthy = !beats.websocket || (Date.now() - beats.websocket < 60000);
-    var mqttHealthy = !beats.mqtt || (Date.now() - beats.mqtt < 90000);
+    const wsHealthy = !beats.websocket || (Date.now() - beats.websocket < 60000);
+    const mqttHealthy = !beats.mqtt || (Date.now() - beats.mqtt < 90000);
     
-    var summary = {
+    const summary = {
       period: period,
       generatedAt: new Date().toISOString(),
       summary: {
@@ -35,16 +35,16 @@ module.exports = {
         avgTemperature: avgTemp,
         websocketStatus: wsHealthy ? 'online' : 'offline',
         mqttStatus: mqttHealthy ? 'online' : 'offline',
-        uptime: process.uptime(),
+        uptime: process.uptime()
       },
       alerts: recentAlerts.slice(0, 10),
-      incidents: recentIncidents.slice(0, 5),
+      incidents: recentIncidents.slice(0, 5)
     };
     
     return {
       ok: true,
       report: summary,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

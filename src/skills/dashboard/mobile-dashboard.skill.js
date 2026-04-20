@@ -12,11 +12,11 @@ module.exports = {
   canAutoFix: false,
   
   run: function(ctx) {
-    var event = ctx.event || {};
-    var action = event.action || 'dashboard';
-    var stateStore = ctx.stateStore;
+    const event = ctx.event || {};
+    const action = event.action || 'dashboard';
+    const stateStore = ctx.stateStore;
     
-    var result = {
+    const result = {
       ok: true,
       action: action,
       timestamp: new Date().toISOString(),
@@ -24,32 +24,32 @@ module.exports = {
     };
     
     switch (action) {
-      case 'dashboard':
-        result.dashboard = this.getDashboard(stateStore);
-        break;
+    case 'dashboard':
+      result.dashboard = this.getDashboard(stateStore);
+      break;
         
-      case 'summary':
-        result.summary = this.getSummary(stateStore);
-        break;
+    case 'summary':
+      result.summary = this.getSummary(stateStore);
+      break;
         
-      case 'alerts':
-        result.alerts = this.getAlerts(stateStore);
-        break;
+    case 'alerts':
+      result.alerts = this.getAlerts(stateStore);
+      break;
         
-      case 'sensors':
-        result.sensors = this.getSensors(stateStore);
-        break;
+    case 'sensors':
+      result.sensors = this.getSensors(stateStore);
+      break;
         
-      case 'stats':
-        result.stats = this.getStats(stateStore);
-        break;
+    case 'stats':
+      result.stats = this.getStats(stateStore);
+      break;
         
-      case 'recommendations':
-        result.recommendations = this.getRecommendations(stateStore);
-        break;
+    case 'recommendations':
+      result.recommendations = this.getRecommendations(stateStore);
+      break;
         
-      default:
-        result.dashboard = this.getDashboard(stateStore);
+    default:
+      result.dashboard = this.getDashboard(stateStore);
     }
     
     return result;
@@ -85,7 +85,7 @@ module.exports = {
   },
   
   getSummary: function(stateStore) {
-    var sensors = stateStore ? stateStore.get('sensors_summary') : null;
+    const sensors = stateStore ? stateStore.get('sensors_summary') : null;
     
     return {
       totalSensors: sensors ? sensors.count : 0,
@@ -97,7 +97,7 @@ module.exports = {
   },
   
   getAlerts: function(stateStore) {
-    var alerts = stateStore ? stateStore.get('alerts') : [];
+    const alerts = stateStore ? stateStore.get('alerts') : [];
     
     return {
       count: alerts.length,
@@ -107,7 +107,7 @@ module.exports = {
   },
   
   getSensors: function(stateStore) {
-    var sensors = stateStore ? stateStore.get('sensors') : [];
+    const sensors = stateStore ? stateStore.get('sensors') : [];
     
     return {
       count: sensors.length,
@@ -127,7 +127,7 @@ module.exports = {
   },
   
   getRecommendations: function(stateStore) {
-    var recommendations = [
+    const recommendations = [
       { type: 'water', message: 'Độ ẩm đất thấp - nên tưới nước', priority: 'high' },
       { type: 'fertilizer', message: 'Cần bón phân cho cây trồng', priority: 'medium' },
       { type: 'weather', message: 'Dự báo mưa - chuẩn bị thu hoạch', priority: 'low' }

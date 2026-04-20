@@ -12,11 +12,11 @@ module.exports = {
   canAutoFix: false,
   
   run: function(ctx) {
-    var event = ctx.event || {};
-    var action = event.action || 'calculate';
-    var inputs = event.inputs || event;
+    const event = ctx.event || {};
+    const action = event.action || 'calculate';
+    const inputs = event.inputs || event;
     
-    var result = {
+    const result = {
       ok: true,
       action: action,
       timestamp: new Date().toISOString(),
@@ -24,45 +24,45 @@ module.exports = {
     };
     
     switch (action) {
-      case 'calculate':
-      case 'estimate':
-        result.calculation = this.calculate(inputs);
-        break;
+    case 'calculate':
+    case 'estimate':
+      result.calculation = this.calculate(inputs);
+      break;
         
-      case 'roi':
-        result.roi = this.calculateROI(inputs);
-        break;
+    case 'roi':
+      result.roi = this.calculateROI(inputs);
+      break;
         
-      case 'breakdown':
-        result.breakdown = this.getCostBreakdown(inputs);
-        break;
+    case 'breakdown':
+      result.breakdown = this.getCostBreakdown(inputs);
+      break;
         
-      case 'compare':
-        result.comparison = this.compareOptions(inputs);
-        break;
+    case 'compare':
+      result.comparison = this.compareOptions(inputs);
+      break;
         
-      case 'summary':
-        result.summary = this.getSummary(inputs);
-        break;
+    case 'summary':
+      result.summary = this.getSummary(inputs);
+      break;
         
-      default:
-        result.calculation = this.calculate(inputs);
+    default:
+      result.calculation = this.calculate(inputs);
     }
     
     return result;
   },
   
   calculate: function(inputs) {
-    var sensorCount = inputs.sensorCount || 5;
-    var farmArea = inputs.farmArea || 1000;
-    var cropType = inputs.cropType || 'vegetables';
+    const sensorCount = inputs.sensorCount || 5;
+    const farmArea = inputs.farmArea || 1000;
+    const cropType = inputs.cropType || 'vegetables';
     
-    var cost = this.getCosts(sensorCount, farmArea, cropType);
+    const cost = this.getCosts(sensorCount, farmArea, cropType);
     
-    var annualRevenue = this.getAnnualRevenue(farmArea, cropType);
-    var annualCost = this.getAnnualOperatingCost(farmArea, cropType);
-    var annualProfit = annualRevenue - annualCost;
-    var paybackMonths = cost.totalInvestment > 0 && annualProfit > 0 
+    const annualRevenue = this.getAnnualRevenue(farmArea, cropType);
+    const annualCost = this.getAnnualOperatingCost(farmArea, cropType);
+    const annualProfit = annualRevenue - annualCost;
+    const paybackMonths = cost.totalInvestment > 0 && annualProfit > 0 
       ? Math.ceil((cost.totalInvestment / annualProfit) * 12) 
       : 0;
     
@@ -78,18 +78,18 @@ module.exports = {
   },
   
   getCosts: function(sensorCount, farmArea, cropType) {
-    var sensorPrice = 500000;
-    var gatewayPrice = 2000000;
-    var installationCost = sensorCount * 100000;
-    var softwareFee = 500000;
-    var trainingFee = 300000;
+    const sensorPrice = 500000;
+    const gatewayPrice = 2000000;
+    const installationCost = sensorCount * 100000;
+    const softwareFee = 500000;
+    const trainingFee = 300000;
     
-    var hardware = (sensorPrice * sensorCount) + gatewayPrice;
-    var installation = installationCost + softwareFee + trainingFee;
-    var totalInvestment = hardware + installation;
+    const hardware = (sensorPrice * sensorCount) + gatewayPrice;
+    const installation = installationCost + softwareFee + trainingFee;
+    const totalInvestment = hardware + installation;
     
-    var monthlyCloud = 100000;
-    var monthlyMaintenance = 200000;
+    const monthlyCloud = 100000;
+    const monthlyMaintenance = 200000;
     
     return {
       hardware: hardware,
@@ -103,7 +103,7 @@ module.exports = {
   },
   
   getAnnualRevenue: function(farmArea, cropType) {
-    var revenuePerSqm = {
+    const revenuePerSqm = {
       vegetables: 180000,
       fruits: 250000,
       rice: 120000,
@@ -115,7 +115,7 @@ module.exports = {
   },
   
   getAnnualOperatingCost: function(farmArea, cropType) {
-    var costPerSqm = {
+    const costPerSqm = {
       vegetables: 90000,
       fruits: 130000,
       rice: 70000,
@@ -127,15 +127,15 @@ module.exports = {
   },
   
   calculateROI: function(inputs) {
-    var calculation = this.calculate(inputs);
+    const calculation = this.calculate(inputs);
     
-    var yearlyProfit = calculation.annualProfit;
-    var investment = calculation.costs.totalInvestment;
-    var yearlyCost = calculation.costs.yearlyTotal;
+    const yearlyProfit = calculation.annualProfit;
+    const investment = calculation.costs.totalInvestment;
+    const yearlyCost = calculation.costs.yearlyTotal;
     
-    var netProfit = yearlyProfit - yearlyCost;
-    var roi = investment > 0 ? ((netProfit / investment) * 100).toFixed(1) + '%' : '0%';
-    var npv = netProfit > 0 ? 'positive' : 'negative';
+    const netProfit = yearlyProfit - yearlyCost;
+    const roi = investment > 0 ? ((netProfit / investment) * 100).toFixed(1) + '%' : '0%';
+    const npv = netProfit > 0 ? 'positive' : 'negative';
     
     return {
       investment: investment,
@@ -150,7 +150,7 @@ module.exports = {
   },
   
   getCostBreakdown: function(inputs) {
-    var cost = this.getCosts(inputs.sensorCount || 5, inputs.farmArea || 1000, inputs.cropType || 'vegetables');
+    const cost = this.getCosts(inputs.sensorCount || 5, inputs.farmArea || 1000, inputs.cropType || 'vegetables');
     
     return {
       chiPhíĐầuTư: {
@@ -169,14 +169,14 @@ module.exports = {
   },
   
   compareOptions: function(inputs) {
-    var options = [
+    const options = [
       { name: 'Cơ bản', sensors: 3, features: ['Giám sát cơ bản', 'Cảnh báo'] },
       { name: 'Tiêu chuẩn', sensors: 5, features: ['Giám sát đầy đủ', 'AI predictions', 'Tự động hóa'] },
       { name: 'Nâng cao', sensors: 10, features: ['Full automation', 'AI RAG', 'Predictive maintenance', 'Blockchain'] }
     ];
     
-    var comparisons = options.map(function(opt) {
-      var calc = this.calculate({
+    const comparisons = options.map(function(opt) {
+      const calc = this.calculate({
         sensorCount: opt.sensors,
         farmArea: inputs.farmArea || 1000,
         cropType: inputs.cropType || 'vegetables'
@@ -197,7 +197,7 @@ module.exports = {
   },
   
   getSummary: function(inputs) {
-    var roi = this.calculateROI(inputs);
+    const roi = this.calculateROI(inputs);
     
     return {
       'Tổng đầu tư': roi.investment + ' VNĐ',

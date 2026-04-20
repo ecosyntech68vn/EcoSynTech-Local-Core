@@ -1,9 +1,9 @@
-var config = require('../config');
+const config = require('../config');
 
-var BC_ENABLED = false;
+let BC_ENABLED = false;
 
 function init() {
-  var bcConfig = config.blockchain || {};
+  const bcConfig = config.blockchain || {};
   BC_ENABLED = bcConfig.enabled === true;
 }
 

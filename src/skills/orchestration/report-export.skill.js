@@ -25,7 +25,7 @@ module.exports = {
       dashboard,
       kpis,
       exportData,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

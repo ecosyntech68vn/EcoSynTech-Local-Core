@@ -12,7 +12,7 @@ module.exports = {
       deviceId,
       action: 'reset-device',
       requiresApproval: true,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

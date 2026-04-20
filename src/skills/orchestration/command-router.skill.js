@@ -14,7 +14,7 @@ module.exports = {
       command,
       action: 'route-command',
       requiresApproval: true,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

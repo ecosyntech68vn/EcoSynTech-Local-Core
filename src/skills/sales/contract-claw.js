@@ -137,13 +137,13 @@ module.exports = {
   
   generateOrderConfirmation: function(contract) {
     return {
-      message: `✅ **XÁC NHẬN ĐẶT HÀNG**\n\n` +
+      message: '✅ **XÁC NHẬN ĐẶT HÀNG**\n\n' +
         `Mã hợp đồng: ${contract.number}\n\n` +
         `📦 Gói: ${contract.package.name}\n` +
         `💰 Tổng: ${this.formatPrice(contract.pricing.total)}\n` +
         `📅 Ngày tạo: ${new Date(contract.createdAt).toLocaleDateString('vi-VN')}\n\n` +
-        `Vui lòng thanh toán để xác nhận đơn hàng!\n\n` +
-        `📱 Liên hệ: 1900 xxxx`,
+        'Vui lòng thanh toán để xác nhận đơn hàng!\n\n' +
+        '📱 Liên hệ: 1900 xxxx',
       contract: contract
     };
   }

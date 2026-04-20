@@ -11,7 +11,7 @@ module.exports = {
       ok: true,
       target,
       action: 'dispatch-webhook',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

@@ -5,12 +5,12 @@ module.exports = {
   riskLevel: 'medium',
   canAutoFix: false,
   run: function(ctx) {
-    var stateStore = ctx.stateStore;
-    var deviceHistory = stateStore.get('deviceHistory') || {};
+    const stateStore = ctx.stateStore;
+    const deviceHistory = stateStore.get('deviceHistory') || {};
     
-    var deviceId = ctx.event.deviceId || ctx.event.device || 'main';
-    var status = ctx.event.status || 'online';
-    var responseTime = ctx.event.responseTime || 0;
+    const deviceId = ctx.event.deviceId || ctx.event.device || 'main';
+    const status = ctx.event.status || 'online';
+    const responseTime = ctx.event.responseTime || 0;
     
     if (!deviceHistory[deviceId]) {
       deviceHistory[deviceId] = {
@@ -18,11 +18,11 @@ module.exports = {
         slowResponses: 0,
         lastFailure: null,
         lastStatus: 'unknown',
-        uptime: Date.now(),
+        uptime: Date.now()
       };
     }
     
-    var dh = deviceHistory[deviceId];
+    const dh = deviceHistory[deviceId];
     dh.lastStatus = status;
     
     if (status === 'offline' || status === 'error') {
@@ -36,12 +36,12 @@ module.exports = {
     
     stateStore.set('deviceHistory', deviceHistory);
     
-    var failureRate = dh.failures / ((Date.now() - dh.uptime) / 3600000);
-    var healthScore = 100 - (failureRate * 20) - (dh.slowResponses * 2);
+    const failureRate = dh.failures / ((Date.now() - dh.uptime) / 3600000);
+    let healthScore = 100 - (failureRate * 20) - (dh.slowResponses * 2);
     healthScore = Math.max(0, Math.min(100, healthScore));
     
-    var prediction = 'healthy';
-    var recommendation = 'Device operating normally';
+    let prediction = 'healthy';
+    let recommendation = 'Device operating normally';
     
     if (healthScore < 30) {
       prediction = 'critical';
@@ -59,7 +59,7 @@ module.exports = {
       failures: dh.failures,
       slowResponses: dh.slowResponses,
       recommendation: recommendation,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

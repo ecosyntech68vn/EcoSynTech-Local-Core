@@ -79,7 +79,7 @@ function withCircuitBreaker(fn, options = {}) {
   let failures = 0;
   let isOpen = false;
   let lastFailure = null;
-  let resetTimer = null;
+  const resetTimer = null;
 
   return async (...args) => {
     if (isOpen) {

@@ -9,7 +9,7 @@ module.exports = {
       ok: true,
       action: 'evaluate-schedules',
       note: 'Run scheduled jobs, maintenance windows, and timed notifications.',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

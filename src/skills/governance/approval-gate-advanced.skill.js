@@ -17,7 +17,7 @@ module.exports = {
       action,
       risk,
       required: !approved,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

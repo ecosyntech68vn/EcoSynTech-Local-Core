@@ -24,7 +24,7 @@ class AIEngine {
 
   async getSoilMoisture(farmId) {
     try {
-      const sensor = getOne("SELECT value FROM sensors WHERE type = 'soil'");
+      const sensor = getOne('SELECT value FROM sensors WHERE type = \'soil\'');
       return sensor?.value || 30;
     } catch (e) {
       return 30;
@@ -129,7 +129,7 @@ class AIEngine {
         `INSERT INTO recommendations (id, farm_id, category, title, detail, priority, status, suggested_action, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))`,
         [recId, farmId, 'fertilization', 'Khuyến nghị bón phân', reason, priority, 'open',
-         JSON.stringify({ action: 'fertilize', type: fertilizerType, amount })]
+          JSON.stringify({ action: 'fertilize', type: fertilizerType, amount })]
       );
     }
 
@@ -146,8 +146,8 @@ class AIEngine {
   async detectAnomalies(farmId) {
     const anomalies = [];
     try {
-      const sensors = getAll("SELECT * FROM sensors");
-      const devices = getOne("SELECT COUNT(*) as total, SUM(CASE WHEN status = 'online' THEN 1 ELSE 0 END) as online FROM devices");
+      const sensors = getAll('SELECT * FROM sensors');
+      const devices = getOne('SELECT COUNT(*) as total, SUM(CASE WHEN status = \'online\' THEN 1 ELSE 0 END) as online FROM devices');
 
       for (const sensor of sensors) {
         if (sensor.type === 'soil' && sensor.value < 10) {
@@ -207,7 +207,7 @@ class AIEngine {
   }
 
   async predictYield(farmId) {
-    const sensors = getAll("SELECT type, value FROM sensors");
+    const sensors = getAll('SELECT type, value FROM sensors');
     const soilMoisture = sensors.find(s => s.type === 'soil')?.value || 30;
     const temp = sensors.find(s => s.type === 'temperature')?.value || 28;
     const humidity = sensors.find(s => s.type === 'humidity')?.value || 70;
@@ -256,7 +256,7 @@ class AIEngine {
   }
 
   async diseaseRiskScore(farmId) {
-    const sensors = getAll("SELECT type, value FROM sensors");
+    const sensors = getAll('SELECT type, value FROM sensors');
     const humidity = sensors.find(s => s.type === 'humidity')?.value || 70;
     const temp = sensors.find(s => s.type === 'temperature')?.value || 28;
 
@@ -302,11 +302,11 @@ class AIEngine {
   async generateSummary(farmId, period = 'daily') {
     try {
       const totalDevices = getOne('SELECT COUNT(*) as count FROM devices');
-      const onlineDevices = getOne("SELECT COUNT(*) as count FROM devices WHERE status = 'online'");
-      const activeRules = getOne("SELECT COUNT(*) as count FROM rules WHERE enabled = 1");
-      const pendingAlerts = getOne("SELECT COUNT(*) as count FROM alerts WHERE acknowledged = 0");
-      const pendingRecs = getOne("SELECT COUNT(*) as count FROM recommendations WHERE status = 'open'");
-      const anomalies = getOne("SELECT COUNT(*) as count FROM anomalies WHERE status = 'open'");
+      const onlineDevices = getOne('SELECT COUNT(*) as count FROM devices WHERE status = \'online\'');
+      const activeRules = getOne('SELECT COUNT(*) as count FROM rules WHERE enabled = 1');
+      const pendingAlerts = getOne('SELECT COUNT(*) as count FROM alerts WHERE acknowledged = 0');
+      const pendingRecs = getOne('SELECT COUNT(*) as count FROM recommendations WHERE status = \'open\'');
+      const anomalies = getOne('SELECT COUNT(*) as count FROM anomalies WHERE status = \'open\'');
 
       const summary = {
         period,

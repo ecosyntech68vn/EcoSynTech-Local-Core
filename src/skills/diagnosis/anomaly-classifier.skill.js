@@ -22,7 +22,7 @@ module.exports = {
       severity,
       entity: data.deviceId || data.sensor || data.type || 'system',
       observedValue: Number.isNaN(value) ? null : value,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

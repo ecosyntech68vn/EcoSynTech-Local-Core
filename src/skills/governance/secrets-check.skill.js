@@ -12,7 +12,7 @@ module.exports = {
     return {
       ok: findings.length === 0,
       findings: findings.map(([k]) => ({ key: k, issue: 'placeholder or weak secret detected' })),
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

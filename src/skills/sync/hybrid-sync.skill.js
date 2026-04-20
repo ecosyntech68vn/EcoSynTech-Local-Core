@@ -14,15 +14,15 @@ module.exports = {
   canAutoFix: true,
   
   run: function(ctx) {
-    var event = ctx.event || {};
-    var action = event.action || 'sync';
-    var stateStore = ctx.stateStore;
-    var db = ctx.db;
+    const event = ctx.event || {};
+    const action = event.action || 'sync';
+    const stateStore = ctx.stateStore;
+    const db = ctx.db;
     
-    var syncModule = ctx.hybridSync || require('../../modules/hybrid-sync.js');
-    var instance = syncModule.init ? syncModule.init(ctx) : syncModule;
+    const syncModule = ctx.hybridSync || require('../../modules/hybrid-sync.js');
+    const instance = syncModule.init ? syncModule.init(ctx) : syncModule;
     
-    var result = {
+    const result = {
       ok: true,
       action: action,
       timestamp: new Date().toISOString(),
@@ -30,33 +30,33 @@ module.exports = {
     };
     
     switch (action) {
-      case 'sync':
-        result.sync = instance.sync(ctx);
-        result.status = instance.getSyncStatus();
-        break;
+    case 'sync':
+      result.sync = instance.sync(ctx);
+      result.status = instance.getSyncStatus();
+      break;
         
-      case 'status':
-        result.status = instance.getSyncStatus();
-        result.stats = instance.getStats();
-        break;
+    case 'status':
+      result.status = instance.getSyncStatus();
+      result.stats = instance.getStats();
+      break;
         
-      case 'queue':
-        result.queued = instance.queueChange(
-          db,
-          event.table || 'readings',
-          event.operation || 'INSERT',
-          event.recordId || event.id,
-          event.data || {}
-        );
-        break;
+    case 'queue':
+      result.queued = instance.queueChange(
+        db,
+        event.table || 'readings',
+        event.operation || 'INSERT',
+        event.recordId || event.id,
+        event.data || {}
+      );
+      break;
         
-      case 'check':
-        result.online = instance.isOnline();
-        result.status = instance.getSyncStatus();
-        break;
+    case 'check':
+      result.online = instance.isOnline();
+      result.status = instance.getSyncStatus();
+      break;
         
-      default:
-        result.status = 'Use action: sync, status, queue, or check';
+    default:
+      result.status = 'Use action: sync, status, queue, or check';
     }
     
     return result;

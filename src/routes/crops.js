@@ -180,7 +180,7 @@ router.post('/plantings', auth, async (req, res) => {
     const { db } = require('../config/database');
     db.run(`INSERT INTO crop_plantings (id, farm_id, crop_id, area, area_unit, planting_date, expected_harvest_date, yield_expected, notes, current_stage)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'gieo_hat')`,
-      [id, farm_id || null, crop_id, area || null, area_unit || 'hectare', plantingDate, expected_harvest_date || null, yield_expected || null, notes || null]
+    [id, farm_id || null, crop_id, area || null, area_unit || 'hectare', plantingDate, expected_harvest_date || null, yield_expected || null, notes || null]
     );
     
     const planting = getOne('SELECT * FROM crop_plantings WHERE id = ?', [id]);
@@ -205,7 +205,7 @@ router.put('/plantings/:id', auth, async (req, res) => {
                current_stage = COALESCE(?, current_stage), yield_expected = COALESCE(?, yield_expected),
                yield_actual = COALESCE(?, yield_actual), notes = COALESCE(?, notes), updated_at = CURRENT_TIMESTAMP
            WHERE id = ?`,
-      [area, area_unit, planting_date, expected_harvest_date, actual_harvest_date, status, current_stage, yield_expected, yield_actual, notes, req.params.id]
+    [area, area_unit, planting_date, expected_harvest_date, actual_harvest_date, status, current_stage, yield_expected, yield_actual, notes, req.params.id]
     );
     
     const planting = getOne('SELECT * FROM crop_plantings WHERE id = ?', [req.params.id]);
@@ -248,7 +248,7 @@ router.get('/analyze/crop/:cropId', auth, async (req, res) => {
       assessment: {
         temperature: {
           status: currentTemp >= crop.optimal_temp_min && currentTemp <= crop.optimal_temp_max ? 'optimal' : 
-                  currentTemp < crop.min_temp ? 'too_cold' : 'too_hot',
+            currentTemp < crop.min_temp ? 'too_cold' : 'too_hot',
           value: currentTemp,
           optimal_range: `${crop.optimal_temp_min}-${crop.optimal_temp_max}`,
           min: crop.min_temp,
@@ -261,7 +261,7 @@ router.get('/analyze/crop/:cropId', auth, async (req, res) => {
         },
         soil_moisture: {
           status: currentSoilMoisture >= crop.min_soil_moisture && currentSoilMoisture <= crop.max_soil_moisture ? 'optimal' : 
-                  currentSoilMoisture < crop.min_soil_moisture ? 'too_dry' : 'too_wet',
+            currentSoilMoisture < crop.min_soil_moisture ? 'too_dry' : 'too_wet',
           value: currentSoilMoisture,
           optimal_range: `${crop.min_soil_moisture}-${crop.max_soil_moisture}%`
         }

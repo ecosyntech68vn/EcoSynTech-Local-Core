@@ -33,16 +33,16 @@ module.exports = {
   
   sendToChannel: async function(channel, notification) {
     switch (channel) {
-      case 'push':
-        return this.sendPush(notification);
-      case 'email':
-        return this.sendEmail(notification);
-      case 'sms':
-        return this.sendSMS(notification);
-      case 'telegram':
-        return this.sendTelegram(notification);
-      default:
-        return { success: false, error: 'Unknown channel' };
+    case 'push':
+      return this.sendPush(notification);
+    case 'email':
+      return this.sendEmail(notification);
+    case 'sms':
+      return this.sendSMS(notification);
+    case 'telegram':
+      return this.sendTelegram(notification);
+    default:
+      return { success: false, error: 'Unknown channel' };
     }
   },
   

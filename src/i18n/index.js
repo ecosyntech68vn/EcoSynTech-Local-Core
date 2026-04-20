@@ -1,16 +1,16 @@
-var fs = require('fs');
-var path = require('path');
+const fs = require('fs');
+const path = require('path');
 
-var SUPPORTED_LANGUAGES = {
+const SUPPORTED_LANGUAGES = {
   'vi': { name: 'Tiếng Việt', native: 'Tiếng Việt', code: 'vi' },
   'en': { name: 'English', native: 'English', code: 'en' },
-  'zh': { name: '中文', native: 'Chinese', code: 'zh' },
+  'zh': { name: '中文', native: 'Chinese', code: 'zh' }
 };
 
-var DEFAULT_LANGUAGE = 'vi';
+const DEFAULT_LANGUAGE = 'vi';
 
-var translationCache = {};
-var currentLanguage = DEFAULT_LANGUAGE;
+const translationCache = {};
+let currentLanguage = DEFAULT_LANGUAGE;
 
 function setLanguage(lang) {
   if (SUPPORTED_LANGUAGES[lang]) {
@@ -29,9 +29,9 @@ function getSupportedLanguages() {
 }
 
 function t(key, params) {
-  var lang = currentLanguage;
-  var translations = translationCache[lang] || {};
-  var text = translations[key] || key;
+  const lang = currentLanguage;
+  let translations = translationCache[lang] || {};
+  let text = translations[key] || key;
 
   if (!text || text === key) {
     if (lang !== DEFAULT_LANGUAGE) {
@@ -41,7 +41,7 @@ function t(key, params) {
   }
 
   if (params) {
-    for (var p in params) {
+    for (const p in params) {
       text = text.replace(new RegExp('\\{' + p + '\\}', 'g'), params[p]);
     }
   }
@@ -64,10 +64,10 @@ function loadTranslations(lang, dir) {
     dir = path.join(process.cwd(), 'src', 'i18n');
   }
 
-  var filePath = path.join(dir, lang + '.json');
+  const filePath = path.join(dir, lang + '.json');
   try {
     if (fs.existsSync(filePath)) {
-      var content = fs.readFileSync(filePath, 'utf8');
+      const content = fs.readFileSync(filePath, 'utf8');
       translationCache[lang] = JSON.parse(content);
       return true;
     }
@@ -78,7 +78,7 @@ function loadTranslations(lang, dir) {
 }
 
 function loadAllTranslations() {
-  for (var lang in SUPPORTED_LANGUAGES) {
+  for (const lang in SUPPORTED_LANGUAGES) {
     loadTranslations(lang);
   }
 }
@@ -86,9 +86,9 @@ function loadAllTranslations() {
 function detectLanguage(acceptHeader) {
   if (!acceptHeader) return DEFAULT_LANGUAGE;
 
-  var langs = acceptHeader.split(',');
-  for (var i = 0; i < langs.length; i++) {
-    var lang = langs[i].split(';')[0].trim().toLowerCase();
+  const langs = acceptHeader.split(',');
+  for (let i = 0; i < langs.length; i++) {
+    const lang = langs[i].split(';')[0].trim().toLowerCase();
     if (lang.indexOf('vi') !== -1) return 'vi';
     if (lang.indexOf('en') !== -1) return 'en';
     if (lang.indexOf('zh') !== -1 || lang.indexOf('cn') !== -1) return 'zh';
@@ -107,5 +107,5 @@ module.exports = {
   loadAllTranslations: loadAllTranslations,
   detectLanguage: detectLanguage,
   DEFAULT_LANGUAGE: DEFAULT_LANGUAGE,
-  SUPPORTED_LANGUAGES: SUPPORTED_LANGUAGES,
+  SUPPORTED_LANGUAGES: SUPPORTED_LANGUAGES
 };

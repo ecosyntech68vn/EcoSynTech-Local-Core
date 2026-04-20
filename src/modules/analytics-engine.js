@@ -154,21 +154,21 @@ module.exports = {
       let key;
       
       switch (granularity) {
-        case 'hourly':
-          key = date.toISOString().slice(0, 13) + ':00';
-          break;
-        case 'daily':
-          key = date.toISOString().slice(0, 10);
-          break;
-        case 'weekly':
-          const week = Math.ceil(date.getDate() / 7);
-          key = date.toISOString().slice(0, 4) + '-W' + week;
-          break;
-        case 'monthly':
-          key = date.toISOString().slice(0, 7);
-          break;
-        default:
-          key = date.toISOString().slice(0, 10);
+      case 'hourly':
+        key = date.toISOString().slice(0, 13) + ':00';
+        break;
+      case 'daily':
+        key = date.toISOString().slice(0, 10);
+        break;
+      case 'weekly':
+        const week = Math.ceil(date.getDate() / 7);
+        key = date.toISOString().slice(0, 4) + '-W' + week;
+        break;
+      case 'monthly':
+        key = date.toISOString().slice(0, 7);
+        break;
+      default:
+        key = date.toISOString().slice(0, 10);
       }
       
       if (!revenue[key]) {

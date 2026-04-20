@@ -5,19 +5,19 @@ module.exports = {
   riskLevel: 'low',
   canAutoFix: false,
   run: function(ctx) {
-    var TelegramNotifier = require('../../ops/advanced').TelegramNotifier;
-    var config = {
+    const TelegramNotifier = require('../../ops/advanced').TelegramNotifier;
+    const config = {
       botToken: process.env.TELEGRAM_BOT_TOKEN,
-      chatId: process.env.TELEGRAM_CHAT_ID,
+      chatId: process.env.TELEGRAM_CHAT_ID
     };
     
-    var notifier = TelegramNotifier(config);
+    const notifier = TelegramNotifier(config);
     if (!notifier.enabled) {
       return { ok: true, skipped: true, reason: 'Telegram not configured' };
     }
     
-    var event = ctx.event;
-    var severity = event.severity || 'medium';
+    const event = ctx.event;
+    const severity = event.severity || 'medium';
     
     if (event.type === 'alert.created') {
       notifier.sendAlert(event.alert || event, severity);
@@ -31,7 +31,7 @@ module.exports = {
       ok: true,
       notified: true,
       channel: 'telegram',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

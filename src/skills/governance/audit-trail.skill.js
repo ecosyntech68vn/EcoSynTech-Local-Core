@@ -14,9 +14,9 @@ module.exports = {
         actor,
         action,
         at: new Date().toISOString(),
-        source: ctx.event.source || 'ops',
+        source: ctx.event.source || 'ops'
       },
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

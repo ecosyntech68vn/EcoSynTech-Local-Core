@@ -1,27 +1,27 @@
-var fs = require('fs');
-var path = require('path');
-var crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 
 function TelegramNotifier(config) {
-  var botToken = (config && config.botToken) ? config.botToken : null;
-  var chatId = (config && config.chatId) ? config.chatId : null;
-  var enabled = botToken && chatId;
+  const botToken = (config && config.botToken) ? config.botToken : null;
+  const chatId = (config && config.chatId) ? config.chatId : null;
+  const enabled = botToken && chatId;
 
   function send(message, parseMode) {
     if (!enabled) return Promise.resolve({ ok: false, error: 'Not configured' });
 
-    var url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
-    var body = {
+    const url = 'https://api.telegram.org/bot' + botToken + '/sendMessage';
+    const body = {
       chat_id: chatId,
       text: message,
       parse_mode: parseMode || 'HTML',
-      disable_web_page_preview: true,
+      disable_web_page_preview: true
     };
 
     return fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify(body)
     }).then(function(res) {
       return res.json();
     }).catch(function(err) {
@@ -30,8 +30,8 @@ function TelegramNotifier(config) {
   }
 
   function sendAlert(alert, severity) {
-    var emoji = severity === 'critical' ? '🔴' : (severity === 'high' ? '🟠' : '🟡');
-    var msg = emoji + ' <b>ALERT</b>\n' +
+    const emoji = severity === 'critical' ? '🔴' : (severity === 'high' ? '🟠' : '🟡');
+    const msg = emoji + ' <b>ALERT</b>\n' +
       '<code>' + (alert.type || 'Unknown') + '</code>\n' +
       (alert.message || '') + '\n' +
       '<pre>' + JSON.stringify(alert, null, 2) + '</pre>';
@@ -39,7 +39,7 @@ function TelegramNotifier(config) {
   }
 
   function sendIncident(incident, action) {
-    var msg = '⚠️ <b>INCIDENT</b>\n' +
+    const msg = '⚠️ <b>INCIDENT</b>\n' +
       'ID: <code>' + incident.id + '</code>\n' +
       'Action: ' + action + '\n' +
       'Time: ' + new Date().toISOString();
@@ -47,17 +47,17 @@ function TelegramNotifier(config) {
   }
 
   function sendRecovery(action, status) {
-    var emoji = status === 'success' ? '✅' : '❌';
-    var msg = emoji + ' <b>RECOVERY</b>\n' +
+    const emoji = status === 'success' ? '✅' : '❌';
+    const msg = emoji + ' <b>RECOVERY</b>\n' +
       'Action: ' + action + '\n' +
       'Status: ' + status;
     return send(msg);
   }
 
   function sendHealthCheck(checks) {
-    var msg = '📊 <b>HEALTH CHECK</b>\n';
-    for (var key in checks) {
-      var status = checks[key] ? '🟢' : '🔴';
+    let msg = '📊 <b>HEALTH CHECK</b>\n';
+    for (const key in checks) {
+      const status = checks[key] ? '🟢' : '🔴';
       msg += status + ' ' + key + ': ' + checks[key] + '\n';
     }
     return send(msg);
@@ -69,18 +69,18 @@ function TelegramNotifier(config) {
     sendIncident: sendIncident,
     sendRecovery: sendRecovery,
     sendHealthCheck: sendHealthCheck,
-    get enabled() { return enabled; },
+    get enabled() { return enabled; }
   };
 }
 
 function RootCauseAnalyzer(stateStore, logger) {
   function analyze(error, context) {
-    var hints = [];
-    var severity = 'low';
-    var confidence = 0;
+    const hints = [];
+    let severity = 'low';
+    let confidence = 0;
 
-    var errorStr = String(error).toLowerCase();
-    var contextStr = JSON.stringify(context || {}).toLowerCase();
+    const errorStr = String(error).toLowerCase();
+    const contextStr = JSON.stringify(context || {}).toLowerCase();
 
     if (errorStr.indexOf('database') !== -1 || errorStr.indexOf('sql') !== -1) {
       hints.push('Check DB connection, query syntax, migration pending');
@@ -136,14 +136,14 @@ function RootCauseAnalyzer(stateStore, logger) {
       hints: hints,
       severity: severity,
       confidence: Math.min(confidence, 1),
-      analyzedAt: new Date().toISOString(),
+      analyzedAt: new Date().toISOString()
     };
   }
 
   function getSimilarIncidents(type, limit) {
-    var alerts = stateStore.get('alerts') || [];
-    var similar = [];
-    for (var i = 0; i < alerts.length; i++) {
+    const alerts = stateStore.get('alerts') || [];
+    const similar = [];
+    for (let i = 0; i < alerts.length; i++) {
       if (alerts[i].signature && alerts[i].signature.indexOf(type) !== -1) {
         similar.push(alerts[i]);
       }
@@ -153,30 +153,30 @@ function RootCauseAnalyzer(stateStore, logger) {
 
   return {
     analyze: analyze,
-    getSimilarIncidents: getSimilarIncidents,
+    getSimilarIncidents: getSimilarIncidents
   };
 }
 
 function AutoBackup(config, logger) {
-  var backupDir = (config && config.backupDir) ? config.backupDir : path.join(process.cwd(), 'data', 'backups');
-  var maxBackups = (config && config.maxBackups) ? config.maxBackups : 10;
+  const backupDir = (config && config.backupDir) ? config.backupDir : path.join(process.cwd(), 'data', 'backups');
+  const maxBackups = (config && config.maxBackups) ? config.maxBackups : 10;
 
   function createBackup(label) {
-    var timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    var backupFile = path.join(backupDir, 'backup-' + timestamp + '-' + (label || 'manual') + '.json');
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupFile = path.join(backupDir, 'backup-' + timestamp + '-' + (label || 'manual') + '.json');
 
     try {
       fs.mkdirSync(backupDir, { recursive: true });
 
-      var backupData = {
+      const backupData = {
         timestamp: new Date().toISOString(),
         label: label || 'auto',
         version: require('./package.json').version,
         state: {
           beats: null,
           alerts: [],
-          incidents: [],
-        },
+          incidents: []
+        }
       };
 
       fs.writeFileSync(backupFile, JSON.stringify(backupData, null, 2));
@@ -202,7 +202,7 @@ function AutoBackup(config, logger) {
         return { ok: false, error: 'File not found' };
       }
 
-      var data = JSON.parse(fs.readFileSync(backupFile, 'utf8'));
+      const data = JSON.parse(fs.readFileSync(backupFile, 'utf8'));
 
       if (logger && logger.info) {
         logger.info('[Backup] Restored from: ' + backupFile);
@@ -215,7 +215,7 @@ function AutoBackup(config, logger) {
   }
 
   function restoreFromLatest() {
-    var files = listBackups();
+    const files = listBackups();
     if (files.length === 0) {
       return { ok: false, error: 'No backups found' };
     }
@@ -225,7 +225,7 @@ function AutoBackup(config, logger) {
   function listBackups() {
     try {
       if (!fs.existsSync(backupDir)) return [];
-      var files = fs.readdirSync(backupDir);
+      let files = fs.readdirSync(backupDir);
       files = files.filter(function(f) { return f.endsWith('.json'); });
       files = files.map(function(f) { return path.join(backupDir, f); });
       files.sort().reverse();
@@ -236,9 +236,9 @@ function AutoBackup(config, logger) {
   }
 
   function cleanupOldBackups() {
-    var files = listBackups();
+    const files = listBackups();
     while (files.length > maxBackups) {
-      var oldest = files.pop();
+      const oldest = files.pop();
       try {
         fs.unlinkSync(oldest);
         if (logger && logger.info) {
@@ -249,12 +249,12 @@ function AutoBackup(config, logger) {
   }
 
   function getBackupInfo() {
-    var files = listBackups();
+    const files = listBackups();
     return {
       count: files.length,
       latest: files[0] || null,
       directory: backupDir,
-      max: maxBackups,
+      max: maxBackups
     };
   }
 
@@ -263,34 +263,34 @@ function AutoBackup(config, logger) {
     restoreFromBackup: restoreFromBackup,
     restoreFromLatest: restoreFromLatest,
     listBackups: listBackups,
-    getBackupInfo: getBackupInfo,
+    getBackupInfo: getBackupInfo
   };
 }
 
 function VulnerabilityScanner(logger) {
-  var knownPatterns = [
+  const knownPatterns = [
     { pattern: /eval\s*\(/, severity: 'high', name: 'Code injection risk (eval)' },
     { pattern: /exec\s*\(/, severity: 'high', name: 'Command injection risk (exec)' },
     { pattern: /password\s*=\s*['"][^'"]+['"]/, severity: 'medium', name: 'Hardcoded password' },
     { pattern: /secret\s*=\s*['"][^'"]+['"]/, severity: 'medium', name: 'Hardcoded secret' },
     { pattern: /WHERE.*=\s*['"][^'"]*['"]/i, severity: 'medium', name: 'SQL injection risk' },
     { pattern: /\.join\s*\([^,)]+\)/, severity: 'low', name: 'Path traversal risk' },
-    { pattern: /process\.env\.[A-Z_]+/, severity: 'low', name: 'Sensitive env access' },
+    { pattern: /process\.env\.[A-Z_]+/, severity: 'low', name: 'Sensitive env access' }
   ];
 
   function scanFile(filePath) {
     try {
-      var content = fs.readFileSync(filePath, 'utf8');
-      var findings = [];
+      const content = fs.readFileSync(filePath, 'utf8');
+      const findings = [];
 
-      for (var i = 0; i < knownPatterns.length; i++) {
-        var p = knownPatterns[i];
-        var match = content.match(p.pattern);
+      for (let i = 0; i < knownPatterns.length; i++) {
+        const p = knownPatterns[i];
+        const match = content.match(p.pattern);
         if (match) {
           findings.push({
             pattern: p.name,
             severity: p.severity,
-            line: content.substring(0, match.index).split('\n').length,
+            line: content.substring(0, match.index).split('\n').length
           });
         }
       }
@@ -298,7 +298,7 @@ function VulnerabilityScanner(logger) {
       return {
         file: filePath,
         findings: findings,
-        scannedAt: new Date().toISOString(),
+        scannedAt: new Date().toISOString()
       };
     } catch (err) {
       return { file: filePath, error: err.message };
@@ -307,20 +307,20 @@ function VulnerabilityScanner(logger) {
 
   function scanDirectory(dir, extensions) {
     extensions = extensions || ['.js'];
-    var files = [];
-    var results = [];
+    const files = [];
+    const results = [];
 
     function walk(d) {
       try {
-        var entries = fs.readdirSync(d);
-        for (var i = 0; i < entries.length; i++) {
-          var entry = entries[i];
-          var fullPath = path.join(d, entry);
-          var stat = fs.statSync(fullPath);
+        const entries = fs.readdirSync(d);
+        for (let i = 0; i < entries.length; i++) {
+          const entry = entries[i];
+          const fullPath = path.join(d, entry);
+          const stat = fs.statSync(fullPath);
           if (stat.isDirectory() && !entry.startsWith('.')) {
             walk(fullPath);
           } else {
-            for (var j = 0; j < extensions.length; j++) {
+            for (let j = 0; j < extensions.length; j++) {
               if (entry.endsWith(extensions[j])) {
                 files.push(fullPath);
                 break;
@@ -333,8 +333,8 @@ function VulnerabilityScanner(logger) {
 
     walk(dir);
 
-    for (var k = 0; k < files.length; k++) {
-      var result = scanFile(files[k]);
+    for (let k = 0; k < files.length; k++) {
+      const result = scanFile(files[k]);
       if (result.findings && result.findings.length > 0) {
         results.push(result);
       }
@@ -345,18 +345,18 @@ function VulnerabilityScanner(logger) {
 
   return {
     scanFile: scanFile,
-    scanDirectory: scanDirectory,
+    scanDirectory: scanDirectory
   };
 }
 
 function IntrusionDetector(logger) {
-  var failedLogins = {};
-  var suspiciousIPs = {};
-  var blockedIPs = {};
-  var thresholds = {
+  const failedLogins = {};
+  const suspiciousIPs = {};
+  const blockedIPs = {};
+  const thresholds = {
     maxFailedLogins: 5,
     maxRequestsPerMinute: 100,
-    blockDuration: 300000,
+    blockDuration: 300000
   };
 
   function recordLoginAttempt(ip, success) {
@@ -395,7 +395,7 @@ function IntrusionDetector(logger) {
   }
 
   function isBlocked(ip) {
-    var blocked = blockedIPs[ip];
+    const blocked = blockedIPs[ip];
     if (!blocked) return false;
 
     if (Date.now() - blocked.blockedAt > thresholds.blockDuration) {
@@ -411,7 +411,7 @@ function IntrusionDetector(logger) {
       suspicious: Object.keys(suspiciousIPs).filter(function(ip) {
         return suspiciousIPs[ip].count > thresholds.maxRequestsPerMinute * 0.5;
       }),
-      failedLogins: Object.keys(failedLogins),
+      failedLogins: Object.keys(failedLogins)
     };
   }
 
@@ -421,23 +421,23 @@ function IntrusionDetector(logger) {
     blockIP: blockIP,
     unblockIP: unblockIP,
     isBlocked: isBlocked,
-    getThreats: getThreats,
+    getThreats: getThreats
   };
 }
 
 function SessionGuard(logger) {
-  var sessions = {};
-  var maxSessions = 1000;
-  var sessionTimeout = 3600000;
+  const sessions = {};
+  const maxSessions = 1000;
+  const sessionTimeout = 3600000;
 
   function createSession(userId, metadata) {
-    var sessionId = crypto.randomBytes(32).toString('hex');
+    const sessionId = crypto.randomBytes(32).toString('hex');
 
     sessions[sessionId] = {
       userId: userId,
       created: Date.now(),
       lastActivity: Date.now(),
-      metadata: metadata || {},
+      metadata: metadata || {}
     };
 
     if (Object.keys(sessions).length > maxSessions) {
@@ -448,7 +448,7 @@ function SessionGuard(logger) {
   }
 
   function validateSession(sessionId) {
-    var session = sessions[sessionId];
+    const session = sessions[sessionId];
     if (!session) return false;
 
     if (Date.now() - session.lastActivity > sessionTimeout) {
@@ -465,8 +465,8 @@ function SessionGuard(logger) {
   }
 
   function cleanupOldSessions() {
-    var now = Date.now();
-    for (var id in sessions) {
+    const now = Date.now();
+    for (const id in sessions) {
       if (now - sessions[id].lastActivity > sessionTimeout) {
         delete sessions[id];
       }
@@ -481,7 +481,7 @@ function SessionGuard(logger) {
     createSession: createSession,
     validateSession: validateSession,
     destroySession: destroySession,
-    getActiveSessions: getActiveSessions,
+    getActiveSessions: getActiveSessions
   };
 }
 
@@ -491,5 +491,5 @@ module.exports = {
   AutoBackup: AutoBackup,
   VulnerabilityScanner: VulnerabilityScanner,
   IntrusionDetector: IntrusionDetector,
-  SessionGuard: SessionGuard,
+  SessionGuard: SessionGuard
 };

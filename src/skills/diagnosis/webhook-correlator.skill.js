@@ -13,7 +13,7 @@ module.exports = {
       type: payload.type || payload.eventType || 'unknown',
       deviceId: payload.deviceId || payload.id || null,
       ruleId: payload.ruleId || null,
-      scheduleId: payload.scheduleId || null,
+      scheduleId: payload.scheduleId || null
     });
 
     return {
@@ -21,7 +21,7 @@ module.exports = {
       fingerprint,
       source,
       payloadSummary: { keys: Object.keys(payload || {}) },
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

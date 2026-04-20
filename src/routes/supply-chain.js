@@ -119,7 +119,7 @@ router.get('/stats/summary', auth, async (req, res) => {
     const byStatus = getAll('SELECT status, COUNT(*) as count FROM supply_chain GROUP BY status');
     const thisMonth = new Date().toISOString().slice(0, 7);
     const monthly = getOne(
-      "SELECT COUNT(*) as count FROM supply_chain WHERE created_at LIKE ?",
+      'SELECT COUNT(*) as count FROM supply_chain WHERE created_at LIKE ?',
       [thisMonth + '%']
     );
     

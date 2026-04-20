@@ -5,18 +5,18 @@ module.exports = {
   riskLevel: 'low',
   canAutoFix: false,
   run: function(ctx) {
-    var fs = require('fs');
-    var path = require('path');
+    const fs = require('fs');
+    const path = require('path');
     
-    var backupDir = path.join(process.cwd(), 'data', 'backups');
+    const backupDir = path.join(process.cwd(), 'data', 'backups');
     try {
       fs.mkdirSync(backupDir, { recursive: true });
-      var timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      var file = path.join(backupDir, 'backup-' + timestamp + '.json');
-      var data = {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const file = path.join(backupDir, 'backup-' + timestamp + '.json');
+      const data = {
         timestamp: new Date().toISOString(),
         label: 'scheduled',
-        version: ctx.packageVersion,
+        version: ctx.packageVersion
       };
       fs.writeFileSync(file, JSON.stringify(data, null, 2));
       
@@ -25,14 +25,14 @@ module.exports = {
         backupCreated: true,
         file: file,
         totalBackups: 1,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       };
     } catch (err) {
       return {
         ok: false,
         error: err.message,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       };
     }
-  },
+  }
 };

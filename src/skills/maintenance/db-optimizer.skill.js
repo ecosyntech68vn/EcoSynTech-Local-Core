@@ -5,33 +5,33 @@ module.exports = {
   riskLevel: 'low',
   canAutoFix: true,
   run: function(ctx) {
-    var fs = require('fs');
-    var path = require('path');
+    const fs = require('fs');
+    const path = require('path');
 
-    var dbPath = path.join(process.cwd(), 'data', 'ecosyntech.db');
-    var indexPath = path.join(process.cwd(), 'data', 'index.json');
+    const dbPath = path.join(process.cwd(), 'data', 'ecosyntech.db');
+    const indexPath = path.join(process.cwd(), 'data', 'index.json');
 
     if (!fs.existsSync(dbPath)) {
       return { ok: true, skipped: true, reason: 'No database found' };
     }
 
-    var stats = {
+    const stats = {
       dbSize: 0,
       indexSize: 0,
-      optimizationRate: 0,
+      optimizationRate: 0
     };
 
     try {
-      var dbStat = fs.statSync(dbPath);
+      const dbStat = fs.statSync(dbPath);
       stats.dbSize = dbStat.size;
 
       if (fs.existsSync(indexPath)) {
-        var indexStat = fs.statSync(indexPath);
+        const indexStat = fs.statSync(indexPath);
         stats.indexSize = indexStat.size;
       }
 
       // Estimate optimization (simplified)
-      var optimalSize = stats.dbSize * 0.7;
+      const optimalSize = stats.dbSize * 0.7;
       if (stats.dbSize > 10 * 1024 * 1024) {
         stats.optimizationRate = 15;
       } else if (stats.dbSize > 5 * 1024 * 1024) {
@@ -40,7 +40,7 @@ module.exports = {
         stats.optimizationRate = 5;
       }
 
-      var recommendation = stats.dbSize > 10 * 1024 * 1024 
+      const recommendation = stats.dbSize > 10 * 1024 * 1024 
         ? 'Consider backup and recreate database'
         : 'Database healthy';
 
@@ -50,10 +50,10 @@ module.exports = {
         indexSize: (stats.indexSize / 1024).toFixed(2) + ' KB',
         optimizationRate: stats.optimizationRate + '%',
         recommendation: recommendation,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       };
     } catch (e) {
       return { ok: false, error: e.message };
     }
-  },
+  }
 };

@@ -13,7 +13,7 @@ module.exports = {
       ok: true,
       alertId: alert.id || null,
       action: shouldAck ? 'acknowledge' : 'leave-open',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

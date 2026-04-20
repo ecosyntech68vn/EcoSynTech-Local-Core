@@ -13,12 +13,12 @@ module.exports = {
   canAutoFix: true,
   
   run: function(ctx) {
-    var event = ctx.event || {};
-    var action = event.action || 'setup';
-    var stateStore = ctx.stateStore;
-    var db = ctx.db;
+    const event = ctx.event || {};
+    const action = event.action || 'setup';
+    const stateStore = ctx.stateStore;
+    const db = ctx.db;
     
-    var result = {
+    const result = {
       ok: true,
       action: action,
       timestamp: new Date().toISOString(),
@@ -27,35 +27,35 @@ module.exports = {
     };
     
     switch (action) {
-      case 'setup':
-        result.configs = this.setupOptimizations(db);
-        result.status = 'SQLite optimized for IoT';
-        break;
+    case 'setup':
+      result.configs = this.setupOptimizations(db);
+      result.status = 'SQLite optimized for IoT';
+      break;
         
-      case 'optimize':
-        result.configs = this.runOptimizations(db);
-        result.status = 'Optimizations applied';
-        break;
+    case 'optimize':
+      result.configs = this.runOptimizations(db);
+      result.status = 'Optimizations applied';
+      break;
         
-      case 'cleanup':
-        result.deleted = this.cleanupOldData(stateStore, db, event.keep || 10000);
-        result.status = 'Old data cleaned';
-        break;
+    case 'cleanup':
+      result.deleted = this.cleanupOldData(stateStore, db, event.keep || 10000);
+      result.status = 'Old data cleaned';
+      break;
         
-      case 'backup':
-        result.backup = this.backupDatabase(stateStore, db);
-        result.status = 'Backup created';
-        break;
+    case 'backup':
+      result.backup = this.backupDatabase(stateStore, db);
+      result.status = 'Backup created';
+      break;
         
-      default:
-        result.status = 'Use action: setup, optimize, cleanup, or backup';
+    default:
+      result.status = 'Use action: setup, optimize, cleanup, or backup';
     }
     
     return result;
   },
   
   setupOptimizations: function(db) {
-    var configs = [
+    const configs = [
       { pragma: 'journal_mode', value: 'WAL', description: 'Write-Ahead Logging for better concurrency' },
       { pragma: 'synchronous', value: 'NORMAL', description: 'Balance performance and safety' },
       { pragma: 'cache_size', value: '-64000', description: '64MB cache' },
@@ -81,7 +81,7 @@ module.exports = {
   },
   
   runOptimizations: function(db) {
-    var optimizations = [
+    const optimizations = [
       'ANALYZE',
       'REINDEX',
       'VACUUM'
@@ -102,19 +102,19 @@ module.exports = {
   
   cleanupOldData: function(stateStore, db, keep) {
     keep = keep || 10000;
-    var deleted = 0;
+    let deleted = 0;
     
     if (db && db.run) {
       try {
-        var sensorIds = "SELECT DISTINCT sensor_id FROM readings";
-        var sensorList = db.prepare(sensorIds).all();
+        const sensorIds = 'SELECT DISTINCT sensor_id FROM readings';
+        const sensorList = db.prepare(sensorIds).all();
         
         sensorList.forEach(function(row) {
-          var countQuery = "SELECT COUNT(*) as cnt FROM readings WHERE sensor_id = ?";
-          var count = db.prepare(countQuery).get(row.sensor_id);
+          const countQuery = 'SELECT COUNT(*) as cnt FROM readings WHERE sensor_id = ?';
+          const count = db.prepare(countQuery).get(row.sensor_id);
           
           if (count.cnt > keep) {
-            var deleteQuery = "DELETE FROM readings WHERE sensor_id = ? AND rowid IN (SELECT rowid FROM readings WHERE sensor_id = ? ORDER BY timestamp ASC LIMIT ?)";
+            const deleteQuery = 'DELETE FROM readings WHERE sensor_id = ? AND rowid IN (SELECT rowid FROM readings WHERE sensor_id = ? ORDER BY timestamp ASC LIMIT ?)';
             db.run(deleteQuery, [row.sensor_id, row.sensor_id, count.cnt - keep]);
             deleted += count.cnt - keep;
           }
@@ -128,10 +128,10 @@ module.exports = {
   },
   
   backupDatabase: function(stateStore, db) {
-    var timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    var backupName = 'ecosyntech_backup_' + timestamp + '.db';
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const backupName = 'ecosyntech_backup_' + timestamp + '.db';
     
-    var backup = {
+    const backup = {
       timestamp: timestamp,
       name: backupName,
       status: 'ready',
@@ -139,7 +139,7 @@ module.exports = {
     };
     
     if (stateStore) {
-      var backups = stateStore.get('db_backups') || [];
+      let backups = stateStore.get('db_backups') || [];
       backups.unshift(backup);
       if (backups.length > 10) backups = backups.slice(0, 10);
       stateStore.set('db_backups', backups);

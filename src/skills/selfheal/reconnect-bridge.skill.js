@@ -12,7 +12,7 @@ module.exports = {
       channel,
       action: 'reconnect',
       recommendation: `Restart ${channel} bridge and rebind subscriptions.`,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

@@ -42,7 +42,7 @@ module.exports = {
     
     let segment = 'unknown';
     let intent = 'inquiry';
-    let products = [];
+    const products = [];
     let urgency = 'medium';
     let score = 50;
     

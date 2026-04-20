@@ -5,24 +5,24 @@ module.exports = {
   riskLevel: 'low',
   canAutoFix: false,
   run: function(ctx) {
-    var stateStore = ctx.stateStore;
-    var uptime = process.uptime();
-    var mem = process.memoryUsage();
+    const stateStore = ctx.stateStore;
+    const uptime = process.uptime();
+    const mem = process.memoryUsage();
     
-    var beats = stateStore.get('beats') || {};
-    var alerts = stateStore.get('alerts') || [];
-    var incidents = stateStore.get('incidents') || [];
+    const beats = stateStore.get('beats') || {};
+    const alerts = stateStore.get('alerts') || [];
+    const incidents = stateStore.get('incidents') || [];
     
-    var wsBeat = beats.websocket;
-    var mqttBeat = beats.mqtt;
-    var wsStale = wsBeat ? Date.now() - wsBeat > 60000 : true;
-    var mqttStale = mqttBeat ? Date.now() - mqttBeat > 90000 : true;
+    const wsBeat = beats.websocket;
+    const mqttBeat = beats.mqtt;
+    const wsStale = wsBeat ? Date.now() - wsBeat > 60000 : true;
+    const mqttStale = mqttBeat ? Date.now() - mqttBeat > 90000 : true;
     
-    var recentAlerts = alerts.filter(function(a) { return Date.now() - a.ts < 3600000; }).length;
-    var recentIncidents = incidents.filter(function(i) { return Date.now() - new Date(i.createdAt).getTime() < 3600000; }).length;
+    const recentAlerts = alerts.filter(function(a) { return Date.now() - a.ts < 3600000; }).length;
+    const recentIncidents = incidents.filter(function(i) { return Date.now() - new Date(i.createdAt).getTime() < 3600000; }).length;
     
-    var memUsage = mem.heapUsed / mem.heapTotal;
-    var score = 100;
+    const memUsage = mem.heapUsed / mem.heapTotal;
+    let score = 100;
     
     if (wsStale) score -= 10;
     if (mqttStale) score -= 10;
@@ -33,7 +33,7 @@ module.exports = {
     
     score = Math.max(0, score);
     
-    var status = score >= 80 ? 'healthy' : (score >= 50 ? 'warning' : 'critical');
+    const status = score >= 80 ? 'healthy' : (score >= 50 ? 'warning' : 'critical');
     
     return {
       ok: score >= 50,
@@ -45,7 +45,7 @@ module.exports = {
       mqttHealthy: !mqttStale,
       alertsLastHour: recentAlerts,
       incidentsLastHour: recentIncidents,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

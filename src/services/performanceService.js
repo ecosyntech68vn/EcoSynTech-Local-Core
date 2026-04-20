@@ -30,20 +30,20 @@ async function getDashboardOverview(farmId = null) {
   if (cached) return cached;
 
   const deviceQuery = farmId 
-    ? `SELECT COUNT(*) as total, SUM(CASE WHEN status = 'online' THEN 1 ELSE 0 END) as online FROM devices WHERE farm_id = ?`
-    : `SELECT COUNT(*) as total, SUM(CASE WHEN status = 'online' THEN 1 ELSE 0 END) as online FROM devices`;
+    ? 'SELECT COUNT(*) as total, SUM(CASE WHEN status = \'online\' THEN 1 ELSE 0 END) as online FROM devices WHERE farm_id = ?'
+    : 'SELECT COUNT(*) as total, SUM(CASE WHEN status = \'online\' THEN 1 ELSE 0 END) as online FROM devices';
   
   const devices = getOne(deviceQuery, farmId ? [farmId] : []);
   
   const sensorQuery = farmId
-    ? `SELECT s.type, AVG(s.value) as value, s.unit, s.timestamp FROM sensors s JOIN devices d ON s.device_id = d.id WHERE d.farm_id = ? GROUP BY s.type`
-    : `SELECT type, AVG(value) as value, unit, MAX(timestamp) as timestamp FROM sensors GROUP BY type`;
+    ? 'SELECT s.type, AVG(s.value) as value, s.unit, s.timestamp FROM sensors s JOIN devices d ON s.device_id = d.id WHERE d.farm_id = ? GROUP BY s.type'
+    : 'SELECT type, AVG(value) as value, unit, MAX(timestamp) as timestamp FROM sensors GROUP BY type';
   
   const sensors = getAll(sensorQuery, farmId ? [farmId] : []);
   
   const alertQuery = farmId
-    ? `SELECT COUNT(*) as total, SUM(CASE WHEN acknowledged = 0 THEN 1 ELSE 0 END) as pending FROM alerts WHERE farm_id = ?`
-    : `SELECT COUNT(*) as total, SUM(CASE WHEN acknowledged = 0 THEN 1 ELSE 0 END) as pending FROM alerts`;
+    ? 'SELECT COUNT(*) as total, SUM(CASE WHEN acknowledged = 0 THEN 1 ELSE 0 END) as pending FROM alerts WHERE farm_id = ?'
+    : 'SELECT COUNT(*) as total, SUM(CASE WHEN acknowledged = 0 THEN 1 ELSE 0 END) as pending FROM alerts';
   
   const alerts = getOne(alertQuery, farmId ? [farmId] : []);
 
@@ -76,8 +76,8 @@ async function getSensorDataByZone(zoneId = null) {
   if (cached) return cached;
 
   const query = zoneId
-    ? `SELECT s.*, d.name as device_name FROM sensors s JOIN devices d ON s.device_id = d.id WHERE d.zone_id = ? ORDER BY s.timestamp DESC LIMIT 50`
-    : `SELECT s.*, d.name as device_name FROM sensors s JOIN devices d ON s.device_id = d.id ORDER BY s.timestamp DESC LIMIT 50`;
+    ? 'SELECT s.*, d.name as device_name FROM sensors s JOIN devices d ON s.device_id = d.id WHERE d.zone_id = ? ORDER BY s.timestamp DESC LIMIT 50'
+    : 'SELECT s.*, d.name as device_name FROM sensors s JOIN devices d ON s.device_id = d.id ORDER BY s.timestamp DESC LIMIT 50';
 
   const sensors = getAll(query, zoneId ? [zoneId] : []);
 
@@ -104,7 +104,7 @@ async function getAlertsQuick(limit = 10) {
   if (cached) return cached;
 
   const alerts = getAll(
-    `SELECT a.*, d.name as device_name FROM alerts a LEFT JOIN devices d ON a.device_id = d.id ORDER BY a.created_at DESC LIMIT ?`,
+    'SELECT a.*, d.name as device_name FROM alerts a LEFT JOIN devices d ON a.device_id = d.id ORDER BY a.created_at DESC LIMIT ?',
     [limit]
   );
 

@@ -143,15 +143,15 @@ async function getIncidentById(id) {
 
 async function getIncidentStats() {
   const bySeverity = getAll(
-    `SELECT severity, COUNT(*) as count FROM security_incidents GROUP BY severity`
+    'SELECT severity, COUNT(*) as count FROM security_incidents GROUP BY severity'
   );
   
   const byStatus = getAll(
-    `SELECT status, COUNT(*) as count FROM security_incidents GROUP BY status`
+    'SELECT status, COUNT(*) as count FROM security_incidents GROUP BY status'
   );
   
   const last30Days = getOne(
-    `SELECT COUNT(*) as count FROM security_incidents WHERE created_at >= datetime('now', '-30 days')`
+    'SELECT COUNT(*) as count FROM security_incidents WHERE created_at >= datetime(\'now\', \'-30 days\')'
   );
   
   return {

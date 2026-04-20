@@ -13,7 +13,7 @@ module.exports = {
       tenantId,
       path,
       note: 'Verify tenant scoping in every query and device lookup.',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

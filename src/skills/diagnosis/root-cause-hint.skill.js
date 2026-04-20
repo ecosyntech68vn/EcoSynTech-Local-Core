@@ -22,7 +22,7 @@ module.exports = {
       ok: true,
       hints,
       summary: hints.length ? hints[0] : 'No immediate root-cause hint available.',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

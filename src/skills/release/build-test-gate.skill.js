@@ -7,7 +7,7 @@ function runCmd(cmd, args, cwd = process.cwd()) {
         ok: !error,
         code: error?.code ?? 0,
         stdout: stdout?.toString() || '',
-        stderr: stderr?.toString() || '',
+        stderr: stderr?.toString() || ''
       });
     });
   });
@@ -24,7 +24,7 @@ module.exports = {
     const steps = [
       ['npm', ['run', 'build']],
       ['npm', ['test']],
-      ['npm', ['run', 'lint']],
+      ['npm', ['run', 'lint']]
     ];
 
     const results = [];
@@ -37,7 +37,7 @@ module.exports = {
     return {
       ok: results.every(r => r.ok),
       results,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

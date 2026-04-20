@@ -5,24 +5,24 @@ module.exports = {
   riskLevel: 'medium',
   canAutoFix: true,
   run: function(ctx) {
-    var stateStore = ctx.stateStore;
-    var config = ctx.config || {};
+    const stateStore = ctx.stateStore;
+    const config = ctx.config || {};
     
-    var powerLevel = stateStore.get('powerLevel') || 100;
-    var batteryMode = stateStore.get('batteryMode') || 'normal';
-    var currentInterval = config.opsSchedulerInterval || 600000;
+    const powerLevel = stateStore.get('powerLevel') || 100;
+    const batteryMode = stateStore.get('batteryMode') || 'normal';
+    const currentInterval = config.opsSchedulerInterval || 600000;
     
-    var ecoConfig = {
+    const ecoConfig = {
       critical: { interval: 3600000, backup: 43200000, sample: 0.3 },
       low: { interval: 1800000, backup: 21600000, sample: 0.5 },
-      normal: { interval: 600000, backup: 10800000, sample: 1 },
+      normal: { interval: 600000, backup: 10800000, sample: 1 }
     };
     
-    var mode = 'normal';
-    var action = 'none';
-    var newInterval = currentInterval;
-    var newBackupInterval = 10800000;
-    var sampleRate = 1;
+    let mode = 'normal';
+    let action = 'none';
+    let newInterval = currentInterval;
+    let newBackupInterval = 10800000;
+    let sampleRate = 1;
     
     if (powerLevel < 20) {
       mode = 'critical';
@@ -57,7 +57,7 @@ module.exports = {
       sampleRate: sampleRate,
       previousInterval: currentInterval,
       powerLevel: powerLevel,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

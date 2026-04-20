@@ -5,16 +5,16 @@ module.exports = {
   riskLevel: 'low',
   canAutoFix: false,
   run: function(ctx) {
-    var event = ctx.event;
-    var severity = event.severity || 'medium';
-    var message = event.message || event.alert || event.type || 'Alert';
+    const event = ctx.event;
+    const severity = event.severity || 'medium';
+    const message = event.message || event.alert || event.type || 'Alert';
     
-    var messageStr = String(message);
+    let messageStr = String(message);
     if (messageStr.length > 200) {
       messageStr = messageStr.substring(0, 197) + '...';
     }
     
-    var priority = 'default';
+    let priority = 'default';
     if (severity === 'critical') priority = 'urgent';
     else if (severity === 'high') priority = 'urgent';
     
@@ -24,7 +24,7 @@ module.exports = {
       message: messageStr,
       voicePriority: priority,
       language: 'vi-VN',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

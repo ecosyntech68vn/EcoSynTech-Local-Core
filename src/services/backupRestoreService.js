@@ -127,7 +127,7 @@ async function verifyBackup(backupPath) {
     }
 
     const db = new SQL.Database(data);
-    const tables = db.exec("SELECT name FROM sqlite_master WHERE type='table'");
+    const tables = db.exec('SELECT name FROM sqlite_master WHERE type=\'table\'');
 
     db.close();
 

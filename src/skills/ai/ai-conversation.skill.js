@@ -16,13 +16,13 @@ module.exports = {
   maxHistoryPerUser: 10,
   
   run: function(ctx) {
-    var event = ctx.event || {};
-    var action = event.action || 'chat';
-    var userId = event.userId || 'default';
-    var message = event.message || event.text || '';
-    var stateStore = ctx.stateStore;
+    const event = ctx.event || {};
+    const action = event.action || 'chat';
+    const userId = event.userId || 'default';
+    const message = event.message || event.text || '';
+    const stateStore = ctx.stateStore;
     
-    var result = {
+    const result = {
       ok: true,
       action: action,
       userId: userId,
@@ -33,47 +33,47 @@ module.exports = {
     };
     
     switch (action) {
-      case 'chat':
-      case 'talk':
-      case 'ask':
-        var history = this.getHistory(userId, stateStore);
-        var context = this.buildContext(history);
-        var intent = this.detectIntent(message, context);
+    case 'chat':
+    case 'talk':
+    case 'ask':
+      var history = this.getHistory(userId, stateStore);
+      var context = this.buildContext(history);
+      var intent = this.detectIntent(message, context);
         
-        result.intent = intent.type;
-        result.entities = intent.entities;
-        result.reply = this.generateReply(message, intent, context, event.lang || 'vi');
-        result.suggestions = this.getSuggestions(intent.type, message, event.lang || 'vi');
-        result.contextUsed = history.length;
+      result.intent = intent.type;
+      result.entities = intent.entities;
+      result.reply = this.generateReply(message, intent, context, event.lang || 'vi');
+      result.suggestions = this.getSuggestions(intent.type, message, event.lang || 'vi');
+      result.contextUsed = history.length;
         
-        this.addToHistory(userId, message, result.reply, stateStore);
-        break;
+      this.addToHistory(userId, message, result.reply, stateStore);
+      break;
         
-      case 'reply':
-        result.reply = this.generateReply(message, {type: 'general'}, [], event.lang || 'vi');
-        break;
+    case 'reply':
+      result.reply = this.generateReply(message, { type: 'general' }, [], event.lang || 'vi');
+      break;
         
-      case 'clear':
-        this.clearHistory(userId, stateStore);
-        result.reply = 'Đã xóa lịch sử cuộc trò chuyện.';
-        break;
+    case 'clear':
+      this.clearHistory(userId, stateStore);
+      result.reply = 'Đã xóa lịch sử cuộc trò chuyện.';
+      break;
         
-      case 'history':
-        var hist = this.getHistory(userId, stateStore);
-        result.history = hist;
-        result.reply = 'Có ' + hist.length + ' tin nhắn trong lịch sử.';
-        break;
+    case 'history':
+      var hist = this.getHistory(userId, stateStore);
+      result.history = hist;
+      result.reply = 'Có ' + hist.length + ' tin nhắn trong lịch sử.';
+      break;
         
-      default:
-        result.reply = 'Có thể nói chuyện với tôi. Hỏi về ECOSYNTECH nhé!';
+    default:
+      result.reply = 'Có thể nói chuyện với tôi. Hỏi về ECOSYNTECH nhé!';
     }
     
     return result;
   },
   
   detectIntent: function(message, context) {
-    var msgLower = message.toLowerCase();
-    var intent = { type: 'general', entities: {} };
+    const msgLower = message.toLowerCase();
+    const intent = { type: 'general', entities: {} };
     
     if (msgLower.indexOf('giá') !== -1 || msgLower.indexOf('bao nhiêu') !== -1 || msgLower.indexOf('tiền') !== -1) {
       intent.type = 'pricing';
@@ -98,24 +98,24 @@ module.exports = {
     } else if (msgLower.indexOf('AI') !== -1 || msgLower.indexOf('thông minh') !== -1) {
       intent.type = 'ai';
     } else if (context.length > 0) {
-      var lastIntent = context[context.length - 1]?.intent;
+      const lastIntent = context[context.length - 1]?.intent;
       if (lastIntent && msgLower.indexOf('?') === -1 && msgLower.length < 50) {
         intent.type = 'answer_to_previous';
         intent.previousIntent = lastIntent;
       }
     }
     
-    var cropMatch = message.match(/(rau muống|rau cải|cà chua|dưa leo|cá|thịt)/i);
+    const cropMatch = message.match(/(rau muống|rau cải|cà chua|dưa leo|cá|thịt)/i);
     if (cropMatch) {
       intent.entities.crop = cropMatch[1];
     }
     
-    var deviceMatch = message.match(/(máy bơm|đèn|quạt|relay)/i);
+    const deviceMatch = message.match(/(máy bơm|đèn|quạt|relay)/i);
     if (deviceMatch) {
       intent.entities.device = deviceMatch[1];
     }
     
-    var thresholdMatch = message.match(/(\d+)(%|độ)?/);
+    const thresholdMatch = message.match(/(\d+)(%|độ)?/);
     if (thresholdMatch) {
       intent.entities.threshold = thresholdMatch[1];
     }
@@ -124,7 +124,7 @@ module.exports = {
   },
   
   generateReply: function(message, intent, context, lang) {
-    var replies = {
+    const replies = {
       vi: {
         greeting: 'Chào quý khách! Tôi là trợ lý ảo của ECOSYNTECH. Có thể giúp gì về hệ thống nông nghiệp thông minh?',
         pricing: 'Giá ECOSYNTECH: Free (0đ), Basic 99K/tháng, Pro 299K/tháng. Năm đầu chỉ cần mua thiết bị 300-500K. Khác biệt là backend và database hoàn toàn miễn phí!',
@@ -172,7 +172,7 @@ module.exports = {
       }
     };
     
-    var langReplies = replies[lang] || replies.vi;
+    const langReplies = replies[lang] || replies.vi;
     
     if (intent.type === 'general' && intent.entities.crop) {
       return langReplies[lang].crop;
@@ -182,7 +182,7 @@ module.exports = {
   },
   
   getSuggestions: function(intentType, message, lang) {
-    var suggestions = {
+    const suggestions = {
       vi: [
         'Giá bao nhiêu?',
         'Cách cài đặt?',
@@ -211,14 +211,14 @@ module.exports = {
   
   getHistory: function(userId, stateStore) {
     if (stateStore) {
-      var allHistory = stateStore.get('ai_conversation_history') || {};
+      const allHistory = stateStore.get('ai_conversation_history') || {};
       return allHistory[userId] || [];
     }
     return this.conversationHistory[userId] || [];
   },
   
   addToHistory: function(userId, userMsg, botReply, stateStore) {
-    var history = this.getHistory(userId, stateStore);
+    let history = this.getHistory(userId, stateStore);
     
     history.push({
       user: userMsg,
@@ -232,7 +232,7 @@ module.exports = {
     }
     
     if (stateStore) {
-      var allHistory = stateStore.get('ai_conversation_history') || {};
+      const allHistory = stateStore.get('ai_conversation_history') || {};
       allHistory[userId] = history;
       stateStore.set('ai_conversation_history', allHistory);
     } else {
@@ -242,7 +242,7 @@ module.exports = {
   
   clearHistory: function(userId, stateStore) {
     if (stateStore) {
-      var allHistory = stateStore.get('ai_conversation_history') || {};
+      const allHistory = stateStore.get('ai_conversation_history') || {};
       delete allHistory[userId];
       stateStore.set('ai_conversation_history', allHistory);
     } else {

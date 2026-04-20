@@ -5,14 +5,14 @@ module.exports = {
   riskLevel: 'low',
   canAutoFix: true,
   run: function(ctx) {
-    var i18n = require('../../i18n');
-    var requestedLang = ctx.event.language || ctx.event.lang || 'vi';
-    var previousLang = i18n.getLanguage();
+    const i18n = require('../../i18n');
+    const requestedLang = ctx.event.language || ctx.event.lang || 'vi';
+    const previousLang = i18n.getLanguage();
     
-    var success = i18n.setLanguage(requestedLang);
-    var newLang = i18n.getLanguage();
+    const success = i18n.setLanguage(requestedLang);
+    const newLang = i18n.getLanguage();
     
-    var supported = i18n.getSupportedLanguages();
+    const supported = i18n.getSupportedLanguages();
     
     return {
       ok: success,
@@ -21,7 +21,7 @@ module.exports = {
       currentLanguage: newLang,
       languageName: supported[newLang] ? supported[newLang].name : newLang,
       supportedLanguages: supported,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

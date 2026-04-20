@@ -209,7 +209,7 @@ class HealthReportService {
   async getActiveDeviceCount() {
     try {
       const { getOne } = require('../config/database');
-      const row = getOne("SELECT COUNT(*) as count FROM devices WHERE status = 'online'");
+      const row = getOne('SELECT COUNT(*) as count FROM devices WHERE status = \'online\'');
       return row?.count || 0;
     } catch (e) { return 0; }
   }
@@ -217,7 +217,7 @@ class HealthReportService {
   async getLastCriticalError() {
     try {
       const { getOne } = require('../config/database');
-      const row = getOne("SELECT message FROM alerts WHERE severity IN ('danger','critical') ORDER BY timestamp DESC LIMIT 1");
+      const row = getOne('SELECT message FROM alerts WHERE severity IN (\'danger\',\'critical\') ORDER BY timestamp DESC LIMIT 1');
       return row?.message || null;
     } catch (e) { return null; }
   }

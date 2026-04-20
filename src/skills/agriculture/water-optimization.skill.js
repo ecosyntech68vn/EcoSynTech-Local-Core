@@ -5,29 +5,29 @@ module.exports = {
   riskLevel: 'low',
   canAutoFix: true,
   run: function(ctx) {
-    var stateStore = ctx.stateStore;
-    var sensors = stateStore.get('sensors') || {};
+    const stateStore = ctx.stateStore;
+    const sensors = stateStore.get('sensors') || {};
     
-    var soilMoisture = sensors.soil || 50;
-    var humidity = sensors.humidity || 60;
-    var temp = sensors.temperature || 25;
-    var plantType = stateStore.get('plantType') || 'general';
+    const soilMoisture = sensors.soil || 50;
+    const humidity = sensors.humidity || 60;
+    const temp = sensors.temperature || 25;
+    const plantType = stateStore.get('plantType') || 'general';
     
-    var optimalRanges = {
+    const optimalRanges = {
       'general': { min: 40, max: 70 },
       'rice': { min: 70, max: 90 },
       'vegetable': { min: 50, max: 70 },
       'fruit': { min: 40, max: 60 },
-      'coffee': { min: 60, max: 80 },
+      'coffee': { min: 60, max: 80 }
     };
     
-    var range = optimalRanges[plantType] || optimalRanges.general;
-    var deficit = range.min - soilMoisture;
-    var excess = soilMoisture - range.max;
+    const range = optimalRanges[plantType] || optimalRanges.general;
+    const deficit = range.min - soilMoisture;
+    const excess = soilMoisture - range.max;
     
-    var waterAmount = 0;
-    var duration = 0;
-    var recommendation = '';
+    let waterAmount = 0;
+    let duration = 0;
+    let recommendation = '';
     
     if (excess > 10) {
       waterAmount = 0;
@@ -51,7 +51,7 @@ module.exports = {
       recommendation = 'Soil moisture optimal';
     }
     
-    var efficiency = (soilMoisture >= range.min && soilMoisture <= range.max) ? 100 : (soilMoisture < range.min ? (100 - deficit) : (100 - excess * 2));
+    let efficiency = (soilMoisture >= range.min && soilMoisture <= range.max) ? 100 : (soilMoisture < range.min ? (100 - deficit) : (100 - excess * 2));
     efficiency = Math.max(0, Math.min(100, efficiency));
     
     return {
@@ -62,7 +62,7 @@ module.exports = {
       waterAmount: Math.round(waterAmount),
       duration: duration,
       efficiency: efficiency,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

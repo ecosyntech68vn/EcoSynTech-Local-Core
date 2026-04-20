@@ -9,7 +9,7 @@ class StateStore {
       alerts: [],
       incidents: [],
       builds: [],
-      approvals: [],
+      approvals: []
     };
     this._load();
   }

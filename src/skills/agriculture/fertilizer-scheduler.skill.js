@@ -5,40 +5,40 @@ module.exports = {
   riskLevel: 'low',
   canAutoFix: true,
   run: function(ctx) {
-    var stateStore = ctx.stateStore;
-    var schedule = stateStore.get('fertilizerSchedule') || [];
+    const stateStore = ctx.stateStore;
+    const schedule = stateStore.get('fertilizerSchedule') || [];
     
-    var cropId = ctx.event.cropId || ctx.event.crop || 'default';
-    var dayOfGrowth = ctx.event.day || 1;
-    var cropType = ctx.event.cropType || 'general';
+    const cropId = ctx.event.cropId || ctx.event.crop || 'default';
+    const dayOfGrowth = ctx.event.day || 1;
+    const cropType = ctx.event.cropType || 'general';
     
-    var schedules = {
+    const schedules = {
       'general': [7, 14, 21, 28],
       'rice': [15, 30, 45, 60],
       'vegetable': [7, 14, 21],
       'fruit': [30, 60, 90, 120],
-      'coffee': [30, 60, 90],
+      'coffee': [30, 60, 90]
     };
     
-    var days = schedules[cropType] || schedules.general;
-    var nextFertilize = null;
+    const days = schedules[cropType] || schedules.general;
+    let nextFertilize = null;
     
-    for (var i = 0; i < days.length; i++) {
+    for (let i = 0; i < days.length; i++) {
       if (days[i] >= dayOfGrowth) {
         nextFertilize = days[i];
         break;
       }
     }
     
-    var daysUntilNext = nextFertilize ? nextFertilize - dayOfGrowth : null;
-    var shouldFertilize = daysUntilNext === 0 || daysUntilNext === 1;
+    const daysUntilNext = nextFertilize ? nextFertilize - dayOfGrowth : null;
+    const shouldFertilize = daysUntilNext === 0 || daysUntilNext === 1;
     
-    var fertilizerType = 'NPK';
+    let fertilizerType = 'NPK';
     if (cropType === 'vegetable') fertilizerType = 'nitrogen-rich';
     else if (cropType === 'fruit') fertilizerType = 'phosphorus-rich';
     else if (cropType === 'rice') fertilizerType = 'urea';
     
-    var recommendation = '';
+    let recommendation = '';
     if (shouldFertilize) {
       recommendation = 'FERTILIZE TODAY - Day ' + dayOfGrowth;
     } else if (daysUntilNext !== null) {
@@ -57,7 +57,7 @@ module.exports = {
       fertilizerType: fertilizerType,
       schedule: days,
       recommendation: recommendation,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

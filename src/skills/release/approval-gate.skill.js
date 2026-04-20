@@ -21,7 +21,7 @@ module.exports = {
       message: autoApproved
         ? 'Approved for safe execution.'
         : 'Manual approval required before execution.',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

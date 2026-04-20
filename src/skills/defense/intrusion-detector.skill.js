@@ -5,13 +5,13 @@ module.exports = {
   riskLevel: 'high',
   canAutoFix: true,
   run: function(ctx) {
-    var logger = ctx.logger || {};
-    var event = ctx.event || {};
-    var ip = event.ip || event.clientIp || 'unknown';
+    const logger = ctx.logger || {};
+    const event = ctx.event || {};
+    const ip = event.ip || event.clientIp || 'unknown';
     
-    var blocked = [];
-    var suspicious = [];
-    var recommendation = 'No threats detected';
+    const blocked = [];
+    const suspicious = [];
+    let recommendation = 'No threats detected';
     
     if (event.type === 'login.failed' || event.success === false) {
       recommendation = 'Failed login from ' + ip + ' - monitor';
@@ -25,7 +25,7 @@ module.exports = {
       blockedIPs: blocked,
       suspiciousIPs: suspicious,
       recommendations: recommendation,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

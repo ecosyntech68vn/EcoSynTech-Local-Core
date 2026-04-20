@@ -1,6 +1,6 @@
-var QRCode = require('qrcode');
-var { v4: uuidv4 } = require('uuid');
-var config = require('../../config');
+const QRCode = require('qrcode');
+const { v4: uuidv4 } = require('uuid');
+const config = require('../../config');
 
 module.exports = {
   id: 'qr-traceability',
@@ -9,19 +9,19 @@ module.exports = {
   riskLevel: 'low',
   canAutoFix: true,
   run: function(ctx) {
-    var stateStore = ctx.stateStore;
-    var event = ctx.event || {};
+    const stateStore = ctx.stateStore;
+    const event = ctx.event || {};
     
-    var qrConfig = config.qrcode || {};
+    const qrConfig = config.qrcode || {};
     if (!qrConfig.enabled) {
       return { ok: false, skipped: true, reason: 'QR Code disabled in config' };
     }
     
-    var baseUrl = qrConfig.baseUrl || 'https://ecosyntech.com';
-    var batchCode = event.data?.batchCode || stateStore.get('currentBatchCode');
+    const baseUrl = qrConfig.baseUrl || 'https://ecosyntech.com';
+    let batchCode = event.data?.batchCode || stateStore.get('currentBatchCode');
     
     if (!batchCode) {
-      var pendingBatches = stateStore.get('pendingQRBatches') || [];
+      const pendingBatches = stateStore.get('pendingQRBatches') || [];
       if (pendingBatches.length > 0) {
         batchCode = pendingBatches.shift();
         stateStore.set('pendingQRBatches', pendingBatches);
@@ -32,9 +32,9 @@ module.exports = {
       return { ok: true, skipped: true, reason: 'No batch code to process' };
     }
     
-    var traceUrl = baseUrl + '/trace/' + batchCode;
+    const traceUrl = baseUrl + '/trace/' + batchCode;
     
-    var qrResult = {
+    const qrResult = {
       ok: true,
       batchCode: batchCode,
       traceUrl: traceUrl,
@@ -45,7 +45,7 @@ module.exports = {
     };
     
     try {
-      var dataUrl = QRCode.toDataURL(traceUrl, {
+      const dataUrl = QRCode.toDataURL(traceUrl, {
         width: 300,
         margin: 2,
         color: { dark: '#0f2b1f', light: '#ffffff' }
@@ -59,7 +59,7 @@ module.exports = {
         generatedAt: Date.now()
       });
       
-      var qrHistory = stateStore.get('qrHistory') || [];
+      let qrHistory = stateStore.get('qrHistory') || [];
       qrHistory.unshift({
         batchCode: batchCode,
         traceUrl: traceUrl,
@@ -77,9 +77,9 @@ module.exports = {
   },
   
   generateQR: function(batchCode) {
-    var qrConfig = config.qrcode || {};
-    var baseUrl = qrConfig.baseUrl || 'https://ecosyntech.com';
-    var traceUrl = baseUrl + '/trace/' + batchCode;
+    const qrConfig = config.qrcode || {};
+    const baseUrl = qrConfig.baseUrl || 'https://ecosyntech.com';
+    const traceUrl = baseUrl + '/trace/' + batchCode;
     
     return QRCode.toDataURL(traceUrl, {
       width: 300,
@@ -89,12 +89,12 @@ module.exports = {
   },
   
   getQRForBatch: function(batchCode) {
-    var stateStore = this._stateStore;
+    const stateStore = this._stateStore;
     return stateStore ? stateStore.get('lastQR_' + batchCode) : null;
   },
   
   listHistory: function() {
-    var stateStore = this._stateStore;
+    const stateStore = this._stateStore;
     return stateStore ? stateStore.get('qrHistory') || [] : [];
   }
 };

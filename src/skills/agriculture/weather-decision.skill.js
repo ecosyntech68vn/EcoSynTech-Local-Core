@@ -5,16 +5,16 @@ module.exports = {
   riskLevel: 'medium',
   canAutoFix: true,
   run: function(ctx) {
-    var stateStore = ctx.stateStore;
-    var weather = stateStore.get('weather') || {};
+    const stateStore = ctx.stateStore;
+    const weather = stateStore.get('weather') || {};
     
-    var raining = weather.rainfall > 5;
-    var humidity = weather.humidity || 0;
-    var temp = weather.temperature || 25;
-    var forecast = weather.forecast || 'clear';
+    const raining = weather.rainfall > 5;
+    const humidity = weather.humidity || 0;
+    const temp = weather.temperature || 25;
+    const forecast = weather.forecast || 'clear';
     
-    var decision = 'normal';
-    var reason = '';
+    let decision = 'normal';
+    let reason = '';
     
     if (raining || forecast === 'rain') {
       decision = 'skip-irrigation';
@@ -33,12 +33,12 @@ module.exports = {
       reason = 'Normal watering schedule';
     }
     
-    var actions = {
+    const actions = {
       'skip-irrigation': { irrigation: false, pump: false },
       'reduce-irrigation': { irrigation: true, pump: true, duration: 0.5 },
       'increase-irrigation': { irrigation: true, pump: true, duration: 1.5 },
       'delay-irrigation': { irrigation: false, pump: false, delay: 3600000 },
-      'normal': { irrigation: true, pump: true, duration: 1 },
+      'normal': { irrigation: true, pump: true, duration: 1 }
     };
     
     return {
@@ -47,7 +47,7 @@ module.exports = {
       reason: reason,
       actions: actions[decision],
       weatherSummary: { raining: raining, humidity: humidity, temp: temp, forecast: forecast },
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

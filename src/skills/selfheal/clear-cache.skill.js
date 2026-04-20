@@ -9,7 +9,7 @@ module.exports = {
       ok: true,
       action: 'clear-cache',
       note: 'Invalidate runtime caches, then rebuild derived state.',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

@@ -5,13 +5,13 @@ module.exports = {
   riskLevel: 'medium',
   canAutoFix: false,
   run: function(ctx) {
-    var event = ctx.event || {};
-    var err = event.error || event.message || event.err || event.type || 'unknown';
+    const event = ctx.event || {};
+    const err = event.error || event.message || event.err || event.type || 'unknown';
 
-    var hints = [];
-    var severity = 'low';
+    const hints = [];
+    let severity = 'low';
 
-    var errorStr = String(err).toLowerCase();
+    const errorStr = String(err).toLowerCase();
 
     if (errorStr.indexOf('database') !== -1 || errorStr.indexOf('sql') !== -1) {
       hints.push('Check DB connection and queries');
@@ -40,7 +40,7 @@ module.exports = {
       hints: hints,
       severity: severity,
       recommendation: hints[0],
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

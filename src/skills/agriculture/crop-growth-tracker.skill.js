@@ -5,14 +5,14 @@ module.exports = {
   riskLevel: 'low',
   canAutoFix: false,
   run: function(ctx) {
-    var stateStore = ctx.stateStore;
-    var cropData = stateStore.get('cropData') || {};
+    const stateStore = ctx.stateStore;
+    const cropData = stateStore.get('cropData') || {};
     
-    var cropId = ctx.event.cropId || ctx.event.crop || 'default';
-    var dayOfGrowth = ctx.event.day || cropData.day || 1;
-    var stage = 'germination';
-    var nextStage = 'seedling';
-    var daysToNext = 7;
+    const cropId = ctx.event.cropId || ctx.event.crop || 'default';
+    const dayOfGrowth = ctx.event.day || cropData.day || 1;
+    let stage = 'germination';
+    let nextStage = 'seedling';
+    let daysToNext = 7;
     
     if (dayOfGrowth <= 7) {
       stage = 'germination';
@@ -36,23 +36,23 @@ module.exports = {
       daysToNext = 0;
     }
     
-    var stageDays = {
+    const stageDays = {
       'germination': { water: 'low', fertilizer: 'none', light: 'indirect' },
       'seedling': { water: 'medium', fertilizer: 'low', light: 'partial' },
       'vegetative': { water: 'high', fertilizer: 'medium', light: 'full' },
       'flowering': { water: 'high', fertilizer: 'high', light: 'full' },
       'fruiting': { water: 'high', fertilizer: 'high', light: 'full' },
-      'harvest': { water: 'low', fertilizer: 'none', light: 'any' },
+      'harvest': { water: 'low', fertilizer: 'none', light: 'any' }
     };
     
-    var requirements = stageDays[stage];
+    const requirements = stageDays[stage];
     
     cropData[cropId] = {
       day: dayOfGrowth,
       stage: stage,
       nextStage: nextStage,
       daysToNext: daysToNext,
-      lastUpdate: Date.now(),
+      lastUpdate: Date.now()
     };
     stateStore.set('cropData', cropData);
     
@@ -64,7 +64,7 @@ module.exports = {
       nextStage: nextStage,
       daysToNextStage: daysToNext,
       requirements: requirements,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

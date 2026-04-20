@@ -51,7 +51,7 @@ class WaterOptimizationService {
 
   async getIrrigationRecommendation(farmId = null) {
     try {
-      const whereClause = farmId ? "WHERE zone LIKE ?" : "";
+      const whereClause = farmId ? 'WHERE zone LIKE ?' : '';
       const params = farmId ? [`%${farmId}%`] : [];
       const sensors = getAll(
         `SELECT type, value FROM sensors ${whereClause}`,
@@ -159,7 +159,7 @@ class WaterOptimizationService {
 
   triggerIrrigation(recommendation) {
     try {
-      const pumpDevices = getAll("SELECT * FROM devices WHERE type = 'pump' AND status = 'online'");
+      const pumpDevices = getAll('SELECT * FROM devices WHERE type = \'pump\' AND status = \'online\'');
       for (const pump of pumpDevices) {
         const config = JSON.parse(pump.config || '{}');
         if (config.autoMode) {

@@ -117,7 +117,7 @@ async function sendBackupStatus(success, details) {
   return sendTelegramMessage(
     `${emoji} *Backup ${success ? 'Completed' : 'Failed'}*`,
     'Markdown',
-    success ? `Backup completed successfully` : `Backup failed: ${details.error}`
+    success ? 'Backup completed successfully' : `Backup failed: ${details.error}`
   );
 }
 

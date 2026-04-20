@@ -16,7 +16,7 @@ module.exports = {
       ok: true,
       routes,
       note: 'Use these as skill attachment points and health anchors.',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

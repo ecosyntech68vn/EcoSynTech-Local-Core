@@ -12,7 +12,7 @@ module.exports = {
       deviceId,
       action: 'rollback-ota',
       requiresApproval: true,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

@@ -1,15 +1,15 @@
-var os = require('os');
+const os = require('os');
 
-var totalMem = os.totalmem();
-var freeMem = os.freemem();
-var usedMem = totalMem - freeMem;
-var memUsagePercent = (usedMem / totalMem) * 100;
+const totalMem = os.totalmem();
+const freeMem = os.freemem();
+const usedMem = totalMem - freeMem;
+const memUsagePercent = (usedMem / totalMem) * 100;
 
 function getSystemInfo() {
-  var totalMem = os.totalmem();
-  var freeMem = os.freemem();
-  var usedMem = totalMem - freeMem;
-  var memUsagePercent = (usedMem / totalMem) * 100;
+  const totalMem = os.totalmem();
+  const freeMem = os.freemem();
+  const usedMem = totalMem - freeMem;
+  const memUsagePercent = (usedMem / totalMem) * 100;
   
   return {
     totalMemory: totalMem,
@@ -19,22 +19,22 @@ function getSystemInfo() {
     platform: os.platform(),
     arch: os.arch(),
     nodeVersion: process.version,
-    uptime: process.uptime(),
+    uptime: process.uptime()
   };
 }
 
 function getMemoryStatus() {
-  var mem = process.memoryUsage();
+  const mem = process.memoryUsage();
   return {
     heapUsed: (mem.heapUsed / 1024 / 1024).toFixed(2) + ' MB',
     heapTotal: (mem.heapTotal / 1024 / 1024).toFixed(2) + ' MB',
     rss: (mem.rss / 1024 / 1024).toFixed(2) + ' MB',
-    external: (mem.external / 1024 / 1024).toFixed(2) + ' MB',
+    external: (mem.external / 1024 / 1024).toFixed(2) + ' MB'
   };
 }
 
 function isLowMemory() {
-  var percent = memUsagePercent;
+  const percent = memUsagePercent;
   return percent > 80;
 }
 
@@ -49,16 +49,16 @@ function getOptimizationLevel() {
 }
 
 function getRecommendedSettings() {
-  var level = getOptimizationLevel();
+  const level = getOptimizationLevel();
   
-  var configs = {
+  const configs = {
     normal: {
       schedulerInterval: 600000,
       backupInterval: 10800000,
       wsHeartbeat: 60000,
       sensorInterval: 5000,
       maxHistory: 1000,
-      enableMetrics: true,
+      enableMetrics: true
     },
     low: {
       schedulerInterval: 1800000,
@@ -66,7 +66,7 @@ function getRecommendedSettings() {
       wsHeartbeat: 120000,
       sensorInterval: 10000,
       maxHistory: 500,
-      enableMetrics: true,
+      enableMetrics: true
     },
     critical: {
       schedulerInterval: 3600000,
@@ -74,22 +74,22 @@ function getRecommendedSettings() {
       wsHeartbeat: 300000,
       sensorInterval: 30000,
       maxHistory: 100,
-      enableMetrics: false,
-    },
+      enableMetrics: false
+    }
   };
   
   return configs[level];
 }
 
 function optimizeForDevice() {
-  var level = getOptimizationLevel();
-  var settings = getRecommendedSettings();
+  const level = getOptimizationLevel();
+  const settings = getRecommendedSettings();
   
   if (level !== 'normal') {
     global.__OPTIMIZATION__ = {
       level: level,
       settings: settings,
-      timestamp: Date.now(),
+      timestamp: Date.now()
     };
   }
   
@@ -97,25 +97,25 @@ function optimizeForDevice() {
     level: level,
     settings: settings,
     systemInfo: getSystemInfo(),
-    memoryStatus: getMemoryStatus(),
+    memoryStatus: getMemoryStatus()
   };
 }
 
 function getCacheSize() {
   return {
     requireCache: Object.keys(require.cache).length,
-    moduleCache: process.moduleCacheVersions ? Object.keys(process.moduleCacheVersions).length : 0,
+    moduleCache: process.moduleCacheVersions ? Object.keys(process.moduleCacheVersions).length : 0
   };
 }
 
 function clearCache() {
-  var before = Object.keys(require.cache).length;
-  for (var key in require.cache) {
+  const before = Object.keys(require.cache).length;
+  for (const key in require.cache) {
     if (key.indexOf('node_modules') !== -1) {
       delete require.cache[key];
     }
   }
-  var after = Object.keys(require.cache).length;
+  const after = Object.keys(require.cache).length;
   return { before: before, after: after, cleared: before - after };
 }
 
@@ -132,5 +132,5 @@ module.exports = {
   getRecommendedSettings: getRecommendedSettings,
   optimizeForDevice: optimizeForDevice,
   getCacheSize: getCacheSize,
-  clearCache: clearCache,
+  clearCache: clearCache
 };

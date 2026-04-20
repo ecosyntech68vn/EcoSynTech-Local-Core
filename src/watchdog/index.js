@@ -20,7 +20,7 @@ class Watchdog {
         severity: 'high',
         baseUrl: this.baseUrl,
         packageVersion: this.packageVersion,
-        config: this.config,
+        config: this.config
       });
     }
     return [];

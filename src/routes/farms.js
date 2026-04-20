@@ -78,7 +78,7 @@ router.get('/:id/stats', auth, async (req, res) => {
     const farm = getOne('SELECT * FROM farms WHERE id = ?', [req.params.id]);
     if (!farm) return res.status(404).json({ ok: false, error: 'Farm not found' });
     
-    const devices = getAll("SELECT COUNT(*) as count, SUM(CASE WHEN status = 'online' THEN 1 ELSE 0 END) as online FROM devices WHERE zone LIKE ?", [`%${req.params.id}%`]);
+    const devices = getAll('SELECT COUNT(*) as count, SUM(CASE WHEN status = \'online\' THEN 1 ELSE 0 END) as online FROM devices WHERE zone LIKE ?', [`%${req.params.id}%`]);
     const sensors = getAll('SELECT type, value FROM sensors');
     const alerts = getOne('SELECT COUNT(*) as total, SUM(CASE WHEN acknowledged = 0 THEN 1 ELSE 0 END) as pending FROM alerts');
     

@@ -175,7 +175,7 @@ module.exports = {
         `⏱️ Thời gian: ${solution.estimatedTime}\n` +
         `✅ Khả năng xử lý: ${solution.successRate}\n\n` +
         solution.steps.map((s, i) => `${i + 1}. ${s}`).join('\n') + '\n\n' +
-        `❓ Cần hỗ trợ thêm? Gọi: 1900 xxxx`,
+        '❓ Cần hỗ trợ thêm? Gọi: 1900 xxxx',
       solution: solution
     };
   }

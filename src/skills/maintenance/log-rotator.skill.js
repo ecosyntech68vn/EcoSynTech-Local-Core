@@ -5,19 +5,19 @@ module.exports = {
   riskLevel: 'low',
   canAutoFix: true,
   run: function(ctx) {
-    var fs = require('fs');
-    var path = require('path');
+    const fs = require('fs');
+    const path = require('path');
 
-    var logDir = path.join(process.cwd(), 'logs');
-    var maxFiles = 10;
-    var maxSize = 10 * 1024 * 1024;
+    const logDir = path.join(process.cwd(), 'logs');
+    const maxFiles = 10;
+    const maxSize = 10 * 1024 * 1024;
 
     try {
       if (!fs.existsSync(logDir)) {
         return { ok: true, skipped: true, reason: 'No log directory' };
       }
 
-      var files = fs.readdirSync(logDir)
+      const files = fs.readdirSync(logDir)
         .filter(function(f) { return f.endsWith('.log'); })
         .map(function(f) {
           return {
@@ -27,17 +27,17 @@ module.exports = {
           };
         });
 
-      var totalSize = 0;
-      for (var i = 0; i < files.length; i++) {
+      let totalSize = 0;
+      for (let i = 0; i < files.length; i++) {
         totalSize += files[i].stat.size;
       }
 
-      var rotated = 0;
+      let rotated = 0;
       if (files.length > maxFiles || totalSize > maxSize) {
         files.sort(function(a, b) { return a.stat.mtime - b.stat.mtime; });
         
         while (files.length > maxFiles || totalSize > maxSize) {
-          var oldest = files.shift();
+          const oldest = files.shift();
           try {
             fs.unlinkSync(oldest.path);
             totalSize -= oldest.stat.size;
@@ -51,10 +51,10 @@ module.exports = {
         filesTotal: files.length,
         totalSize: totalSize,
         rotated: rotated,
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       };
     } catch (e) {
       return { ok: false, error: e.message };
     }
-  },
+  }
 };

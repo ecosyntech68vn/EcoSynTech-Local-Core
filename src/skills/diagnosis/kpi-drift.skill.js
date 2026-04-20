@@ -18,7 +18,7 @@ module.exports = {
 
     const [kpis, dashboard] = await Promise.all([
       safeJson('/api/analytics/kpis'),
-      safeJson('/api/analytics/dashboard'),
+      safeJson('/api/analytics/dashboard')
     ]);
 
     return {
@@ -26,7 +26,7 @@ module.exports = {
       kpis,
       dashboard,
       note: 'Use drift analysis to compare daily vs baseline trends.',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

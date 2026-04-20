@@ -12,10 +12,10 @@ module.exports = {
   canAutoFix: false,
   
   run: function(ctx) {
-    var event = ctx.event || {};
-    var action = event.action || 'calculate';
+    const event = ctx.event || {};
+    const action = event.action || 'calculate';
     
-    var result = {
+    const result = {
       ok: true,
       action: action,
       timestamp: new Date().toISOString(),
@@ -25,19 +25,19 @@ module.exports = {
     };
     
     switch (action) {
-      case 'calculate':
-      case 'show':
-        result.roi = this.calculateROI(event.params);
-        result.payback = this.calculatePayback(event.params);
-        result.savings = this.calculateSavings(event.params);
-        break;
+    case 'calculate':
+    case 'show':
+      result.roi = this.calculateROI(event.params);
+      result.payback = this.calculatePayback(event.params);
+      result.savings = this.calculateSavings(event.params);
+      break;
         
-      case 'compare':
-        result.comparison = this.compareOptions(event.params);
-        break;
+    case 'compare':
+      result.comparison = this.compareOptions(event.params);
+      break;
         
-      default:
-        result.roi = this.getDefaultROI();
+    default:
+      result.roi = this.getDefaultROI();
     }
     
     return result;
@@ -46,17 +46,17 @@ module.exports = {
   calculateROI: function(params) {
     params = params || {};
     
-    var sensorCount = params.sensorCount || 10;
-    var deviceCost = params.deviceCost || 400000;
+    const sensorCount = params.sensorCount || 10;
+    const deviceCost = params.deviceCost || 400000;
     
-    var monthlyWaterSaved = 150000;
-    var monthlyFertilizerSaved = 100000;
-    var monthlyYieldIncrease = 200000;
-    var monthlyErrorReduced = 50000;
-    var monthlyTotalSaved = monthlyWaterSaved + monthlyFertilizerSaved + monthlyYieldIncrease + monthlyErrorReduced;
+    const monthlyWaterSaved = 150000;
+    const monthlyFertilizerSaved = 100000;
+    const monthlyYieldIncrease = 200000;
+    const monthlyErrorReduced = 50000;
+    const monthlyTotalSaved = monthlyWaterSaved + monthlyFertilizerSaved + monthlyYieldIncrease + monthlyErrorReduced;
     
-    var yearlySavings = monthlyTotalSaved * 12;
-    var yearlyROI = Math.round(((yearlySavings - deviceCost) / deviceCost) * 100);
+    const yearlySavings = monthlyTotalSaved * 12;
+    const yearlyROI = Math.round(((yearlySavings - deviceCost) / deviceCost) * 100);
     
     return {
       deviceCost: deviceCost,
@@ -73,10 +73,10 @@ module.exports = {
   },
   
   calculatePayback: function(params) {
-    var roi = this.calculateROI(params);
-    var months = Math.ceil(roi.deviceCost / roi.monthlySavings);
-    var years = Math.floor(months / 12);
-    var remainingMonths = months % 12;
+    const roi = this.calculateROI(params);
+    const months = Math.ceil(roi.deviceCost / roi.monthlySavings);
+    const years = Math.floor(months / 12);
+    const remainingMonths = months % 12;
     
     return {
       months: months,
@@ -89,15 +89,15 @@ module.exports = {
   calculateSavings: function(params) {
     params = params || {};
     
-    var sensorCount = params.sensorCount || 10;
-    var waterSavedPerDay = 50 * sensorCount;
-    var waterCost = 10000;
-    var yearlyWater = waterSavedPerDay * 365 * waterCost / 1000;
+    const sensorCount = params.sensorCount || 10;
+    const waterSavedPerDay = 50 * sensorCount;
+    const waterCost = 10000;
+    const yearlyWater = waterSavedPerDay * 365 * waterCost / 1000;
     
-    var fertilizerSaved = 200000;
-    var laborHoursSaved = sensorCount * 0.5 * 30;
-    var laborCost = 50000;
-    var yearlyLabor = laborHoursSaved * 12 * laborCost;
+    const fertilizerSaved = 200000;
+    const laborHoursSaved = sensorCount * 0.5 * 30;
+    const laborCost = 50000;
+    const yearlyLabor = laborHoursSaved * 12 * laborCost;
     
     return {
       yearly: {
@@ -140,9 +140,9 @@ module.exports = {
   },
   
   getBreakdown: function(params) {
-    var roi = this.calculateROI(params);
-    var payback = this.calculatePayback(params);
-    var savings = this.calculateSavings(params);
+    const roi = this.calculateROI(params);
+    const payback = this.calculatePayback(params);
+    const savings = this.calculateSavings(params);
     
     return {
       investment: this.formatCurrency(roi.deviceCost),

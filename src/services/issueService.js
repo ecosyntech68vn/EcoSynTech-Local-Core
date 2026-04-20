@@ -87,7 +87,7 @@ async function createIssue(data) {
 
 async function acknowledgeIssue(id, assignedTo) {
   await runQuery(
-    `UPDATE service_issues SET status = ?, assigned_to = ?, acknowledged_at = ?, updated_at = ? WHERE id = ?`,
+    'UPDATE service_issues SET status = ?, assigned_to = ?, acknowledged_at = ?, updated_at = ? WHERE id = ?',
     [ISSUE_STATUS.ACKNOWLEDGED, assignedTo, new Date().toISOString(), new Date().toISOString(), id]
   );
   
@@ -96,7 +96,7 @@ async function acknowledgeIssue(id, assignedTo) {
 
 async function diagnoseIssue(id, rootCause) {
   await runQuery(
-    `UPDATE service_issues SET status = ?, root_cause = ?, diagnosed_at = ?, updated_at = ? WHERE id = ?`,
+    'UPDATE service_issues SET status = ?, root_cause = ?, diagnosed_at = ?, updated_at = ? WHERE id = ?',
     [ISSUE_STATUS.DIAGNOSED, rootCause, new Date().toISOString(), new Date().toISOString(), id]
   );
   
@@ -105,7 +105,7 @@ async function diagnoseIssue(id, rootCause) {
 
 async function applyFix(id, fixDescription) {
   await runQuery(
-    `UPDATE service_issues SET status = ?, fix_applied = ?, fixed_at = ?, updated_at = ? WHERE id = ?`,
+    'UPDATE service_issues SET status = ?, fix_applied = ?, fixed_at = ?, updated_at = ? WHERE id = ?',
     [ISSUE_STATUS.FIXED, fixDescription, new Date().toISOString(), new Date().toISOString(), id]
   );
   
@@ -114,7 +114,7 @@ async function applyFix(id, fixDescription) {
 
 async function verifyFix(id) {
   await runQuery(
-    `UPDATE service_issues SET status = ?, verified_at = ?, updated_at = ? WHERE id = ?`,
+    'UPDATE service_issues SET status = ?, verified_at = ?, updated_at = ? WHERE id = ?',
     [ISSUE_STATUS.VERIFIED, new Date().toISOString(), new Date().toISOString(), id]
   );
   
@@ -123,7 +123,7 @@ async function verifyFix(id) {
 
 async function closeIssue(id, wontFix = false) {
   await runQuery(
-    `UPDATE service_issues SET status = ?, closed_at = ?, updated_at = ? WHERE id = ?`,
+    'UPDATE service_issues SET status = ?, closed_at = ?, updated_at = ? WHERE id = ?',
     [wontFix ? ISSUE_STATUS.WONT_FIX : ISSUE_STATUS.CLOSED, new Date().toISOString(), new Date().toISOString(), id]
   );
   
@@ -180,23 +180,23 @@ async function getIssueById(id) {
 
 async function getIssueStats() {
   const byStatus = getAll(
-    `SELECT status, COUNT(*) as count FROM service_issues GROUP BY status`
+    'SELECT status, COUNT(*) as count FROM service_issues GROUP BY status'
   );
   
   const bySeverity = getAll(
-    `SELECT severity, COUNT(*) as count FROM service_issues GROUP BY severity`
+    'SELECT severity, COUNT(*) as count FROM service_issues GROUP BY severity'
   );
   
   const byCategory = getAll(
-    `SELECT category, COUNT(*) as count FROM service_issues GROUP BY category`
+    'SELECT category, COUNT(*) as count FROM service_issues GROUP BY category'
   );
   
   const avgTimeToAck = getOne(
-    `SELECT AVG((julianday(acknowledged_at) - julianday(created_at)) * 86400) as seconds FROM service_issues WHERE acknowledged_at IS NOT NULL`
+    'SELECT AVG((julianday(acknowledged_at) - julianday(created_at)) * 86400) as seconds FROM service_issues WHERE acknowledged_at IS NOT NULL'
   );
   
   const avgTimeToFix = getOne(
-    `SELECT AVG((julianday(fixed_at) - julianday(created_at)) * 86400) as seconds FROM service_issues WHERE fixed_at IS NOT NULL`
+    'SELECT AVG((julianday(fixed_at) - julianday(created_at)) * 86400) as seconds FROM service_issues WHERE fixed_at IS NOT NULL'
   );
 
   return {
@@ -222,7 +222,7 @@ async function getDiagnosticData(issueId) {
 
   if (issue.affected_device) {
     const logs = getAll(
-      `SELECT * FROM audit_logs WHERE entity_id = ? ORDER BY timestamp DESC LIMIT 20`,
+      'SELECT * FROM audit_logs WHERE entity_id = ? ORDER BY timestamp DESC LIMIT 20',
       [issue.affected_device]
     );
     diagnostic.relatedDevices = logs;
@@ -230,7 +230,7 @@ async function getDiagnosticData(issueId) {
 
   if (issue.affected_sensor) {
     const readings = getAll(
-      `SELECT * FROM sensors WHERE sensor_id = ? ORDER BY timestamp DESC LIMIT 20`,
+      'SELECT * FROM sensors WHERE sensor_id = ? ORDER BY timestamp DESC LIMIT 20',
       [issue.affected_sensor]
     );
     diagnostic.relatedSensors = readings;

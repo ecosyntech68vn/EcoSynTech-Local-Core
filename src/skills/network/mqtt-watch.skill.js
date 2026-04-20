@@ -16,9 +16,9 @@ module.exports = {
       staleForMs,
       autoFix: ok ? null : {
         action: 'reconnect-mqtt',
-        note: 'Reconnect MQTT bridge and re-subscribe topics.',
+        note: 'Reconnect MQTT bridge and re-subscribe topics.'
       },
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

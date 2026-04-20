@@ -18,7 +18,7 @@ module.exports = {
     return {
       ok: diffs.length === 0,
       diffs,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

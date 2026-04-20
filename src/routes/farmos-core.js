@@ -41,7 +41,7 @@ router.post('/organizations', auth, async (req, res) => {
     const { db } = require('../config/database');
     db.run(`INSERT INTO organizations (id, name, email, phone, address, settings_json, status, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-      [id, name, email, phone, address, settings ? JSON.stringify(settings) : null]
+    [id, name, email, phone, address, settings ? JSON.stringify(settings) : null]
     );
     const org = getOne('SELECT * FROM organizations WHERE id = ?', [id]);
     res.status(201).json({ ok: true, data: org });
@@ -60,7 +60,7 @@ router.put('/organizations/:id', auth, async (req, res) => {
            name = COALESCE(?, name), email = COALESCE(?, email), phone = COALESCE(?, phone),
            address = COALESCE(?, address), settings_json = COALESCE(?, settings_json),
            status = COALESCE(?, status), updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-      [name, email, phone, address, settings ? JSON.stringify(settings) : null, status, req.params.id]
+    [name, email, phone, address, settings ? JSON.stringify(settings) : null, status, req.params.id]
     );
     const org = getOne('SELECT * FROM organizations WHERE id = ?', [req.params.id]);
     res.json({ ok: true, data: org });
@@ -120,7 +120,7 @@ router.post('/plans', auth, async (req, res) => {
     const { db } = require('../config/database');
     db.run(`INSERT INTO plans (id, farm_id, name, description, season, year, start_date, end_date, crop_id, status, progress, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-      [id, farm_id, name, description, season, year || new Date().getFullYear(), start_date, end_date, crop_id]
+    [id, farm_id, name, description, season, year || new Date().getFullYear(), start_date, end_date, crop_id]
     );
     const plan = getOne('SELECT * FROM plans WHERE id = ?', [id]);
     res.status(201).json({ ok: true, data: plan });
@@ -140,7 +140,7 @@ router.put('/plans/:id', auth, async (req, res) => {
            year = COALESCE(?, year), start_date = COALESCE(?, start_date), end_date = COALESCE(?, end_date),
            crop_id = COALESCE(?, crop_id), status = COALESCE(?, status), progress = COALESCE(?, progress),
            updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-      [name, description, season, year, start_date, end_date, crop_id, status, progress, req.params.id]
+    [name, description, season, year, start_date, end_date, crop_id, status, progress, req.params.id]
     );
     const plan = getOne('SELECT * FROM plans WHERE id = ?', [req.params.id]);
     res.json({ ok: true, data: plan });
@@ -189,9 +189,9 @@ router.post('/assets', auth, async (req, res) => {
     const { db } = require('../config/database');
     db.run(`INSERT INTO assets (id, farm_id, area_id, parent_id, name, type, model, serial_number, purchase_date, purchase_price, status, created_at, updated_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-      [id, farm_id, area_id, parent_id, name, type, model, serial_number, purchase_date, purchase_price]
+    [id, farm_id, area_id, parent_id, name, type, model, serial_number, purchase_date, purchase_price]
     );
-    db.run(`INSERT INTO asset_history (id, asset_id, action, description, created_at) VALUES (?, ?, 'created', 'Asset created', CURRENT_TIMESTAMP)`,
+    db.run('INSERT INTO asset_history (id, asset_id, action, description, created_at) VALUES (?, ?, \'created\', \'Asset created\', CURRENT_TIMESTAMP)',
       [`history-${uuidv4().slice(0, 8)}`, id]
     );
     const asset = getOne('SELECT * FROM assets WHERE id = ?', [id]);
@@ -263,7 +263,7 @@ router.post('/quantities', auth, async (req, res) => {
     const { db } = require('../config/database');
     db.run(`INSERT INTO quantities (id, farm_id, area_id, crop_id, type, quantity, unit, quality_grade, notes, record_date, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-      [id, farm_id, area_id, crop_id, type, quantity, unit, quality_grade, notes, record_date]
+    [id, farm_id, area_id, crop_id, type, quantity, unit, quality_grade, notes, record_date]
     );
     const qty = getOne('SELECT * FROM quantities WHERE id = ?', [id]);
     res.status(201).json({ ok: true, data: qty });
@@ -355,7 +355,7 @@ router.post('/quantities', auth, async (req, res) => {
     const { db } = require('../config/database');
     db.run(`INSERT INTO quantities (id, farm_id, area_id, crop_id, type, quantity, unit, quality_grade, notes, record_date, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-      [id, farm_id, area_id, crop_id, type, quantity, unit, quality_grade, notes, record_date]
+    [id, farm_id, area_id, crop_id, type, quantity, unit, quality_grade, notes, record_date]
     );
     const qty = getOne('SELECT * FROM quantities WHERE id = ?', [id]);
     res.status(201).json({ ok: true, data: qty });
@@ -396,7 +396,7 @@ router.post('/logs', auth, async (req, res) => {
     const { db } = require('../config/database');
     db.run(`INSERT INTO logs (id, farm_id, area_id, asset_id, worker_id, type, description, value, attachments_json, timestamp, created_at)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-      [id, farm_id, area_id, asset_id, worker_id, type, description, value, attachments ? JSON.stringify(attachments) : null, timestamp]
+    [id, farm_id, area_id, asset_id, worker_id, type, description, value, attachments ? JSON.stringify(attachments) : null, timestamp]
     );
     const log = getOne('SELECT * FROM logs WHERE id = ?', [id]);
     res.status(201).json({ ok: true, data: log });

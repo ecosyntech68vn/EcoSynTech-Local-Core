@@ -14,7 +14,7 @@ function createOps(logger, baseUrl, packageVersion, config) {
 
   let scheduler = null;
   let hotReloader = null;
-  let metrics = null;
+  const metrics = null;
 
   function startScheduler(schedulerConfig) {
     if (!scheduler) {
@@ -61,7 +61,7 @@ function createOps(logger, baseUrl, packageVersion, config) {
         logger: logger,
         baseUrl: options && options.baseUrl ? options.baseUrl : baseUrl,
         packageVersion: options && options.packageVersion ? options.packageVersion : packageVersion,
-        config: options && options.config ? options.config : config,
+        config: options && options.config ? options.config : config
       });
     },
 
@@ -72,40 +72,40 @@ function createOps(logger, baseUrl, packageVersion, config) {
       return {
         skills: registry.size,
         schedulerRunning: scheduler && scheduler.running ? scheduler.running : false,
-        lastTick: scheduler && scheduler.metrics && scheduler.metrics.lastTick ? scheduler.metrics.lastTick : null,
+        lastTick: scheduler && scheduler.metrics && scheduler.metrics.lastTick ? scheduler.metrics.lastTick : null
       };
     },
 
     heartbeat: function() {
-      var current = stateStore.get('beats') || {};
-    current.orchestrator = Date.now();
-    stateStore.set('beats', current);
+      const current = stateStore.get('beats') || {};
+      current.orchestrator = Date.now();
+      stateStore.set('beats', current);
     },
 
     recordWebSocketBeat: function() {
-      var current = stateStore.get('beats') || {};
-    current.websocket = Date.now();
-    stateStore.set('beats', current);
+      const current = stateStore.get('beats') || {};
+      current.websocket = Date.now();
+      stateStore.set('beats', current);
     },
 
     recordMqttBeat: function() {
-      var current = stateStore.get('beats') || {};
-    current.mqtt = Date.now();
-    stateStore.set('beats', current);
+      const current = stateStore.get('beats') || {};
+      current.mqtt = Date.now();
+      stateStore.set('beats', current);
     },
 
     handleAlert: async function(alert) {
       stateStore.push('alerts', {
         id: (alert && alert.id) ? alert.id : 'alert-' + Date.now(),
         signature: JSON.stringify(alert),
-        ts: Date.now(),
+        ts: Date.now()
       }, 500);
       return orchestrator.handle({
         type: 'alert.created',
         alert: alert,
         baseUrl: baseUrl,
         packageVersion: packageVersion,
-        config: config,
+        config: config
       });
     },
 
@@ -116,7 +116,7 @@ function createOps(logger, baseUrl, packageVersion, config) {
         data: data,
         baseUrl: baseUrl,
         packageVersion: packageVersion,
-        config: config,
+        config: config
       });
     },
 
@@ -126,7 +126,7 @@ function createOps(logger, baseUrl, packageVersion, config) {
     enableHotReload: enableHotReload,
     disableHotReload: disableHotReload,
 
-    getMetrics: getMetrics,
+    getMetrics: getMetrics
   };
 }
 

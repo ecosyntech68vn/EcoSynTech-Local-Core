@@ -15,12 +15,12 @@ module.exports = {
   lastLoad: 0,
   
   run: function(ctx) {
-    var event = ctx.event || {};
-    var action = event.action || 'query';
-    var query = event.query || event.question || '';
-    var stateStore = ctx.stateStore;
+    const event = ctx.event || {};
+    const action = event.action || 'query';
+    const query = event.query || event.question || '';
+    const stateStore = ctx.stateStore;
     
-    var result = {
+    const result = {
       ok: true,
       action: action,
       timestamp: new Date().toISOString(),
@@ -31,36 +31,36 @@ module.exports = {
     };
     
     switch (action) {
-      case 'load':
-        result.docs = this.loadAllDocs();
-        result.answer = 'Loaded ' + Object.keys(result.docs).length + ' documents';
-        break;
+    case 'load':
+      result.docs = this.loadAllDocs();
+      result.answer = 'Loaded ' + Object.keys(result.docs).length + ' documents';
+      break;
         
-      case 'query':
-      case 'search':
-        var context = this.getRelevantContext(query, stateStore);
-        result.context = context;
-        result.sources = context.map(function(c) { return c.source; });
-        result.answer = this.generateAnswer(query, context);
-        result.confidence = context.length > 0 ? 0.95 : 0.5;
-        break;
+    case 'query':
+    case 'search':
+      var context = this.getRelevantContext(query, stateStore);
+      result.context = context;
+      result.sources = context.map(function(c) { return c.source; });
+      result.answer = this.generateAnswer(query, context);
+      result.confidence = context.length > 0 ? 0.95 : 0.5;
+      break;
         
-      case 'reload':
-        this.docCache = null;
-        result.docs = this.loadAllDocs();
-        result.answer = 'Reloaded all documents';
-        break;
+    case 'reload':
+      this.docCache = null;
+      result.docs = this.loadAllDocs();
+      result.answer = 'Reloaded all documents';
+      break;
         
-      default:
-        result.answer = 'Use action: load, query, search, or reload';
+    default:
+      result.answer = 'Use action: load, query, search, or reload';
     }
     
     return result;
   },
   
   loadAllDocs: function() {
-    var docs = {};
-    var now = Date.now();
+    const docs = {};
+    const now = Date.now();
     
     if (this.docCache && (now - this.lastLoad) < 1800000) {
       return this.docCache;
@@ -84,25 +84,25 @@ module.exports = {
   },
   
   loadFile: function(filename) {
-    var fs = require('fs');
-    var path = require('path');
-    var baseDir = process.cwd();
-    var filePath = path.join(baseDir, filename);
+    const fs = require('fs');
+    const path = require('path');
+    const baseDir = process.cwd();
+    const filePath = path.join(baseDir, filename);
     
     if (fs.existsSync(filePath)) {
-      var content = fs.readFileSync(filePath, 'utf8');
+      const content = fs.readFileSync(filePath, 'utf8');
       return this.chunkText(content, 500);
     }
     return [];
   },
   
   chunkText: function(text, chunkSize) {
-    var chunks = [];
-    var paragraphs = text.split(/\n\n+/);
-    var current = '';
+    const chunks = [];
+    const paragraphs = text.split(/\n\n+/);
+    let current = '';
     
-    for (var i = 0; i < paragraphs.length; i++) {
-      var para = paragraphs[i].trim();
+    for (let i = 0; i < paragraphs.length; i++) {
+      const para = paragraphs[i].trim();
       if (!para) continue;
       
       if (current.length + para.length > chunkSize) {
@@ -127,27 +127,27 @@ module.exports = {
   },
   
   getRelevantContext: function(query, stateStore) {
-    var docs = this.loadAllDocs();
-    var queryLower = query.toLowerCase();
-    var queryWords = queryLower.split(/\s+/).filter(function(w) {
+    const docs = this.loadAllDocs();
+    const queryLower = query.toLowerCase();
+    const queryWords = queryLower.split(/\s+/).filter(function(w) {
       return w.length > 2;
     });
     
-    var context = [];
-    var scores = [];
+    const context = [];
+    const scores = [];
     
-    for (var docName in docs) {
-      var chunks = docs[docName];
+    for (const docName in docs) {
+      const chunks = docs[docName];
       if (!chunks || !Array.isArray(chunks)) continue;
       
-      for (var i = 0; i < chunks.length; i++) {
-        var chunk = chunks[i];
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
         if (!chunk.text) continue;
         
-        var textLower = chunk.text.toLowerCase();
-        var score = 0;
+        const textLower = chunk.text.toLowerCase();
+        let score = 0;
         
-        for (var j = 0; j < queryWords.length; j++) {
+        for (let j = 0; j < queryWords.length; j++) {
           if (textLower.indexOf(queryWords[j]) !== -1) {
             score += 1;
           }
@@ -167,9 +167,9 @@ module.exports = {
       return b.score - a.score;
     });
     
-    var topResults = scores.slice(0, 5);
+    const topResults = scores.slice(0, 5);
     
-    for (var k = 0; k < topResults.length; k++) {
+    for (let k = 0; k < topResults.length; k++) {
       context.push({
         text: topResults[k].chunk.text,
         source: topResults[k].source,
@@ -178,7 +178,7 @@ module.exports = {
     }
     
     if (stateStore) {
-      var history = stateStore.get('rag_history') || [];
+      let history = stateStore.get('rag_history') || [];
       history.unshift({
         query: query,
         context: context.map(function(c) { return c.source; }),
@@ -196,12 +196,12 @@ module.exports = {
       return 'Không tìm thấy thông tin phù hợp. Bạn hỏi cụ thể hơn được không?';
     }
     
-    var answer = '';
-    var foundInfo = [];
+    let answer = '';
+    const foundInfo = [];
     
-    for (var i = 0; i < Math.min(3, context.length); i++) {
-      var c = context[i];
-      var text = c.text;
+    for (let i = 0; i < Math.min(3, context.length); i++) {
+      const c = context[i];
+      let text = c.text;
       if (text.length > 400) {
         text = text.substring(0, 397) + '...';
       }
@@ -215,11 +215,11 @@ module.exports = {
   },
   
   getStats: function() {
-    var docs = this.loadAllDocs();
-    var stats = {};
+    const docs = this.loadAllDocs();
+    const stats = {};
     
-    for (var name in docs) {
-      var chunks = docs[name];
+    for (const name in docs) {
+      const chunks = docs[name];
       stats[name] = chunks ? chunks.length : 0;
     }
     

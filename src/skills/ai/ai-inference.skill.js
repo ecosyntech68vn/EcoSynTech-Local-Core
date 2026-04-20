@@ -10,14 +10,14 @@ module.exports = {
   riskLevel: 'low',
   canAutoFix: false,
   run: function(ctx) {
-    var event = ctx.event || {};
-    var action = event.action || event.type?.replace('ai.', '') || 'inference';
-    var stateStore = ctx.stateStore;
+    const event = ctx.event || {};
+    const action = event.action || event.type?.replace('ai.', '') || 'inference';
+    const stateStore = ctx.stateStore;
     
-    var config = this.getConfig();
-    var provider = event.provider || config.defaultProvider || 'ollama';
+    const config = this.getConfig();
+    const provider = event.provider || config.defaultProvider || 'ollama';
     
-    var result = {
+    const result = {
       ok: true,
       action: action,
       provider: provider,
@@ -28,23 +28,23 @@ module.exports = {
     };
     
     switch (action) {
-      case 'chat':
-        result.response = this.chat(event.message, event.model, provider, config);
-        result.tokens = result.response?.split(' ').length || 0;
-        break;
+    case 'chat':
+      result.response = this.chat(event.message, event.model, provider, config);
+      result.tokens = result.response?.split(' ').length || 0;
+      break;
         
-      case 'complete':
-        result.response = this.complete(event.prompt, event.model, provider, config);
-        break;
+    case 'complete':
+      result.response = this.complete(event.prompt, event.model, provider, config);
+      break;
         
-      case 'inference':
-      default:
-        result.response = this.inference(event.prompt, event.model, provider, config);
-        break;
+    case 'inference':
+    default:
+      result.response = this.inference(event.prompt, event.model, provider, config);
+      break;
     }
     
     if (stateStore) {
-      var history = stateStore.get('aiHistory') || [];
+      let history = stateStore.get('aiHistory') || [];
       history.unshift({
         prompt: event.message || event.prompt,
         response: result.response,
@@ -60,7 +60,7 @@ module.exports = {
   },
   
   getConfig: function() {
-    var defaultConfig = {
+    const defaultConfig = {
       defaultProvider: 'ollama',
       providers: {
         ollama: {
@@ -88,7 +88,7 @@ module.exports = {
     };
     
     try {
-      var customConfig = require('../../config');
+      const customConfig = require('../../config');
       return customConfig.ai || defaultConfig;
     } catch (e) {
       return defaultConfig;
@@ -96,7 +96,7 @@ module.exports = {
   },
   
   chat: function(message, model, provider, config) {
-    var providerConfig = config.providers?.[provider] || config.providers.ollama;
+    const providerConfig = config.providers?.[provider] || config.providers.ollama;
     
     if (!providerConfig.enabled) {
       return 'AI provider disabled. Enable in config.';
@@ -114,9 +114,9 @@ module.exports = {
   },
   
   syncDeepseekChat: function(message, model, config) {
-    var baseUrl = config.baseUrl || 'https://api.deepseek.com/v1';
-    var modelName = model || config.model || 'deepseek-chat';
-    var apiKey = config.apiKey || process.env.DEEPSEEK_API_KEY;
+    const baseUrl = config.baseUrl || 'https://api.deepseek.com/v1';
+    const modelName = model || config.model || 'deepseek-chat';
+    const apiKey = config.apiKey || process.env.DEEPSEEK_API_KEY;
     
     if (!apiKey) {
       return 'DeepSeek API: Set DEEPSEEK_API_KEY env var or config.apiKey';
@@ -126,24 +126,24 @@ module.exports = {
   },
   
   ollamaChat: function(message, model, config) {
-    var baseUrl = config.baseUrl || 'http://localhost:11434';
-    var modelName = model || config.model || 'llama3';
+    const baseUrl = config.baseUrl || 'http://localhost:11434';
+    const modelName = model || config.model || 'llama3';
     
-    var payload = {
+    const payload = {
       model: modelName,
       messages: [{ role: 'user', content: message }],
       stream: false
     };
     
-    var options = {
+    const options = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     };
     
     try {
-      var response = this.httpSync(baseUrl + '/api/chat', options);
-      var data = JSON.parse(response);
+      const response = this.httpSync(baseUrl + '/api/chat', options);
+      const data = JSON.parse(response);
       return data.message?.content || 'No response';
     } catch (e) {
       return 'Ollama error: ' + e.message + '. Make sure Ollama is running.';
@@ -151,25 +151,25 @@ module.exports = {
   },
   
   lmstudioChat: function(message, model, config) {
-    var baseUrl = config.baseUrl || 'http://localhost:1234/v1';
-    var modelName = model || config.model || 'local-model';
+    const baseUrl = config.baseUrl || 'http://localhost:1234/v1';
+    const modelName = model || config.model || 'local-model';
     
-    var payload = {
+    const payload = {
       model: modelName,
       messages: [{ role: 'user', content: message }],
       temperature: 0.7,
       max_tokens: 512
     };
     
-    var options = {
+    const options = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     };
     
     try {
-      var response = this.httpSync(baseUrl + '/chat/completions', options);
-      var data = JSON.parse(response);
+      const response = this.httpSync(baseUrl + '/chat/completions', options);
+      const data = JSON.parse(response);
       return data.choices?.[0]?.message?.content || 'No response';
     } catch (e) {
       return 'LM Studio error: ' + e.message + '. Make sure LM Studio is running.';
@@ -177,22 +177,22 @@ module.exports = {
   },
   
   deepseekChat: function(message, model, config) {
-    var baseUrl = config.baseUrl || 'https://api.deepseek.com/v1';
-    var modelName = model || config.model || 'deepseek-chat';
-    var apiKey = config.apiKey || process.env.DEEPSEEK_API_KEY;
+    const baseUrl = config.baseUrl || 'https://api.deepseek.com/v1';
+    const modelName = model || config.model || 'deepseek-chat';
+    const apiKey = config.apiKey || process.env.DEEPSEEK_API_KEY;
     
     if (!apiKey) {
       return 'DeepSeek API key not configured. Set DEEPSEEK_API_KEY env var.';
     }
     
-    var payload = {
+    const payload = {
       model: modelName,
       messages: [{ role: 'user', content: message }],
       temperature: 0.7,
       max_tokens: 1024
     };
     
-    var options = {
+    const options = {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -202,8 +202,8 @@ module.exports = {
     };
     
     try {
-      var response = this.httpSync(baseUrl + '/chat/completions', options);
-      var data = JSON.parse(response);
+      const response = this.httpSync(baseUrl + '/chat/completions', options);
+      const data = JSON.parse(response);
       return data.choices?.[0]?.message?.content || 'No response';
     } catch (e) {
       return 'DeepSeek error: ' + e.message;
@@ -219,14 +219,14 @@ module.exports = {
   },
   
   httpSync: function(url, options) {
-    var http = require('http');
-    var https = require('https');
-    var urlObj = require('url').parse(url);
-    var client = urlObj.protocol === 'https:' ? https : http;
+    const http = require('http');
+    const https = require('https');
+    const urlObj = require('url').parse(url);
+    const client = urlObj.protocol === 'https:' ? https : http;
     
     return new Promise(function(resolve, reject) {
-      var req = client.request(url, options, function(res) {
-        var data = '';
+      const req = client.request(url, options, function(res) {
+        let data = '';
         res.on('data', function(chunk) { data += chunk; });
         res.on('end', function() { resolve(data); });
       });
@@ -239,10 +239,10 @@ module.exports = {
   listModels: function(provider, config) {
     if (provider === 'ollama') {
       try {
-        var response = this.httpSync((config.providers.ollama.baseUrl || 'http://localhost:11434') + '/api/tags', {
+        const response = this.httpSync((config.providers.ollama.baseUrl || 'http://localhost:11434') + '/api/tags', {
           method: 'GET'
         });
-        var data = JSON.parse(response);
+        const data = JSON.parse(response);
         return data.models?.map(function(m) { return m.name; }) || [];
       } catch (e) {
         return [];
@@ -252,14 +252,14 @@ module.exports = {
   },
   
   getProviders: function() {
-    var config = this.getConfig();
+    const config = this.getConfig();
     return Object.keys(config.providers || {}).filter(function(p) {
       return config.providers[p]?.enabled;
     });
   },
   
   setProvider: function(provider, enabled) {
-    var config = this.getConfig();
+    const config = this.getConfig();
     if (config.providers && config.providers[provider]) {
       config.providers[provider].enabled = enabled;
     }

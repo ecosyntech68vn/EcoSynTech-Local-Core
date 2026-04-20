@@ -1094,10 +1094,10 @@ router.post('/tb/batches', auth, async (req, res) => {
     const { db } = require('../config/database');
     db.run(`INSERT INTO tb_batches (id, org_id, farm_id, area_id, season_id, asset_id, product_name, product_type, batch_code, harvest_date, produced_quantity, unit, quality_grade, status)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'created')`,
-      [id, null, farm_id, area_id, season_id, asset_id, product_name, product_type, code, harvest_date, produced_quantity, unit || 'kg', quality_grade]
+    [id, null, farm_id, area_id, season_id, asset_id, product_name, product_type, code, harvest_date, produced_quantity, unit || 'kg', quality_grade]
     );
     const batch = getOne('SELECT * FROM tb_batches WHERE id = ?', [id]);
-    db.run(`INSERT INTO tb_batch_events (id, batch_id, event_type, actor_type, note) VALUES (?, ?, ?, ?, ?)`, [`tbe-${uuidv4().slice(0, 8)}`, id, 'created', 'user', 'Batch created']);
+    db.run('INSERT INTO tb_batch_events (id, batch_id, event_type, actor_type, note) VALUES (?, ?, ?, ?, ?)', [`tbe-${uuidv4().slice(0, 8)}`, id, 'created', 'user', 'Batch created']);
     res.status(201).json({ ok: true, data: batch });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
@@ -1114,7 +1114,7 @@ router.patch('/tb/batches/:id', auth, async (req, res) => {
     db.run(`UPDATE tb_batches SET product_name = COALESCE(?, product_name), product_type = COALESCE(?, product_type), batch_code = COALESCE(?, batch_code),
            harvest_date = COALESCE(?, harvest_date), produced_quantity = COALESCE(?, produced_quantity), unit = COALESCE(?, unit),
            quality_grade = COALESCE(?, quality_grade), status = COALESCE(?, status), updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-      [product_name, product_type, batch_code, harvest_date, produced_quantity, unit, quality_grade, status, req.params.id]
+    [product_name, product_type, batch_code, harvest_date, produced_quantity, unit, quality_grade, status, req.params.id]
     );
     const batch = getOne('SELECT * FROM tb_batches WHERE id = ?', [req.params.id]);
     res.json({ ok: true, data: batch });
@@ -1135,7 +1135,7 @@ router.post('/tb/batches/:id/events', auth, async (req, res) => {
     const { db } = require('../config/database');
     db.run(`INSERT INTO tb_batch_events (id, batch_id, event_type, actor_type, actor_id, related_log_id, related_quantity_id, related_inventory_id, location_json, note)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, req.params.id, event_type, actor_type || 'user', actor_id, related_log_id, related_quantity_id, related_inventory_id, locationJson, note]
+    [id, req.params.id, event_type, actor_type || 'user', actor_id, related_log_id, related_quantity_id, related_inventory_id, locationJson, note]
     );
     if (status && status !== 'created') {
       db.run('UPDATE tb_batches SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [status, req.params.id]);
@@ -1165,7 +1165,7 @@ router.post('/tb/batches/:id/inputs', auth, async (req, res) => {
     if (!batch) return res.status(404).json({ ok: false, error: 'Batch not found' });
     const id = `tbi-${uuidv4().slice(0, 8)}`;
     const { db } = require('../config/database');
-    db.run(`INSERT INTO tb_batch_inputs (id, batch_id, input_type, input_name, supplier_name, quantity, unit, used_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+    db.run('INSERT INTO tb_batch_inputs (id, batch_id, input_type, input_name, supplier_name, quantity, unit, used_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)',
       [id, req.params.id, input_type, input_name, supplier_name, quantity, unit]
     );
     const input = getOne('SELECT * FROM tb_batch_inputs WHERE id = ?', [id]);
@@ -1184,7 +1184,7 @@ router.post('/tb/batches/:id/quality-checks', auth, async (req, res) => {
     const id = `tbqc-${uuidv4().slice(0, 8)}`;
     const detailsJson = details ? JSON.stringify(details) : null;
     const { db } = require('../config/database');
-    db.run(`INSERT INTO tb_batch_quality_checks (id, batch_id, check_type, result, score, details_json, checked_by, checked_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+    db.run('INSERT INTO tb_batch_quality_checks (id, batch_id, check_type, result, score, details_json, checked_by, checked_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)',
       [id, req.params.id, check_type, result, score, detailsJson, checked_by]
     );
     res.status(201).json({ ok: true, data: { id, check_type, result, score } });
@@ -1220,7 +1220,7 @@ router.post('/tb/packages', auth, async (req, res) => {
     const { db } = require('../config/database');
     db.run(`INSERT INTO tb_packages (id, batch_id, package_code, barcode, qr_code, net_weight, unit, packaging_type, status)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'created')`,
-      [id, batch_id, code, barcode || code, qr_code || code, net_weight, unit || 'kg', packaging_type || 'carton']
+    [id, batch_id, code, barcode || code, qr_code || code, net_weight, unit || 'kg', packaging_type || 'carton']
     );
     const pkg = getOne('SELECT * FROM tb_packages WHERE id = ?', [id]);
     res.status(201).json({ ok: true, data: pkg });
@@ -1274,11 +1274,11 @@ router.post('/tb/shipments', auth, async (req, res) => {
     const id = `ship-${uuidv4().slice(0, 8)}`;
     const code = `SHP-${Date.now().toString(36).toUpperCase()}`;
     const { db } = require('../config/database');
-    db.run(`INSERT INTO tb_shipments (id, shipment_code, customer_name, destination, transport_type, status) VALUES (?, ?, ?, ?, ?, 'preparing')`,
+    db.run('INSERT INTO tb_shipments (id, shipment_code, customer_name, destination, transport_type, status) VALUES (?, ?, ?, ?, ?, \'preparing\')',
       [id, code, customer_name, destination, transport_type]
     );
     for (const item of items) {
-      db.run(`INSERT INTO tb_shipment_items (id, shipment_id, package_id, quantity, unit) VALUES (?, ?, ?, ?, ?)`,
+      db.run('INSERT INTO tb_shipment_items (id, shipment_id, package_id, quantity, unit) VALUES (?, ?, ?, ?, ?)',
         [`shi-${uuidv4().slice(0, 8)}`, id, item.package_id, item.quantity, item.unit || 'kg']
       );
     }
@@ -1332,7 +1332,7 @@ router.post('/tb/incidents', auth, async (req, res) => {
     if (!batch_id) return res.status(400).json({ ok: false, error: 'batch_id is required' });
     const id = `inc-${uuidv4().slice(0, 8)}`;
     const { db } = require('../config/database');
-    db.run(`INSERT INTO tb_recall_incidents (id, batch_id, incident_type, severity, description, status, created_by) VALUES (?, ?, ?, ?, ?, 'open', ?)`,
+    db.run('INSERT INTO tb_recall_incidents (id, batch_id, incident_type, severity, description, status, created_by) VALUES (?, ?, ?, ?, ?, \'open\', ?)',
       [id, batch_id, incident_type, severity, description, req.user?.id]
     );
     db.run('UPDATE tb_batches SET status = ? WHERE id = ?', ['recalled', batch_id]);

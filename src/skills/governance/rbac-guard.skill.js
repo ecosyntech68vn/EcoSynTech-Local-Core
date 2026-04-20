@@ -12,7 +12,7 @@ module.exports = {
       ok: role !== 'unknown',
       role,
       allowed: ['admin', 'operator', 'maintainer'].includes(role),
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

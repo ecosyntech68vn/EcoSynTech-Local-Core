@@ -10,7 +10,7 @@ module.exports = {
       action: 'coordinate-ota',
       requiresApproval: true,
       note: 'Validate target, version, checksum, and rollback plan before rollout.',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

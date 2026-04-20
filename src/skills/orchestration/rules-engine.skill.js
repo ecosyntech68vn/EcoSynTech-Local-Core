@@ -9,7 +9,7 @@ module.exports = {
       ok: true,
       action: 'evaluate-rules',
       note: 'Sync rules to sensor values and alert policy.',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

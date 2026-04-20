@@ -5,18 +5,18 @@ module.exports = {
   riskLevel: 'high',
   canAutoFix: true,
   run: function(ctx) {
-    var AutoBackup = require('../../ops/advanced').AutoBackup;
-    var config = { backupDir: './data/backups' };
-    var backup = AutoBackup(config, ctx.logger);
+    const AutoBackup = require('../../ops/advanced').AutoBackup;
+    const config = { backupDir: './data/backups' };
+    const backup = AutoBackup(config, ctx.logger);
     
-    var restore = backup.restoreFromLatest();
+    const restore = backup.restoreFromLatest();
     
     return {
       ok: restore.ok,
       action: 'restore-latest-backup',
       restored: restore.ok,
       data: restore.data,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

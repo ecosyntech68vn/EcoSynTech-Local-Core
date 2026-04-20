@@ -5,18 +5,18 @@ module.exports = {
   riskLevel: 'medium',
   canAutoFix: false,
   run: function(ctx) {
-    var stateStore = ctx.stateStore;
-    var history = stateStore.get('sensorHistory') || [];
+    const stateStore = ctx.stateStore;
+    let history = stateStore.get('sensorHistory') || [];
     
-    var data = ctx.event.data || ctx.event;
-    var sensorType = data.type || data.sensor;
-    var value = Number(data.value);
+    const data = ctx.event.data || ctx.event;
+    const sensorType = data.type || data.sensor;
+    const value = Number(data.value);
     
     if (!isNaN(value)) {
       history.push({
         type: sensorType,
         value: value,
-        timestamp: Date.now(),
+        timestamp: Date.now()
       });
       
       if (history.length > 100) history = history.slice(-100);
@@ -27,18 +27,18 @@ module.exports = {
       return { ok: true, skipped: true, reason: 'Insufficient data' };
     }
     
-    var recent = history.slice(-10);
-    var avg = 0;
-    var variance = 0;
+    const recent = history.slice(-10);
+    let avg = 0;
+    let variance = 0;
     
-    for (var i = 0; i < recent.length; i++) avg += recent[i].value;
+    for (let i = 0; i < recent.length; i++) avg += recent[i].value;
     avg /= recent.length;
     
-    for (var j = 0; j < recent.length; j++) variance += Math.pow(recent[j].value - avg, 2);
+    for (let j = 0; j < recent.length; j++) variance += Math.pow(recent[j].value - avg, 2);
     variance = Math.sqrt(variance / recent.length);
     
-    var deviation = Math.abs(value - avg);
-    var anomaly = deviation > variance * 2;
+    const deviation = Math.abs(value - avg);
+    const anomaly = deviation > variance * 2;
     
     return {
       ok: !anomaly,
@@ -48,7 +48,7 @@ module.exports = {
       deviation: deviation,
       threshold: variance * 2,
       recommendation: anomaly ? 'Check sensor ' + sensorType + ' for abnormal readings' : 'Normal',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

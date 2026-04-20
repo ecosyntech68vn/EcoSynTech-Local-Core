@@ -20,13 +20,13 @@ module.exports = {
   canAutoFix: false,
   
   run: function(ctx) {
-    var event = ctx.event || {};
-    var action = event.action || event.type?.replace('voice.', '') || 'present';
-    var lang = event.lang || 'vi';
-    var topic = event.topic || event.data?.topic || '';
-    var feature = event.feature || event.data?.feature || '';
+    const event = ctx.event || {};
+    const action = event.action || event.type?.replace('voice.', '') || 'present';
+    const lang = event.lang || 'vi';
+    const topic = event.topic || event.data?.topic || '';
+    const feature = event.feature || event.data?.feature || '';
     
-    var result = {
+    const result = {
       ok: true,
       action: action,
       language: lang,
@@ -37,46 +37,46 @@ module.exports = {
     };
     
     switch (action) {
-      case 'present':
-      case 'demo':
-        result.sections = this.getFullPresentation(topic, lang);
-        result.ttsOutput = this.compilePresentation(result.sections, lang);
-        break;
+    case 'present':
+    case 'demo':
+      result.sections = this.getFullPresentation(topic, lang);
+      result.ttsOutput = this.compilePresentation(result.sections, lang);
+      break;
         
-      case 'about':
-        result.sections = this.getAboutSection(lang);
-        result.ttsOutput = this.compileSection(result.sections, lang);
-        break;
+    case 'about':
+      result.sections = this.getAboutSection(lang);
+      result.ttsOutput = this.compileSection(result.sections, lang);
+      break;
         
-      case 'feature':
-        result.sections = this.getFeatureDeepDive(feature, lang);
-        result.ttsOutput = this.compileSection(result.sections, lang);
-        break;
+    case 'feature':
+      result.sections = this.getFeatureDeepDive(feature, lang);
+      result.ttsOutput = this.compileSection(result.sections, lang);
+      break;
         
-      case 'walkthrough':
-        result.sections = this.getWalkthrough(topic, lang);
-        result.ttsOutput = this.compileSection(result.sections, lang);
-        break;
+    case 'walkthrough':
+      result.sections = this.getWalkthrough(topic, lang);
+      result.ttsOutput = this.compileSection(result.sections, lang);
+      break;
         
-      case 'guide':
-        result.sections = this.getUserGuide(feature, lang);
-        result.ttsOutput = this.compileSection(result.sections, lang);
-        break;
+    case 'guide':
+      result.sections = this.getUserGuide(feature, lang);
+      result.ttsOutput = this.compileSection(result.sections, lang);
+      break;
         
-      case 'faq':
-        result.sections = this.getFAQDeep(feature, lang);
-        result.ttsOutput = this.compileSection(result.sections, lang);
-        break;
+    case 'faq':
+      result.sections = this.getFAQDeep(feature, lang);
+      result.ttsOutput = this.compileSection(result.sections, lang);
+      break;
         
-      case 'ask':
-      case 'answer':
-        result.sections = this.answerComprehensive(topic, feature, lang);
-        result.ttsOutput = this.compileSection(result.sections, lang);
-        break;
+    case 'ask':
+    case 'answer':
+      result.sections = this.answerComprehensive(topic, feature, lang);
+      result.ttsOutput = this.compileSection(result.sections, lang);
+      break;
         
-      default:
-        result.sections = this.getQuickIntro(lang);
-        result.ttsOutput = this.compileSection(result.sections, lang);
+    default:
+      result.sections = this.getQuickIntro(lang);
+      result.ttsOutput = this.compileSection(result.sections, lang);
     }
     
     result.totalDuration = result.sections.length * 2;
@@ -84,10 +84,10 @@ module.exports = {
   },
   
   getFullPresentation: function(topic, lang) {
-    var allTopics = ['overview', 'all', ''];
-    var isAll = allTopics.indexOf(topic) !== -1;
+    const allTopics = ['overview', 'all', ''];
+    const isAll = allTopics.indexOf(topic) !== -1;
     
-    var sections = [];
+    const sections = [];
     
     sections.push(this.getAboutSection(lang));
     sections.push(this.getFeaturesSection(lang));
@@ -99,7 +99,7 @@ module.exports = {
   },
   
   getAboutSection: function(lang) {
-    var content = {
+    const content = {
       vi: {
         title: 'GIỚI THIỆU ECOSYNTECH FARM OS',
         sections: [
@@ -136,7 +136,7 @@ module.exports = {
   },
   
   getFeaturesSection: function(lang) {
-    var content = {
+    const content = {
       vi: {
         title: 'TÍNH NĂNG NỔI BẬT',
         sections: [
@@ -240,7 +240,7 @@ module.exports = {
   },
   
   getPricingSection: function(lang) {
-    var content = {
+    const content = {
       vi: {
         title: 'BẢNG GIÁ & CHI PHÍ',
         sections: [
@@ -361,7 +361,7 @@ module.exports = {
   },
   
   getBenefitsSection: function(lang) {
-    var content = {
+    const content = {
       vi: {
         title: 'LỢI ÍCH & GIÁ TRỊ',
         sections: [
@@ -452,7 +452,7 @@ module.exports = {
   },
   
   getTechnicalSection: function(lang) {
-    var content = {
+    const content = {
       vi: {
         title: 'THÔNG SỐ KỸ THUẬT',
         sections: [
@@ -537,7 +537,7 @@ module.exports = {
   },
   
   getFeatureDeepDive: function(feature, lang) {
-    var guides = {
+    const guides = {
       qr: {
         vi: {
           title: 'HƯỚNG DẪN QR TRUY XUẤT',
@@ -616,12 +616,12 @@ module.exports = {
       }
     };
     
-    var content = guides[feature];
+    const content = guides[feature];
     return content ? content[lang] || content.vi : this.getFeaturesSection(lang);
   },
   
   getWalkthrough: function(topic, lang) {
-    var walks = {
+    const walks = {
       first: {
         vi: {
           title: 'HƯỚNG DẪN BẮT ĐẦU',
@@ -662,7 +662,7 @@ module.exports = {
   },
   
   getFAQDeep: function(faqId, lang) {
-    var faqs = {
+    const faqs = {
       vi: {
         title: 'CÂU HỎI THƯỜNG GẶP',
         sections: [
@@ -697,7 +697,7 @@ module.exports = {
   },
   
   getQuickIntro: function(lang) {
-    var intros = {
+    const intros = {
       vi: {
         title: 'ECOSYNTECH FARM OS',
         sections: [
@@ -713,7 +713,7 @@ module.exports = {
   },
   
   answerComprehensive: function(question, topic, lang) {
-    var sections = [];
+    const sections = [];
     
     sections.push({
       title: 'TRẢ LỜI: ' + (question || topic).toUpperCase(),
@@ -724,10 +724,10 @@ module.exports = {
   },
   
   compileSection: function(section, lang) {
-    var text = section.title || '';
-    var sections = section.sections || [];
+    let text = section.title || '';
+    const sections = section.sections || [];
     
-    for (var i = 0; i < sections.length; i++) {
+    for (let i = 0; i < sections.length; i++) {
       text += '\n' + sections[i];
     }
     
@@ -735,10 +735,10 @@ module.exports = {
   },
   
   compilePresentation: function(sections, lang) {
-    var text = '';
+    let text = '';
     
-    for (var i = 0; i < sections.length; i++) {
-      var section = sections[i];
+    for (let i = 0; i < sections.length; i++) {
+      const section = sections[i];
       text += '\n\n' + (section.title || '');
       text += '\n' + (section.sections || []).join('\n');
     }
@@ -760,9 +760,9 @@ module.exports = {
   
   getNaturalDialog: function(query, lang) {
     lang = lang || 'vi';
-    var q = query.toLowerCase();
+    const q = query.toLowerCase();
     
-    var responses = {
+    const responses = {
       vi: {
         'tưới nước': 'Độ ẩm đất hiện tại là bao nhiêu? Nếu dưới 40% nên tưới ngay.',
         'bón phân': 'Thời điểm bón phân tốt nhất là sáng sớm hoặc chiều mát.',
@@ -785,11 +785,11 @@ module.exports = {
       }
     };
     
-    var langResponses = responses[lang] || responses.vi;
-    var matched = null;
-    var keywords = Object.keys(langResponses);
+    const langResponses = responses[lang] || responses.vi;
+    let matched = null;
+    const keywords = Object.keys(langResponses);
     
-    for (var i = 0; i < keywords.length; i++) {
+    for (let i = 0; i < keywords.length; i++) {
       if (q.indexOf(keywords[i]) !== -1) {
         matched = langResponses[keywords[i]];
         break;
@@ -811,11 +811,11 @@ module.exports = {
   },
   
   runDialog: function(ctx) {
-    var event = ctx.event || {};
-    var query = event.query || event.text || event.speech || '';
-    var lang = event.lang || 'vi';
+    const event = ctx.event || {};
+    const query = event.query || event.text || event.speech || '';
+    const lang = event.lang || 'vi';
     
-    var result = {
+    const result = {
       ok: true,
       action: 'dialog',
       query: query,
@@ -825,7 +825,7 @@ module.exports = {
     };
     
     if (query) {
-      var dialog = this.getNaturalDialog(query, lang);
+      const dialog = this.getNaturalDialog(query, lang);
       result.response = dialog.response;
       result.tts = dialog.tts;
     } else {

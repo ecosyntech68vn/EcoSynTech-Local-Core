@@ -1,12 +1,12 @@
-var crypto = require('crypto');
-var config = require('../../config');
+const crypto = require('crypto');
+const config = require('../../config');
 
-var BC_ENABLED = false;
-var BC_NETWORK = 'testnet';
-var BC_MODULE = '0x1';
+let BC_ENABLED = false;
+let BC_NETWORK = 'testnet';
+let BC_MODULE = '0x1';
 
 function initBlockchain() {
-  var bcConfig = config.blockchain || {};
+  const bcConfig = config.blockchain || {};
   BC_ENABLED = bcConfig.enabled === true;
   BC_NETWORK = bcConfig.network || 'testnet';
   BC_MODULE = bcConfig.moduleAddress || '0x1';
@@ -17,7 +17,7 @@ function formatTimestamp(ts) {
 }
 
 function computeBatchHash(batch, stages, readings) {
-  var data = {
+  const data = {
     batch_code: batch.batch_code,
     product_name: batch.product_name,
     product_type: batch.product_type,
@@ -42,12 +42,12 @@ function computeBatchHash(batch, stages, readings) {
     farm_certifications: batch.farm_certifications
   };
   
-  var canonical = JSON.stringify(data, Object.keys(data).sort());
+  const canonical = JSON.stringify(data, Object.keys(data).sort());
   return '0x' + crypto.createHash('sha256').update(canonical).digest('hex');
 }
 
 function computeStageHash(stage) {
-  var data = {
+  const data = {
     stage_name: stage.stage_name,
     stage_type: stage.stage_type,
     stage_order: stage.stage_order,
@@ -57,24 +57,24 @@ function computeStageHash(stage) {
     inputs_used: stage.inputs_used,
     created_at: stage.created_at
   };
-  var canonical = JSON.stringify(data, Object.keys(data).sort());
+  const canonical = JSON.stringify(data, Object.keys(data).sort());
   return '0x' + crypto.createHash('sha256').update(canonical).digest('hex');
 }
 
 function computeHarvestHash(batch, harvestData) {
-  var data = {
+  const data = {
     batch_code: batch.batch_code,
     harvest_date: new Date().toISOString(),
     harvest_quantity: harvestData.harvest_quantity,
     harvest_notes: harvestData.harvest_notes,
     status: 'harvested'
   };
-  var canonical = JSON.stringify(data, Object.keys(data).sort());
+  const canonical = JSON.stringify(data, Object.keys(data).sort());
   return '0x' + crypto.createHash('sha256').update(canonical).digest('hex');
 }
 
 function computeExportHash(batch, exportData) {
-  var data = {
+  const data = {
     batch_code: batch.batch_code,
     export_date: new Date().toISOString(),
     buyer_name: exportData.buyer_name,
@@ -83,12 +83,12 @@ function computeExportHash(batch, exportData) {
     export_unit: exportData.export_unit,
     status: 'exported'
   };
-  var canonical = JSON.stringify(data, Object.keys(data).sort());
+  const canonical = JSON.stringify(data, Object.keys(data).sort());
   return '0x' + crypto.createHash('sha256').update(canonical).digest('hex');
 }
 
 function computeCertHash(batch, certData) {
-  var data = {
+  const data = {
     batch_code: batch.batch_code,
     certification_name: certData.certification_name,
     certification_body: certData.certification_body,
@@ -96,7 +96,7 @@ function computeCertHash(batch, certData) {
     certificate_number: certData.certificate_number,
     added_at: new Date().toISOString()
   };
-  var canonical = JSON.stringify(data, Object.keys(data).sort());
+  const canonical = JSON.stringify(data, Object.keys(data).sort());
   return '0x' + crypto.createHash('sha256').update(canonical).digest('hex');
 }
 
@@ -133,8 +133,8 @@ module.exports = {
   run: function(ctx) {
     initBlockchain();
     
-    var stateStore = ctx.stateStore;
-    var event = ctx.event || {};
+    const stateStore = ctx.stateStore;
+    const event = ctx.event || {};
     
     if (!BC_ENABLED) {
       return { 
@@ -145,14 +145,14 @@ module.exports = {
       };
     }
     
-    var txType = event.type || event.data?.txType || 'batch_record';
-    var batchData = event.data?.batch || event.data;
-    var metadata = event.data?.metadata || {};
+    let txType = event.type || event.data?.txType || 'batch_record';
+    let batchData = event.data?.batch || event.data;
+    let metadata = event.data?.metadata || {};
     
     if (!batchData || !batchData.batch_code) {
-      var pendingTxs = stateStore.get('pendingBlockchainTxs') || [];
+      const pendingTxs = stateStore.get('pendingBlockchainTxs') || [];
       if (pendingTxs.length > 0) {
-        var nextTx = pendingTxs.shift();
+        const nextTx = pendingTxs.shift();
         stateStore.set('pendingBlockchainTxs', pendingTxs);
         batchData = nextTx.batchData;
         txType = nextTx.txType || txType;
@@ -164,39 +164,39 @@ module.exports = {
       return { ok: true, skipped: true, reason: 'No batch data to process' };
     }
     
-    var dataHash;
-    var stages = batchData.stages || [];
-    var readings = batchData.readings || [];
+    let dataHash;
+    const stages = batchData.stages || [];
+    const readings = batchData.readings || [];
     
     switch (txType) {
-      case 'traceability.harvest':
-        dataHash = computeHarvestHash(batchData, metadata);
-        break;
-      case 'traceability.export':
-        dataHash = computeExportHash(batchData, metadata);
-        break;
-      case 'traceability.certify':
-        dataHash = computeCertHash(batchData, metadata);
-        break;
-      case 'traceability.stage':
-        dataHash = computeStageHash(metadata.stage || {});
-        break;
-      default:
-        dataHash = computeBatchHash(batchData, stages, readings);
+    case 'traceability.harvest':
+      dataHash = computeHarvestHash(batchData, metadata);
+      break;
+    case 'traceability.export':
+      dataHash = computeExportHash(batchData, metadata);
+      break;
+    case 'traceability.certify':
+      dataHash = computeCertHash(batchData, metadata);
+      break;
+    case 'traceability.stage':
+      dataHash = computeStageHash(metadata.stage || {});
+      break;
+    default:
+      dataHash = computeBatchHash(batchData, stages, readings);
     }
     
-    var txRecord = createTxRecord(txType, batchData.batch_code, dataHash, metadata);
+    const txRecord = createTxRecord(txType, batchData.batch_code, dataHash, metadata);
     
-    var txHistory = stateStore.get('blockchainTxHistory') || [];
+    let txHistory = stateStore.get('blockchainTxHistory') || [];
     txHistory.unshift(txRecord);
     if (txHistory.length > 200) txHistory = txHistory.slice(0, 200);
     stateStore.set('blockchainTxHistory', txHistory);
     
-    var pendingBatches = stateStore.get('blockchainPendingBatches') || {};
+    const pendingBatches = stateStore.get('blockchainPendingBatches') || {};
     delete pendingBatches[batchData.batch_code];
     stateStore.set('blockchainPendingBatches', pendingBatches);
     
-    var stats = stateStore.get('blockchainStats') || { totalTxs: 0, byType: {} };
+    const stats = stateStore.get('blockchainStats') || { totalTxs: 0, byType: {} };
     stats.totalTxs++;
     stats.byType[txType] = (stats.byType[txType] || 0) + 1;
     stateStore.set('blockchainStats', stats);
@@ -225,13 +225,13 @@ module.exports = {
   computeCertHash: computeCertHash,
   
   getTransactionHistory: function(limit) {
-    var stateStore = this._stateStore;
-    var history = stateStore ? (stateStore.get('blockchainTxHistory') || []) : [];
+    const stateStore = this._stateStore;
+    const history = stateStore ? (stateStore.get('blockchainTxHistory') || []) : [];
     return limit ? history.slice(0, limit) : history;
   },
   
   getStats: function() {
-    var stateStore = this._stateStore;
+    const stateStore = this._stateStore;
     return stateStore ? (stateStore.get('blockchainStats') || { totalTxs: 0 }) : { totalTxs: 0 };
   },
   

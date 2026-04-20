@@ -870,7 +870,7 @@ function seedCropData() {
   
   let canSeed = false;
   try {
-    const info = db.exec("PRAGMA table_info(crops)");
+    const info = db.exec('PRAGMA table_info(crops)');
     const cols = (info[0]?.values || []).map(r => r[1]);
     canSeed = cols.includes('name') && cols.includes('name_vi');
   } catch(e) { canSeed = false; }
@@ -918,14 +918,14 @@ function seedCropData() {
     crops.forEach(crop => stmt.run(crop));
     stmt.free();
     
-logger.info('Vietnamese crop data seeded with growth stages');
+    logger.info('Vietnamese crop data seeded with growth stages');
   } else {
     logger.info('Skipping crop seed: schema mismatch');
   }
    
   let canSeedAqua = false;
   try {
-    const info = db.exec("PRAGMA table_info(aquaculture)");
+    const info = db.exec('PRAGMA table_info(aquaculture)');
     const cols = (info[0]?.values || []).map(r => r[1]);
     canSeedAqua = cols.includes('name') && cols.includes('name_vi');
   } catch(e) { canSeedAqua = false; }
@@ -950,7 +950,7 @@ logger.info('Vietnamese crop data seeded with growth stages');
       ['frog-tiger', 'Tiger Frog', 'Ếch', 'amphibian', 22, 30, 6.5, 7.5, 4, 2, 90, 30, 1.2, 10, 'red leg syndrome']
     ];
 
-    const stmt = db.prepare(`INSERT INTO aquaculture (id, name, name_vi, category, optimal_temp_min, optimal_temp_max, optimal_ph_min, optimal_ph_max, optimal_do, optimal_salinity, growth_days, density_max, feed_conversion_ratio, water_change_rate, disease_risk) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    const stmt = db.prepare('INSERT INTO aquaculture (id, name, name_vi, category, optimal_temp_min, optimal_temp_max, optimal_ph_min, optimal_ph_max, optimal_do, optimal_salinity, growth_days, density_max, feed_conversion_ratio, water_change_rate, disease_risk) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
     aquaculture.forEach(a => {
       stmt.run(a);
     });

@@ -131,7 +131,7 @@ module.exports = {
         `📡 ${pkg.sensors} cảm biến\n` +
         `💰 ${this.formatPrice(pkg.price)}\n` +
         `⏱️ Thu hồi vốn: ${this.calculatePayback(pkg.price, pkg.sensors)}\n\n` +
-        `Anh/chị có muốn xem chi tiết không?`,
+        'Anh/chị có muốn xem chi tiết không?',
       package: pkg,
       nextAction: 'Xem chi tiết / Báo giá / Đặt hàng'
     };

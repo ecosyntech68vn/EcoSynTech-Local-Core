@@ -20,14 +20,14 @@ module.exports = {
     const [health, apiHealth, apiVersion] = await Promise.all([
       fetchJson('/health'),
       fetchJson('/api/health'),
-      fetchJson('/api/version'),
+      fetchJson('/api/version')
     ]);
 
     const versions = {
       packageVersion,
       healthVersion: health?.version ?? null,
       apiHealthVersion: apiHealth?.version ?? null,
-      apiVersion: apiVersion?.api ?? null,
+      apiVersion: apiVersion?.api ?? null
     };
 
     const unique = [...new Set(Object.values(versions).filter(Boolean))];
@@ -39,7 +39,7 @@ module.exports = {
       recommendation: unique.length > 1
         ? 'Align README, package.json, /health and /api/health to one release version.'
         : 'Versions aligned.',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

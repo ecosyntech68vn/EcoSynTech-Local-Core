@@ -15,7 +15,7 @@ module.exports = {
       lastBeat,
       staleForMs,
       recommendation: ok ? 'WS healthy' : 'WebSocket heartbeat missing/stale. Check reconnect logic and /ws consumers.',
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

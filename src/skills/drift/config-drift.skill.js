@@ -19,7 +19,7 @@ module.exports = {
     const [health, readiness, stats] = await Promise.all([
       fetchJson('/api/health'),
       fetchJson('/readiness'),
-      fetchJson('/api/stats'),
+      fetchJson('/api/stats')
     ]);
 
     const findings = [];
@@ -39,7 +39,7 @@ module.exports = {
     return {
       ok: findings.length === 0,
       findings,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date().toISOString()
     };
-  },
+  }
 };

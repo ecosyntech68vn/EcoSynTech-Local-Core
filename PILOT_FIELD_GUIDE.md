@@ -1,6 +1,6 @@
 # EcoSynTech FarmOS PRO - PILOT FIELD GUIDE
 ## Hướng dẫn triển khai thực địa - Pilot Program
-## Phiên bản: 5.0.0 | Ngày: 2026-04-19
+## Phiên bản: 5.0.0 | Ngày: 2026-04-20
 
 ---
 

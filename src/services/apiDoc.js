@@ -6,7 +6,7 @@ const options = {
     openapi: '3.0.0',
     info: {
       title: 'EcoSynTech Farm OS API',
-      version: '5.0.0',
+      version: process.env.npm_package_version || '5.0.0',
       description: 'Nền tảng Nông nghiệp Thông minh IoT với AI',
       contact: {
         name: 'EcoSynTech',

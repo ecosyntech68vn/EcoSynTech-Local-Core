@@ -272,6 +272,10 @@ app.use(compression());
   app.use('/api/crops', cropsRoutes);
   app.use('/api/backup', backupRoutes);
 
+  // Swagger API Documentation
+  const apiDoc = require('./src/services/apiDoc');
+  apiDoc.setupSwagger(app);
+
   // Health endpoints for deployment health and readiness
   app.get('/health', (req, res) => {
     var sysInfo = optimization.getSystemInfo();
@@ -474,11 +478,13 @@ async function startServer() {
 ║    POST /api/auth/login        - Login                        ║
 ║                                                              ║
 ║  Webhooks:                                                    ║
-║    POST /api/webhooks/sensor-alert                           ║
-║    POST /api/webhooks/device-status                          ║
-║    POST /api/webhooks/rule-triggered                        ║
-║    POST /api/webhooks/schedule-run                          ║
-╚══════════════════════════════════════════════════════════════╝
+    ║  POST /api/webhooks/sensor-alert                           ║
+    ║  POST /api/webhooks/device-status                          ║
+    ║  POST /api/webhooks/rule-triggered                        ║
+    ║  POST /api/webhooks/schedule-run                          ║
+    ╠══════════════════════════════════════════════════════════════╣
+    ║  API Docs: /api-docs (Swagger UI)                        ║
+    ╚══════════════════════════════════════════════════════════════╝
       `);
     });
     

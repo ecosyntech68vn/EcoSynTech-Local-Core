@@ -1,4 +1,6 @@
 require('dotenv').config();
+// Initialize OpenTelemetry observability if available (non-blocking)
+require('./src/config/otel_setup');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');

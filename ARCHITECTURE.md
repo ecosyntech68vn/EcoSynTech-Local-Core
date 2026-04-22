@@ -1,5 +1,24 @@
 # EcoSynTech FarmOS PRO - Architecture Diagrams
-# Version 5.0.0
+# Version 6.0.0 | Dual-Path Platform for SMB & Enterprise
+
+---
+
+## 0. DESIGN PHILOSOPHY
+
+### Dual-Path Architecture / Kiến trúc hai lớp
+
+**EcoSynTech FarmOS** được thiết kế theo nguyên tắc **hybrid-lightweight-first**:
+
+| Path | Target | Technology | Resources | Use Case |
+|------|-------|------------|-----------|----------|----------|
+| **Lite** (Default) | Nông dân, HTX nhỏ (1-2GB RAM) | SQLite + In-memory | <512MB | 100 ESP32 |
+| **Pro** | HTX lớn, Farm enterprise | PostgreSQL + Redis | >2GB | 500+ ESP32 |
+
+**Nguyên tắc thiết kế:**
+1. **Lightweight default** - Chạy tốt trên thiết bị cũ, RAM thấp
+2. **Clear migration path** - Nâng cấp liền mạch khi cần
+3. **No feature penalty** - Lite có đầy đủ core features
+4. **Enterprise-ready** - Đường nâng cấp sẵn khi quy mô tăng
 
 ---
 
@@ -340,4 +359,55 @@
 
 ---
 
-*Diagrams generated for EcoSynTech FarmOS PRO v5.0.0*
+## 10. Dual-Path Database Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│            DUAL-PATH DATABASE ARCHITECTURE                    │
+└─────────────────────────────────────────────────────────────────┘
+
+                    ┌──────────────┐
+                    │  APP LAYER  │
+                    └──────┬───────┘
+                           │
+            ┌──────────────┼─────────────���┐
+            ▼              ▼              ▼
+    ┌───────────┐  ┌────────────┐  ┌──────────────┐
+    │   Lite   │  │  Hybrid   │  │    Pro      │
+    │  Mode    │  │   Mode    │  │   Mode      │
+    └────┬─────┘  └─────┬─────┘  └──────┬──────┘
+         │              │               │
+    ┌────▼────┐   ┌─────▼─────┐  ┌─────▼─────┐
+    │ SQLite │   │  SQLite   │  │PostgreSQL│
+    │ (WAL)  │   │ + Redis   │  │+ Redis   │
+    └────────┘   └───────────┘  └───────────┘
+
+    LITE (<1GB)    HYBRID (1-2GB)  PRO (>2GB)
+    ┌─────────────────────────────────────────────────────┐
+    │  Migration Path: Lite → Pro (when scale requires)  │
+    └─────────────────────────────────────────────────────┘
+```
+
+---
+
+## 11. Technology Stack by Path
+
+### Lite Path (Default for SMB)
+| Component | Technology | Rationale |
+|----------|-----------|-----------|
+| Database | SQLite (WAL mode) | No server, low RAM |
+| Cache | In-memory LRU | Lightweight |
+| Auth | JWT | Stateless |
+| Backup | Local + Export | Simple |
+
+### Pro Path (For Enterprise Scale)
+| Component | Technology | Rationale |
+|----------|-----------|-----------|
+| Database | PostgreSQL | ACID, scaling |
+| Cache | Redis | Session sharing |
+| Auth | JWT + Refresh rotation | Security |
+| Backup | Automated + Off-site | Compliance |
+
+---
+
+*Diagrams for EcoSynTech FarmOS v6.0.0 - Dual-Path Platform*

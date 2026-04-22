@@ -2,7 +2,18 @@
 
 ## English | Tiếng Việt
 
-**Smart Agriculture 4.0 Platform** with **multi-farm management**, **workforce**, **supply chain**, **inventory**, **finance**, **smart irrigation**, **health monitoring** and **AI-powered automation**.
+**Smart Agriculture Platform** - Lightweight, easy to deploy, suitable for Vietnamese smallholders and cooperatives. Has upgrade path to enterprise when scale increases.
+
+**Nền tảng nông nghiệp thông minh** - Nhẹ, dễ triển khai, phù hợp nông dân và HTX Việt Nam. Có đường nâng cấp lên enterprise khi quy mô tăng.
+
+---
+
+## 🎯 DUAL-PATH PLATFORM
+
+| Path | Target | RAM | Devices |
+|------|-------|-----|---------|----------|
+| **Lite** (Default) | Nông dân, HTX nhỏ | 512MB-1GB | 100 ESP32 |
+| **Pro** | HTX lớn, Enterprise | >2GB | 500+ ESP32 |
 
 ---
 

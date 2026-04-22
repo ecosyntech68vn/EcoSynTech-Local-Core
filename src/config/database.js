@@ -131,18 +131,22 @@ function createPeriodicBackup() {
   }
 }
 
-setInterval(() => {
-  if (db) {
-    saveDatabaseSync();
-    logger.debug('[DB] Checkpoint written');
-  }
-}, 60000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(() => {
+    if (db) {
+      saveDatabaseSync();
+      logger.debug('[DB] Checkpoint written');
+    }
+  }, 60000);
+}
 
-setInterval(() => {
-  if (db) {
-    createPeriodicBackup();
-  }
-}, 24 * 60 * 60 * 1000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(() => {
+    if (db) {
+      createPeriodicBackup();
+    }
+  }, 24 * 60 * 60 * 1000);
+}
 
 function createTables() {
   db.run(`

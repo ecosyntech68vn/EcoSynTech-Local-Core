@@ -6,6 +6,7 @@ const { getOne, runQuery } = require('../config/database');
 const { validateMiddleware } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { auth: authenticate } = require('../middleware/auth');
+const { generateRefreshToken, storeRefreshToken, verifyRefreshToken, rotateRefreshToken, generateAccessToken } = require('../middleware/auth');
 const config = require('../config');
 const logger = require('../config/logger');
 
@@ -30,12 +31,16 @@ router.post('/register', validateMiddleware('auth.register'), asyncHandler(async
     config.jwt.secret,
     { expiresIn: config.jwt.expiresIn }
   );
+  // Generate and persist refresh token for rotation
+  const refreshToken = generateRefreshToken({ id, email, name, role: 'user' });
+  storeRefreshToken(id, refreshToken);
   
   logger.info(`User registered: ${email}`);
   
   res.status(201).json({
     user: { id, email, name, role: 'user' },
-    token
+    token,
+    refreshToken
   });
 }));
 
@@ -60,9 +65,14 @@ router.post('/login', validateMiddleware('auth.login'), asyncHandler(async (req,
   
   logger.info(`User logged in: ${email}`);
   
+  // Create and store refresh token for rotation
+  const loginRefreshToken = generateRefreshToken({ id: user.id, email: user.email, name: user.name, role: user.role });
+  storeRefreshToken(user.id, loginRefreshToken);
+  
   res.json({
     user: { id: user.id, email: user.email, name: user.name, role: user.role },
-    token
+    token,
+    refreshToken: loginRefreshToken
   });
 }));
 
@@ -91,6 +101,24 @@ router.put('/me', authenticate, asyncHandler(async (req, res) => {
   const user = getOne('SELECT id, email, name, role FROM users WHERE id = ?', [req.user.id]);
   
   res.json(user);
+}));
+
+// Refresh endpoint to rotate refresh token and issue new access token
+router.post('/refresh', asyncHandler(async (req, res) => {
+  const { userId, refreshToken } = req.body;
+  if (!userId || !refreshToken) {
+    return res.status(400).json({ error: 'Missing userId or refreshToken' });
+  }
+  const { verifyRefreshToken, rotateRefreshToken, generateAccessToken } = require('../middleware/auth');
+  if (!verifyRefreshToken(userId, refreshToken)) {
+    return res.status(401).json({ error: 'Invalid refresh token' });
+  }
+  const user = getOne('SELECT id, email, name, role FROM users WHERE id = ?', [userId]);
+  if (!user) return res.status(401).json({ error: 'User not found' });
+  const newRefresh = rotateRefreshToken(userId, refreshToken);
+  if (!newRefresh) return res.status(401).json({ error: 'Refresh rotation failed' });
+  const newAccess = generateAccessToken(user);
+  res.json({ token: newAccess, refreshToken: newRefresh });
 }));
 
 module.exports = router;

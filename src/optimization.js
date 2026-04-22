@@ -185,9 +185,11 @@ function clearCache() {
   return { before: before, after: after, cleared: before - after };
 }
 
-setInterval(function() {
-  global.__SYSTEM_INFO__ = getSystemInfo();
-}, 30000);
+if (process.env.NODE_ENV !== 'test') {
+  setInterval(function() {
+    global.__SYSTEM_INFO__ = getSystemInfo();
+  }, 30000);
+}
 
 module.exports = {
   getSystemInfo: getSystemInfo,

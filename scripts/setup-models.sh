@@ -16,6 +16,38 @@ download() {
     echo "[Bootstrap] No URL provided for $dest"
     return 0
   fi
+  # Support Google Drive direct downloads (two-step confirmation)
+  download_drive() {
+    local gurl="$1"; local gdest="$2"
+    if [[ -z "$gurl" ]]; then return 0; fi
+    # Extract file id from common Drive URL formats
+    local file_id=""
+    if [[ "$gurl" =~ /d/([^/?]+) ]]; then
+      file_id=${BASH_REMATCH[1]}
+    elif [[ "$gurl" =~ id=([^&]+) ]]; then
+      file_id=${BASH_REMATCH[1]}
+    fi
+    if [[ -z "$file_id" ]]; then
+      echo "[Bootstrap] Could not extract Drive file ID from URL: $gurl"; return 0
+    fi
+    if command -v curl >/dev/null 2>&1; then
+      curl -sc /tmp/gcookie "https://drive.google.com/uc?export=download&id=${file_id}" >/dev/null
+      confirm=$(awk '/download/ {print $NF}' /tmp/gcookie 2>/dev/null || true)
+      if [[ -n "$confirm" ]]; then
+        curl -L -b /tmp/gcookie "https://drive.google.com/uc?export=download&confirm=${confirm}&id=${file_id}" -o "$gdest"
+      else
+        curl -L -o "$gdest" "https://drive.google.com/uc?export=download&id=${file_id}"
+      fi
+      echo "[Bootstrap] Downloaded (Drive) $gdest"
+      return 0
+    fi
+    if command -v wget >/dev/null 2>&1; then
+      wget --load-cookies /tmp/gcookie.txt "https://drive.google.com/uc?export=download&id=${file_id}" -O "$gdest" || true
+      echo "[Bootstrap] Downloaded (Drive) $gdest"
+      return 0
+    fi
+    echo "[Bootstrap] Drive download not supported: missing curl/wget" >&2
+  }
   if command -v curl >/dev/null 2>&1; then
     curl -fL "$url" -o "$dest" && echo "[Bootstrap] Downloaded $dest"
   elif command -v wget >/dev/null 2>&1; then
@@ -45,7 +77,11 @@ if [[ "$AI_LARGE" == "1" || "$AI_LARGE" == "true" ]]; then
   else
     AI_ONNX_URL="${AI_ONNX_URL:-}"
     if [[ -n "$AI_ONNX_URL" ]]; then
-      download "$AI_ONNX_URL" "$LARGE_FILE" || true
+      if [[ "$AI_ONNX_URL" =~ drive.google.com ]]; then
+        download_drive "$AI_ONNX_URL" "$LARGE_FILE" || true
+      else
+        download "$AI_ONNX_URL" "$LARGE_FILE" || true
+      fi
     else
       echo "[Bootstrap] AI_ONNX_URL not provided; skipping large model download"
     fi

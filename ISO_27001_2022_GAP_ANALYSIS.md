@@ -200,6 +200,7 @@ Last Updated: 2026-04-23
 | A.14.3 | Predictive alerting | ✅ DONE | PredictiveAlerting (Z-score) |
 | A.14.4 | Skill orchestration | ✅ DONE | SkillOrchestrator |
 | A.14.5 | Compliance reporting | ✅ DONE | complianceReportService.js |
+| A.14.6 | Drive-hosted model bootstrap | ✅ DONE | bootstrap/modelLoader.js | 
 
 ---
 

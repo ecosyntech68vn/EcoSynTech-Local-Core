@@ -59,6 +59,7 @@ const farmosCoreRoutes = require('./src/routes/farmos-core');
 const dashboardRoutes = require('./src/routes/dashboard');
 const workersRoutes = require('./src/routes/workers');
 const supplyChainRoutes = require('./src/routes/supply-chain');
+const aiModelLoader = require('./src/bootstrap/modelLoader');
 const inventoryRoutes = require('./src/routes/inventory');
 const financeRoutes = require('./src/routes/finance');
 const systemInfoRoutes = require('./src/routes/system-info');
@@ -276,6 +277,12 @@ app.use(compression());
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/workers', workersRoutes);
   app.use('/api/supply-chain', supplyChainRoutes);
+  // Initialize lightweight/optional AI models lazily on startup to keep boot fast
+  aiModelLoader.initialize().then(() => {
+    // models initialized
+  }).catch((err) => {
+    console.error('[BOOTSTRAP] AI model bootstrap error on startup:', err?.message || err);
+  });
   app.use('/api/inventory', inventoryRoutes);
   app.use('/api/finance', financeRoutes);
   app.use('/api/system', systemInfoRoutes);

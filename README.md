@@ -78,7 +78,23 @@ npm install
 cp .env.example .env
 # ⚠️ IMPORTANT: Change JWT_SECRET in .env before production!
 
-# 5. Start server
+# 5. Bootstrap AI models (optional)
+- Script bootstrap for AI models is available to download lightweight and optional large models on demand.
+- By default, the bootstrap loads the lightweight plant disease model (4MB). You can enable loading the heavy ONNX model via environment variables.
+- To bootstrap:
+- export AI_SMALL_MODEL=1
+- export AI_LARGE_MODEL=0
+- npm run setup-models
+- If you want to load the large ONNX model, set:
+- export AI_LARGE_MODEL=1
+- export AI_ONNX_URL="https://path/to/irrigation_lstm.onnx" (or Drive URL supported)
+- npm run setup-models
+
+- After bootstrap, start server as usual:
+-
+```bash
+- npm start
+-```
 npm start
 ```
 

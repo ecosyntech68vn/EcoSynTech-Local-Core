@@ -415,3 +415,15 @@
 ---
 
 *Diagrams for EcoSynTech FarmOS v6.0.0 - Dual-Path Platform*
+
+### AI Bootstrap & Governance (New)
+
+- Philosophy: Modular, lazy-loaded AI models with a lightweight bootstrap layer. Models are loaded on-demand via a bootstrap manager to minimize RAM and CPU usage in the common Lite path, with a clean migration path to Pro when needed.
+- Implementation: A small bootstrap module (src/bootstrap/modelLoader.js) and a shell bootstrap script (scripts/setup-models.sh) manage loading of two model families:
+  - Lightweight model: Plant disease detection (TFLite, ~4MB).
+  - Heavy model: ONNX-based irrigation predictor (on-demand, typically ~2GB, optional).
+- Activation:
+  - Small model enabled by AI_SMALL_MODEL (default 1).
+  - Large model enabled by AI_LARGE_MODEL (default 0) and AI_ONNX_URL for source.
+- Observability: Bootstrapping logs are recorded for audit/tracking and to satisfy A.14 controls.
+- Operational considerations: Bootstrap supports Drive URL for large model download, with two-step confirmation, and supports OS Linux/macOS/WSL.

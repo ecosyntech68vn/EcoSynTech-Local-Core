@@ -3,6 +3,10 @@
 
 ---
 
+## Version Notes
+- This version (6.0.0) reflects the SOP framework milestone, not the code release version.
+- Code releases follow package.json semantic versioning (e.g., v5.2.0).
+
 ## DANH MỤC SOP
 -Note: Document aligned with the latest ISA/ISO 27001 alignment and architecture updates. For future updates, reference DOCS_GUIDE.md.
 -Check: Ensure presence of 'DANH MUC SOP' header and reference to 'DOCS_GUIDE.md' (robust across diacritics).

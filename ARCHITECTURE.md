@@ -3,6 +3,10 @@
 
 ---
 
+## Version Notes
+- This version (6.0.0) reflects the dual-path architecture milestone (Lite/Pro), not the code release version.
+- Code releases follow package.json semantic versioning (e.g., v5.2.0).
+
 ## 0. DESIGN PHILOSOPHY
 
 ### Dual-Path Architecture / Kiến trúc hai lớp

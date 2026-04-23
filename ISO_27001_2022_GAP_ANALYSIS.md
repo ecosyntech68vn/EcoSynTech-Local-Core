@@ -4,6 +4,10 @@ Last Updated: 2026-04-23
 
 ---
 
+## Version Notes
+- This version (6.0.0) reflects the ISO 27001 GAP framework milestone, not the code release version.
+- Code releases follow package.json semantic versioning (e.g., v5.2.0).
+
 ## TỔNG QUAN ĐÁNH GIÁ
 
 | Metric | Điểm | Rating |

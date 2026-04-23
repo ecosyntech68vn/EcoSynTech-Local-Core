@@ -4,6 +4,10 @@ Version: 6.0.0 | Release date: 2026-04-22 | Last Updated: 2026-04-23 | Status: P
 
 ---
 
+## Version Notes
+- This version (6.0.0) reflects the dual-path architecture milestone, not the code release version.
+- Code releases follow package.json semantic versioning (e.g., v5.2.0).
+
 Overview / Tổng quan
 - EcoSynTech FarmOS là nền tảng nông nghiệp thông minh tích hợp IoT và AI, tuân thủ ISO 27001:2022 (9.5/10). Hệ thống có 30+ bài test passing, 77 skills có sẵn, 9 AI agents, và sẵn sàng cho Pilot với tối đa 100 thiết bị ESP32.
 - The repo contains deployment assets (Dockerfile, docker-compose.prod.yml, nginx.conf, deploy.sh), SOPs for core operational processes, formal legal documents (TOS, Privacy Policy, SLA, Service Agreement), và proprietary SmartAutomationEngine.

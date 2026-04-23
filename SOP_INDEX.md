@@ -52,7 +52,7 @@ Patch: Use the DOCS_GUIDE.md template for future SOP updates; ensure alignment a
 | **SOP-D-02** | Báo cáo sự cố | Support | 24 giờ |
 | **SOP-D-03** | Đào tạo người dùng | HR | 6 tháng |
 
-### Series E: AI Automation (AI Tự động - v6.0)
+### Series E: AI Automation (AI Tự động - v6.1)
 
 | SOP Code | Title | Owner | Review Cycle |
 |---------|-------|-------|---------------|
@@ -62,6 +62,9 @@ Patch: Use the DOCS_GUIDE.md template for future SOP updates; ensure alignment a
 | **SOP-E-04** | AI Bootstrap & Model Management | AI Ops | 1 tuần |
 | **SOP-E-05** | AI Decision Logging & Audit Trail | AI Ops | 1 tháng |
 | **SOP-E-06** | AI Incident Response | SOC | 15 phút |
+| **SOP-E-07** | IoT Data Quality Assessment | AI Ops | 1 tuần |
+| **SOP-E-08** | AI Telemetry Governance | AI Ops | 1 tháng |
+| **SOP-E-09** | AI Model Checksum Verification | AI Ops | 1 tuần |
 
 ---
 
@@ -106,6 +109,7 @@ Patch: Use the DOCS_GUIDE.md template for future SOP updates; ensure alignment a
 |---------|------|--------|---------|
 | 5.0.0 | 2026-04-20 | EcoSynTech | Initial release |
 | 6.0.0 | 2026-04-23 | EcoSynTech | Added SOP-E-04/05/06 (AI Bootstrap, Logging, Incident) |
+| 6.1.0 | 2026-04-23 | EcoSynTech | Added SOP-E-07/08/09 (Data Quality, Telemetry Governance, Checksum) |
 
 | Role | Name | Date | Signature |
 |------|------|------|----------|

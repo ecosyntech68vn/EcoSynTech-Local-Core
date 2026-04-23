@@ -4,6 +4,7 @@
   "description": "EcoSynTech IoT Backend - Optimized for low-memory devices",
   "main": "server.js",
   "scripts": {
+    "setup-models": "./scripts/setup-models.sh",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "start:lowmem": "node --max-old-space-size=256 server.js",

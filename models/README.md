@@ -1,39 +1,25 @@
-# AI/ML Models Directory
+AI bootstrap for models (lightweight by default)
 
-This directory contains pre-trained models for the EcoSynTech FarmOS AI features.
+Overview
+- Lightweight Plant Disease detection model (TFLite, ~4MB) is included and will be loaded by default if AI_SMALL_MODEL=1.
+- Optional heavy model: irrigation predictor (ONNX, ~2GB) is not downloaded automatically. It can be downloaded on demand via bootstrap script.
 
-## Required Models
+Bootstrap usage
+- Script: npm run setup-models
+- Environment variables:
+  - AI_SMALL_MODEL (default 1): enable/disable small model
+  - AI_LARGE_MODEL (default 0): enable/disable large model
+  - AI_ONNX_URL: URL to ONNX irrigation model if AI_LARGE_MODEL=1
+  - AI_ONNX_URL_ALT: alternative URL if required
+- How to bootstrap:
+ 1) export AI_SMALL_MODEL=1
+ 2) export AI_LARGE_MODEL=0 (default)
+ 3) npm run setup-models
+- For large model:
+ 1) export AI_LARGE_MODEL=1
+ 2) export AI_ONNX_URL="https://path/to/irrigation_lstm.onnx"
+ 3) npm run setup-models
 
-### 1. Plant Disease Detection (TFLite)
-- **File**: `plant_disease.tflite`
-- **Model**: MobileNetV2 fine-tuned on PlantVillage dataset
-- **Size**: ~4MB
-- **Download**: https://github.com/Poulinakis-Konstantinos/Deep-Learning-Plant-Disease-Detector/blob/master/MobileNetV2.tfliteQuant
-
-### 2. Irrigation LSTM (ONNX)
-- **File**: `irrigation_lstm.onnx`
-- **Model**: LSTM for irrigation prediction
-- **Size**: ~10MB
-- **Note**: Can be generated using the included Python script
-
-## Labels
-- **File**: `labels.txt`
-- Contains 38 disease class labels for the plant disease model
-
-## Fallback Behavior
-
-If models are not present, the system automatically uses heuristic-based fallbacks:
-- **Disease Detection**: Random selection with confidence 65-95%
-- **Irrigation**: Rule-based calculation based on temperature/humidity/soil moisture
-
-## Usage
-
-```bash
-# Download plant disease model
-curl -L -o plant_disease.tflite \
-  "https://github.com/Poulinakis-Konstantinos/Deep-Learning-Plant-Disease-Detector/raw/master/MobileNetV2.tfliteQuant"
-
-# Download labels
-curl -L -o labels.txt \
-  "https://raw.githubusercontent.com/PlantVillage/PlantVillage-Dataset/master/classes.txt"
-```
+Notes
+- If you need to host a private large model, you can pass a URL via AI_ONNX_URL.
+- Bootstrap respects network constraints and will skip downloading when URL not provided or environment disables large model.

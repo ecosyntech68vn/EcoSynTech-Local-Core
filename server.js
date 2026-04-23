@@ -59,10 +59,12 @@ const farmosCoreRoutes = require('./src/routes/farmos-core');
 const dashboardRoutes = require('./src/routes/dashboard');
 const workersRoutes = require('./src/routes/workers');
 const supplyChainRoutes = require('./src/routes/supply-chain');
+const aiModelLoader = require('./src/bootstrap/modelLoader');
 const inventoryRoutes = require('./src/routes/inventory');
 const financeRoutes = require('./src/routes/finance');
 const systemInfoRoutes = require('./src/routes/system-info');
 const aiRoutes = require('./src/routes/ai');
+const bootstrapApi = require('./src/bootstrap/bootstrap_api');
 const cropsRoutes = require('./src/routes/crops');
 const backupRoutes = require('./src/routes/backup');
 const healthReportService = require('./src/services/healthReportService');
@@ -99,6 +101,11 @@ app.use(compression());
   // Dashboard pages
   app.get('/dashboard', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+  });
+
+  // Bootstrap UI (admin)
+  app.get('/bootstrap', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'bootstrap.html'));
   });
 
   // Landing page (sales)
@@ -276,11 +283,19 @@ app.use(compression());
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/workers', workersRoutes);
   app.use('/api/supply-chain', supplyChainRoutes);
+  // Initialize lightweight/optional AI models lazily on startup to keep boot fast
+  aiModelLoader.initialize().then(() => {
+    // models initialized
+  }).catch((err) => {
+    console.error('[BOOTSTRAP] AI model bootstrap error on startup:', err?.message || err);
+  });
   app.use('/api/inventory', inventoryRoutes);
   app.use('/api/finance', financeRoutes);
   app.use('/api/system', systemInfoRoutes);
   app.use('/api/ai', aiRoutes);
   app.use('/api/crops', cropsRoutes);
+  // Bootstrap management API (admin only)
+  app.use('/api/bootstrap', bootstrapApi);
   app.use('/api/backup', backupRoutes);
 
   // Swagger API Documentation

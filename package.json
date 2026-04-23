@@ -12,7 +12,11 @@
     "test:coverage": "jest --coverage --passWithNoTests --forceExit --detectOpenHandles",
     "test:e2e": "NODE_ENV=test npx jest __tests__/e2e.api.flow.test.js --runInBand --forceExit",
     "lint": "eslint src/",
-    "build": "node --check server.js"
+    "build": "node --check server.js",
+    "bootstrap-ai": "node bin/bootstrap-ai.js"
+  },
+  "bin": {
+    "bootstrap-ai": "bin/bootstrap-ai.js"
   },
   "keywords": [
     "iot",

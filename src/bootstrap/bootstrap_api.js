@@ -1,34 +1,53 @@
 const express = require('express');
 const router = express.Router();
 const { auth } = require('../middleware/auth');
-const modelLoader = require('./modelLoader');
+const { requireRole } = require('../middleware/auth');
+const ml = require('./modelLoader');
 
-// Status: GET /api/bootstrap/status
+// GET /api/bootstrap/status
 router.get('/status', auth, (req, res) => {
   try {
-    const status = modelLoader.getStatus();
-    res.json({ ok: true, status });
+    res.json({ ok: true, ...ml.getStatus() });
   } catch (e) {
     res.status(500).json({ ok: false, error: e?.message || String(e) });
   }
 });
 
-// Configure: POST /api/bootstrap/configure
+// GET /api/bootstrap/health
+router.get('/health', auth, (req, res) => {
+  try {
+    res.json({ ok: true, ...ml.getHealth() });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e?.message || String(e) });
+  }
+});
+
+// GET /api/bootstrap/history
+router.get('/history', auth, (req, res) => {
+  try {
+    const n = Math.min(parseInt(req.query.limit) || 20, 100);
+    res.json({ ok: true, history: ml.getHistory(n) });
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e?.message || String(e) });
+  }
+});
+
+// POST /api/bootstrap/configure
 router.post('/configure', auth, (req, res) => {
   const { small, large, largeUrl } = req.body || {};
   try {
-    modelLoader.applyConfig({ small, large, largeUrl });
-    res.json({ ok: true, status: modelLoader.getStatus() });
+    ml.applyConfig({ small, large, largeUrl });
+    res.json({ ok: true, status: ml.getStatus() });
   } catch (e) {
     res.status(500).json({ ok: false, error: e?.message || String(e) });
   }
 });
 
-// Reload bootstrap: POST /api/bootstrap/reload
+// POST /api/bootstrap/reload
 router.post('/reload', auth, async (req, res) => {
   try {
-    await modelLoader.reloadBootstrap();
-    res.json({ ok: true, status: modelLoader.getStatus() });
+    const result = await ml.reload();
+    res.json({ ok: true, result });
   } catch (e) {
     res.status(500).json({ ok: false, error: e?.message || String(e) });
   }

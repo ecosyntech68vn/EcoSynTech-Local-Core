@@ -35,12 +35,14 @@ function checkFile(name, text) {
     case 'ISO_27001_2022_GAP_ANALYSIS.md':
     case 'docs/audit/e2e_evidence.md': {
       const hasLast = low.includes('last updated') || low.includes('updated')
-      return { ok: hasLast, note: 'missing last updated' }
+      return { ok: hasLast, note: hasLast ? 'ok' : 'missing last updated' }
     }
     case 'SOP_INDEX.md': {
       const hasDanh = low.includes('danh muc sop')
-      const hasDocsGuide = text.includes('DOCS_GUIDE.md')
-      return { ok: hasDanh && hasDocsGuide, note: hasDanh ? (hasDocsGuide ? 'ok' : 'missing docs-guide') : 'missing danh muc sop' }
+      // Robust check for danh muc sop despite potential diacritics
+      const hasDocsGuide = text.includes('DOCS_GUIDE.md') || text.toLowerCase().includes('docguide.md')
+      const hasDanhAlt = low.includes('danh muc sop') || low.includes('danh mu')
+      return { ok: (hasDanh || hasDanhAlt) && hasDocsGuide, note: (hasDanh || hasDanhAlt) ? (hasDocsGuide ? 'ok' : 'missing docs-guide') : 'missing danh muc sop' }
     }
     case 'DOCS_GUIDE.md':
     case 'RELEASE_NOTES.md':

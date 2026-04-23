@@ -21,7 +21,17 @@ Structure Template
 
 Versioning & Updates
 - Keep a CHANGES/RELEASE_NOTES.md at repo root.
-- Each doc should include a Last Updated date and a short Change log entry.
+- Each doc should include a Last Updated date (ISO format: YYYY-MM-DD) and a short Change log entry.
+
+VERSIONING SCHEME
+- Architecture/Design docs (e.g., ARCHITECTURE.md, EXECUTIVE_SUMMARY.md, ISO_27001_GAP, SOP_INDEX): Use milestone versioning (e.g., 6.0.0 for dual-path architecture) - reflects major architecture/policy changes, not code releases.
+- Code releases (package.json, RELEASE_NOTES.md, CHANGELOG.md): Follow semantic versioning (e.g., v5.2.0) - increments with code changes.
+- ISMS/Compliance docs: Independent versioning (e.g., 1.0.0 for initial ISMS policy) - cycles with audit/compliance reviews.
+
+CONSISTENT FIELDS
+- Last Updated: YYYY-MM-DD - required for all audit-relevant docs.
+- Version: Clear about which scheme is used (architecture milestone vs. code release vs. compliance).
+- Note: If version differs from package.json, explain in a "Version Notes" section.
 
 Review & Approvals
 - Include Author, Reviewer, Date.

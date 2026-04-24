@@ -68,7 +68,7 @@
       "bootstrapDefault": false,
       "fallbackMethod": "heuristic_water_calc",
       "lastHealthCheck": null,
-      "healthStatus": "healthy",
+      "healthStatus": "error",
       "notes": "LSTM model for irrigation prediction. Optional - not included in repo. Requires user to provide ONNX file via AI_ONNX_URL.",
       "securityClassification": "Internal",
       "dataSensitivity": "Low",

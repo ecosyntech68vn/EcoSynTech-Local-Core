@@ -51,7 +51,16 @@ async function runScheduledBackup() {
     if (result.success) {
       logger.info('[AutoBackup] Backup created:', result.backupPath);
       
+      const verifyResult = await backupService.verifyBackup(result.backupPath);
+      if (!verifyResult.valid) {
+        logger.error('[AutoBackup] Backup verification FAILED:', verifyResult.error);
+        return { success: false, error: 'Backup verification failed', verifyResult };
+      }
+      logger.info('[AutoBackup] Backup verified successfully');
+      
       await cleanupOldBackups();
+      
+      return { success: true, backupPath: result.backupPath, verified: true };
     } else {
       logger.error('[AutoBackup] Failed:', result.error);
     }

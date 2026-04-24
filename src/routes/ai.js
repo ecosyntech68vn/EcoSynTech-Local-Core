@@ -11,6 +11,7 @@ const AutoMLService = require('../services/ai/AutoMLService');
 const FederatedClient = require('../services/ai/FederatedClient');
 const BayesianOptimizer = require('../services/ai/BayesianOptimizer');
 const DigitalTwin = require('../services/ai/DigitalTwin');
+const AuroraService = require('../services/ai/AuroraService');
 
 const diseasePredictor = new TFLiteDiseasePredictor();
 const irrigationPredictor = new LSTMIrrigationPredictor();
@@ -531,6 +532,54 @@ router.delete('/ml/digital-twin/:farmId', auth, async (req, res) => {
     const { farmId } = req.params;
     digitalTwins.delete(farmId);
     res.json({ ok: true, data: { message: `Digital twin ${farmId} deleted` } });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/weather/forecast', async (req, res) => {
+  try {
+    const { lat, lon, date } = req.query;
+    if (!lat || !lon) {
+      return res.status(400).json({ ok: false, error: 'lat and lon required' });
+    }
+    const forecast = await AuroraService.forecast(parseFloat(lat), parseFloat(lon), date || null);
+    res.json({ ok: true, data: forecast });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/weather/forecast/7day', async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+    if (!lat || !lon) {
+      return res.status(400).json({ ok: false, error: 'lat and lon required' });
+    }
+    const forecasts = await AuroraService.get7DayForecast(parseFloat(lat), parseFloat(lon));
+    res.json({ ok: true, data: forecasts });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/weather/current', async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+    if (!lat || !lon) {
+      return res.status(400).json({ ok: false, error: 'lat and lon required' });
+    }
+    const weather = await AuroraService.getCurrentWeather(parseFloat(lat), parseFloat(lon));
+    res.json({ ok: true, data: weather });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/weather/status', auth, async (req, res) => {
+  try {
+    const status = AuroraService.getStatus();
+    res.json({ ok: true, data: status });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }

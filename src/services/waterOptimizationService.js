@@ -1,5 +1,7 @@
 const { getAll, getOne, runQuery } = require('../config/database');
 const logger = require('../config/logger');
+const { getBreaker } = require('./circuitBreaker');
+const { retry } = require('./retryService');
 
 class WaterOptimizationService {
   constructor() {
@@ -8,6 +10,11 @@ class WaterOptimizationService {
     this.maxMoisture = parseFloat(process.env.WATER_MAX_MOISTURE || '70');
     this.checkIntervalMs = parseInt(process.env.WATER_CHECK_INTERVAL || '300000');
     this.timer = null;
+    
+    this.weatherBreaker = getBreaker('water-weather', { 
+      failureThreshold: 3, 
+      timeout: 30000 
+    });
   }
 
   start() {
@@ -78,67 +85,72 @@ class WaterOptimizationService {
       }
       const avgKc = crops.length ? totalKc / crops.length : 1.0;
       const etc = et0 * avgKc;
-      
-      const recommendation = {
+      const irrigationNeedMm = Math.max(0, etc - (soilMoisture / 10));
+      const duration = Math.round(irrigationNeedMm * 2);
+
+      const action = soilMoisture < this.minMoisture && duration > 0 ? 'irrigate' : 'wait';
+      const reason = soilMoisture < this.minMoisture 
+        ? `Độ ẩm ${soilMoisture.toFixed(0)}% < ngưỡng ${this.minMoisture}%` 
+        : soilMoisture > this.maxMoisture 
+          ? `Độ ẩm ${soilMoisture.toFixed(0)}% > ngưỡng ${this.maxMoisture}%` 
+          : 'Độ ẩm trong ngưỡng cho phép';
+
+      return {
+        action,
+        duration,
+        reason,
         soilMoisture,
+        et0: et0.toFixed(2),
         etc: etc.toFixed(2),
-        weather: weatherData,
-        action: 'no_action',
-        duration: 0,
-        reason: '',
-        score: 100
+        weatherSource: weatherData ? 'api' : 'sensor'
       };
-      
-      if (soilMoisture < this.minMoisture) {
-        const deficit = this.minMoisture - soilMoisture;
-        recommendation.action = 'irrigate';
-        recommendation.duration = Math.max(10, Math.round(deficit * 2));
-        recommendation.reason = `Độ ẩm đất thấp (${soilMoisture.toFixed(0)}%)`;
-        recommendation.score = Math.min(100, Math.round((1 - deficit / 100) * 100));
-      } else if (soilMoisture > this.maxMoisture) {
-        recommendation.action = 'stop_irrigation';
-        recommendation.reason = `Độ ẩm đất cao (${soilMoisture.toFixed(0)}%)`;
-        recommendation.score = Math.min(100, Math.round((this.maxMoisture / soilMoisture) * 100));
-      } else if (weatherData?.rainfall > 5) {
-        recommendation.action = 'skip';
-        recommendation.reason = 'Dự báo có mưa';
-        recommendation.score = 80;
-      } else if (etc > 5 && soilMoisture < this.minMoisture + 10) {
-        recommendation.action = 'irrigate';
-        recommendation.duration = Math.max(10, Math.round(etc * 15));
-        recommendation.reason = `ET0 cao (${etc.toFixed(1)}mm/ngày)`;
-        recommendation.score = 70;
-      }
-      
-      return recommendation;
     } catch (e) {
       logger.warn('[WaterOpt] Lỗi:', e.message);
-      return { error: e.message };
+      return { action: 'wait', duration: 0, error: e.message };
     }
   }
 
   async getWeatherForecast() {
+    const fallbackWeather = {
+      temp: 28,
+      humidity: 70,
+      rainfall: 0,
+      wind: 2,
+      solar: 15
+    };
+
     try {
-      const lat = process.env.FARM_LAT || '10.7769';
-      const lon = process.env.FARM_LON || '106.7009';
-      
-      const axios = require('axios');
-      const res = await axios.get(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&forecast_days=2&timezone=auto`
-      );
-      const hourly = res.data.hourly;
-      const now = new Date();
-      const idx = hourly.time.findIndex(t => new Date(t) >= now);
-      const safeIdx = idx >= 0 ? idx : 0;
-      
-      return {
-        temp: hourly.temperature_2m[safeIdx] || 25,
-        humidity: hourly.relative_humidity_2m[safeIdx] || 60,
-        rainfall: hourly.precipitation[safeIdx] || 0,
-        wind: hourly.wind_speed_10m[safeIdx] || 2
-      };
-    } catch (e) {
-      return null;
+      return await this.weatherBreaker.execute(async () => {
+        return await retry(async () => {
+          const lat = process.env.FARM_LAT || '10.7769';
+          const lon = process.env.FARM_LON || '106.7009';
+          
+          const axios = require('axios');
+          const res = await axios.get(
+            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&forecast_days=2&timezone=auto`,
+            { timeout: 5000 }
+          );
+          const hourly = res.data.hourly;
+          const now = new Date();
+          const idx = hourly?.time?.findIndex(t => new Date(t) >= now) ?? -1;
+          const safeIdx = idx >= 0 ? idx : 0;
+          
+          return {
+            temp: hourly?.temperature_2m?.[safeIdx] || fallbackWeather.temp,
+            humidity: hourly?.relative_humidity_2m?.[safeIdx] || fallbackWeather.humidity,
+            rainfall: hourly?.precipitation?.[safeIdx] || fallbackWeather.rainfall,
+            wind: hourly?.wind_speed_10m?.[safeIdx] || fallbackWeather.wind
+          };
+        }, {
+          maxRetries: 2,
+          initialDelay: 500,
+          backoffFactor: 2,
+          onRetry: (info) => logger.warn(`[WaterOpt] Weather retry ${info.attempt}: ${info.error}`)
+        });
+      });
+    } catch (error) {
+      logger.warn(`[WaterOpt] Weather API failed, using fallback: ${error.message}`);
+      return fallbackWeather;
     }
   }
 
@@ -177,6 +189,10 @@ class WaterOptimizationService {
 
   stop() {
     if (this.timer) clearTimeout(this.timer);
+  }
+  
+  getCircuitBreakerStatus() {
+    return this.weatherBreaker.getState();
   }
 }
 

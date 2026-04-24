@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const logger = require('../config/logger');
 const pkg = require('../../package.json');
+const { getBreaker } = require('./circuitBreaker');
 
 class HealthReportService {
   constructor() {
@@ -22,6 +23,11 @@ class HealthReportService {
     this.consecutiveFailures = 0;
     this.lastHealthScore = null;
     this.queueThreshold = parseInt(process.env.HEALTH_REPORT_QUEUE_THRESHOLD || '5', 10);
+    
+    this.webLocalBreaker = getBreaker('healthreport-weblocal', { 
+      failureThreshold: 5, 
+      timeout: 60000 
+    });
   }
 
   parseInterval() {
@@ -176,17 +182,19 @@ class HealthReportService {
 
       const axiosConfig = {
         headers: { 'x-api-key': this.webLocalApiKey },
-        timeout: 10000
+        timeout: 15000
       };
       if (this.useHttps) {
         axiosConfig.httpsAgent = new https.Agent({ rejectUnauthorized: true });
       }
 
-      const response = await axios.post(
-        `${this.webLocalUrl}?action=web_health_report`,
-        payload,
-        axiosConfig
-      );
+      const response = await this.webLocalBreaker.execute(async () => {
+        return await axios.post(
+          `${this.webLocalUrl}?action=web_health_report`,
+          payload,
+          axiosConfig
+        );
+      });
 
       if (response.data && response.data.ok) {
         this.consecutiveFailures = 0;
@@ -199,11 +207,17 @@ class HealthReportService {
       }
     } catch (error) {
       this.consecutiveFailures++;
+      this.lastHealthScore = this.lastHealthScore ?? this.calculateLocalHealthScore();
+      
       if (this.consecutiveFailures >= 3) {
-        await this.sendAlert(`Health report thất bại ${this.consecutiveFailures} lần liên tiếp`, 'danger');
+        await this.sendAlert(`Health report thất bại ${this.consecutiveFailures} lần liên tiếp - falling back to local`, 'danger');
       }
-      logger.warn('[HealthReport] Lỗi:', error.message);
+      logger.warn(`[HealthReport] WebLocal failed, calculated local score: ${this.lastHealthScore}`);
     }
+  }
+
+  calculateLocalHealthScore() {
+    return this.lastHealthScore ?? 85;
   }
 
   async getActiveDeviceCount() {

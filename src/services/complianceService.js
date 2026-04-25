@@ -68,14 +68,157 @@ const EVIDENCE_DOCS = {
     path: 'policies/PRIVACY_POLICY.md',
     status: COMPLIANCE_STATUS.COMPLIANT 
   },
+  'A.6.7': { 
+    doc: 'TERMS_OF_SERVICE.md', 
+    path: 'policies/TERMS_OF_SERVICE.md',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
   'A.6.8': { 
     doc: 'CODE_SIGNING_POLICY.md', 
     path: 'policies/CODE_SIGNING_POLICY.md',
     status: COMPLIANCE_STATUS.COMPLIANT 
   },
   
-  // A.7 Physical Security (NOT applicable - infrastructure)
+  // A.7 Physical Security (NOT APPLICABLE - infrastructure)
   'A.7.1': { 
+    doc: 'SOP_AN_TOAN_VAT_LY.md', 
+    path: 'sop/SOP_AN_TOAN_VAT_LY.md',
+    status: COMPLIANCE_STATUS.NOT_APPLICABLE,
+    note: 'Evidence: Physical security is managed by facility/landlord' 
+  },
+  
+  // A.8 Technology Controls
+  'A.8.1.1': { 
+    doc: 'auth.js', 
+    path: 'middleware/auth.js',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.8.1.2': { 
+    doc: 'auth.js', 
+    path: 'middleware/auth.js',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.8.1.3': { 
+    doc: 'rbac-guard.skill.js', 
+    path: 'skills/governance/rbac-guard.skill.js',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.8.1.4': { 
+    doc: 'auth.js', 
+    path: 'middleware/auth.js',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.8.1.5': { 
+    doc: 'auth.js', 
+    path: 'middleware/auth.js',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.8.5.1': { 
+    doc: 'autoBackupScheduler.js', 
+    path: 'services/autoBackupScheduler.js',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.8.5.2': { 
+    doc: 'backupRestoreService.js', 
+    path: 'services/backupRestoreService.js',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.8.6.1': { 
+    doc: 'WebLocalBridge.js', 
+    path: 'services/weblocal/WebLocalBridge.js',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.8.6.2': { 
+    doc: 'WebLocalBridge.js', 
+    path: 'services/weblocal/WebLocalBridge.js',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.8.12.1': { 
+    doc: 'auth.js', 
+    path: 'middleware/auth.js',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.8.13.1': { 
+    doc: 'deviceAuth.js', 
+    path: 'middleware/deviceAuth.js',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.8.16.1': { 
+    doc: 'logger.js', 
+    path: 'config/logger.js',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.8.17.1': { 
+    doc: 'SECURE_DEVELOPMENT.md', 
+    path: 'policies/SECURE_DEVELOPMENT.md',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.8.28.1': { 
+    doc: 'SECURE_DEVELOPMENT.md', 
+    path: 'policies/SECURE_DEVELOPMENT.md',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  
+  // A.15 Supplier Management
+  'A.15.1': { 
+    doc: 'SUPPLIER_SECURITY_SOP.md', 
+    path: 'sop/SUPPLIER_SECURITY_SOP.md',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.15.2': { 
+    doc: 'SOP_QUAN_LY_NHA_CUNG_CAP.md', 
+    path: 'sop/SOP_QUAN_LY_NHA_CUNG_CAP.md',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  
+  // A.16 Incident Management
+  'A.16.1': { 
+    doc: 'INCIDENT_RESPONSE_PLAN.md', 
+    path: 'operations/INCIDENT_RESPONSE_PLAN.md',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.16.2': { 
+    doc: 'INCIDENT_RESPONSE_SOP.md', 
+    path: 'operations/INCIDENT_RESPONSE_SOP.md',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.16.3': { 
+    doc: 'VULNERABILITY_MANAGEMENT.md', 
+    path: 'security/VULNERABILITY_MANAGEMENT.md',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  
+  // A.17 Business Continuity
+  'A.17.1': { 
+    doc: 'BUSINESS_CONTINUITY_SOP.md', 
+    path: 'operations/BUSINESS_CONTINUITY_SOP.md',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.17.2': { 
+    doc: 'SLA.md', 
+    path: 'operations/SLA.md',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.17.3': { 
+    doc: 'RISK_TREATMENT_PLAN.md', 
+    path: 'governance/RISK_TREATMENT_PLAN.md',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  
+  // A.18 Compliance
+  'A.18.1': { 
+    doc: 'PERSONAL_DATA_PROTECTION.md', 
+    path: 'policies/PERSONAL_DATA_PROTECTION.md',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  'A.18.2': { 
+    doc: 'DATA_RETENTION_POLICY.md', 
+path: 'policies/DATA_RETENTION_POLICY.md',
+    status: COMPLIANCE_STATUS.COMPLIANT 
+  },
+  
+  // A.7 Physical Security (NOT APPLICABLE - infrastructure)
+  'A.7.1': {
     doc: 'SOP_AN_TOAN_VAT_LY.md', 
     path: 'sop/SOP_AN_TOAN_VAT_LY.md',
     status: COMPLIANCE_STATUS.NOT_APPLICABLE,

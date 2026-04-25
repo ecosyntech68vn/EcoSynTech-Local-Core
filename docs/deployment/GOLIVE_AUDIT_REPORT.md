@@ -2,7 +2,7 @@
 ## ISO 27001 Compliance & System Readiness
 
 **Date:** 2026-04-25
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** ✅ READY FOR GOLIVE
 **Server:** http://139.59.101.136:3000
 
@@ -18,6 +18,7 @@
 | **Routes** | 41/41 | ✅ OK |
 | **Skills** | 83 | ✅ OK |
 | **AI Services** | 8 | ✅ OPERATIONAL |
+| **WebLocal Integration** | GAS V10 | ✅ READY |
 
 ---
 
@@ -155,6 +156,18 @@
 | VNPay | ✅ SANDBOX |
 | MoMo | ✅ SANDBOX |
 | SePay | ✅ SANDBOX |
+
+### WebLocal Integration (GAS V10)
+
+| Component | Status |
+|-----------|--------|
+| deviceAuth.js | ✅ HMAC verification middleware |
+| gasHybridClient.js | ✅ 6 hybrid actions |
+| POST /api/device/action | ✅ Dual-format envelope |
+| mDNS _ecosyntech._tcp | ✅ Bonjour advertisement |
+| device_secrets table | ✅ HMAC key sync |
+| WebLocalBridge.js | ✅ Queue/backlog |
+| Hybrid sync | ✅ hybrid_pull, hybrid_push, hybrid_ack |
 
 ---
 

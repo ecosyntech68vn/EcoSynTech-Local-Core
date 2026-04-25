@@ -1,7 +1,7 @@
 # EcoSynTech FarmOS
 ## Pitch Deck - Series Pre-Seed
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Date:** April 2026
 **Confidential**
 
@@ -20,6 +20,7 @@ Vietnam has **9 million agricultural households** facing:
 | **Complex** | FPT, Viettel solutions require enterprise budgets |
 | **Data Lost** | No offline capability = lost crop data |
 | **Labor Shortage** | Hard to find skilled farm workers |
+| **No Traceability** | Cannot export to EU/US markets |
 
 ### Market Pain
 
@@ -29,7 +30,8 @@ Vietnam has **9 million agricultural households** facing:
 │  ├── 70% không có internet ổn định                    │
 │  ├── 90% không biết dùng máy tính                       │
 │  ├── 500K/month là tiền thuê internet               │
-│  └── Mất mùa vì không có cảnh báo sớm                │
+│  ├── Mất mùa vì không có cảnh báo sớm                │
+│  └── Cannot prove organic/premium for export            │
 └────────────────────────────────────────────────────────────┘
 ```
 

@@ -8,6 +8,7 @@ const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const http = require('http');
 const os = require('os');
+const bonjour = require('bonjour');
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -480,6 +481,20 @@ async function startServer() {
     waterOptimizationService.start();
     
     server.listen(config.port, () => {
+      // mDNS advertisement for device discovery
+      try {
+        const mdns = bonjour();
+        mdns.publish({
+          name: 'ecosyntech-farmos',
+          type: '_ecosyntech._tcp',
+          port: config.port,
+          txt: { version: pkg.version, nodeEnv: config.nodeEnv }
+        });
+        logger.info('[mDNS] Advertising _ecosyntech._tcp:' + config.port);
+      } catch (e) {
+        logger.warn('[mDNS] Not available:', e.message);
+      }
+      
       logger.info(`
 ╔══════════════════════════════════════════════════════════════╗
 ║           EcoSynTech IoT Backend Server v${pkg.version}               ║

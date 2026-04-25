@@ -16,8 +16,8 @@
     "audit": "npm audit --production",
     "audit:fix": "npm audit fix --production",
     "build": "node --check server.js",
-    "bootstrap-ai": "node bin/bootstrap-ai.js"
-    ,"validate-skills": "node scripts/validate-skills.js"
+    "bootstrap-ai": "node bin/bootstrap-ai.js",
+    "validate-skills": "node scripts/validate-skills.js"
   },
   "validate-skills": "node scripts/validate-skills.js",
   "bin": {
@@ -42,6 +42,7 @@
     "aedes": "^0.51.3",
     "axios": "^1.6.5",
     "bcryptjs": "^2.4.3",
+    "bonjour": "^3.5.1",
     "chart.js": "^4.4.1",
     "compression": "^1.7.4",
     "cors": "^2.8.5",

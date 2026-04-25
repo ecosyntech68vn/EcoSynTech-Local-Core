@@ -365,4 +365,31 @@ router.post('/:id/heartbeat', async (req, res) => {
   }
 });
 
+// POST /api/device/action - Dual-format device action endpoint (GAS V10)
+router.post('/action', async (req, res) => {
+  try {
+    const payload = req.body;
+    
+    // Handle envelope (GAS V10 format)
+    const envelope = payload._ || payload.envelope;
+    const action = payload.action || payload.cmd;
+    const params = payload.params || payload.data || {};
+    
+    // Log for debugging
+    logger.info('[Device] Action received:', { action, envelope, has_sig: !!payload.signature });
+    
+    // Return acknowledgment
+    res.json({
+      ok: true,
+      action: action || 'noop',
+      envelope: envelope || null,
+      status: 'received',
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    logger.error('[Devices] Action error:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 module.exports = router;

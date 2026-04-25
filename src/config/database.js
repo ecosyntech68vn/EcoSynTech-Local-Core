@@ -176,6 +176,16 @@ function createTables() {
   `);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS device_secrets (
+      device_id TEXT PRIMARY KEY,
+      secret TEXT NOT NULL,
+      provisioned_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      expires_at TEXT,
+      active INTEGER DEFAULT 1
+    )
+  `);
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS sensors (
       id TEXT PRIMARY KEY,
       type TEXT UNIQUE NOT NULL,

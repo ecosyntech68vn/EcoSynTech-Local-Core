@@ -1,14 +1,42 @@
-# 🚀 ECOSYNTECH FARM OS
+# 🚀 ECOSYNTECH FARM OS - LOCAL CORE
 
 ## English | Tiếng Việt
 
-**Smart Agriculture Platform** - Lightweight, easy to deploy, suitable for Vietnamese smallholders and cooperatives. Has upgrade path to enterprise when scale increases.
+**Smart Agriculture Platform** - Lightweight, easy to deploy, suitable for Vietnamese smallholders and cooperatives. Enterprise-grade architecture with 5S, PDCA, and ISO 27001 compliance.
 
-**Nền tảng nông nghiệp thông minh** - Nhẹ, dễ triển khai, phù hợp nông dân và HTX Việt Nam. Có đường nâng cấp lên enterprise khi quy mô tăng.
+**Nền tảng nông nghiệp thông minh** - Kiến trúc enterprise với 5S, PDCA và tuân thủ ISO 27001. Phù hợp nông dân và HTX Việt Nam.
 
 ---
 
-## 🎯 DUAL-PATH PLATFORM
+## 🏗️ CẤU TRÚC DOMAIN-BASED (5S/ISO 27001)
+
+### New Architecture / Kiến trúc mới
+
+```
+src/
+├── core/           # Business domains (farm, iot, supply-chain, inventory, finance, worker, traceability)
+├── intelligence/   # AI & ML (ai-skills, analytics, analysis, diagnosis, dashboard, drift, ml)
+├── ops/           # Operations (automation, scheduler, alerts, notifications, maintenance, recovery, deployment, selfheal)
+├── security/      # Security ISO 27001 (auth, compliance, defense, rbac)
+├── external/      # External integrations (telegram, zalo, messenger, blockchain, weather, sales, payment)
+├── skills/        # 138 autonomous skills
+├── routes/        # API endpoints
+├── services/      # Business logic
+└── modules/       # Backward compatibility aliases
+```
+
+### 5S Implementation
+- **Sort (Seiri)**: Loại bỏ files không cần thiết
+- **Set in Order (Seiton)**: Sắp xếp theo domain
+- **Shine (Seiso)**: Làm sạch code, giảm complexity
+- **Standardize (Seiketsu)**: Chuẩn hóa naming conventions
+- **Sustain (Shitsuke)**: Duy trì qua PDCA cycle
+
+### PDCA Cycle
+- **Plan**: Quy hoạch tính năng mới
+- **Do**: Triển khai trong sandbox
+- **Check**: Đánh giá qua metrics
+- **Act**: Cải tiến liên tục
 
 | Path | Target | RAM | Devices |
 |------|-------|-----|---------|----------|
@@ -28,6 +56,21 @@
 | **Website** | https://ecosyntechglobal.com |
 | **Founded** | 2026 |
 | **Certification** | ISO 27001:2022 (9.5/10) |
+
+---
+
+## 🏗️ NEW DOMAIN STRUCTURE
+
+| Domain | Modules | Description |
+|--------|---------|-------------|
+| **core/** | 25 files | farm, iot, supply-chain, inventory, finance, worker, traceability, admin, batch, roi |
+| **intelligence/** | 32 files | ai-skills, analytics, analysis, diagnosis, dashboard, drift, ml, decision |
+| **ops/** | 40 files | automation, scheduler, alerts, notifications, communication, maintenance, recovery, deployment, selfheal |
+| **security/** | 16 files | auth, compliance, defense, rbac |
+| **external/** | 14 files | telegram, zalo, messenger, blockchain, weather, weblocal, sales, payment |
+| **skills/** | 138 files | Autonomous agents |
+| **routes/** | 66 files | API endpoints |
+| **services/** | 49 files | Business logic |
 
 ---
 
@@ -69,10 +112,10 @@
 
 ```bash
 # 1. Clone the project
-git clone https://github.com/ecosyntech68vn/Ecosyntech-web
+git clone https://github.com/ecosyntech68vn/EcoSynTech-Local-Core
 
 # 2. Navigate to directory
-cd Ecosyntech-web
+cd EcoSynTech-Local-Core
 
 # 3. Install dependencies
 npm install
@@ -185,9 +228,34 @@ npm run lint     # ESLint
 
 ---
 
-## 🤖 AI SKILLS / KỸ NĂNG AI
+## 🤖 AI SKILLS / KỸ NĂNG AI (138 Skills)
 
-Hệ thống bao gồm 9 intelligent skills tự động hóa vận hành nông nghiệp:
+Hệ thống bao gồm **138 intelligent skills** tự động hóa vận hành nông nghiệp:
+
+### 📊 Skills by Category
+| Category | Count | Description |
+|----------|-------|-------------|
+| diagnosis | 16 | Anomaly detection, alert aggregation, root cause analysis |
+| selfheal | 12 | Auto recovery, device reset, retry jobs |
+| maintenance | 12 | Predictive maintenance, energy optimization, cleanup |
+| automation | 12 | Rules engine, schedules, command routing |
+| ai-skills | 12 | AI conversation, inference, RAG, weather prediction |
+| communication | 10 | Telegram, voice assistant, report generation |
+| iot | 8 | Device provisioning, multi-farm management |
+| analysis | 8 | Health scoring, anomaly prediction, backup |
+| governance | 7 | Compliance, audit trail, rate limiting |
+| compliance | 7 | ISO 27001 compliance monitoring |
+| traceability | 6 | Blockchain, QR codes, certificate management |
+| ai | 6 | Conversation, inference, RAG, cost & ROI calculation |
+| security | 4 | Security audit, vulnerability scanning |
+| drift | 4 | Config drift, version drift monitoring |
+| deployment | 4 | OTA orchestration, release management |
+| defense | 2 | Intrusion detection |
+| dashboard | 2 | Mobile dashboard |
+| network | 2 | MQTT watch, WebSocket heartbeat |
+| recovery | 2 | Auto restore |
+| sync | 1 | Hybrid sync |
+| supply-chain | 1 | Supply chain sync |
 
 ### 🌱 Agriculture Skills
 | Skill | Mô tả | Tính năng |
@@ -370,13 +438,22 @@ Hệ thống bao gồm 9 intelligent skills tự động hóa vận hành nông 
 
 ---
 
-## 🤖 AI AGENTS (Machine Learning)
+## 🤖 AI AGENTS (Machine Learning) - Multiple Models
 
-### Plant Disease Detection (TFLite - 4MB)
+### 1. Plant Disease Detection (TFLite - 4MB)
 - **Model**: MobileNetV2 fine-tuned on PlantVillage (38 classes)
 - **Accuracy**: 91% on test set
 - **Size**: 4MB (lightweight, runs on CPU)
 - **Endpoint**: `POST /api/ai/disease/predict`
+
+### 2. Irrigation Prediction (LightGBM/ONNX)
+- **Models**: LightGBM, sklearn, LSTM for time-series
+- **Training**: Federated learning supported
+- **Endpoint**: `POST /api/ai/irrigation/predict`
+
+### 3. AI Conversation & Inference
+- **Skills**: ai-conversation, ai-inference, ai-rag.skill.js
+- **Features**: RAG (Retrieval Augmented Generation), cost calculator, ROI calculator
 
 ```bash
 # Enable (default ON)
@@ -386,35 +463,24 @@ AI_SMALL_MODEL=1
 curl -X POST -F "image=@leaf.jpg" http://localhost:3000/api/ai/disease/predict
 ```
 
-### Irrigation Prediction (ONNX LSTM - Optional)
-- **Model**: LSTM for time-series prediction
-- **Input**: 3-day weather sequence (temp, humidity, rainfall, soilMoisture)
-- **Size**: ~10MB (requires AI_LARGE_MODEL=1)
-- **Endpoint**: `POST /api/ai/irrigation/predict`
+### 4. Federated Learning
+- **Server**: ml/federated_server.py
+- **Clients**: Aurora service for multi-party training
 
+### ML Models Location
 ```bash
-# Enable (requires ~2GB RAM)
-AI_LARGE_MODEL=1
-AI_ONNX_URL=https://path/to/irrigation_lstm.onnx
+models/
+├── plant_disease.tflite      # 4MB TFLite model
+├── registry.json             # Model registry
+└── create_lstm_model.py     # LSTM creator
 
-# Test API
-curl -X POST http://localhost:3000/api/ai/irrigation/predict \
-  -H "Content-Type: application/json" \
-  -d '{"historicalData": [
-    {"temp": 28, "humidity": 70, "rainfall": 5, "soilMoisture": 45},
-    {"temp": 29, "humidity": 65, "rainfall": 0, "soilMoisture": 40},
-    {"temp": 30, "humidity": 60, "rainfall": 0, "soilMoisture": 35}
-  ]}'
+ml/
+├── train_lightgbm.py        # LightGBM training
+├── train_sklearn.py         # sklearn training
+├── train_irrigation.py       # Irrigation prediction
+├── federated_server.py     # Federated learning
+└── aurora_service.py       # Aurora multi-party
 ```
-
-### Bootstrap CLI
-```bash
-node bin/bootstrap-ai.js --status    # Check model status
-node bin/bootstrap-ai.js --load-small # Load TFLite only
-node bin/bootstrap-ai.js --reload     # Reload all models
-```
-
-Xem chi tiết: [AI_SETUP.md](./AI_SETUP.md)
 
 ---
 
@@ -489,10 +555,22 @@ MIT License - EcoSynTech Global 2026
 | **Điện thoại** | 0989516698 |
 | **Email** | kd.ecosyntech@gmail.com |
 | **Website** | https://ecosyntech.com |
+| **GitHub** | https://github.com/ecosyntech68vn/EcoSynTech-Local-Core |
 
 ---
 
-**ECOSYNTECH FARM OS**  
-*"Nông nghiệp thông minh - Cho nông dân, cho mọi người"*
+## 📊 PROJECT STATS
 
-🌱🚀 **"Cắm là chạy!"** 🚀🌱
+| Metric | Value |
+|--------|-------|
+| Total Files | 647 |
+| Source Files | 369 |
+| Skills | 138 |
+| AI Models | 9+ |
+| API Endpoints | 66+ |
+| ISO 27001 | ✅ Compliant |
+
+---
+
+**ECOSYNTECH FARM OS - LOCAL CORE**  
+*"Nông nghiệp thông minh - Enterprise Grade"*

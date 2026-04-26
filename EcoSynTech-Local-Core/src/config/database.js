@@ -73,7 +73,8 @@ function logTransaction(sql, params) {
 }
 
 function saveDatabase() {
-  if (!db) return;
+  const currentDb = db
+  if (!currentDb) return;
   if (pendingSave) return;
   
   pendingSave = true;
@@ -81,7 +82,7 @@ function saveDatabase() {
   
   saveTimeout = setTimeout(() => {
     try {
-      const data = db.export();
+      const data = currentDb.export();
       const buffer = Buffer.from(data);
       fs.writeFileSync(config.database.path, buffer);
       pendingSave = false;
@@ -93,10 +94,11 @@ function saveDatabase() {
 }
 
 function saveDatabaseSync() {
-  if (!db || pendingSave) return;
+  const currentDb = db
+  if (!currentDb || pendingSave) return;
   clearTimeout(saveTimeout);
   try {
-    const data = db.export();
+    const data = currentDb.export();
     const buffer = Buffer.from(data);
     fs.writeFileSync(config.database.path, buffer);
   } catch (err) {
@@ -110,7 +112,12 @@ function createPeriodicBackup() {
   const backupPath = path.join(BACKUP_DIR, `ecosyntech_${timestamp}.db`);
   
   try {
-    const data = db.export();
+    const currentDb = db
+    if (!currentDb) {
+      logger.warn('Periodic backup skipped: database not initialized');
+      return;
+    }
+    const data = currentDb.export();
     const buffer = Buffer.from(data);
     fs.writeFileSync(backupPath, buffer);
     logger.info(`[DB] Periodic backup created: ${backupPath}`);

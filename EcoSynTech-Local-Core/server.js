@@ -78,6 +78,7 @@ const cropsRoutes = require('./src/routes/crops');
 const journalRoutes = require('./src/routes/journal');
 const backupRoutes = require('./src/routes/backup');
 const healthReportService = require('./src/services/healthReportService');
+const requestIdMiddleware = require('./src/middleware/requestId');
 const waterOptimizationService = require('./src/services/waterOptimizationService');
 const { responseSignatureMiddleware } = require('./src/middleware/response-sign');
 const { getAuditHashMiddleware } = require('./src/middleware/audit-tamper-proof');
@@ -87,6 +88,8 @@ const path = require('path');
 
 function createApp() {
   const app = express();
+  // Attach requestId middleware early for traceability in logs
+  app.use(requestIdMiddleware);
   
   app.set('webhookSecret', config.webhook.secret);
   
@@ -237,7 +240,9 @@ app.use(compression());
   app.use((req, res, next) => {
     req.startTime = Date.now();
     res.setHeader('X-Response-Time', '0');
-    logger.info(`${req.method} ${req.path}`, {
+    // Include request id if available for traceability
+    logger.info(`[${req.id || 'unknown'}] ${req.method} ${req.path}`, {
+      id: req.id,
       ip: req.ip,
       userAgent: req.get('user-agent')
     });

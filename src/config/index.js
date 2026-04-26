@@ -10,7 +10,7 @@ module.exports = {
   },
   
   jwt: {
-    secret: process.env.JWT_SECRET || 'dev-secret-change-me',
+    secret: process.env.JWT_SECRET || 'test-secret-key-for-development-use-only',
     expiresIn: process.env.JWT_EXPIRES_IN || '7d'
   },
   
@@ -21,15 +21,36 @@ module.exports = {
   },
   
   cors: {
-    origin: process.env.CORS_ORIGIN || '*'
+    origin: process.env.CORS_ORIGIN || '*',
+    allowedOrigins: (process.env.CORS_ALLOWED_ORIGINS || '')
+      .split(',')
+      .map(o => o.trim())
+      .filter(o => o)
   },
   
   rateLimit: {
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
     maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10)
   },
+
+  opsSchedulerDisabled: process.env.OPS_SCHEDULER_DISABLED === 'true',
+  opsHotReloadEnabled: process.env.OPS_HOT_RELOAD_ENABLED === 'true',
+  opsSchedulerInterval: parseInt(process.env.OPS_SCHEDULER_INTERVAL || '600000', 10),
   
   webhook: {
     secret: process.env.WEBHOOK_SECRET || 'webhook-secret'
+  },
+
+  blockchain: {
+    enabled: process.env.BLOCKCHAIN_ENABLED === 'true',
+    type: process.env.BLOCKCHAIN_TYPE || 'aptos',
+    network: process.env.APTOS_NETWORK || 'testnet',
+    moduleAddress: process.env.APTOS_MODULE_ADDRESS || '0x1',
+    privateKey: process.env.APTOS_PRIVATE_KEY || ''
+  },
+
+  qrcode: {
+    enabled: process.env.QR_CODE_ENABLED !== 'false',
+    baseUrl: process.env.QR_CODE_BASE_URL || 'https://ecosyntech.com'
   }
 };

@@ -9,7 +9,8 @@ const skills = {
     { name: 'Risk Assessment Engine', file: 'risk-assessment.skill.js' },
     { name: 'Competitive Intelligence', file: 'competitive-intelligence.skill.js' },
     { name: 'Profit Optimizer', file: 'profit-optimizer.skill.js' },
-    { name: 'Business Scenario Simulator', file: 'business-scenario-simulator.skill.js' }
+    { name: 'Business Scenario Simulator', file: 'business-scenario-simulator.skill.js' },
+    { name: 'Business Report Generator', file: 'business-report-generator.skill.js' }
   ],
   sales: [
     { name: 'Sales Pipeline Manager', file: 'sales-pipeline-manager.skill.js' },
@@ -19,7 +20,8 @@ const skills = {
     { name: 'Upsell/Cross-sell Engine', file: 'upsell-crosssell-engine.skill.js' },
     { name: 'Sales Forecasting AI', file: 'sales-forecasting.skill.js' },
     { name: 'Deal Close Probability', file: 'deal-close-probability.skill.js' },
-    { name: 'CRM Automation', file: 'crm-automation.skill.js' }
+    { name: 'CRM Automation', file: 'crm-automation.skill.js' },
+    { name: 'Sales Proposal Generator', file: 'sales-proposal-generator.skill.js' }
   ],
   hr: [
     { name: 'Resume Screening AI', file: 'resume-screening.skill.js' },
@@ -28,7 +30,12 @@ const skills = {
     { name: 'Performance Review Auto', file: 'performance-review-auto.skill.js' },
     { name: 'Skills Gap Analyzer', file: 'skills-gap-analyzer.skill.js' },
     { name: 'Attrition Risk Detector', file: 'attrition-risk-detector.skill.js' },
-    { name: 'Workforce Planning AI', file: 'workforce-planning.skill.js' }
+    { name: 'Workforce Planning AI', file: 'workforce-planning.skill.js' },
+    { name: 'Online Test System', file: 'online-test-system.skill.js', description: 'Thi trực tuyến - Kết nối Google Drive' },
+    { name: 'Interview Scheduler', file: 'interview-scheduler.skill.js', description: 'Lên lịch phỏng vấn tự động với Google Calendar' },
+    { name: 'Salary Benchmarking', file: 'salary-benchmarking.skill.js', description: 'So sánh lương thị trường' },
+    { name: 'Job Description Generator', file: 'job-description-generator.skill.js', description: 'Tạo JD tự động với AI' },
+    { name: 'Employee Engagement Survey', file: 'employee-engagement-survey.skill.js', description: 'Khảo sát gắn kết nhân viên' }
   ],
   marketing: [
     { name: 'Campaign Optimizer', file: 'campaign-optimizer.skill.js' },
@@ -44,11 +51,11 @@ const skills = {
 
 const aiForManagersSkills = {
   metadata: {
-    version: '1.0.0',
-    totalSkills: 30,
+    version: '1.1.0',
+    totalSkills: 38,
     categories: Object.keys(skills).length,
     createdAt: new Date().toISOString(),
-    description: '30 AI Skills đẳng cấp cho Quản trị Kinh doanh, Bán hàng, Nhân sự, Marketing'
+    description: '38 AI Skills đẳng cấp cho Quản trị Kinh doanh, Bán hàng, Nhân sự, Marketing - Tích hợp Google Drive/Calendar'
   },
 
   skills,
@@ -74,7 +81,7 @@ module.exports = aiForManagersSkills;
 
 if (require.main === module) {
   console.log('='.repeat(50));
-  console.log('🎯 AI FOR MANAGERS - 30 SKILLS EXPORT');
+  console.log('🎯 AI FOR MANAGERS - 38 SKILLS EXPORT');
   console.log('='.repeat(50));
   console.log(`\n📊 Total Skills: ${aiForManagersSkills.metadata.totalSkills}`);
   console.log(`📁 Categories: ${aiForManagersSkills.metadata.categories}\n`);

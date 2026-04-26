@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const config = require('../../config');
+const config = require('../../../infrastructure/config');
 
 function getBlockchainConfig() {
   return config.blockchain || {};

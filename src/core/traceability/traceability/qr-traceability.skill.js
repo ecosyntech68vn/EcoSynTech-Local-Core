@@ -1,6 +1,6 @@
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
-const config = require('../../config');
+const config = require('../../../infrastructure/config');
 
 module.exports = {
   id: 'qr-traceability',

@@ -35,10 +35,10 @@ module.exports = {
     switch (action) {
     case 'chat':
     case 'talk':
-    case 'ask':
-      var history = this.getHistory(userId, stateStore);
-      var context = this.buildContext(history);
-      var intent = this.detectIntent(message, context);
+    case 'ask': {
+      const history = this.getHistory(userId, stateStore);
+      const context = this.buildContext(history);
+      const intent = this.detectIntent(message, context);
         
       result.intent = intent.type;
       result.entities = intent.entities;
@@ -48,6 +48,7 @@ module.exports = {
         
       this.addToHistory(userId, message, result.reply, stateStore);
       break;
+    }
         
     case 'reply':
       result.reply = this.generateReply(message, { type: 'general' }, [], event.lang || 'vi');
@@ -58,11 +59,12 @@ module.exports = {
       result.reply = 'Đã xóa lịch sử cuộc trò chuyện.';
       break;
         
-    case 'history':
-      var hist = this.getHistory(userId, stateStore);
+    case 'history': {
+      const hist = this.getHistory(userId, stateStore);
       result.history = hist;
-      result.reply = 'Có ' + hist.length + ' tin nhắn trong lịch sử.';
+      result.reply = 'Co ' + hist.length + ' tin nhan trong lich su.';
       break;
+    }
         
     default:
       result.reply = 'Có thể nói chuyện với tôi. Hỏi về ECOSYNTECH nhé!';

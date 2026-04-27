@@ -125,7 +125,7 @@ async function sendTelegramMessage(message, parseMode = 'Markdown') {
 async function sendAlert(type, title, message, details = {}) {
   const emoji = ALERT_TEMPLATE[type] || ALERT_TEMPLATE.info;
   
-  const formattedMessage = [
+  let alertMessage = [
     `${emoji} *EcoSynTech Alert*`,
     '',
     `*${title}*`,
@@ -137,10 +137,10 @@ async function sendAlert(type, title, message, details = {}) {
     const detailsText = Object.entries(details)
       .map(([k, v]) => `• ${k}: \`${v}\``)
       .join('\n');
-    formattedMessage += '\n' + detailsText;
+    alertMessage += '\n' + detailsText;
   }
 
-  return sendTelegramMessage(formattedMessage);
+  return sendTelegramMessage(alertMessage);
 }
 
 async function sendDeviceStatus(device) {

@@ -37,13 +37,14 @@ module.exports = {
       break;
         
     case 'query':
-    case 'search':
-      var context = this.getRelevantContext(query, stateStore);
+    case 'search': {
+      const context = this.getRelevantContext(query, stateStore);
       result.context = context;
       result.sources = context.map(function(c) { return c.source; });
       result.answer = this.generateAnswer(query, context);
       result.confidence = context.length > 0 ? 0.95 : 0.5;
       break;
+    }
         
     case 'reload':
       this.docCache = null;

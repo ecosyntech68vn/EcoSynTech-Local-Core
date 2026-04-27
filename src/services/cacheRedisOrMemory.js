@@ -29,7 +29,7 @@ async function getCache() {
         try {
           const raw = await redisClient.get(key);
           if (raw) return JSON.parse(raw);
-        } catch (e) { /* ignore */ }
+        } catch (e) { /* istanbul ignore next */ }
       }
       const entry = memoryCache.get(key);
       if (entry) {
@@ -54,13 +54,13 @@ async function getCache() {
     },
     async invalidate(key) {
       if (useRedis && redisClient) {
-        try { await redisClient.del(key); } catch (e) {}
+        try { await redisClient.del(key); } catch (e) { /* istanbul ignore next */ }
       }
       memoryCache.delete(key);
     },
     async clear() {
       if (useRedis && redisClient) {
-        try { await redisClient.flushAll(); } catch (e) {}
+        try { await redisClient.flushAll(); } catch (e) { /* istanbul ignore next */ }
       }
       memoryCache.clear();
     }

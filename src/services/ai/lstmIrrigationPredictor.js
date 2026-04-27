@@ -58,6 +58,7 @@ class LSTMIrrigationPredictor {
       const inputSize = 4;
       
       const flatFeatures = [];
+      let normalizedFeatures = [];
       for (let i = 0; i < seqLen; i++) {
         const day = historicalData[i] || {};
         flatFeatures.push((day.temp || day.temperature || 25) / 40);
@@ -65,6 +66,8 @@ class LSTMIrrigationPredictor {
         flatFeatures.push((day.rainfall || day.precipitation || 0) / 20);
         flatFeatures.push((day.soilMoisture || 50) / 100);
       }
+      
+      normalizedFeatures = flatFeatures;
       
       const inputArray = new Float32Array(flatFeatures);
       const inputTensor = new ort.Tensor('float32', inputArray, [1, 12]);
@@ -115,8 +118,7 @@ class LSTMIrrigationPredictor {
           event: 'predict',
           latencyMs: durationSec * 1000,
           outcome: 'error',
-          error: e.message,
-          features: normalizedFeatures
+          error: e.message
         });
       } catch (br) {
         // ignore bridge errors

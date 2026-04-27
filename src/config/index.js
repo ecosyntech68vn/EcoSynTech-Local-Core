@@ -52,5 +52,17 @@ module.exports = {
   qrcode: {
     enabled: process.env.QR_CODE_ENABLED !== 'false',
     baseUrl: process.env.QR_CODE_BASE_URL || 'https://ecosyntech.com'
+  },
+
+  gasHybrid: {
+    url: process.env.GAS_WEBHOOK_URL || '',
+    webId: process.env.WEBLOCAL_WEB_ID || '',
+    hybridSecret: process.env.HYBRID_SECRET || '',
+    timeoutMs: parseInt(process.env.GAS_TIMEOUT_MS || '15000', 10)
+  },
+
+  weblocal: {
+    webId: process.env.WEBLOCAL_WEB_ID || '',
+    tsWindowSec: parseInt(process.env.DEVICE_TS_WINDOW_SEC || '300', 10)
   }
 };

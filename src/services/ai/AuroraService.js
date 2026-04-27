@@ -11,6 +11,9 @@ const { spawn } = require('child_process');
 const path = require('path');
 const logger = require('../../config/logger');
 
+let mlMetrics;
+try { mlMetrics = require('../../metrics/mlMetrics'); } catch (e) { /* mlMetrics optional */ }
+
 const AURORA_SCRIPT_PATH = path.join(__dirname, '../../../ml/aurora_service.py');
 
 class AuroraService {

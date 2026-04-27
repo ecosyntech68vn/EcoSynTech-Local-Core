@@ -192,18 +192,6 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-function requireRole(role) {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({ ok: false, error: 'Authentication required' });
-    }
-    if (req.user.role !== role) {
-      return res.status(403).json({ ok: false, error: `Role ${role} required` });
-    }
-    next();
-  };
-}
-
 module.exports = {
   generateAccessToken,
   generateRefreshToken,

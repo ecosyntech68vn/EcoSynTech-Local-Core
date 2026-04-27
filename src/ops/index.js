@@ -124,9 +124,7 @@ function createOps(logger, baseUrl, packageVersion, config) {
     stopScheduler: stopScheduler,
 
     enableHotReload: enableHotReload,
-    disableHotReload: disableHotReload,
-
-    getMetrics: getMetrics
+    disableHotReload: disableHotReload
   };
 }
 

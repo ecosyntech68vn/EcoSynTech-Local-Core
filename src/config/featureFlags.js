@@ -16,7 +16,7 @@ const DEFAULT_FLAGS = {
 const featureFlags = new Map(Object.entries(DEFAULT_FLAGS));
 
 function getFlag(name) {
-  if (process.env.hasOwnProperty('FF_' + name)) {
+  if (Object.hasOwn(process.env, 'FF_' + name)) {
     return process.env['FF_' + name] === 'true';
   }
   return featureFlags.get(name) ?? false;

@@ -1,5 +1,5 @@
 const os = require('os');
-const {AIManager} = (() => {
+const { AIManager } = (() => {
   try { return require('./services/AIManager'); } catch (e) { return { AIManager: null }; }
 })();
 
@@ -122,14 +122,14 @@ function handleMemoryPressure() {
       if (cache && cache.getCache) {
         cache.getCache().cleanup();
       }
-    } catch (e) {}
+    } catch (e) { /* istanbul ignore next */ }
     
     try {
       const perfCache = require('./services/performanceService');
       if (perfCache && perfCache.clearCache) {
         perfCache.clearCache();
       }
-    } catch (e) {}
+    } catch (e) { /* istanbul ignore next */ }
     
     global.gc && global.gc();
   }

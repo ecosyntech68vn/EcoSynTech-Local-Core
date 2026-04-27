@@ -1,12 +1,13 @@
-"use strict";
+'use strict';
 const crypto = require('crypto');
 const fetch = require('node-fetch');
 
 class GasHybridClient {
   constructor(opts) {
-    this.gasUrl = opts?.gasUrl; // GAS endpoint URL
-    this.webId = opts?.webId;   // web identifier
-    this.secret = opts?.hybridSecret; // per-web secret from GAS (HMAC key)
+    this.gasUrl = opts?.gasUrl;
+    this.webId = opts?.webId;
+    this.secret = opts?.hybridSecret;
+    this.timeoutMs = opts?.timeoutMs || 15000;
   }
 
   _buildSignedBody(action, payload) {
@@ -41,40 +42,39 @@ class GasHybridClient {
     }
   }
 
-  async pull(limits) {
-    const body = this._buildSignedBody('hybrid_pull', limits || {});
-    const resp = await fetch(this.gasUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: body
-    });
-    return this._verify(await resp.text());
-  }
-
-  async push(events) {
-    return this._verify(await this._post('hybrid_push', { events }));
-  }
-
-  async ack(eventIds) {
-    return this._verify(await this._post('hybrid_ack', { event_ids: eventIds }));
-  }
-
-  async cmdAck(cmdId, status, result) {
-    return this._verify(await this._post('hybrid_cmd_ack', { cmd_id: cmdId, status, result }));
-  }
-
-  async healthReport(metrics) {
-    return this._verify(await this._post('web_health_report', metrics));
-  }
-
   async _post(action, payload) {
     const body = this._buildSignedBody(action, payload);
     const res = await fetch(this.gasUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: body
+      body: body,
+      timeout: this.timeoutMs
     });
     return res.text();
+  }
+
+  async _call(action, payload) {
+    return this._verify(await this._post(action, payload));
+  }
+
+  async pull(limits) {
+    return this._call('hybrid_pull', limits || {});
+  }
+
+  async push(events) {
+    return this._call('hybrid_push', { events });
+  }
+
+  async ack(eventIds) {
+    return this._call('hybrid_ack', { event_ids: eventIds });
+  }
+
+  async cmdAck(cmdId, status, result) {
+    return this._call('hybrid_cmd_ack', { cmd_id: cmdId, status, result });
+  }
+
+  async healthReport(metrics) {
+    return this._call('web_health_report', metrics);
   }
 }
 

@@ -20,14 +20,14 @@ class StateStore {
         const raw = fs.readFileSync(this.filePath, 'utf8');
         this.state = JSON.parse(raw);
       }
-    } catch (_) {}
+    } catch (_) { /* istanbul ignore next */ }
   }
 
   _save() {
     try {
       fs.mkdirSync(path.dirname(this.filePath), { recursive: true });
       fs.writeFileSync(this.filePath, JSON.stringify(this.state, null, 2));
-    } catch (_) {}
+    } catch (_) { /* istanbul ignore next */ }
   }
 
   get(key, fallback = null) {

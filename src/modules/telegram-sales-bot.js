@@ -81,20 +81,20 @@ module.exports = {
   sendWelcome: function(chatId, user) {
     const firstName = user.first_name || '';
     const text = `🌱 *Chào ${firstName}!*\n\n` +
-      `_EcoSynTech_ - Nền Tảng Nông Nghiệp Thông Minh 4.0\n` +
-      `Sứ mệnh: Giúp nông dân Việt Nam ứng dụng IoT để tăng năng suất, giảm chi phí\n\n` +
-      `━━━━━━━━━━━━━━━━━━\n\n` +
-      `*Sứ mệnh:*\n` + 
-      `» Đưa công nghệ IoT đến mọi trang trại Việt Nam\n` +
-      `» Giảm 40% chi phí nước, 30% phân bón\n` +
-      `» Tăng 50% năng suất cây trồng\n\n` +
-      `*Giá trị cốt lõi:*\n` +
-      `» 🧡 Khách hàng là trung tâm\n` +
-      `» 💡 Đổi mới liên tục\n` +
-      `» 🤝 Đồng hành dài hạn\n` +
-      `» 🌿 Bền vững\n\n` +
-      `━━━━━━━━━━━━━━━━━━\n\n` +
-      `Chọn menu bên dưới để tiếp tục 👇`;
+      '_EcoSynTech_ - Nền Tảng Nông Nghiệp Thông Minh 4.0\n' +
+      'Sứ mệnh: Giúp nông dân Việt Nam ứng dụng IoT để tăng năng suất, giảm chi phí\n\n' +
+      '━━━━━━━━━━━━━━━━━━\n\n' +
+      '*Sứ mệnh:*\n' + 
+      '» Đưa công nghệ IoT đến mọi trang trại Việt Nam\n' +
+      '» Giảm 40% chi phí nước, 30% phân bón\n' +
+      '» Tăng 50% năng suất cây trồng\n\n' +
+      '*Giá trị cốt lõi:*\n' +
+      '» 🧡 Khách hàng là trung tâm\n' +
+      '» 💡 Đổi mới liên tục\n' +
+      '» 🤝 Đồng hành dài hạn\n' +
+      '» 🌿 Bền vững\n\n' +
+      '━━━━━━━━━━━━━━━━━━\n\n' +
+      'Chọn menu bên dưới để tiếp tục 👇';
     
     return this.sendInlineKeyboard(chatId, text, [
       [{ text: '📦 Xem sản phẩm', callback_data: 'products' }],
@@ -105,15 +105,15 @@ module.exports = {
   },
   
   sendProducts: function(chatId) {
-    let text = `📦 *SẢN PHẨM ECO SYNTECH*\n\n`;
+    let text = '📦 *SẢN PHẨM ECO SYNTECH*\n\n';
     
     Object.values(PRODUCTS).forEach((p, i) => {
       text += `${i + 1}. *${p.name}* - ${this.formatPrice(p.price)}\n`;
       text += `   ${p.desc}\n\n`;
     });
     
-    text += `━━━━━━━━━━━━━━━━━━\n`;
-    text += `Liên hệ để được tư vấn miễn phí!\n`;
+    text += '━━━━━━━━━━━━━━━━━━\n';
+    text += 'Liên hệ để được tư vấn miễn phí!\n';
     
     return this.sendInlineKeyboard(chatId, text, [
       [{ text: '🛒 Mua Gói Cơ Bản', callback_data: 'buy_basic' }],
@@ -124,29 +124,31 @@ module.exports = {
   },
   
   sendQuoteRequest: function(chatId) {
-    const text = `💰 *YÊU CẦU BÁO GIÁ*\n\n` +
-      `Vui lòng cung cấp:\n` +
-      `1. Diện tích trang trại (m²) \n` +
-      `2. Loại cây trồng\n` +
-      `3. Số lượng cảm biến mong muốn\n\n` +
-      `_Ví dụ:_\n` +
-      `» 1000m², trồng rau, 5 cảm biến`;
+    const text = '💰 *YÊU CẦU BÁO GIÁ*\n\n' +
+      'Vui lòng cung cấp:\n' +
+      '1. Diện tích trang trại (m²) \n' +
+      '2. Loại cây trồng\n' +
+      '3. Số lượng cảm biến mong muốn\n\n' +
+      '_Ví dụ:_\n' +
+      '» 1000m², trồng rau, 5 cảm biến';
     
     return this.sendMessage(chatId, text);
   },
   
   sendROIInfo: function(chatId) {
-    const text = `📊 *ROI - HIỆU QUẢ ĐẦU TƯ*\n\n` +
-      `*Gói Cơ Bản (5.8M):*\n` +
-      `• Đầu tư: 5.8M VNĐ\n` +
-      `• Doanh thu năm: ~90M VNĐ\n` +
-      `• Lợi nhuận: 84M VNĐ\n` +
-      `• ROI: 1449%\n` +
-      `• Thu hồi: ~1 tháng\n\n` +
-      `*Gói Tiêu Chuẩn (9.8M):*\n` +
-      `• ROI: 818%\n` +
-      `• Thu hồi: ~1.5 tháng\n\n` +
-      `_Tính toán dựa trên 1000m² trồng rau_;
+    const text = [
+      '*ROI - HIEU QUA DAU TU*',
+      '*Goi Co Ban (5.8M):*',
+      'Dau tu: 5.8M VND',
+      'Doanh thu nam: ~90M VND',
+      'Loi nhuan: 84M VND',
+      'ROI: 1449%',
+      'Thu hoi: ~1 thang',
+      '*Goi Tieu Chuan (9.8M):*',
+      'ROI: 818%',
+      'Thu hoi: ~1.5 thang',
+      '_Tinh toan dua tren 1000m² trong rau_'
+    ].join('\n');
     
     return this.sendInlineKeyboard(chatId, text, [
       [{ text: '📦 Xem chi tiết sản phẩm', callback_data: 'products' }],
@@ -155,22 +157,25 @@ module.exports = {
   },
   
   sendContact: function(chatId) {
-    const text = `📞 *LIÊN HỆ ECO SYNTECH*\n\n` +
-      `*Công ty TNHH EcoSynTech Global*\n\n` +
-      `📍 Địa chỉ: [Địa chỉ công ty]\n` +
-      `📞 Hotline: 1900 xxxx\n` +
-      `✉️ Email: info@ecosyntech.vn\n` +
-      `🌐 Website: ecosyntech.vn\n\n` +
-      `*Giờ làm việc:*\n` +
-      `Thứ 2 - Thứ 7: 8h00 - 18h00\n\n` +
-      `_Đội ngũ tư vấn sẵn sàng hỗ trợ 24/7!_`;
+    const text = [
+      '*LIEN HE ECO SYNTECH*',
+      '',
+      '*Cong ty TNHH EcoSynTech Global*',
+      'Dia chi: [Dia chi cong ty]',
+      'Hotline: 1900 xxxx',
+      'Email: info@ecosyntech.vn',
+      'Website: ecosyntech.vn',
+      '*Gio lam viec:*',
+      'Thu 2 - Thu 7: 8h00 - 18h00',
+      '_Doi tu van san sang ho tro 24/7!_'
+    ].join('\n');
     
     return this.sendMessage(chatId, text);
   },
   
   processOrder: async function(chatId, text, userKey) {
     const productId = text.toLowerCase().includes('co ban') ? 'basic' :
-                     text.toLowerCase().includes('tieu chuan') ? 'standard' : 'premium';
+      text.toLowerCase().includes('tieu chuan') ? 'standard' : 'premium';
     
     const product = PRODUCTS[productId];
     
@@ -181,17 +186,20 @@ module.exports = {
       lead: {}
     });
     
-    const orderText = `🛒 *XÁC NHẬN ĐƠN HÀNG*\n\n` +
-      `*Sản phẩm:* ${product.name}\n` +
-      `*Giá:* ${this.formatPrice(product.price)}\n` +
-      `*Mã đơn:* ${quoteResult.quote.id}\n\n` +
-      `━━━━━━━━━━━━━━━━━━\n\n` +
-      `*THANH TOÁN:*\n` +
-      `Ngân hàng: [Tên ngân hàng]\n` +
-      `Số tài khoản: [Số TK]\n` +
-      `Chủ TK: Công ty TNHH EcoSynTech Global\n` +
-      `Nội dung: ${quoteResult.quote.id}\n\n` +
-      `Sau khi chuyển khoản, vui lòng gửi xác nhận!`;
+    const orderText = [
+      '*XAC NHAN DON HANG*',
+      '',
+      'San pham: ' + product.name,
+      'Gia: ' + this.formatPrice(product.price),
+      'Ma don: ' + quoteResult.quote.id,
+      '━━━━━━━━━━━━━━━━━━',
+      'THANH TOAN:',
+      'Ngan hang: [Ten ngan hang]',
+      'So tai khoan: [So TK]',
+      'Chu TK: Cong ty TNHH EcoSynTech Global',
+      'Noi dung: ' + quoteResult.quote.id,
+      'Sau khi chuyen khoan, vui long gui xac nhan!'
+    ].join('\n');
     
     return this.sendInlineKeyboard(chatId, orderText, [
       [{ text: '✅ Đã chuyển khoản', callback_data: 'paid_' + productId }],

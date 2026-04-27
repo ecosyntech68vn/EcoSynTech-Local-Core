@@ -244,7 +244,7 @@ function AutoBackup(config, logger) {
         if (logger && logger.info) {
           logger.info('[Backup] Deleted old: ' + oldest);
         }
-      } catch (_) {}
+      } catch (_) { /* istanbul ignore next */ }
     }
   }
 
@@ -328,7 +328,7 @@ function VulnerabilityScanner(logger) {
             }
           }
         }
-      } catch (_) {}
+      } catch (_) { /* istanbul ignore next */ }
     }
 
     walk(dir);

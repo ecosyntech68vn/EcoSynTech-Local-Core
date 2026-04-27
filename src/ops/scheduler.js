@@ -225,14 +225,14 @@ function SkillMetrics(options) {
           data[key] = parsed[key];
         }
       }
-    } catch (_) {}
+    } catch (_) { /* istanbul ignore next */ }
   }
 
   function save() {
     try {
       fs.mkdirSync(path.dirname(storePath), { recursive: true });
       fs.writeFileSync(storePath, JSON.stringify(data, null, 2));
-    } catch (_) {}
+    } catch (_) { /* istanbul ignore next */ }
   }
 
   function record(skillId, result) {

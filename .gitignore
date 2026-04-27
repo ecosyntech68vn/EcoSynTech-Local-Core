@@ -20,6 +20,9 @@ bundles/
 .env
 .env.local
 .env.*.local
+.env.base
+.env.pro
+.env.premium
 .env.pilot
 .env.production
 *.pem

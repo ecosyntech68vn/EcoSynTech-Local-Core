@@ -160,10 +160,11 @@ module.exports = {
       case 'daily':
         key = date.toISOString().slice(0, 10);
         break;
-      case 'weekly':
+      case 'weekly': {
         const week = Math.ceil(date.getDate() / 7);
         key = date.toISOString().slice(0, 4) + '-W' + week;
         break;
+      }
       case 'monthly':
         key = date.toISOString().slice(0, 7);
         break;

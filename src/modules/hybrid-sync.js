@@ -166,7 +166,7 @@ module.exports = {
     if (db && db.run) {
       try {
         db.run('DELETE FROM sync_queue WHERE id = ?', [changeId]);
-      } catch (e) {}
+      } catch (e) { /* istanbul ignore next */ }
     }
   },
   

@@ -42,7 +42,7 @@ module.exports = {
             fs.unlinkSync(oldest.path);
             totalSize -= oldest.stat.size;
             rotated++;
-          } catch (e) {}
+          } catch (e) { /* istanbul ignore next */ }
         }
       }
 

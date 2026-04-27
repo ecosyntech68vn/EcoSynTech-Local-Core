@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { runQuery, getOne } = require('../config/database');
+const { runQuery, getOne, getAll } = require('../config/database');
 
 const AUDIT_CHAIN_KEY = process.env.AUDIT_CHAIN_KEY || process.env.HMAC_SECRET || process.env.JWT_SECRET;
 

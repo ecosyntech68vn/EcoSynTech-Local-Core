@@ -75,6 +75,12 @@ const { responseSignatureMiddleware } = require('./src/middleware/response-sign'
 const { getAuditHashMiddleware } = require('./src/middleware/audit-tamper-proof');
 const { requestDeduplication } = require('./src/middleware/requestDeduplication');
 const { responseOptimizer } = require('./src/middleware/responseOptimizer');
+const deviceAuth = require('./src/middleware/deviceAuth');
+const responseSign = require('./src/middleware/responseSign');
+const GasHybridClient = require('./src/services/gasHybridClient');
+const DeviceSecretsSync = require('./src/services/deviceSecretsSync');
+const deviceActionRouter = require('./src/routes/deviceAction');
+const { bootstrap, wireRoutes } = require('./src/bootstrap');
 const path = require('path');
 
 function createApp() {
@@ -285,6 +291,7 @@ app.use(compression());
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/workers', workersRoutes);
   app.use('/api/supply-chain', supplyChainRoutes);
+  // 3-layer auth routes are mounted by wireRoutes() after bootstrap
   // Initialize lightweight/optional AI models lazily on startup to keep boot fast
   aiModelLoader.initialize().then(() => {
     // models initialized
@@ -432,6 +439,16 @@ async function startServer() {
     await initDatabase();
     
     const app = createApp();
+    
+    // ===== 3-Layer Auth Bootstrap =====
+    let deps = {};
+    if (config.gasHybrid.url && config.gasHybrid.webId && config.gasHybrid.hybridSecret) {
+      deps = await bootstrap(app);
+      wireRoutes(app, deps);
+    } else {
+      logger.warn('[BOOTSTRAP] GAS hybrid not configured — 3-layer auth skipped');
+    }
+    // ===== End 3-Layer Auth Bootstrap =====
     
     const server = http.createServer(app);
     

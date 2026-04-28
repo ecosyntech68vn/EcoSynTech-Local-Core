@@ -34,6 +34,7 @@ const config = require('../config');
 const logger = require('../config/logger');
 const envValidator = require('../config/envValidator');
 const { initDatabase, closeDatabase } = require('../config/database');
+const { applyProfile, getMemoryEstimate, getConfig } = require('../config/features');
 
 const { errorHandler, notFoundHandler } = require('../middleware/errorHandler');
 const { initWebSocket } = require('../websocket');
@@ -65,7 +66,24 @@ class EcoSynTechServer {
   }
 
   /**
-   * Khởi tạo ứng dụng - Step 2: Initialize Database
+   * Khởi tạo ứng dụng - Step 2: Load Feature Profile
+   */
+  _loadFeatures() {
+    const profile = process.env.PROFILE || 'standard';
+    const result = applyProfile(profile);
+    
+    if (result.success) {
+      const mem = getMemoryEstimate();
+      logger.info(`[FEATURES] Profile: ${profile}, Memory: ~${mem.total}MB, Active: ${mem.active.length} features`);
+    } else {
+      logger.warn(`[FEATURES] Failed to apply profile: ${result.error}`);
+    }
+    
+    this.config.enabledFeatures = getConfig();
+  }
+
+  /**
+   * Khởi tạo ứng dụng - Step 3: Initialize Database
    */
   async _initializeDatabase() {
     await initDatabase();
@@ -73,7 +91,7 @@ class EcoSynTechServer {
   }
 
   /**
-   * Khởi tạo ứng dụng - Step 3: Setup Express
+   * Khởi tạo ứng dụng - Step 4: Setup Express
    */
   _setupExpress() {
     this.app = express();
@@ -85,7 +103,7 @@ class EcoSynTechServer {
   }
 
   /**
-   * Khởi tạo ứng dụng - Step 4: Register Middlewares
+   * Khởi tạo ứng dụng - Step 5: Register Middlewares
    */
   _registerMiddlewares() {
     registerMiddlewares(this.app);
@@ -93,7 +111,7 @@ class EcoSynTechServer {
   }
 
   /**
-   * Khởi tạo ứng dụng - Step 5: Register Routes
+   * Khởi tạo ứng dụng - Step 6: Register Routes
    */
   _registerRoutes() {
     registerRoutes(this.app);
@@ -101,7 +119,7 @@ class EcoSynTechServer {
   }
 
   /**
-   * Khởi tạo ứng dụng - Step 6: Setup WebSocket
+   * Khởi tạo ứng dụng - Step 7: Setup WebSocket
    */
   _setupWebSocket() {
     const httpServer = require('http').createServer(this.app);
@@ -111,7 +129,7 @@ class EcoSynTechServer {
   }
 
   /**
-   * Khởi tạo ứng dụng - Step 7: Error Handlers
+   * Khởi tạo ứng dụng - Step 8: Error Handlers
    */
   _registerErrorHandlers() {
     this.app.use(notFoundHandler);
@@ -130,6 +148,7 @@ class EcoSynTechServer {
       logger.info('========================================');
 
       await this._validateEnvironment();
+      this._loadFeatures();
       await this._initializeDatabase();
       this._setupExpress();
       this._registerMiddlewares();

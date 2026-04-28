@@ -116,8 +116,7 @@ function registerRoutes(app) {
   // ============================================================
   // LEGACY / COMPATIBILITY
   // ============================================================
-  app.use('/api/webhook', require('../routes/webhook'));
-  app.use('/api/webhooks', require('../routes/webhooks'));
+  app.use('/api/webhook', require('../routes/device-webhook'));
   app.use('/api/health-report', require('../routes/health-report'));
   app.use('/api/devicemgmt', require('../routes/devicemgmt'));
   app.use('/api/security', require('../routes/security'));

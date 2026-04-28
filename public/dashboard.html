@@ -370,6 +370,87 @@
       border-color: var(--accent);
     }
     
+    .btn-sm {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    
+    /* Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--border);
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: var(--success);
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    
+    /* Form styles */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      color: var(--text-primary);
+    }
+    
+    .form-input, .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-input);
+      color: var(--text-primary);
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    }
+    
     /* Stats grid */
     .stats-grid {
       display: grid;
@@ -782,6 +863,11 @@
             <span class="nav-icon">⚡</span>
             <span>Điều khiển</span>
           </a>
+          <a class="nav-item" href="#" onclick="showSection('automation')">
+            <span class="nav-icon">🔄</span>
+            <span>Tự động hóa</span>
+            <span class="nav-badge" id="ruleCount">0</span>
+          </a>
         </div>
         
         <div class="nav-section">
@@ -930,6 +1016,100 @@
                 <div class="alert-time">23 phút trước</div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Automation Section -->
+      <div id="automation-section" style="display: none;">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Quản lý Tự động hóa</h2>
+            <button class="btn btn-primary" onclick="openRuleModal()">+ Tạo Rule mới</button>
+          </div>
+          <div class="card-body">
+            <div id="rules-list">
+              <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+                <p>🔄 Đang tải rules...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card" style="margin-top: 16px;">
+          <div class="card-header">
+            <h3 class="card-title">Tạo Rule mới</h3>
+          </div>
+          <div class="card-body">
+            <form id="rule-form" onsubmit="saveRule(event)">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                  <label class="form-label">Tên Rule *</label>
+                  <input type="text" class="form-input" id="ruleName" required placeholder="VD: Tưới nước khi độ ẩm thấp">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Thiết bị mục tiêu</label>
+                  <select class="form-select" id="ruleTargetDevice">
+                    <option value="">Chọn thiết bị...</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label">Điều kiện kích hoạt</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                  <select class="form-select" id="ruleSensor">
+                    <option value="soil_moisture">Độ ẩm đất</option>
+                    <option value="temperature">Nhiệt độ</option>
+                    <option value="humidity">Độ ẩm</option>
+                    <option value="light">Ánh sáng</option>
+                  </select>
+                  <select class="form-select" id="ruleOperator">
+                    <option value="<">Nhỏ hơn (&lt;)</option>
+                    <option value=">">Lớn hơn (&gt;)</option>
+                    <option value="<=">Nhỏ hơn hoặc bằng</option>
+                    <option value=">=">Lớn hơn hoặc bằng</option>
+                    <option value="==">Bằng</option>
+                  </select>
+                  <input type="number" class="form-input" id="ruleValue" placeholder="Giá trị ngưỡng" required>
+                </div>
+              </div>
+              
+              <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label">Hành động</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <select class="form-select" id="ruleActionType">
+                    <option value="relay_on">Bật relay</option>
+                    <option value="relay_off">Tắt relay</option>
+                    <option value="irrigate">Tưới nước</option>
+                    <option value="alert">Gửi cảnh báo</option>
+                  </select>
+                  <input type="number" class="form-input" id="ruleDuration" placeholder="Thời gian (giây)">
+                </div>
+              </div>
+              
+              <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label">🛡️ Chống bật/tắt liên tục (Anti-Flicker)</label>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <input type="number" class="form-input" id="ruleCooldown" value="30" min="1" max="1440" style="width: 100px;">
+                  <span style="color: var(--text-muted);">phút cooldown giữa các lần kích hoạt</span>
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                  💡 Ngăn thiết bị bật/tắt liên tục trong thời gian ngắn
+                </p>
+              </div>
+              
+              <div style="margin-top: 20px;">
+                <label class="form-label">
+                  <input type="checkbox" id="ruleEnabled" checked> Kích hoạt ngay
+                </label>
+              </div>
+              
+              <div style="margin-top: 24px;">
+                <button type="submit" class="btn btn-primary">Lưu Rule</button>
+                <button type="button" class="btn btn-ghost" onclick="closeRuleModal()">Hủy</button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -1099,6 +1279,160 @@
       // Initialize on load
       initTheme();
     })();
+    
+    // ==================== Automation Functions ====================
+    let currentSection = 'dashboard';
+    
+    function showSection(section) {
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      event.target.closest('.nav-item').classList.add('active');
+      
+      document.getElementById('dashboard-section').style.display = section === 'dashboard' ? 'block' : 'none';
+      document.getElementById('automation-section').style.display = section === 'automation' ? 'block' : 'none';
+      currentSection = section;
+      
+      if (section === 'automation') {
+        loadRules();
+        loadDevicesForRule();
+      }
+    }
+    
+    async function loadRules() {
+      const container = document.getElementById('rules-list');
+      try {
+        const response = await fetch('/api/rules');
+        const data = await response.json();
+        
+        if (data.rules && data.rules.length > 0) {
+          container.innerHTML = data.rules.map(rule => `
+            <div class="rule-item" style="display: flex; align-items: center; justify-content: space-between; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 12px;">
+              <div style="flex: 1;">
+                <div style="font-weight: 600;">${rule.name}</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                  ${rule.condition?.sensor || ''} ${rule.condition?.operator || ''} ${rule.condition?.value || ''} 
+                  → ${rule.action?.type || ''}
+                </div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                  🛡️ Cooldown: ${rule.cooldown_minutes || 30} phút
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <label class="switch">
+                  <input type="checkbox" ${rule.enabled ? 'checked' : ''} onchange="toggleRule('${rule.id}', this.checked)">
+                  <span class="slider"></span>
+                </label>
+                <button class="btn btn-ghost btn-sm" onclick="editRule('${rule.id}')">Sửa</button>
+                <button class="btn btn-ghost btn-sm" style="color: var(--danger);" onclick="deleteRule('${rule.id}')">Xóa</button>
+              </div>
+            </div>
+          `).join('');
+          
+          document.getElementById('ruleCount').textContent = data.rules.length;
+        } else {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+              <p>🔄 Chưa có rule nào</p>
+              <p style="font-size: 12px;">Tạo rule để tự động hóa thiết bị</p>
+            </div>
+          `;
+          document.getElementById('ruleCount').textContent = '0';
+        }
+      } catch (err) {
+        console.error('Load rules error:', err);
+        container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--danger);">Lỗi tải rules</div>';
+      }
+    }
+    
+    async function loadDevicesForRule() {
+      const select = document.getElementById('ruleTargetDevice');
+      try {
+        const response = await fetch('/api/devices');
+        const data = await response.json();
+        
+        if (data.devices) {
+          select.innerHTML = '<option value="">Chọn thiết bị...</option>' + 
+            data.devices.map(d => `<option value="${d.id}">${d.name} (${d.type})</option>`).join('');
+        }
+      } catch (err) {
+        console.error('Load devices error:', err);
+      }
+    }
+    
+    function openRuleModal() {
+      document.getElementById('rule-form').reset();
+      document.getElementById('ruleCooldown').value = 30;
+      document.getElementById('ruleEnabled').checked = true;
+    }
+    
+    function closeRuleModal() {
+      document.getElementById('rule-form').reset();
+    }
+    
+    async function saveRule(event) {
+      event.preventDefault();
+      
+      const rule = {
+        name: document.getElementById('ruleName').value,
+        targetDevice: document.getElementById('ruleTargetDevice').value,
+        enabled: document.getElementById('ruleEnabled').checked,
+        condition: {
+          sensor: document.getElementById('ruleSensor').value,
+          operator: document.getElementById('ruleOperator').value,
+          value: parseFloat(document.getElementById('ruleValue').value)
+        },
+        action: {
+          type: document.getElementById('ruleActionType').value,
+          durationSec: parseInt(document.getElementById('ruleDuration').value) || null
+        },
+        cooldownMinutes: parseInt(document.getElementById('ruleCooldown').value) || 30
+      };
+      
+      try {
+        const response = await fetch('/api/rules', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(rule)
+        });
+        
+        if (response.ok) {
+          alert('✅ Rule đã được tạo!');
+          closeRuleModal();
+          loadRules();
+        } else {
+          const err = await response.json();
+          alert('❌ Lỗi: ' + (err.error || 'Unknown error'));
+        }
+      } catch (err) {
+        alert('❌ Lỗi kết nối: ' + err.message);
+      }
+    }
+    
+    async function toggleRule(ruleId, enabled) {
+      try {
+        await fetch(`/api/rules/${ruleId}/toggle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled })
+        });
+      } catch (err) {
+        console.error('Toggle rule error:', err);
+      }
+    }
+    
+    async function deleteRule(ruleId) {
+      if (!confirm('Bạn có chắc muốn xóa rule này?')) return;
+      
+      try {
+        await fetch(`/api/rules/${ruleId}`, { method: 'DELETE' });
+        loadRules();
+      } catch (err) {
+        alert('❌ Lỗi xóa rule');
+      }
+    }
+    
+    function editRule(ruleId) {
+      alert('Chức năng đang phát triển. Vui lòng xóa và tạo lại rule.');
+    }
   </script>
 </body>
 </html>

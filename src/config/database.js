@@ -250,6 +250,21 @@ function createTables() {
   db.run('CREATE INDEX IF NOT EXISTS idx_rules_enabled ON rules(enabled)');
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS device_action_log (
+      id TEXT PRIMARY KEY,
+      device_id TEXT NOT NULL,
+      action_type TEXT NOT NULL,
+      triggered_by TEXT,
+      rule_id TEXT,
+      result TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run('CREATE INDEX IF NOT EXISTS idx_device_action_log_device ON device_action_log(device_id)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_device_action_log_created ON device_action_log(created_at)');
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS schedules (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -1233,6 +1248,58 @@ process.on('SIGINT', () => {
   saveDatabaseSync();
 });
 
+function logDeviceAction(deviceId, actionType, triggeredBy, ruleId, result) {
+  const id = require('uuid').v4();
+  try {
+    runQuery(
+      `INSERT INTO device_action_log (id, device_id, action_type, triggered_by, rule_id, result, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+      [id, deviceId, actionType, triggeredBy, ruleId, JSON.stringify(result || {})]
+    );
+    return { success: true, id };
+  } catch (err) {
+    logger.error('[DB] Failed to log device action:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+function getLastDeviceAction(deviceId, actionType) {
+  try {
+    const result = getOne(
+      `SELECT * FROM device_action_log 
+       WHERE device_id = ? AND action_type = ? 
+       ORDER BY created_at DESC LIMIT 1`,
+      [deviceId, actionType]
+    );
+    return result;
+  } catch (err) {
+    logger.debug('[DB] getLastDeviceAction:', err.message);
+    return null;
+  }
+}
+
+function checkDeviceCooldown(deviceId, actionType, minIntervalMinutes = 5) {
+  const lastAction = getLastDeviceAction(deviceId, actionType);
+  if (!lastAction) {
+    return { allowed: true, reason: 'No previous action' };
+  }
+  
+  const lastTime = new Date(lastAction.created_at);
+  const now = new Date();
+  const diffMs = now - lastTime;
+  const diffMinutes = diffMs / (1000 * 60);
+  
+  if (diffMinutes < minIntervalMinutes) {
+    return { 
+      allowed: false, 
+      reason: `Device ${actionType} blocked - ${Math.round(minIntervalMinutes - diffMinutes)} min remaining`,
+      lastAction: lastAction.created_at
+    };
+  }
+  
+  return { allowed: true, reason: 'Cooldown passed' };
+}
+
 module.exports = {
   initDatabase,
   getDatabase,
@@ -1245,5 +1312,8 @@ module.exports = {
   createIndexes,
   optimizeDatabase,
   verifyPersistence,
-  getHealthCheck
+  getHealthCheck,
+  logDeviceAction,
+  getLastDeviceAction,
+  checkDeviceCooldown
 };

@@ -37,6 +37,7 @@ const ruleSchema = Joi.object({
   }).required(),
   cooldownMinutes: Joi.number().min(0).default(30),
   hysteresis: Joi.number().min(0).optional(),
+  minTriggerInterval: Joi.number().min(1).max(1440).default(5),
   timeWindow: Joi.object({
     startHour: Joi.number().min(0).max(23).optional(),
     endHour: Joi.number().min(0).max(23).optional(),

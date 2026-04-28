@@ -705,6 +705,21 @@ function createTables() {
   db.run('CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_at)');
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS data_quality_log (
+      id TEXT PRIMARY KEY,
+      device_id TEXT,
+      sensor_type TEXT NOT NULL,
+      raw_value REAL,
+      issue_type TEXT NOT NULL,
+      issue_detail TEXT,
+      processed_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run('CREATE INDEX IF NOT EXISTS idx_data_quality_device ON data_quality_log(device_id)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_data_quality_sensor ON data_quality_log(sensor_type)');
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS tenants (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,

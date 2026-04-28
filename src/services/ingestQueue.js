@@ -1,5 +1,6 @@
 'use strict';
 const EventEmitter = require('events');
+const { getValidator } = require('./sensorValidator');
 
 const logger = {
   info: console.log.bind(console),
@@ -50,11 +51,32 @@ class IngestQueue extends EventEmitter {
       return { ok: false, code: 'QUEUE_FULL', queueSize: this.queue.length };
     }
 
+    const validator = getValidator();
+    const result = validator.processReadings(readings);
+
+    if (result.rejected.length > 0) {
+      this.stats.rejected += result.rejected.length;
+      this.emit('validationError', { rejected: result.rejected });
+    }
+
+    if (result.outliers.length > 0) {
+      this.emit('outlierDetected', { outliers: result.outliers });
+    }
+
+    if (result.spikes.length > 0) {
+      this.emit('spikeDetected', { spikes: result.spikes });
+    }
+
+    if (result.validated.length === 0) {
+      return { ok: false, code: 'ALL_READINGS_INVALID', stats: result.stats };
+    }
+
     const entry = {
       deviceId: deviceId,
-      readings: readings,
+      readings: result.validated,
       timestamp: Date.now(),
-      retries: 0
+      retries: 0,
+      quality: result.stats
     };
 
     this.queue.push(entry);

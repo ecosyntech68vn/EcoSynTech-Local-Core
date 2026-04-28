@@ -9,6 +9,7 @@
     "dev": "nodemon server.js",
     "start:lowmem": "node --max-old-space-size=256 server.js",
     "test": "jest --passWithNoTests --forceExit --detectOpenHandles",
+    "test:ci": "jest --passWithNoTests --forceExit --detectOpenHandles --silent",
     "test:coverage": "jest --coverage --passWithNoTests --forceExit --detectOpenHandles",
     "test:e2e": "NODE_ENV=test npx jest __tests__/e2e.api.flow.test.js --runInBand --forceExit",
     "lint": "eslint src/",

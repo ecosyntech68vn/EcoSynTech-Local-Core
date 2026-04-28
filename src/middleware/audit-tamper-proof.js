@@ -57,9 +57,19 @@ async function verifyAuditChain() {
 }
 
 function getAuditHashMiddleware(req, res, next) {
+  if (typeof next !== 'function') {
+    return (req, res, next) => {
+      req.auditLog = async (action, details) => {
+        const userId = req.user ? req.user.id : 'system';
+        const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+        return logTamperProofAudit(action, userId, details, ip);
+      };
+      next();
+    };
+  }
   req.auditLog = async (action, details) => {
     const userId = req.user ? req.user.id : 'system';
-    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
     return logTamperProofAudit(action, userId, details, ip);
   };
   next();

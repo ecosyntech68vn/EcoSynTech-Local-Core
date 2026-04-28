@@ -42,6 +42,30 @@ EcoSynTech Local Core là hệ thống phần mềm **on-premises** cho nông ng
 | **PDCA** | Plan-Do-Check-Act continuous improvement |
 | **5W1H** | What, Why, Who, Where, When, How |
 
+### Thống kê Code
+
+| Chỉ số | Giá trị |
+|--------|---------|
+| **Tổng file JS** | 287 files |
+| **Tổng dòng code** | ~44,554 lines |
+| **Trung bình** | ~155 lines/file |
+| **Modules** | 17 main modules |
+| **API Endpoints** | 40+ routes |
+
+### Cấu trúc Modules
+
+| Module | Files | Lines | Mô tả |
+|--------|-------|-------|-------|
+| `services/` | 51 | 10,644 | Business logic, IoT, AI services |
+| `routes/` | 43 | 9,073 | REST API endpoints |
+| `skills/` | 80 | 7,780 | AI skills & capabilities |
+| `config/` | 9 | 2,487 | Configuration & database |
+| `modules/` | 12 | 2,020 | Core modules (auth, sync, etc.) |
+| `middleware/` | 21 | 1,672 | Auth, security, validation |
+| `ops/` | 8 | 1,294 | Operations & maintenance |
+| `bootstrap/` | 2 | 373 | System bootstrap |
+| Root entry points | 10 | 43,527 | server.js, app.js, bootstrap.js |
+
 ---
 
 ## 2. Kiến trúc hệ thống
@@ -135,6 +159,25 @@ EcoSynTech Local Core là hệ thống phần mềm **on-premises** cho nông ng
 - **Light/Dark mode** với system preference detection
 - **Responsive design** - Mobile-first
 - **Accessibility** - Font size 16px, high contrast
+
+### 3.6 Feature Flags (Frugal Innovation)
+Hệ thống tối ưu bộ nhớ với profile-based features:
+
+| Profile | RAM | Use Case |
+|---------|-----|----------|
+| `minimal` | ~130MB | Core API only |
+| `basic` | ~260MB | IoT + WebSocket |
+| `standard` | ~320MB | Full (trừ AI) |
+| `ai` | ~750MB | AI enabled |
+| `full` | ~905MB | Tất cả features |
+
+**Sử dụng:**
+```bash
+# Copy profile .env và chạy
+cp .env.minimal .env && npm start
+# Hoặc set biến PROFILE
+PROFILE=standard npm start
+```
 
 ---
 

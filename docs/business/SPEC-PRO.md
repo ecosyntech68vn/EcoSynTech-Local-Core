@@ -735,9 +735,9 @@ services:
 
 Steps:
 1. Lint (npm run lint)
-2. Test (npm run test:ci)
+2. Test (npm run test)
 3. Build (npm run build)
-4. Security scan
+4. Security scan (npm run audit)
 5. Deploy staging
 6. Smoke test
 7. Approve production

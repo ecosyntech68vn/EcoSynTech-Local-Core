@@ -15,9 +15,8 @@ When
 How
 - Commands:
   - npm test
-  - npm run test:dashboard
   - npm run test:coverage
-  - npm run typecheck
+  - npm run test:e2e
 - Ensure dependencies are installed: npm ci or npm i.
 - Review test results and fix failing tests.
 

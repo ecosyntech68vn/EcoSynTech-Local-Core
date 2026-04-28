@@ -19,7 +19,10 @@
     "audit:fix": "npm audit fix --production",
     "build": "node --check server.js",
     "bootstrap-ai": "node bin/bootstrap-ai.js",
-    "validate-skills": "node scripts/validate-skills.js"
+    "validate-skills": "node scripts/validate-skills.js",
+    "migrate": "node run-migrations.js",
+    "backup": "node scripts/backup.js",
+    "restore": "node scripts/restore.js"
   },
   "validate-skills": "node scripts/validate-skills.js",
   "bin": {

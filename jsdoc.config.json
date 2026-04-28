@@ -1,0 +1,33 @@
+{
+  "source": {
+    "include": ["src"],
+    "exclude": ["node_modules", "dist", "build", "__tests__"]
+  },
+  "opts": {
+    "destination": "./docs/jsdoc",
+    "template": "default",
+    "readme": "./README.md",
+    "recurse": true,
+    "verbose": true
+  },
+  "plugins": [],
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": false
+  },
+  "jsdoc": {
+    "collapse": true,
+    "inverse": false,
+    "ignorePrivate": false
+  },
+  "docdash": {
+    "title": "EcoSynTech Local Core API",
+    "order": ["Auth", "Services", "Middleware", "Routes"],
+    "displays": ["params", "returns"]
+  },
+  "metadata": {
+    "title": "EcoSynTech Local Core Documentation",
+    "description": "Type-safe API documentation for Smart Agriculture IoT System",
+    "version": "5.0.0"
+  }
+}

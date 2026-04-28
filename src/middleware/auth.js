@@ -1,6 +1,32 @@
+/**
+ * @fileoverview Authentication middleware for EcoSynTech Local Core
+ * @description Provides JWT authentication, account lockout, and HMAC verification
+ * @module middleware/auth
+ * @requires jsonwebtoken
+ * @requires crypto
+ * @requires config/logger
+ * @see {@link https://github.com/ecosyntech68vn/EcoSynTech-Local-Core}
+ * @copyright 2026 EcoSynTech
+ */
+
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const logger = require('../config/logger');
+
+/**
+ * @typedef {Object} User
+ * @property {string} id - User unique identifier
+ * @property {string} email - User email address
+ * @property {string} role - User role (admin, manager, user)
+ */
+
+/**
+ * @typedef {Object} TokenPayload
+ * @property {string} sub - Subject (user ID)
+ * @property {string} email - User email
+ * @property {string} role - User role
+ * @property {string} [type] - Token type (refresh)
+ */
 
 const nodeEnv = process.env.NODE_ENV || 'development';
 let JWT_SECRET = process.env.JWT_SECRET;

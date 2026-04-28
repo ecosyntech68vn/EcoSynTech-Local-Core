@@ -13,6 +13,8 @@
     "test:e2e": "NODE_ENV=test npx jest __tests__/e2e.api.flow.test.js --runInBand --forceExit",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
+    "docs:jsdoc": "jsdoc -c jsdoc.config.json",
+    "docs": "npm run docs:jsdoc",
     "audit": "npm audit --production",
     "audit:fix": "npm audit fix --production",
     "build": "node --check server.js",

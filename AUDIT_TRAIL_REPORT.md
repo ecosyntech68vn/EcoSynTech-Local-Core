@@ -1,10 +1,10 @@
 # ISO 27001 Audit Trail Report
-## EcoSynTech Local Core V5.0 - Security Enhancement
+## EcoSynTech Local Core V5.1 - Security Enhancement
 
-**Date:** 2026-04-27  
+**Date:** 2026-04-28  
 **Auditor:** EcoSynTech Development Team  
 **Standard:** ISO 27001:2022  
-**Scope:** Authentication, Data Ingestion, Caching
+**Version:** 5.1.0
 
 ---
 

@@ -1,7 +1,7 @@
 {
   "name": "ecosyntech-iot-backend",
-  "version": "5.0.0",
-  "description": "EcoSynTech IoT Backend - Optimized for low-memory devices",
+  "version": "5.1.0",
+  "description": "EcoSynTech IoT Backend V5.1 - Ultra-Intelligent AI System for Smart Agriculture",
   "main": "server.js",
   "scripts": {
     "setup-models": "./scripts/setup-models.sh",

@@ -686,6 +686,25 @@ function createTables() {
   `);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS refresh_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      token TEXT NOT NULL,
+      ip TEXT,
+      user_agent TEXT,
+      expires_at TEXT NOT NULL,
+      rotated_at TEXT,
+      rotation_count INTEGER DEFAULT 0,
+      revoked INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run('CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON refresh_tokens(expires_at)');
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS tenants (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -1300,6 +1319,89 @@ function checkDeviceCooldown(deviceId, actionType, minIntervalMinutes = 5) {
   return { allowed: true, reason: 'Cooldown passed' };
 }
 
+function saveRefreshToken(userId, token, ip, userAgent, expiresInDays = 7) {
+  const id = require('uuid').v4();
+  const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString();
+  
+  runQuery(
+    `INSERT INTO refresh_tokens (id, user_id, token, ip, user_agent, expires_at, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+    [id, userId, token, ip || '', userAgent || '', expiresAt]
+  );
+  
+  cleanupOldRefreshTokens(userId);
+}
+
+function verifyRefreshToken(userId, token) {
+  const result = getOne(
+    `SELECT * FROM refresh_tokens 
+     WHERE user_id = ? AND token = ? AND revoked = 0 AND expires_at > datetime('now')
+     LIMIT 1`,
+    [userId, token]
+  );
+  return result !== null;
+}
+
+function rotateRefreshToken(userId, oldToken, newToken, ip, userAgent) {
+  const current = getOne(
+    `SELECT * FROM refresh_tokens WHERE user_id = ? AND token = ? AND revoked = 0`,
+    [userId, oldToken]
+  );
+  
+  if (!current || current.rotation_count >= 5) {
+    return null;
+  }
+  
+  runQuery(
+    `UPDATE refresh_tokens SET rotated_at = datetime('now'), rotation_count = rotation_count + 1 WHERE id = ?`,
+    [current.id]
+  );
+  
+  const id = require('uuid').v4();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  
+  runQuery(
+    `INSERT INTO refresh_tokens (id, user_id, token, ip, user_agent, expires_at, rotation_count, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, 0, datetime('now'))`,
+    [id, userId, newToken, ip || '', userAgent || '', expiresAt]
+  );
+  
+  return newToken;
+}
+
+function revokeRefreshToken(userId, token) {
+  runQuery(
+    `UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ? AND token = ?`,
+    [userId, token]
+  );
+}
+
+function revokeAllUserRefreshTokens(userId) {
+  runQuery(`UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?`, [userId]);
+}
+
+function cleanupOldRefreshTokens(userId) {
+  runQuery(
+    `DELETE FROM refresh_tokens WHERE user_id = ? AND expires_at < datetime('now')`,
+    [userId]
+  );
+  
+  const count = getOne(
+    `SELECT COUNT(*) as count FROM refresh_tokens WHERE user_id = ? AND revoked = 0`,
+    [userId]
+  );
+  
+  if (count?.count > 10) {
+    const oldTokens = getAll(
+      `SELECT id FROM refresh_tokens WHERE user_id = ? AND revoked = 0 ORDER BY created_at ASC LIMIT ?`,
+      [userId, count.count - 10]
+    );
+    for (const t of oldTokens) {
+      runQuery(`UPDATE refresh_tokens SET revoked = 1 WHERE id = ?`, [t.id]);
+    }
+  }
+}
+
 module.exports = {
   initDatabase,
   getDatabase,
@@ -1315,5 +1417,10 @@ module.exports = {
   getHealthCheck,
   logDeviceAction,
   getLastDeviceAction,
-  checkDeviceCooldown
+  checkDeviceCooldown,
+  saveRefreshToken,
+  verifyRefreshToken,
+  rotateRefreshToken,
+  revokeRefreshToken,
+  revokeAllUserRefreshTokens
 };

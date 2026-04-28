@@ -29,15 +29,51 @@ const { getAuditHashMiddleware } = require('../middleware/audit-tamper-proof');
 const { requestDeduplication } = require('../middleware/requestDeduplication');
 const { responseOptimizer } = require('../middleware/responseOptimizer');
 const { rateLimitPerDevice } = require('../middleware/deviceRateLimit');
+const { ddosProtection } = require('../middleware/ddosProtection');
+const { replayProtection } = require('../middleware/replayProtection');
 
 function registerMiddlewares(app) {
+  const isProduction = process.env.NODE_ENV === 'production';
+  
+  // ============================================================
+  // HTTPS ENFORCEMENT (Production)
+  // ============================================================
+  if (isProduction) {
+    app.use((req, res, next) => {
+      if (!req.secure && !req.headers['x-forwarded-proto']) {
+        const httpsUrl = `https://${req.hostname}${req.url}`;
+        return res.redirect(301, httpsUrl);
+      }
+      next();
+    });
+  }
+  
   // ============================================================
   // SECURITY LAYER 1: Basic Protection (A.8.24, A.8.25)
   // ============================================================
   
   app.use(helmet({
-    contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
+    contentSecurityPolicy: isProduction ? {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", "wss:", "https:"],
+        fontSrc: ["'self'", "https:"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'", "https:"],
+        frameSrc: ["'none'"],
+        upgradeInsecureRequests: []
+      },
+      reportOnly: false
+    } : false,
+    crossOriginEmbedderPolicy: false,
+    hsts: isProduction ? {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    } : false
   }));
 
   app.use(cors({
@@ -64,6 +100,11 @@ function registerMiddlewares(app) {
   // ============================================================
   // RATE LIMITING LAYER (A.8.16 - Network controls)
   // ============================================================
+  
+  if (isProduction) {
+    app.use(ddosProtection);
+    app.use(replayProtection);
+  }
   
   // Global rate limit
   const globalLimiter = rateLimit({

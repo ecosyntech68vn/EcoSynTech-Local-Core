@@ -12,6 +12,7 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const logger = require('../config/logger');
+const db = require('../config/database');
 
 /**
  * @typedef {Object} User
@@ -57,21 +58,29 @@ function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-function storeRefreshToken(userId, token) {
-  const hash = hashToken(token);
-  refreshTokenStore.set(userId, {
-    hash,
-    created: Date.now(),
-    rotationCount: 0
-  });
-  
-  if (refreshTokenStore.size > REFRESH_TOKEN_MAX) {
-    const firstKey = refreshTokenStore.keys().next().value;
-    refreshTokenStore.delete(firstKey);
+function storeRefreshToken(userId, token, ip, userAgent) {
+  try {
+    db.saveRefreshToken(userId, token, ip, userAgent, 7);
+  } catch (err) {
+    logger.warn('[Auth] DB save refresh token failed, using memory fallback');
+    const hash = hashToken(token);
+    refreshTokenStore.set(userId, {
+      hash,
+      created: Date.now(),
+      rotationCount: 0
+    });
   }
 }
 
 function verifyRefreshToken(userId, token) {
+  try {
+    if (db.verifyRefreshToken(userId, token)) {
+      return true;
+    }
+  } catch (err) {
+    logger.debug('[Auth] DB verify refresh token failed, trying memory');
+  }
+  
   const stored = refreshTokenStore.get(userId);
   if (!stored) return false;
   
@@ -80,6 +89,18 @@ function verifyRefreshToken(userId, token) {
 }
 
 function rotateRefreshToken(userId, oldToken) {
+  let newToken;
+  
+  try {
+    newToken = generateRefreshToken({ id: userId });
+    const result = db.rotateRefreshToken(userId, oldToken, newToken, null, null);
+    if (result) {
+      return newToken;
+    }
+  } catch (err) {
+    logger.debug('[Auth] DB rotate failed, trying memory');
+  }
+  
   const stored = refreshTokenStore.get(userId);
   if (!stored) return null;
   
@@ -90,12 +111,18 @@ function rotateRefreshToken(userId, oldToken) {
   }
   
   stored.rotationCount++;
-  const newToken = generateRefreshToken({ id: userId });
+  newToken = generateRefreshToken({ id: userId });
   storeRefreshToken(userId, newToken);
   return newToken;
 }
 
-function revokeRefreshToken(userId) {
+function revokeRefreshToken(userId, token) {
+  try {
+    db.revokeRefreshToken(userId, token);
+  } catch (err) {
+    logger.debug('[Auth] DB revoke refresh token failed');
+  }
+  
   refreshTokenStore.delete(userId);
   logger.info('[Auth] Refresh token revoked for user:', userId);
 }

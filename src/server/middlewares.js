@@ -71,7 +71,7 @@ function registerMiddlewares(app) {
     max: config.rateLimit?.maxRequests || 100,
     message: { ok: false, code: 'RATE_LIMIT_EXCEEDED' },
     standardHeaders: true,
-    legacyHeaders: false,
+    legacyHeaders: false
   });
   app.use('/api/', globalLimiter);
 

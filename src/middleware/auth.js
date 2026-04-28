@@ -106,8 +106,8 @@ function verifyToken(token) {
 }
 
 function recordFailedLogin(userId) {
-  var now = Date.now();
-  var attempts = failedLoginAttempts.get(userId);
+  const now = Date.now();
+  let attempts = failedLoginAttempts.get(userId);
   if (!attempts) {
     attempts = { count: 0, windowStart: now };
   }
@@ -131,9 +131,9 @@ function recordFailedLogin(userId) {
 }
 
 function checkAccountLocked(userId) {
-  var lockUntil = lockedAccounts.get(userId);
+  const lockUntil = lockedAccounts.get(userId);
   if (lockUntil && lockUntil > Date.now()) {
-    var remainingSeconds = Math.ceil((lockUntil - Date.now()) / 1000);
+    const remainingSeconds = Math.ceil((lockUntil - Date.now()) / 1000);
     return remainingSeconds;
   }
   if (lockUntil) {

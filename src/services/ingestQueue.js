@@ -50,7 +50,7 @@ class IngestQueue extends EventEmitter {
       return { ok: false, code: 'QUEUE_FULL', queueSize: this.queue.length };
     }
 
-    var entry = {
+    const entry = {
       deviceId: deviceId,
       readings: readings,
       timestamp: Date.now(),
@@ -71,16 +71,16 @@ class IngestQueue extends EventEmitter {
     if (this.processing || this.queue.length === 0) return;
 
     this.processing = true;
-    var batch = this.queue.splice(0, this.batchSize);
-    var deviceReadings = {};
+    const batch = this.queue.splice(0, this.batchSize);
+    const deviceReadings = {};
 
-    for (var i = 0; i < batch.length; i++) {
-      var entry = batch[i];
+    for (let i = 0; i < batch.length; i++) {
+      const entry = batch[i];
       if (!deviceReadings[entry.deviceId]) {
         deviceReadings[entry.deviceId] = [];
       }
-      for (var j = 0; j < entry.readings.length; j++) {
-        var reading = entry.readings[j];
+      for (let j = 0; j < entry.readings.length; j++) {
+        const reading = entry.readings[j];
         deviceReadings[entry.deviceId].push({
           sensor_type: reading.sensor_type,
           value: reading.value,
@@ -97,8 +97,8 @@ class IngestQueue extends EventEmitter {
     } catch (err) {
       logger.error('[IngestQueue] Flush error:', err.message);
       this.stats.errors = this.stats.errors + 1;
-      for (var k = 0; k < batch.length; k++) {
-        var batchEntry = batch[k];
+      for (let k = 0; k < batch.length; k++) {
+        const batchEntry = batch[k];
         if (batchEntry.retries < 3) {
           batchEntry.retries = batchEntry.retries + 1;
           this.queue.unshift(batchEntry);
@@ -111,17 +111,17 @@ class IngestQueue extends EventEmitter {
   }
 
   async processBatch(deviceReadings) {
-    var keys = Object.keys(deviceReadings);
-    var db = require('../config/database');
+    const keys = Object.keys(deviceReadings);
+    const db = require('../config/database');
 
-    for (var i = 0; i < keys.length; i++) {
-      var deviceId = keys[i];
-      var readings = deviceReadings[deviceId];
+    for (let i = 0; i < keys.length; i++) {
+      const deviceId = keys[i];
+      const readings = deviceReadings[deviceId];
 
-      for (var j = 0; j < readings.length; j++) {
-        var reading = readings[j];
+      for (let j = 0; j < readings.length; j++) {
+        const reading = readings[j];
         try {
-          var id = deviceId + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+          const id = deviceId + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
           db.runQuery(
             'INSERT INTO sensor_readings (id, sensor_type, value, timestamp) VALUES (?, ?, ?, datetime(?, \'unixepoch\'))',
             [id, reading.sensor_type, reading.value, Math.floor(Date.now() / 1000)]

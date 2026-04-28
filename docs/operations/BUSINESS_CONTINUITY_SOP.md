@@ -1,1 +1,0 @@
-# BUSINESS_CONTINUITY_SOP placeholder

@@ -120,4 +120,78 @@ router.delete('/', asyncHandler(async (req, res) => {
   res.status(204).send();
 }));
 
+const { auth } = require('../middleware/auth');
+const { getAlertService, CONFIG } = require('../services/alertService');
+
+router.get('/notification/stats', auth, async (req, res) => {
+  try {
+    const alertService = getAlertService();
+    const stats = alertService.getStats();
+    
+    res.json({
+      success: true,
+      stats,
+      config: {
+        telegram: CONFIG.telegram.enabled,
+        zalo: CONFIG.zalo.enabled,
+        alertEnabled: CONFIG.alertEnabled
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/notification/history', auth, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const alertService = getAlertService();
+    const history = alertService.getAlertHistory(limit);
+    
+    res.json({
+      success: true,
+      history
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/notification/test', auth, async (req, res) => {
+  try {
+    const alertService = getAlertService();
+    const result = await alertService.sendAlert('SYSTEM_ERROR', {
+      message: 'Test alert - hệ thống đang hoạt động bình thường'
+    });
+    
+    res.json({
+      success: result.success,
+      message: result.success ? 'Test alert đã được gửi' : 'Test alert thất bại',
+      details: result.results
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/notification/send', auth, async (req, res) => {
+  try {
+    const { alertType, data } = req.body;
+    
+    if (!alertType) {
+      return res.status(400).json({ error: 'alertType is required' });
+    }
+    
+    const alertService = getAlertService();
+    const result = await alertService.sendAlert(alertType, data || {});
+    
+    res.json({
+      success: result.success,
+      results: result.results
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

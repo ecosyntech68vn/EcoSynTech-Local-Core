@@ -1,6 +1,7 @@
 'use strict';
 const EventEmitter = require('events');
 const { getValidator } = require('./sensorValidator');
+const { getAlertService } = require('./alertService');
 
 const logger = {
   info: console.log.bind(console),
@@ -57,14 +58,29 @@ class IngestQueue extends EventEmitter {
     if (result.rejected.length > 0) {
       this.stats.rejected += result.rejected.length;
       this.emit('validationError', { rejected: result.rejected });
+      
+      const alertService = getAlertService();
+      result.rejected.forEach(r => {
+        alertService.sendSensorAlert(r.sensor, r.value, r.issues || []);
+      });
     }
 
     if (result.outliers.length > 0) {
       this.emit('outlierDetected', { outliers: result.outliers });
+      
+      const alertService = getAlertService();
+      result.outliers.forEach(o => {
+        alertService.sendOutlierAlert(deviceId, o.sensor, o.value, o.zScore);
+      });
     }
 
     if (result.spikes.length > 0) {
       this.emit('spikeDetected', { spikes: result.spikes });
+      
+      const alertService = getAlertService();
+      result.spikes.forEach(s => {
+        alertService.sendSpikeAlert(deviceId, s.sensor, s.value, s.deltaPercent);
+      });
     }
 
     if (result.validated.length === 0) {

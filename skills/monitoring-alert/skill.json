@@ -1,0 +1,56 @@
+{
+  "name": "monitoring-alert",
+  "version": "1.0.0",
+  "description": "EcoSynTech Monitoring & Alert System - Real-time anomaly detection and notifications via Telegram and Zalo",
+  "main": "src/services/alertService.js",
+  "dependencies": {
+    "axios": "^1.6.5"
+  },
+  "environmentVariables": [
+    "ALERT_ENABLED",
+    "TELEGRAM_ENABLED",
+    "TELEGRAM_BOT_TOKEN",
+    "TELEGRAM_CHAT_ID",
+    "ZALO_ENABLED",
+    "ZALO_ACCESS_TOKEN",
+    "ZALO_USER_ID"
+  ],
+  "triggers": {
+    "sensorAnomaly": {
+      "source": "ingestQueue",
+      "events": ["outlierDetected", "spikeDetected", "validationError"]
+    },
+    "deviceStatus": {
+      "source": "devices",
+      "events": ["online", "offline"]
+    },
+    "auth": {
+      "source": "auth",
+      "events": ["loginFailed", "lockout"]
+    }
+  },
+  "api": [
+    {
+      "path": "/api/alerts/notification/test",
+      "method": "POST",
+      "description": "Test alert configuration"
+    },
+    {
+      "path": "/api/alerts/notification/send",
+      "method": "POST",
+      "description": "Send manual alert"
+    },
+    {
+      "path": "/api/alerts/notification/history",
+      "method": "GET",
+      "description": "Get alert history"
+    },
+    {
+      "path": "/api/alerts/notification/stats",
+      "method": "GET",
+      "description": "Get alert statistics"
+    }
+  ],
+  "author": "EcoSynTech",
+  "license": "MIT"
+}

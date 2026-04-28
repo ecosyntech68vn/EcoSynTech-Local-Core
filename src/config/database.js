@@ -47,9 +47,10 @@ async function initDatabase() {
 
 let pendingSave = false;
 let saveTimeout = null;
-const SAVE_DEBOUNCE_MS = 2000;
+const SAVE_DEBOUNCE_MS = 500;
 const BACKUP_DIR = path.join(__dirname, '../../backups');
 const MAX_BACKUPS = 10;
+let dbFileDescriptor = null;
 
 function ensureBackupDir() {
   if (!fs.existsSync(BACKUP_DIR)) {
@@ -83,7 +84,22 @@ function saveDatabase() {
     try {
       const data = db.export();
       const buffer = Buffer.from(data);
+      
+      const dir = path.dirname(config.database.path);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+      
       fs.writeFileSync(config.database.path, buffer);
+      
+      try {
+        const fd = fs.openSync(config.database.path, 'r+');
+        fs.fdatasyncSync(fd);
+        fs.closeSync(fd);
+      } catch (syncErr) {
+        logger.debug('fdatasync skipped:', syncErr.message);
+      }
+      
       pendingSave = false;
     } catch (err) {
       logger.error('Failed to save database:', err);
@@ -98,7 +114,21 @@ function saveDatabaseSync() {
   try {
     const data = db.export();
     const buffer = Buffer.from(data);
+    
+    const dir = path.dirname(config.database.path);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
     fs.writeFileSync(config.database.path, buffer);
+    
+    try {
+      const fd = fs.openSync(config.database.path, 'r+');
+      fs.fdatasyncSync(fd);
+      fs.closeSync(fd);
+    } catch (syncErr) {
+      logger.debug('fdatasync skipped:', syncErr.message);
+    }
   } catch (err) {
     logger.error('Failed to save database:', err);
   }
@@ -1140,6 +1170,69 @@ if (process.env.NODE_ENV !== 'test') {
   }, 30 * 60 * 1000);
 }
 
+function verifyPersistence() {
+  try {
+    const dbPath = config.database.path;
+    if (!fs.existsSync(dbPath)) {
+      logger.warn('[DB] Verify: File does not exist');
+      return { valid: false, error: 'Database file not found' };
+    }
+    
+    const stats = fs.statSync(dbPath);
+    if (stats.size === 0) {
+      logger.warn('[DB] Verify: File size is 0');
+      return { valid: false, error: 'Database file is empty' };
+    }
+    
+    const fileBuffer = fs.readFileSync(dbPath);
+    const testDb = new SQL.Database(fileBuffer);
+    const result = testDb.exec('SELECT name FROM sqlite_master WHERE type="table"');
+    testDb.close();
+    
+    logger.info(`[DB] Verify: OK - ${stats.size} bytes, ${result.length} tables`);
+    return { valid: true, size: stats.size, tables: result.length };
+  } catch (err) {
+    logger.error('[DB] Verify: Failed', err.message);
+    return { valid: false, error: err.message };
+  }
+}
+
+function getHealthCheck() {
+  try {
+    const dbPath = config.database.path;
+    if (!fs.existsSync(dbPath)) {
+      return { status: 'DOWN', reason: 'Database file not found' };
+    }
+    
+    const stats = fs.statSync(dbPath);
+    if (stats.size === 0) {
+      return { status: 'DOWN', reason: 'Database file is empty' };
+    }
+    
+    const tables = db.exec('SELECT COUNT(*) as count FROM sqlite_master WHERE type="table"');
+    const rowCount = db.exec('SELECT COUNT(*) as count FROM users');
+    
+    return {
+      status: 'UP',
+      size: stats.size,
+      tables: tables[0]?.values[0]?.[0] || 0,
+      lastModified: stats.mtime
+    };
+  } catch (err) {
+    return { status: 'DOWN', reason: err.message };
+  }
+}
+
+process.on('SIGTERM', () => {
+  logger.info('[DB] SIGTERM received - force saving database');
+  saveDatabaseSync();
+});
+
+process.on('SIGINT', () => {
+  logger.info('[DB] SIGINT received - force saving database');
+  saveDatabaseSync();
+});
+
 module.exports = {
   initDatabase,
   getDatabase,
@@ -1148,6 +1241,9 @@ module.exports = {
   getOne,
   getAll,
   saveDatabase,
+  saveDatabaseSync,
   createIndexes,
-  optimizeDatabase
+  optimizeDatabase,
+  verifyPersistence,
+  getHealthCheck
 };

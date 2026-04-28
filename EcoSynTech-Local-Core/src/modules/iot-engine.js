@@ -1,1 +1,0 @@
-module.exports = { ...require('../core/iot/iot-engine'), ...require('../core/iot/iot-dashboard') };

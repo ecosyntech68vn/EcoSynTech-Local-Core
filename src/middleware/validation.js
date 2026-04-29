@@ -175,7 +175,131 @@ const schemas = {
       score: Joi.number().min(0).max(100).required(),
       comments: Joi.string().max(1000),
       evaluator: Joi.string().max(100)
-    })
+    }),
+
+    // Equipment Management Schemas
+    equipment: {
+      categoryCreate: Joi.object({
+        category_name: Joi.string().min(1).max(100).required(),
+        category_name_vi: Joi.string().max(100),
+        category_code: Joi.string().max(50),
+        category_type: Joi.string().valid('vehicle', 'machine', 'power', 'tools', 'iot').required(),
+        parent_category_id: Joi.string(),
+        description: Joi.string().max(500),
+        icon: Joi.string().max(50),
+        farm_id: Joi.string()
+      }),
+      create: Joi.object({
+        equipment_name: Joi.string().min(1).max(200).required(),
+        equipment_name_vi: Joi.string().max(200),
+        equipment_code: Joi.string().max(50),
+        category_id: Joi.string(),
+        brand: Joi.string().max(100),
+        model: Joi.string().max(100),
+        serial_number: Joi.string().max(100),
+        purchase_date: Joi.date().iso(),
+        purchase_price: Joi.number().min(0),
+        useful_life_years: Joi.number().min(1).max(20),
+        salvage_value: Joi.number().min(0),
+        location: Joi.string().max(200),
+        year_of_manufacture: Joi.string().max(4),
+        warranty_expiry: Joi.date().iso(),
+        fuel_type: Joi.string().max(50),
+        capacity: Joi.string().max(100),
+        power_rating: Joi.string().max(100),
+        image_url: Joi.string().uri(),
+        notes: Joi.string().max(1000),
+        farm_id: Joi.string()
+      }),
+      update: Joi.object({
+        equipment_name: Joi.string().min(1).max(200),
+        equipment_name_vi: Joi.string().max(200),
+        category_id: Joi.string(),
+        brand: Joi.string().max(100),
+        model: Joi.string().max(100),
+        serial_number: Joi.string().max(100),
+        location: Joi.string().max(200),
+        status: Joi.string().valid('active', 'under_maintenance', 'broken', 'retired', 'available', 'in_use'),
+        condition: Joi.string().valid('good', 'fair', 'poor', 'critical'),
+        fuel_type: Joi.string().max(50),
+        capacity: Joi.string().max(100),
+        power_rating: Joi.string().max(100),
+        current_value: Joi.number().min(0),
+        notes: Joi.string().max(1000)
+      }),
+      maintenanceSchedule: Joi.object({
+        equipment_id: Joi.string().required(),
+        maintenance_type: Joi.string().valid('preventive', 'corrective', 'predictive', 'inspection', 'oil_change', 'calibration').required(),
+        description: Joi.string().max(500),
+        frequency_days: Joi.number().min(1).max(365),
+        last_maintenance_date: Joi.date().iso(),
+        next_maintenance_date: Joi.date().iso(),
+        estimated_hours: Joi.number().min(0),
+        estimated_cost: Joi.number().min(0),
+        priority: Joi.string().valid('low', 'normal', 'high', 'urgent'),
+        assigned_technician_id: Joi.string(),
+        auto_trigger: Joi.boolean(),
+        notes: Joi.string().max(500),
+        farm_id: Joi.string()
+      }),
+      maintenanceRecord: Joi.object({
+        equipment_id: Joi.string().required(),
+        schedule_id: Joi.string(),
+        maintenance_type: Joi.string().valid('preventive', 'corrective', 'predictive', 'inspection', 'oil_change', 'calibration').required(),
+        maintenance_date: Joi.date().iso(),
+        technician_id: Joi.string(),
+        description: Joi.string().max(500),
+        work_performed: Joi.string().max(1000),
+        parts_replaced: Joi.string().max(500),
+        labor_hours: Joi.number().min(0).max(24),
+        labor_cost: Joi.number().min(0),
+        parts_cost: Joi.number().min(0),
+        next_maintenance_date: Joi.date().iso(),
+        condition: Joi.string().valid('good', 'fair', 'poor'),
+        attachments: Joi.string().max(500),
+        notes: Joi.string().max(500),
+        farm_id: Joi.string()
+      }),
+      usageLog: Joi.object({
+        equipment_id: Joi.string().required(),
+        worker_id: Joi.string(),
+        task_id: Joi.string(),
+        crop_id: Joi.string(),
+        start_time: Joi.date().iso().required(),
+        end_time: Joi.date().iso(),
+        operation_type: Joi.string().max(100),
+        location_area: Joi.string().max(200),
+        fuel_consumed: Joi.number().min(0),
+        distance_km: Joi.number().min(0),
+        notes: Joi.string().max(500),
+        farm_id: Joi.string()
+      }),
+      assignment: Joi.object({
+        equipment_id: Joi.string().required(),
+        worker_id: Joi.string(),
+        crop_id: Joi.string(),
+        area_id: Joi.string(),
+        assigned_date: Joi.date().iso(),
+        purpose: Joi.string().max(500),
+        notes: Joi.string().max(500),
+        farm_id: Joi.string()
+      }),
+      costTracking: Joi.object({
+        equipment_id: Joi.string().required(),
+        cost_type: Joi.string().valid('operation', 'maintenance', 'fuel', 'depreciation', 'insurance', 'other').required(),
+        period_start: Joi.date().iso().required(),
+        period_end: Joi.date().iso().required(),
+        fuel_cost: Joi.number().min(0),
+        maintenance_cost: Joi.number().min(0),
+        labor_cost: Joi.number().min(0),
+        parts_cost: Joi.number().min(0),
+        depreciation_cost: Joi.number().min(0),
+        insurance_cost: Joi.number().min(0),
+        other_cost: Joi.number().min(0),
+        notes: Joi.string().max(500),
+        farm_id: Joi.string()
+      })
+    }
   }
 };
 

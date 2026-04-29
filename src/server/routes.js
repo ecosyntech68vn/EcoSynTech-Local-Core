@@ -98,6 +98,7 @@ function registerRoutes(app) {
   app.use('/api/inventory', require('../routes/inventory'));
   app.use('/api/finance', require('../routes/finance'));
   app.use('/api/labor', require('../routes/labor'));
+  app.use('/api/equipment', require('../routes/equipment'));
 
   // ============================================================
   // BACKUP & RECOVERY - A.12.3 Backup

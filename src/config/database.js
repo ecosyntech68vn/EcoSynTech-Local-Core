@@ -1570,6 +1570,253 @@ function createTables() {
     )
   `);
 
+  // ========== EQUIPMENT MANAGEMENT TABLES ==========
+  // 5S: Sort, Set in Order, Shine, Standardize, Sustain
+  // PDCA: Plan, Do, Check, Act
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS equipment_categories (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      category_code TEXT NOT NULL,
+      category_name TEXT NOT NULL,
+      category_name_vi TEXT,
+      category_type TEXT NOT NULL,
+      parent_category_id TEXT,
+      description TEXT,
+      icon TEXT,
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS equipment_inventory (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      equipment_code TEXT UNIQUE NOT NULL,
+      equipment_name TEXT NOT NULL,
+      equipment_name_vi TEXT,
+      category_id TEXT,
+      brand TEXT,
+      model TEXT,
+      serial_number TEXT,
+      purchase_date TEXT,
+      purchase_price REAL DEFAULT 0,
+      current_value REAL DEFAULT 0,
+      location TEXT,
+      status TEXT DEFAULT 'active',
+      condition TEXT DEFAULT 'good',
+      year_of_manufacture TEXT,
+      warranty_expiry TEXT,
+      fuel_type TEXT,
+      capacity TEXT,
+      power_rating TEXT,
+      image_url TEXT,
+      qr_code TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS equipment_maintenance_schedules (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      equipment_id TEXT NOT NULL,
+      schedule_code TEXT UNIQUE,
+      maintenance_type TEXT NOT NULL,
+      description TEXT,
+      frequency_days INTEGER DEFAULT 30,
+      last_maintenance_date TEXT,
+      next_maintenance_date TEXT,
+      estimated_hours REAL DEFAULT 0,
+      estimated_cost REAL DEFAULT 0,
+      priority TEXT DEFAULT 'normal',
+      assigned_technician_id TEXT,
+      status TEXT DEFAULT 'active',
+      auto_trigger BOOLEAN DEFAULT 0,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS equipment_maintenance_records (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      equipment_id TEXT NOT NULL,
+      schedule_id TEXT,
+      maintenance_type TEXT NOT NULL,
+      maintenance_date TEXT NOT NULL,
+      technician_id TEXT,
+      description TEXT,
+      work_performed TEXT,
+      parts_replaced TEXT,
+      labor_hours REAL DEFAULT 0,
+      labor_cost REAL DEFAULT 0,
+      parts_cost REAL DEFAULT 0,
+      total_cost REAL DEFAULT 0,
+      next_maintenance_date TEXT,
+      status TEXT DEFAULT 'completed',
+      attachments TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS equipment_usage_logs (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      equipment_id TEXT NOT NULL,
+      worker_id TEXT,
+      task_id TEXT,
+      crop_id TEXT,
+      start_time TEXT NOT NULL,
+      end_time TEXT,
+      duration_hours REAL DEFAULT 0,
+      operation_type TEXT,
+      location_area TEXT,
+      fuel_consumed REAL DEFAULT 0,
+      distance_km REAL DEFAULT 0,
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS equipment_assignments (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      equipment_id TEXT NOT NULL,
+      worker_id TEXT,
+      crop_id TEXT,
+      area_id TEXT,
+      assigned_date TEXT NOT NULL,
+      return_date TEXT,
+      purpose TEXT,
+      status TEXT DEFAULT 'assigned',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS equipment_depreciation (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      equipment_id TEXT NOT NULL,
+      depreciation_method TEXT DEFAULT 'straight_line',
+      useful_life_years INTEGER DEFAULT 5,
+      salvage_value REAL DEFAULT 0,
+      annual_depreciation REAL DEFAULT 0,
+      accumulated_depreciation REAL DEFAULT 0,
+      current_book_value REAL DEFAULT 0,
+      calculation_date TEXT,
+      next_calculation_date TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS equipment_cost_tracking (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      equipment_id TEXT NOT NULL,
+      cost_type TEXT NOT NULL,
+      period_start TEXT NOT NULL,
+      period_end TEXT NOT NULL,
+      fuel_cost REAL DEFAULT 0,
+      maintenance_cost REAL DEFAULT 0,
+      labor_cost REAL DEFAULT 0,
+      parts_cost REAL DEFAULT 0,
+      depreciation_cost REAL DEFAULT 0,
+      insurance_cost REAL DEFAULT 0,
+      other_cost REAL DEFAULT 0,
+      total_cost REAL DEFAULT 0,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS equipment_suppliers (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      supplier_code TEXT UNIQUE,
+      supplier_name TEXT NOT NULL,
+      supplier_name_vi TEXT,
+      contact_person TEXT,
+      phone TEXT,
+      email TEXT,
+      address TEXT,
+      website TEXT,
+      tax_id TEXT,
+      payment_terms TEXT,
+      rating REAL DEFAULT 0,
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS equipment_warranty (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      equipment_id TEXT NOT NULL,
+      warranty_provider TEXT,
+      warranty_type TEXT,
+      start_date TEXT,
+      end_date TEXT,
+      coverage_details TEXT,
+      claim_process TEXT,
+      contact_phone TEXT,
+      contact_email TEXT,
+      terms TEXT,
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS equipment_requisitions (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      requisition_code TEXT UNIQUE,
+      equipment_category_id TEXT,
+      requested_equipment_name TEXT,
+      purpose TEXT,
+      requested_quantity INTEGER DEFAULT 1,
+      estimated_budget REAL DEFAULT 0,
+      requester_id TEXT,
+      request_date TEXT,
+      approval_status TEXT DEFAULT 'pending',
+      approved_by TEXT,
+      approved_date TEXT,
+      supplier_id TEXT,
+      purchase_order_id TEXT,
+      status TEXT DEFAULT 'pending',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  logger.info('Equipment management tables created');
   logger.info('Database tables created');
 }
 

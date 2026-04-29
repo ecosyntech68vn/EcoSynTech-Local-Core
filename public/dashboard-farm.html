@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoSynTech - Dashboard Nông nghiệp Tổng hợp</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #22c55e;
+      --primary-dark: #16a34a;
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --crops: #22c55e;
+      --aquaculture: #0ea5e9;
+      --greenhouse: #f59e0b;
+      --hydroponics: #8b5cf6;
+      --livestock: #ef4444;
+      --aeroponics: #06b6d4;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+    
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { font-size: 24px; font-weight: 700; }
+    .header .logo { color: var(--primary); }
+    
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 16px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .tab {
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: all 0.2s;
+      border: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab:hover { opacity: 0.9; }
+    .tab.active { color: white; }
+    
+    .tab-crops { background: var(--crops); }
+    .tab-aquaculture { background: var(--aquaculture); }
+    .tab-greenhouse { background: var(--greenhouse); }
+    .tab-hydroponics { background: var(--hydroponics); }
+    .tab-livestock { background: var(--livestock); }
+    .tab-aeroponics { background: var(--aeroponics); }
+    .tab-all { background: var(--text); }
+    
+    .content { padding: 24px; }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid var(--border);
+    }
+    .stat-card .label { font-size: 14px; color: var(--text-muted); margin-bottom: 8px; }
+    .stat-card .value { font-size: 28px; font-weight: 700; }
+    .stat-card .sub { font-size: 12px; color: var(--text-muted); }
+    
+    .card {
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-bottom: 24px;
+    }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-title { font-size: 16px; font-weight: 600; }
+    .card-body { padding: 20px; }
+    
+    .btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: var(--bg); border: 1px solid var(--border); }
+    
+    .unit-list { display: grid; gap: 12px; }
+    .unit-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: var(--bg);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .unit-item:hover { background: var(--border); }
+    .unit-info { display: flex; align-items: center; gap: 12px; }
+    .unit-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .unit-name { font-weight: 600; }
+    .unit-meta { font-size: 12px; color: var(--text-muted); }
+    .unit-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .status-active { background: #dcfce7; color: #166534; }
+    .status-harvested { background: #fef3c7; color: #92400e; }
+    .status-grafted { background: #dbeafe; color: #1e40af; }
+    
+    .timeline {
+      position: relative;
+      padding-left: 30px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 8px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+    .timeline-item {
+      position: relative;
+      padding: 16px 0;
+    }
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: -26px;
+      top: 20px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid white;
+    }
+    .timeline-date { font-size: 12px; color: var(--text-muted); }
+    .timeline-title { font-weight: 600; margin: 4px 0; }
+    .timeline-desc { font-size: 14px; color: var(--text-muted); }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      background: var(--surface);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow: auto;
+    }
+    .modal-header {
+      padding: 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-body { padding: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { display: block; margin-bottom: 6px; font-weight: 500; }
+    .form-input, .form-select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    
+    .activity-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin: 2px;
+    }
+    .activity-fertilizer { background: #dcfce7; }
+    .activity-spray { background: #dbeafe; }
+    .activity-pruning { background: #fce7f3; }
+    .activity-watering { background: #e0f2fe; }
+    .activity-harvesting { background: #fef3c7; }
+    
+    .qr-section {
+      text-align: center;
+      padding: 40px;
+      background: white;
+      border-radius: 12px;
+    }
+    .qr-code {
+      width: 200px;
+      height: 200px;
+      background: #f0f0f0;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    
+    @media (max-width: 768px) {
+      .form-row { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <h1>🌾 <span class="logo">EcoSynTech</span> Farm Dashboard</h1>
+    <div>
+      <button class="btn btn-secondary" onclick="showOverview()">📊 Tổng quan</button>
+    </div>
+  </header>
+  
+  <div class="tabs">
+    <button class="tab tab-all active" onclick="switchTab('all')">📋 Tất cả</button>
+    <button class="tab tab-crops" onclick="switchTab('crops')">🌾 Cây trồng</button>
+    <button class="tab tab-aquaculture" onclick="switchTab('aquaculture')">🐟 Thủy sản</button>
+    <button class="tab tab-greenhouse" onclick="switchTab('greenhouse')">🏡 Nhà màng</button>
+    <button class="tab tab-hydroponics" onclick="switchTab('hydroponics')">💧 Thủy canh</button>
+    <button class="tab tab-livestock" onclick="switchTab('livestock')">🐄 Chăn nuôi</button>
+    <button class="tab tab-aeroponics" onclick="switchTab('aeroponics')">💨 Khí canh</button>
+  </div>
+  
+  <div class="content" id="mainContent">
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title" id="sectionTitle">Danh sách đơn vị</h2>
+        <button class="btn btn-primary" onclick="openAddModal()">+ Thêm mới</button>
+      </div>
+      <div class="card-body">
+        <div class="unit-list" id="unitList"></div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal" id="addModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">Thêm đơn vị mới</h3>
+        <button class="btn btn-secondary" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="addForm">
+          <div class="form-group">
+            <label class="form-label">Loại module</label>
+            <select class="form-select" id="moduleType" required>
+              <option value="">Chọn loại...</option>
+              <option value="crops">🌾 Cây trồng</option>
+              <option value="aquaculture">🐟 Thủy sản</option>
+              <option value="greenhouse">🏡 Nhà màng</option>
+              <option value="hydroponics">💧 Thủy canh</option>
+              <option value="livestock">🐄 Chăn nuôi</option>
+              <option value="aeroponics">💨 Khí canh</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Tên/ID cây trồng</label>
+              <select class="form-select" id="cropId">
+                <option value="">Chọn cây trồng...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Diện tích</label>
+              <input type="number" class="form-input" id="unitArea" placeholder="0">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Ngày bắt đầu</label>
+              <input type="date" class="form-input" id="startDate">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Ngày dự kiến thu hoạch</label>
+              <input type="date" class="form-input" id="expectedHarvest">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ghi chú</label>
+            <input type="text" class="form-input" id="unitNotes" placeholder="Ghi chú...">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%">Tạo đơn vị</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <div class="modal" id="detailModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Chi tiết đơn vị</h3>
+        <button class="btn btn-secondary" onclick="closeDetailModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="detailContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = '';
+    let currentModule = 'all';
+    let dashboardData = null;
+    let moduleUnits = {};
+
+    const MODULE_CONFIG = {
+      crops: { name: 'Cây trồng', icon: '🌾', color: '#22c55e' },
+      aquaculture: { name: 'Thủy sản', icon: '🐟', color: '#0ea5e9' },
+      greenhouse: { name: 'Nhà màng', icon: '🏡', color: '#f59e0b' },
+      hydroponics: { name: 'Thủy canh', icon: '💧', color: '#8b5cf6' },
+      livestock: { name: 'Chăn nuôi', icon: '🐄', color: '#ef4444' },
+      aeroponics: { name: 'Khí canh', icon: '💨', color: '#06b6d4' }
+    };
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch(`${API_BASE}/api/crops/dashboard`);
+        const data = await res.json();
+        dashboardData = data.data;
+        renderOverview();
+      } catch (err) {
+        console.error('Error loading dashboard:', err);
+      }
+    }
+
+    async function loadCrops() {
+      try {
+        const res = await fetch(`${API_BASE}/api/crops/crops`);
+        const data = await res.json();
+        populateCropSelect(data.data);
+      } catch (err) {
+        console.error('Error loading crops:', err);
+      }
+    }
+
+    function populateCropSelect(crops) {
+      const select = document.getElementById('cropId');
+      crops.forEach(crop => {
+        const opt = document.createElement('option');
+        opt.value = crop.id;
+        opt.textContent = `${crop.name_vi || crop.name} (${crop.category})`;
+        select.appendChild(opt);
+      });
+    }
+
+    function renderOverview() {
+      const grid = document.getElementById('statsGrid');
+      const overview = dashboardData.overview;
+      const modules = dashboardData.modules;
+      
+      grid.innerHTML = `
+        <div class="stat-card">
+          <div class="label">Tổng module</div>
+          <div class="value" style="color: var(--primary)">${overview.active_modules}/${overview.total_modules}</div>
+          <div class="sub">Đang hoạt động</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Hoạt động nông nghiệp</div>
+          <div class="value">${overview.total_activities}</div>
+          <div class="sub">Tổng số hoạt động</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Chi phí</div>
+          <div class="value">${formatNumber(overview.total_cost)}</div>
+          <div class="sub">VND</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Batch truy xuất</div>
+          <div class="value" style="color: var(--aquaculture)">${overview.traceability_batches}</div>
+          <div class="sub">QR Code</div>
+        </div>
+      `;
+      
+      Object.keys(modules).forEach(key => {
+        const mod = modules[key];
+        grid.innerHTML += `
+          <div class="stat-card" style="border-left: 4px solid ${mod.color}">
+            <div class="label">${mod.icon} ${mod.name}</div>
+            <div class="value">${mod.stats?.active || 0}</div>
+            <div class="sub">đang hoạt động / ${mod.stats?.total || 0} tổng</div>
+          </div>
+        `;
+      });
+    }
+
+    function switchTab(moduleId) {
+      currentModule = moduleId;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.tab-${moduleId}`).classList.add('active');
+      
+      if (moduleId === 'all') {
+        renderOverview();
+        document.getElementById('sectionTitle').textContent = 'Danh sách đơn vị';
+        renderAllUnits();
+      } else {
+        loadModuleUnits(moduleId);
+      }
+    }
+
+    async function loadModuleUnits(moduleId) {
+      try {
+        const res = await fetch(`${API_BASE}/api/crops/module/${moduleId}/units`);
+        const data = await res.json();
+        moduleUnits[moduleId] = data.data;
+        renderUnits(moduleId, data.data);
+      } catch (err) {
+        console.error('Error loading units:', err);
+      }
+    }
+
+    function renderAllUnits() {
+      const list = document.getElementById('unitList');
+      list.innerHTML = '';
+      
+      Object.keys(dashboardData.modules).forEach(key => {
+        const mod = dashboardData.modules[key];
+        mod.units.forEach(unit => {
+          list.innerHTML += createUnitItem(key, unit);
+        });
+      });
+    }
+
+    function renderUnits(moduleId, units) {
+      const config = MODULE_CONFIG[moduleId];
+      document.getElementById('sectionTitle').textContent = `${config.icon} ${config.name}`;
+      
+      const list = document.getElementById('unitList');
+      if (units.length === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text-muted)">Chưa có đơn vị nào</div>`;
+        return;
+      }
+      
+      list.innerHTML = units.map(u => createUnitItem(moduleId, u)).join('');
+    }
+
+    function createUnitItem(moduleId, unit) {
+      const config = MODULE_CONFIG[moduleId];
+      const name = unit.crop_name || unit.species_name || unit.zone_name || unit.system_name || unit.batch_name || unit.animal_type || 'Đơn vị ' + moduleId;
+      const area = unit.area || unit.capacity || unit.quantity || 0;
+      const status = unit.status || 'active';
+      const statusClass = status === 'growing' || status === 'nursing' || status === 'active' ? 'active' : status === 'harvested' ? 'harvested' : 'grafted';
+      
+      return `
+        <div class="unit-item" onclick="showUnitDetail('${moduleId}', '${unit.id}')">
+          <div class="unit-info">
+            <div class="unit-icon" style="background:${config.color}20;color:${config.color}">${config.icon}</div>
+            <div>
+              <div class="unit-name">${name}</div>
+              <div class="unit-meta">${area} ${unit.area_unit || (moduleId === 'livestock' ? 'con' : moduleId === 'aquaculture' ? 'con' : 'm²')}</div>
+            </div>
+          </div>
+          <span class="unit-status status-${statusClass}">${status === 'growing' ? 'Đang grow' : status === 'nursing' ? 'Nuôi ươm' : status === 'active' ? 'Hoạt động' : status === 'harvested' ? 'Đã thu hoạch' : status}</span>
+        </div>
+      `;
+    }
+
+    async function showUnitDetail(moduleId, unitId) {
+      try {
+        const res = await fetch(`${API_BASE}/api/crops/module/${moduleId}/timeline/${unitId}`);
+        const data = await res.json();
+        
+        document.getElementById('detailContent').innerHTML = renderTimeline(data.data);
+        document.getElementById('detailModal').classList.add('active');
+      } catch (err) {
+        console.error('Error loading detail:', err);
+      }
+    }
+
+    function renderTimeline(timeline) {
+      let html = `
+        <div style="margin-bottom:20px;padding:16px;background:var(--bg);border-radius:8px">
+          <h4 style="margin-bottom:8px">📅 Timeline</h4>
+      `;
+      
+      timeline.activities.forEach(a => {
+        html += `
+          <div class="timeline-item">
+            <div class="timeline-date">${a.date}</div>
+            <div class="timeline-title">${a.icon || '📝'} ${a.name}</div>
+            <div class="timeline-desc">${a.description || 'Hoạt động nông nghiệp'}</div>
+          </div>
+        `;
+      });
+      
+      html += '</div>';
+      return html;
+    }
+
+    function showOverview() {
+      switchTab('all');
+    }
+
+    function openAddModal() {
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('addModal').classList.remove('active');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detailModal').classList.remove('active');
+    }
+
+    document.getElementById('addForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const moduleType = document.getElementById('moduleType').value;
+      const data = {
+        crop_id: document.getElementById('cropId').value,
+        area: parseFloat(document.getElementById('unitArea').value) || null,
+        start_date: document.getElementById('startDate').value,
+        expected_harvest_date: document.getElementById('expectedHarvest').value,
+        notes: document.getElementById('unitNotes').value
+      };
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/crops/module/${moduleType}/units`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        
+        if (result.ok) {
+          closeModal();
+          loadDashboard();
+          showToast('Tạo đơn vị thành công!', 'success');
+        } else {
+          showToast(result.error, 'error');
+        }
+      } catch (err) {
+        showToast('Lỗi tạo đơn vị', 'error');
+      }
+    });
+
+    function formatNumber(num) {
+      if (!num) return '0';
+      return new Intl.NumberFormat('vi-VN').format(num);
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.createElement('div');
+      container.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:12px 20px;background:var(--primary);color:white;border-radius:8px;z-index:2000';
+      container.textContent = message;
+      document.body.appendChild(container);
+      setTimeout(() => container.remove(), 3000);
+    }
+
+    loadDashboard();
+    loadCrops();
+  </script>
+</body>
+</html>

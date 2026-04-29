@@ -5,6 +5,7 @@ const { auth } = require('../middleware/auth');
 const { getAll, getOne, db } = require('../config/database');
 const logger = require('../config/logger');
 const farmActivityService = require('../services/farmActivityService');
+const farmModuleService = require('../services/farmModuleService');
 
 router.get('/crops', auth, async (req, res) => {
   try {
@@ -717,6 +718,93 @@ router.post('/plantings/:plantingId/activity', auth, async (req, res) => {
     });
     
     res.status(201).json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/modules', auth, async (req, res) => {
+  try {
+    const modules = farmModuleService.getModules();
+    res.json({ ok: true, data: modules });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/dashboard', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const summary = farmModuleService.getDashboardSummary(farm_id);
+    res.json({ ok: true, data: summary });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/module/:moduleId/units', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const units = farmModuleService.getModuleUnits(req.params.moduleId, farm_id);
+    res.json({ ok: true, data: units });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/module/:moduleId/stats', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const stats = farmModuleService.getModuleStats(req.params.moduleId, farm_id);
+    if (!stats) {
+      return res.status(404).json({ ok: false, error: 'Module không tồn tại' });
+    }
+    res.json({ ok: true, data: stats });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/module/:moduleId/units', auth, async (req, res) => {
+  try {
+    const result = farmModuleService.createModuleUnit(req.params.moduleId, req.body);
+    res.status(201).json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.delete('/module/:moduleId/units/:unitId', auth, async (req, res) => {
+  try {
+    const result = farmModuleService.deleteModuleUnit(req.params.moduleId, req.params.unitId);
+    if (!result) {
+      return res.status(404).json({ ok: false, error: 'Không tìm thấy đơn vị' });
+    }
+    res.json({ ok: true, message: 'Xóa thành công' });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/module/:moduleId/timeline/:unitId', auth, async (req, res) => {
+  try {
+    const timeline = farmModuleService.getModuleTimeline(req.params.moduleId, req.params.unitId);
+    if (!timeline) {
+      return res.status(404).json({ ok: false, error: 'Không tìm thấy đơn vị' });
+    }
+    res.json({ ok: true, data: timeline });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/traceability/:batchCode/full', auth, async (req, res) => {
+  try {
+    const data = farmModuleService.getTraceabilityWithModuleData(req.params.batchCode);
+    if (!data) {
+      return res.status(404).json({ ok: false, error: 'Không tìm thấy batch' });
+    }
+    res.json({ ok: true, data });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }

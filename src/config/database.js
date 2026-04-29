@@ -1101,6 +1101,80 @@ function createTables() {
     )
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS greenhouse_zones (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      zone_name TEXT NOT NULL,
+      area REAL,
+      area_unit TEXT DEFAULT 'm2',
+      crop_type TEXT,
+      start_date TEXT,
+      expected_harvest TEXT,
+      status TEXT DEFAULT 'active',
+      temperature_target REAL,
+      humidity_target REAL,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS hydroponic_systems (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      system_name TEXT NOT NULL,
+      system_type TEXT,
+      capacity INTEGER,
+      crop_type TEXT,
+      nutrient_ph REAL,
+      nutrient_ec REAL,
+      start_date TEXT,
+      expected_harvest TEXT,
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS livestock_batches (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      animal_type TEXT NOT NULL,
+      quantity INTEGER,
+      batch_name TEXT,
+      breed TEXT,
+      start_date TEXT,
+      expected_out_date TEXT,
+      status TEXT DEFAULT 'growing',
+      weight_start REAL,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS aeroponic_systems (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      system_name TEXT NOT NULL,
+      capacity INTEGER,
+      crop_type TEXT,
+      mist_frequency INTEGER,
+      nutrient_concentration REAL,
+      start_date TEXT,
+      expected_harvest TEXT,
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   logger.info('Database tables created');
 }
 

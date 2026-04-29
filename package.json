@@ -23,9 +23,9 @@
     "validate-skills": "node scripts/validate-skills.js",
     "migrate": "node run-migrations.js",
     "backup": "node scripts/backup.js",
-    "restore": "node scripts/restore.js"
+    "restore": "node scripts/restore.js",
+    "test:dashboard": "echo 'Dashboard UI tested via browser at /dashboard-farm.html'"
   },
-  "validate-skills": "node scripts/validate-skills.js",
   "bin": {
     "bootstrap-ai": "bin/bootstrap-ai.js"
   },

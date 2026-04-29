@@ -366,6 +366,26 @@ npm start
 | `CACHE_TTL` | 60000 | Cache TTL (ms) |
 | `REDIS_URL` | - | Redis connection URL |
 
+### Scripts có sẵn
+| Script | Mô tả |
+|--------|-------|
+| `npm start` | Chạy server production |
+| `npm run dev` | Chế độ dev với hot reload |
+| `npm run test` | Chạy unit tests |
+| `npm run test:ci` | Chạy tests cho CI (silent) |
+| `npm run test:coverage` | Chạy tests với coverage report |
+| `npm run test:e2e` | Chạy e2e tests |
+| `npm run lint` | Kiểm tra code style |
+| `npm run lint:fix` | Tự động sửa lỗi style |
+| `npm run build` | Build kiểm tra syntax |
+| `npm run migrate` | Chạy database migrations |
+| `npm run backup` | Sao lưu database |
+| `npm run restore` | Khôi phục database |
+| `npm run validate-skills` | Validate AI skills |
+| `npm run bootstrap-ai` | Khởi tạo AI models |
+| `npm run audit` | Security audit |
+| `npm run docs` | Generate JSDoc |
+
 ---
 
 ## 7. Cấu trúc dự án

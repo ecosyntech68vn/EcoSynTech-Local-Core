@@ -174,4 +174,197 @@ router.get('/summary', auth, async (req, res) => {
   }
 });
 
+// ========== NEW FINANCIAL MODULE ROUTES ==========
+
+const financeService = require('../services/financeService');
+const { validateMiddleware } = require('../middleware/validation');
+
+router.get('/v2/income-types', auth, async (req, res) => {
+  try {
+    res.json({ ok: true, data: financeService.INCOME_TYPES });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/expense-types', auth, async (req, res) => {
+  try {
+    res.json({ ok: true, data: financeService.EXPENSE_TYPES });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/income', auth, async (req, res) => {
+  try {
+    const { farm_id, start_date, end_date, type, status } = req.query;
+    const income = financeService.getIncome(farm_id, start_date, end_date, type, status);
+    res.json({ ok: true, data: income });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/income', auth, async (req, res) => {
+  try {
+    const income = financeService.createIncome(req.body);
+    res.status(201).json({ ok: true, data: income });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/expenses', auth, async (req, res) => {
+  try {
+    const { farm_id, start_date, end_date, type, category } = req.query;
+    const expenses = financeService.getExpenses(farm_id, start_date, end_date, type, category);
+    res.json({ ok: true, data: expenses });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/expenses', auth, async (req, res) => {
+  try {
+    const expense = financeService.createExpense(req.body);
+    res.status(201).json({ ok: true, data: expense });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/profit-loss', auth, async (req, res) => {
+  try {
+    const { farm_id, start_date, end_date } = req.query;
+    const profitLoss = financeService.getProfitLossByCrop(farm_id, start_date, end_date);
+    res.json({ ok: true, data: profitLoss });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/summary', auth, async (req, res) => {
+  try {
+    const { farm_id, start_date, end_date } = req.query;
+    const summary = financeService.getFinancialSummary(farm_id, start_date, end_date);
+    res.json({ ok: true, data: summary });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/budgets', auth, async (req, res) => {
+  try {
+    const { farm_id, status, crop_id } = req.query;
+    const budgets = financeService.getBudgets(farm_id, status, crop_id);
+    res.json({ ok: true, data: budgets });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/budgets', auth, async (req, res) => {
+  try {
+    const budget = financeService.createBudget(req.body);
+    res.status(201).json({ ok: true, data: budget });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/accounts', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const accounts = financeService.getAccounts(farm_id);
+    res.json({ ok: true, data: accounts });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/accounts', auth, async (req, res) => {
+  try {
+    const account = financeService.createAccount(req.body);
+    res.status(201).json({ ok: true, data: account });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/loans', auth, async (req, res) => {
+  try {
+    const { farm_id, status } = req.query;
+    const loans = financeService.getLoans(farm_id, status);
+    res.json({ ok: true, data: loans });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/loans', auth, async (req, res) => {
+  try {
+    const loan = financeService.createLoan(req.body);
+    res.status(201).json({ ok: true, data: loan });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/assets', auth, async (req, res) => {
+  try {
+    const { farm_id, type } = req.query;
+    const assets = financeService.getAssets(farm_id, type);
+    res.json({ ok: true, data: assets });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/assets', auth, async (req, res) => {
+  try {
+    const asset = financeService.createAsset(req.body);
+    res.status(201).json({ ok: true, data: asset });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/taxes', auth, async (req, res) => {
+  try {
+    const { farm_id, status } = req.query;
+    const taxes = financeService.getTaxes(farm_id, status);
+    res.json({ ok: true, data: taxes });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/taxes', auth, async (req, res) => {
+  try {
+    const tax = financeService.createTaxRecord(req.body);
+    res.status(201).json({ ok: true, data: tax });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/predict/cashflow', auth, async (req, res) => {
+  try {
+    const { farm_id, days } = req.query;
+    const prediction = financeService.predictCashFlow(farm_id, parseInt(days) || 30);
+    res.json({ ok: true, data: prediction });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/predict/profitability/:cropId', auth, async (req, res) => {
+  try {
+    const prediction = financeService.predictProfitability(req.query.farm_id || null, req.params.cropId);
+    res.json({ ok: true, data: prediction });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 module.exports = router;

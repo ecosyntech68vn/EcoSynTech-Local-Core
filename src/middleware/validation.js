@@ -350,6 +350,116 @@ function validateMiddleware(schemaName) {
   };
 }
 
+// ========== FINANCE SCHEMAS ==========
+schemas.finance = {
+  income: Joi.object({
+    income_type: Joi.string().valid('crop_sale', 'product_sale', 'service_income', 'subsidy', 'other_income'),
+    category: Joi.string(),
+    amount: Joi.number().min(0),
+    currency: Joi.string().default('VND'),
+    transaction_date: Joi.date().iso(),
+    crop_id: Joi.string(),
+    season_id: Joi.string(),
+    description: Joi.string().max(500),
+    customer_id: Joi.string(),
+    payment_method: Joi.string().max(50),
+    reference_number: Joi.string().max(100),
+    status: Joi.string().valid('pending', 'received', 'cancelled'),
+    notes: Joi.string().max(500),
+    farm_id: Joi.string()
+  }),
+  expense: Joi.object({
+    expense_type: Joi.string(),
+    category: Joi.string(),
+    amount: Joi.number().min(0),
+    currency: Joi.string().default('VND'),
+    transaction_date: Joi.date().iso(),
+    crop_id: Joi.string(),
+    season_id: Joi.string(),
+    equipment_id: Joi.string(),
+    worker_id: Joi.string(),
+    supplier_id: Joi.string(),
+    description: Joi.string().max(500),
+    payment_method: Joi.string().max(50),
+    reference_number: Joi.string().max(100),
+    tax_amount: Joi.number().min(0),
+    status: Joi.string().valid('pending', 'paid', 'cancelled'),
+    notes: Joi.string().max(500),
+    farm_id: Joi.string()
+  }),
+  budget: Joi.object({
+    budget_name: Joi.string().min(1).max(200).required(),
+    budget_type: Joi.string().valid('annual', 'seasonal', 'project').required(),
+    total_amount: Joi.number().min(0).required(),
+    period_start: Joi.date().iso().required(),
+    period_end: Joi.date().iso().required(),
+    crop_id: Joi.string(),
+    season_id: Joi.string(),
+    notes: Joi.string().max(500),
+    farm_id: Joi.string()
+  }),
+  account: Joi.object({
+    account_name: Joi.string().min(1).max(200).required(),
+    account_type: Joi.string().valid('bank', 'cash', 'mobile_money', 'other').required(),
+    bank_name: Joi.string().max(100),
+    account_number: Joi.string().max(50),
+    current_balance: Joi.number().min(0),
+    currency: Joi.string().default('VND'),
+    is_primary: Joi.boolean(),
+    notes: Joi.string().max(500),
+    farm_id: Joi.string()
+  }),
+  loan: Joi.object({
+    loan_type: Joi.string().valid('bank', 'supplier', 'individual', 'government').required(),
+    lender: Joi.string().min(1).max(200).required(),
+    principal_amount: Joi.number().min(0).required(),
+    interest_rate: Joi.number().min(0).max(100),
+    term_months: Joi.number().min(1).max(360),
+    start_date: Joi.date().iso().required(),
+    end_date: Joi.date().iso(),
+    collateral: Joi.string().max(500),
+    notes: Joi.string().max(500),
+    farm_id: Joi.string()
+  }),
+  loanPayment: Joi.object({
+    payment_amount: Joi.number().min(0).required(),
+    payment_date: Joi.date().iso(),
+    reference_number: Joi.string().max(100),
+    notes: Joi.string().max(500),
+    farm_id: Joi.string()
+  }),
+  asset: Joi.object({
+    asset_name: Joi.string().min(1).max(200).required(),
+    asset_type: Joi.string().valid('equipment', 'land', 'building', 'vehicle', 'other').required(),
+    purchase_date: Joi.date().iso(),
+    purchase_price: Joi.number().min(0),
+    depreciation_rate: Joi.number().min(0).max(100),
+    useful_life_years: Joi.number().min(1).max(50),
+    location: Joi.string().max(200),
+    notes: Joi.string().max(500),
+    farm_id: Joi.string()
+  }),
+  tax: Joi.object({
+    tax_type: Joi.string().valid('income_tax', 'vat', 'land_tax', 'other').required(),
+    period: Joi.string().required(),
+    tax_amount: Joi.number().min(0),
+    due_date: Joi.date().iso(),
+    tax_code: Joi.string().max(50),
+    notes: Joi.string().max(500),
+    farm_id: Joi.string()
+  }),
+  cashflow: Joi.object({
+    forecast_type: Joi.string().valid('daily', 'weekly', 'monthly').required(),
+    forecast_date: Joi.date().iso(),
+    period_start: Joi.date().iso().required(),
+    period_end: Joi.date().iso().required(),
+    expected_income: Joi.number().min(0),
+    expected_expense: Joi.number().min(0),
+    notes: Joi.string().max(500),
+    farm_id: Joi.string()
+  })
+};
+
 module.exports = {
   schemas,
   validate,

@@ -1816,6 +1816,268 @@ function createTables() {
     )
   `);
 
+  // ========== FINANCIAL MANAGEMENT TABLES ==========
+  // 5S: Sort, Set in Order, Shine, Standardize, Sustain
+  // PDCA: Plan, Do, Check, Act
+
+  // Income/Revenue transactions
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance_income (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      income_code TEXT UNIQUE,
+      income_type TEXT NOT NULL,
+      category TEXT NOT NULL,
+      amount REAL NOT NULL,
+      currency TEXT DEFAULT 'VND',
+      transaction_date TEXT NOT NULL,
+      crop_id TEXT,
+      season_id TEXT,
+      description TEXT,
+      customer_id TEXT,
+      payment_method TEXT,
+      reference_number TEXT,
+      status TEXT DEFAULT 'received',
+      attachments TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Expense transactions
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance_expenses (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      expense_code TEXT UNIQUE,
+      expense_type TEXT NOT NULL,
+      category TEXT NOT NULL,
+      amount REAL NOT NULL,
+      currency TEXT DEFAULT 'VND',
+      transaction_date TEXT NOT NULL,
+      crop_id TEXT,
+      season_id TEXT,
+      equipment_id TEXT,
+      worker_id TEXT,
+      supplier_id TEXT,
+      description TEXT,
+      payment_method TEXT,
+      reference_number TEXT,
+      tax_amount REAL DEFAULT 0,
+      status TEXT DEFAULT 'paid',
+      attachments TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Profit/Loss tracking by crop/season
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance_profit_loss (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      period_type TEXT NOT NULL,
+      period_start TEXT NOT NULL,
+      period_end TEXT NOT NULL,
+      crop_id TEXT,
+      season_id TEXT,
+      area_id TEXT,
+      total_income REAL DEFAULT 0,
+      total_expenses REAL DEFAULT 0,
+      gross_profit REAL DEFAULT 0,
+      net_profit REAL DEFAULT 0,
+      profit_margin REAL DEFAULT 0,
+      yield_per_hectare REAL DEFAULT 0,
+      cost_per_kg REAL DEFAULT 0,
+      revenue_per_hectare REAL DEFAULT 0,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Cash flow forecasting
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance_cashflow_forecast (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      forecast_type TEXT NOT NULL,
+      forecast_date TEXT NOT NULL,
+      period_start TEXT NOT NULL,
+      period_end TEXT NOT NULL,
+      expected_income REAL DEFAULT 0,
+      expected_expense REAL DEFAULT 0,
+      expected_balance REAL DEFAULT 0,
+      actual_income REAL DEFAULT 0,
+      actual_expense REAL DEFAULT 0,
+      actual_balance REAL DEFAULT 0,
+      variance REAL DEFAULT 0,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Budget planning
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance_budgets (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      budget_code TEXT UNIQUE,
+      budget_name TEXT NOT NULL,
+      budget_type TEXT NOT NULL,
+      total_amount REAL NOT NULL,
+      allocated_amount REAL DEFAULT 0,
+      spent_amount REAL DEFAULT 0,
+      remaining_amount REAL DEFAULT 0,
+      period_start TEXT NOT NULL,
+      period_end TEXT NOT NULL,
+      crop_id TEXT,
+      season_id TEXT,
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Budget line items
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance_budget_items (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      budget_id TEXT NOT NULL,
+      category TEXT NOT NULL,
+      description TEXT,
+      planned_amount REAL NOT NULL,
+      actual_amount REAL DEFAULT 0,
+      variance REAL DEFAULT 0,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Bank accounts and wallets
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance_accounts (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      account_code TEXT UNIQUE,
+      account_name TEXT NOT NULL,
+      account_type TEXT NOT NULL,
+      bank_name TEXT,
+      account_number TEXT,
+      current_balance REAL DEFAULT 0,
+      currency TEXT DEFAULT 'VND',
+      is_primary BOOLEAN DEFAULT 0,
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Loans and debts
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance_loans (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      loan_code TEXT UNIQUE,
+      loan_type TEXT NOT NULL,
+      lender TEXT NOT NULL,
+      principal_amount REAL NOT NULL,
+      interest_rate REAL DEFAULT 0,
+      term_months INTEGER,
+      start_date TEXT NOT NULL,
+      end_date TEXT,
+      paid_amount REAL DEFAULT 0,
+      remaining_amount REAL DEFAULT 0,
+      monthly_payment REAL DEFAULT 0,
+      collateral TEXT,
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Loan payments
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance_loan_payments (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      loan_id TEXT NOT NULL,
+      payment_date TEXT NOT NULL,
+      payment_amount REAL NOT NULL,
+      principal_paid REAL DEFAULT 0,
+      interest_paid REAL DEFAULT 0,
+      remaining_balance REAL DEFAULT 0,
+      reference_number TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Assets tracking
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance_assets (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      asset_code TEXT UNIQUE,
+      asset_name TEXT NOT NULL,
+      asset_type TEXT NOT NULL,
+      purchase_date TEXT,
+      purchase_price REAL DEFAULT 0,
+      current_value REAL DEFAULT 0,
+      depreciation_rate REAL DEFAULT 0,
+      useful_life_years INTEGER,
+      location TEXT,
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Tax tracking
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance_taxes (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      tax_type TEXT NOT NULL,
+      period TEXT NOT NULL,
+      tax_amount REAL DEFAULT 0,
+      paid_amount REAL DEFAULT 0,
+      due_date TEXT,
+      payment_date TEXT,
+      status TEXT DEFAULT 'pending',
+      tax_code TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Financial reports
+  db.run(`
+    CREATE TABLE IF NOT EXISTS finance_reports (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      report_type TEXT NOT NULL,
+      report_name TEXT NOT NULL,
+      period_start TEXT NOT NULL,
+      period_end TEXT NOT NULL,
+      report_data TEXT,
+      generated_by TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  logger.info('Financial management tables created');
   logger.info('Equipment management tables created');
   logger.info('Database tables created');
 }

@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require('uuid');
 const { auth } = require('../middleware/auth');
 const { getAll, getOne, db } = require('../config/database');
 const logger = require('../config/logger');
+const farmActivityService = require('../services/farmActivityService');
 
 router.get('/crops', auth, async (req, res) => {
   try {
@@ -564,6 +565,158 @@ router.post('/plantings/:plantingId/supply-chain', auth, async (req, res) => {
     }
     
     res.json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/activity-types', auth, async (req, res) => {
+  try {
+    res.json({ ok: true, data: farmActivityService.ACTIVITY_TYPES });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/activities', auth, async (req, res) => {
+  try {
+    const { farm_id, source_type, source_id, batch_id, activity_type, start_date, end_date } = req.query;
+    
+    let activities;
+    if (batch_id) {
+      activities = farmActivityService.getActivitiesByBatch(batch_id);
+    } else if (source_type && source_id) {
+      activities = farmActivityService.getActivitiesBySource(source_type, source_id);
+    } else if (farm_id) {
+      activities = farmActivityService.getActivitiesByFarm(farm_id, { activity_type, start_date, end_date });
+    } else {
+      return res.status(400).json({ ok: false, error: 'Cần cung cấp farm_id hoặc source_type + source_id hoặc batch_id' });
+    }
+    
+    res.json({ ok: true, data: activities });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/activities', auth, async (req, res) => {
+  try {
+    const { farm_id, source_type, source_id, traceability_batch_id, activity_type, activity_name, activity_date, description, inputs, dosage, unit, cost, performed_by, notes } = req.body;
+    
+    if (!source_type || !source_id || !activity_type) {
+      return res.status(400).json({ ok: false, error: 'source_type, source_id, activity_type là bắt buộc' });
+    }
+    
+    const result = farmActivityService.createActivity({
+      farm_id,
+      source_type,
+      source_id,
+      traceability_batch_id,
+      activity_type,
+      activity_name,
+      activity_date,
+      description,
+      inputs,
+      dosage,
+      unit,
+      cost: parseFloat(cost) || 0,
+      performed_by,
+      notes
+    });
+    
+    res.status(201).json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.put('/activities/:id', auth, async (req, res) => {
+  try {
+    const result = farmActivityService.updateActivity(req.params.id, req.body);
+    
+    if (!result) {
+      return res.status(404).json({ ok: false, error: 'Không tìm thấy hoạt động' });
+    }
+    
+    res.json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.delete('/activities/:id', auth, async (req, res) => {
+  try {
+    const result = farmActivityService.deleteActivity(req.params.id);
+    
+    if (!result) {
+      return res.status(404).json({ ok: false, error: 'Không tìm thấy hoạt động' });
+    }
+    
+    res.json({ ok: true, message: 'Xóa hoạt động thành công' });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/activities/stats', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const stats = farmActivityService.getActivityStats(farm_id);
+    res.json({ ok: true, data: stats });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/activities/timeline', auth, async (req, res) => {
+  try {
+    const { source_type, source_id } = req.query;
+    
+    if (!source_type || !source_id) {
+      return res.status(400).json({ ok: false, error: 'Cần cung cấp source_type và source_id' });
+    }
+    
+    const timeline = farmActivityService.getActivitiesTimeline(source_type, source_id);
+    res.json({ ok: true, data: timeline });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/plantings/:plantingId/activities', auth, async (req, res) => {
+  try {
+    const activities = farmActivityService.getActivitiesBySource('crop', req.params.plantingId);
+    res.json({ ok: true, data: activities });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/plantings/:plantingId/activity', auth, async (req, res) => {
+  try {
+    const { activity_type, activity_name, activity_date, description, inputs, dosage, unit, cost, performed_by, notes } = req.body;
+    
+    if (!activity_type) {
+      return res.status(400).json({ ok: false, error: 'activity_type là bắt buộc' });
+    }
+    
+    const result = farmActivityService.createActivity({
+      farm_id: req.query.farm_id,
+      source_type: 'crop',
+      source_id: req.params.plantingId,
+      activity_type,
+      activity_name,
+      activity_date,
+      description,
+      inputs,
+      dosage,
+      unit,
+      cost: parseFloat(cost) || 0,
+      performed_by,
+      notes
+    });
+    
+    res.status(201).json({ ok: true, data: result });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }

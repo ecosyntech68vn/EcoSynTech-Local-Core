@@ -413,6 +413,30 @@ function createTables() {
   `);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS farm_activities (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      source_type TEXT NOT NULL,
+      source_id TEXT NOT NULL,
+      traceability_batch_id TEXT,
+      activity_type TEXT NOT NULL,
+      activity_name TEXT NOT NULL,
+      activity_date TEXT NOT NULL,
+      description TEXT,
+      inputs TEXT DEFAULT '[]',
+      dosage TEXT,
+      unit TEXT,
+      cost REAL,
+      performed_by TEXT,
+      notes TEXT,
+      status TEXT DEFAULT 'completed',
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (traceability_batch_id) REFERENCES traceability_batches(id)
+    )
+  `);
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS tb_batches (
       id TEXT PRIMARY KEY,
       org_id TEXT,

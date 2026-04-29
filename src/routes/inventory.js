@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { auth } = require('../middleware/auth');
 const { getAll, getOne, runQuery } = require('../config/database');
+const inventoryService = require('../services/inventoryService');
 
 router.get('/', auth, async (req, res) => {
   try {
@@ -131,6 +132,116 @@ router.get('/stats/summary', auth, async (req, res) => {
         byCategory: byCategory.reduce((acc, c) => { acc[c.category] = { count: c.count, value: c.value }; return acc; }, {})
       }
     });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/items', auth, async (req, res) => {
+  try {
+    const { farm_id, category, status } = req.query;
+    const items = inventoryService.getItems(farm_id, category, status);
+    res.json({ ok: true, data: items });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/items', auth, async (req, res) => {
+  try {
+    const { farm_id, item_code, item_name, item_name_vi, category, unit, min_stock_alert, cost_per_unit, supplier, supplier_contact, expiry_days, storage_conditions, notes } = req.body;
+    
+    if (!item_name || !category) {
+      return res.status(400).json({ ok: false, error: 'item_name và category là bắt buộc' });
+    }
+
+    const item = inventoryService.createItem({
+      farm_id, item_code, item_name, item_name_vi, category, unit, 
+      min_stock_alert, cost_per_unit, supplier, supplier_contact, 
+      expiry_days, storage_conditions, notes
+    });
+
+    res.status(201).json({ ok: true, data: item });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/import', auth, async (req, res) => {
+  try {
+    const { farm_id, item_id, quantity, unit_cost, transaction_date, reference_number, create_batch, expiry_date, supplier_batch, performed_by, notes } = req.body;
+    
+    if (!item_id || !quantity) {
+      return res.status(400).json({ ok: false, error: 'item_id và quantity là bắt buộc' });
+    }
+
+    const result = inventoryService.importStock({
+      farm_id, item_id, quantity, unit_cost, transaction_date,
+      reference_number, create_batch, expiry_date, supplier_batch,
+      performed_by, notes
+    });
+
+    res.status(201).json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/export', auth, async (req, res) => {
+  try {
+    const { farm_id, item_id, quantity, transaction_date, reference_number, source_type, source_id, performed_by, notes } = req.body;
+    
+    if (!item_id || !quantity) {
+      return res.status(400).json({ ok: false, error: 'item_id và quantity là bắt buộc' });
+    }
+
+    const result = inventoryService.exportStock({
+      farm_id, item_id, quantity, transaction_date,
+      reference_number, source_type, source_id,
+      performed_by, notes
+    });
+
+    res.status(201).json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/transactions', auth, async (req, res) => {
+  try {
+    const { item_id, farm_id, start_date, end_date } = req.query;
+    const transactions = inventoryService.getTransactions(item_id, farm_id, start_date, end_date);
+    res.json({ ok: true, data: transactions });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/batches', auth, async (req, res) => {
+  try {
+    const { item_id, farm_id } = req.query;
+    const batches = inventoryService.getBatches(item_id, farm_id);
+    res.json({ ok: true, data: batches });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/low-stock', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const items = inventoryService.getLowStockItems(farm_id);
+    res.json({ ok: true, data: items });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/stats', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const stats = inventoryService.getInventoryStats(farm_id);
+    res.json({ ok: true, data: stats });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }

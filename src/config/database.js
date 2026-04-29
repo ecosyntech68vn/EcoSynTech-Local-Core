@@ -1175,6 +1175,70 @@ function createTables() {
     )
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inventory_items (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      item_code TEXT UNIQUE,
+      item_name TEXT NOT NULL,
+      item_name_vi TEXT,
+      category TEXT NOT NULL,
+      unit TEXT DEFAULT 'kg',
+      min_stock_alert REAL DEFAULT 10,
+      current_stock REAL DEFAULT 0,
+      cost_per_unit REAL DEFAULT 0,
+      supplier TEXT,
+      supplier_contact TEXT,
+      expiry_days INTEGER,
+      storage_conditions TEXT,
+      notes TEXT,
+      status TEXT DEFAULT 'active',
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inventory_transactions (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      item_id TEXT NOT NULL,
+      transaction_type TEXT NOT NULL,
+      quantity REAL NOT NULL,
+      unit TEXT DEFAULT 'kg',
+      unit_cost REAL,
+      total_cost REAL,
+      transaction_date TEXT,
+      reference_number TEXT,
+      source_type TEXT,
+      source_id TEXT,
+      performed_by TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (item_id) REFERENCES inventory_items(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inventory_batches (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      item_id TEXT NOT NULL,
+      batch_code TEXT UNIQUE,
+      import_date TEXT,
+      expiry_date TEXT,
+      quantity_initial REAL,
+      quantity_remaining REAL,
+      unit_cost REAL,
+      supplier_batch TEXT,
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (item_id) REFERENCES inventory_items(id)
+    )
+  `);
+
   logger.info('Database tables created');
 }
 

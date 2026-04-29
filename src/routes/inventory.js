@@ -247,4 +247,148 @@ router.get('/v2/stats', auth, async (req, res) => {
   }
 });
 
+router.post('/v2/suppliers', auth, async (req, res) => {
+  try {
+    const supplier = inventoryService.createSupplier(req.body);
+    res.status(201).json({ ok: true, data: supplier });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/suppliers', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const suppliers = inventoryService.getSuppliers(farm_id);
+    res.json({ ok: true, data: suppliers });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/purchase-orders', auth, async (req, res) => {
+  try {
+    const order = inventoryService.createPurchaseOrder(req.body);
+    res.status(201).json({ ok: true, data: order });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/purchase-orders', auth, async (req, res) => {
+  try {
+    const { farm_id, status } = req.query;
+    const orders = inventoryService.getPurchaseOrders(farm_id, status);
+    res.json({ ok: true, data: orders });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/purchase-orders/:id/receive', auth, async (req, res) => {
+  try {
+    const result = inventoryService.receivePurchaseOrder(req.params.id, req.body.items);
+    res.json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/audits', auth, async (req, res) => {
+  try {
+    const audit = inventoryService.createAudit(req.body);
+    res.status(201).json({ ok: true, data: audit });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/audits', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const audits = inventoryService.getAuditHistory(farm_id);
+    res.json({ ok: true, data: audits });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/audits/:id/submit', auth, async (req, res) => {
+  try {
+    const result = inventoryService.submitAuditResult(req.params.id, req.body.results);
+    res.json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/predict-demand/:itemId', auth, async (req, res) => {
+  try {
+    const prediction = inventoryService.predictDemand(req.params.itemId);
+    res.json({ ok: true, data: prediction });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/usage-by-crop', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const usage = inventoryService.getUsageByCrop(farm_id);
+    res.json({ ok: true, data: usage });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/usage-by-period', auth, async (req, res) => {
+  try {
+    const { farm_id, start_date, end_date } = req.query;
+    const usage = inventoryService.getUsageByPeriod(farm_id, start_date, end_date);
+    res.json({ ok: true, data: usage });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/expiring', auth, async (req, res) => {
+  try {
+    const { days, farm_id } = req.query;
+    const items = inventoryService.getExpiringItems(parseInt(days) || 30, farm_id);
+    res.json({ ok: true, data: items });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/alerts', auth, async (req, res) => {
+  try {
+    const { farm_id, unresolved } = req.query;
+    const alerts = inventoryService.getActiveAlerts(farm_id, unresolved !== 'false');
+    res.json({ ok: true, data: alerts });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/v2/alerts/:id/resolve', auth, async (req, res) => {
+  try {
+    const { resolved_by } = req.body;
+    const result = inventoryService.resolveAlert(req.params.id, resolved_by);
+    res.json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/v2/price-history/:itemId', auth, async (req, res) => {
+  try {
+    const history = inventoryService.getPriceHistory(req.params.itemId);
+    const avgCost = inventoryService.getAverageCost(req.params.itemId);
+    res.json({ ok: true, data: { history, statistics: avgCost } });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 module.exports = router;

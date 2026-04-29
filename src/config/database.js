@@ -1239,6 +1239,137 @@ function createTables() {
     )
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inventory_suppliers (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      supplier_code TEXT UNIQUE,
+      supplier_name TEXT NOT NULL,
+      contact_name TEXT,
+      phone TEXT,
+      email TEXT,
+      address TEXT,
+      tax_code TEXT,
+      payment_terms TEXT,
+      rating REAL DEFAULT 3,
+      total_orders INTEGER DEFAULT 0,
+      total_value REAL DEFAULT 0,
+      notes TEXT,
+      status TEXT DEFAULT 'active',
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS purchase_orders (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      order_number TEXT UNIQUE,
+      supplier_id TEXT,
+      order_date TEXT,
+      expected_delivery_date TEXT,
+      actual_delivery_date TEXT,
+      status TEXT DEFAULT 'pending',
+      total_amount REAL DEFAULT 0,
+      paid_amount REAL DEFAULT 0,
+      items_json TEXT DEFAULT '[]',
+      notes TEXT,
+      created_by TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (supplier_id) REFERENCES inventory_suppliers(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS purchase_order_items (
+      id TEXT PRIMARY KEY,
+      order_id TEXT NOT NULL,
+      item_id TEXT,
+      item_name TEXT NOT NULL,
+      quantity_ordered REAL,
+      quantity_received REAL DEFAULT 0,
+      unit TEXT,
+      unit_price REAL,
+      total_price REAL,
+      status TEXT DEFAULT 'pending',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (order_id) REFERENCES purchase_orders(id),
+      FOREIGN KEY (item_id) REFERENCES inventory_items(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inventory_audits (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      audit_code TEXT UNIQUE,
+      audit_date TEXT,
+      audit_type TEXT DEFAULT 'full',
+      status TEXT DEFAULT 'in_progress',
+      total_items INTEGER DEFAULT 0,
+      matched_items INTEGER DEFAULT 0,
+      discrepancies INTEGER DEFAULT 0,
+      notes TEXT,
+      created_by TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inventory_audit_items (
+      id TEXT PRIMARY KEY,
+      audit_id TEXT NOT NULL,
+      item_id TEXT,
+      system_quantity REAL,
+      physical_quantity REAL,
+      difference REAL,
+      status TEXT DEFAULT 'pending',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (audit_id) REFERENCES inventory_audits(id),
+      FOREIGN KEY (item_id) REFERENCES inventory_items(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inventory_alerts (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      item_id TEXT,
+      alert_type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      message TEXT,
+      threshold_value REAL,
+      current_value REAL,
+      is_resolved INTEGER DEFAULT 0,
+      resolved_at TEXT,
+      resolved_by TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (item_id) REFERENCES inventory_items(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS inventory_usage_history (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      item_id TEXT NOT NULL,
+      period_type TEXT NOT NULL,
+      period_value TEXT NOT NULL,
+      quantity_used REAL,
+      unit_cost REAL,
+      total_value REAL,
+      source_type TEXT,
+      source_count INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (item_id) REFERENCES inventory_items(id)
+    )
+  `);
+
   logger.info('Database tables created');
 }
 

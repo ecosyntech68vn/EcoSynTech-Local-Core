@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { auth } = require('../middleware/auth');
 const { getAll, getOne } = require('../config/database');
+const financeService = require('../services/financeService');
 const { getDashboardOverview, getSensorDataByZone, getAlertsQuick, getDevicesStatus, invalidateCache } = require('../services/performanceService');
 const si = require('systeminformation');
 const os = require('os');
@@ -161,6 +162,108 @@ router.get('/devices-status', auth, async (req, res) => {
   try {
     const devices = await getDevicesStatus();
     res.json({ ok: true, devices });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/finance-summary', auth, async (req, res) => {
+  try {
+    const { farm_id, period = 'month' } = req.query;
+    const now = new Date();
+    let startDate, endDate;
+    
+    if (period === 'today') {
+      startDate = endDate = now.toISOString().split('T')[0];
+    } else if (period === 'week') {
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      startDate = weekAgo.toISOString().split('T')[0];
+      endDate = now.toISOString().split('T')[0];
+    } else if (period === 'month') {
+      const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      startDate = monthAgo.toISOString().split('T')[0];
+      endDate = now.toISOString().split('T')[0];
+    } else if (period === 'year') {
+      const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      startDate = yearAgo.toISOString().split('T')[0];
+      endDate = now.toISOString().split('T')[0];
+    }
+    
+    const summary = financeService.getFinancialSummary(farm_id, startDate, endDate);
+    const recentIncome = financeService.getIncome(farm_id, startDate, endDate).slice(0, 5);
+    const recentExpenses = financeService.getExpenses(farm_id, startDate, endDate).slice(0, 5);
+    const profitLossByCrop = financeService.getProfitLossByCrop(farm_id, startDate, endDate);
+    
+    res.json({
+      ok: true,
+      data: {
+        summary,
+        recentIncome,
+        recentExpenses,
+        profitLossByCrop,
+        period: { start: startDate, end: endDate, type: period }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/finance-kpis', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const now = new Date();
+    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const thisMonthEnd = now.toISOString().split('T')[0];
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString().split('T')[0];
+    const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0).toISOString().split('T')[0];
+    
+    const thisMonth = financeService.getFinancialSummary(farm_id, thisMonthStart, thisMonthEnd);
+    const lastMonth = financeService.getFinancialSummary(farm_id, lastMonthStart, lastMonthEnd);
+    
+    const incomeGrowth = lastMonth.total_income > 0 
+      ? ((thisMonth.total_income - lastMonth.total_income) / lastMonth.total_income * 100).toFixed(1)
+      : 0;
+    const expenseGrowth = lastMonth.total_expenses > 0
+      ? ((thisMonth.total_expenses - lastMonth.total_expenses) / lastMonth.total_expenses * 100).toFixed(1)
+      : 0;
+    const profitGrowth = lastMonth.net_profit > 0
+      ? ((thisMonth.net_profit - lastMonth.net_profit) / lastMonth.net_profit * 100).toFixed(1)
+      : 0;
+    
+    const budgets = financeService.getBudgets(farm_id, 'active');
+    const totalBudget = budgets.reduce((sum, b) => sum + (b.planned_amount || 0), 0);
+    const usedBudget = budgets.reduce((sum, b) => sum + (b.used_amount || 0), 0);
+    
+    res.json({
+      ok: true,
+      data: {
+        thisMonth: {
+          income: thisMonth.total_income,
+          expenses: thisMonth.total_expenses,
+          profit: thisMonth.net_profit,
+          margin: thisMonth.profit_margin
+        },
+        lastMonth: {
+          income: lastMonth.total_income,
+          expenses: lastMonth.total_expenses,
+          profit: lastMonth.net_profit
+        },
+        growth: {
+          income: parseFloat(incomeGrowth),
+          expenses: parseFloat(expenseGrowth),
+          profit: parseFloat(profitGrowth)
+        },
+        budget: {
+          total: totalBudget,
+          used: usedBudget,
+          remaining: totalBudget - usedBudget,
+          usagePercent: totalBudget > 0 ? Math.round((usedBudget / totalBudget) * 100) : 0
+        },
+        incomeTypes: financeService.INCOME_TYPES,
+        expenseTypes: financeService.EXPENSE_TYPES
+      }
+    });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }

@@ -849,6 +849,15 @@
         </div>
         
         <div class="nav-section">
+          <div class="nav-label">Kinh doanh</div>
+          <a class="nav-item" href="#" onclick="showSection('finance')">
+            <span class="nav-icon">💰</span>
+            <span>Tài chính</span>
+            <span class="nav-badge" id="financeAlert">NEW</span>
+          </a>
+        </div>
+        
+        <div class="nav-section">
           <div class="nav-label">Thiết bị</div>
           <a class="nav-item" href="#">
             <span class="nav-icon">📡</span>
@@ -1110,6 +1119,102 @@
                 <button type="button" class="btn btn-ghost" onclick="closeRuleModal()">Hủy</button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Finance Dashboard (Hidden by default) -->
+      <div id="financeSection" style="display: none;">
+        <div class="card-header" style="margin-bottom: 20px;">
+          <h2 class="card-title">💰 Tổng quan Tài chính</h2>
+          <div style="display: flex; gap: 10px;">
+            <select id="financePeriod" class="form-input" style="width: auto;" onchange="loadFinanceDashboard()">
+              <option value="today">Hôm nay</option>
+              <option value="week">Tuần này</option>
+              <option value="month" selected>Tháng này</option>
+              <option value="year">Năm nay</option>
+            </select>
+            <button class="btn btn-ghost" onclick="loadFinanceDashboard()">🔄</button>
+          </div>
+        </div>
+        
+        <!-- KPIs -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Tổng Thu</div>
+              <div id="financeIncome" style="font-size: 28px; font-weight: 700; color: var(--success);">---</div>
+              <div id="financeIncomeGrowth" style="font-size: 12px; color: var(--text-muted);">---</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Tổng Chi</div>
+              <div id="financeExpenses" style="font-size: 28px; font-weight: 700; color: var(--danger);">---</div>
+              <div id="financeExpenseGrowth" style="font-size: 12px; color: var(--text-muted);">---</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Lợi nhuận</div>
+              <div id="financeProfit" style="font-size: 28px; font-weight: 700; color: var(--accent);">---</div>
+              <div id="financeProfitGrowth" style="font-size: 12px; color: var(--text-muted);">---</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">% Lợi nhuận</div>
+              <div id="financeMargin" style="font-size: 28px; font-weight: 700; color: var(--primary-light);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Biên lợi nhuận</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Chi tiết -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📥 Thu gần nhất</h3>
+            </div>
+            <div class="card-body">
+              <div id="financeRecentIncome">
+                <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📤 Chi gần nhất</h3>
+            </div>
+            <div class="card-body">
+              <div id="financeRecentExpenses">
+                <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Budget -->
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <h3 class="card-title">📊 Ngân sách</h3>
+          </div>
+          <div class="card-body">
+            <div id="financeBudget">
+              <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Profit by Crop -->
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <h3 class="card-title">🌱 Lợi nhuận theo cây trồng</h3>
+          </div>
+          <div class="card-body">
+            <div id="financeProfitByCrop">
+              <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1433,6 +1538,153 @@
     function editRule(ruleId) {
       alert('Chức năng đang phát triển. Vui lòng xóa và tạo lại rule.');
     }
+    
+    // Finance Dashboard Functions
+    let financeInterval = null;
+    
+    function showSection(section) {
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      event.target.closest('.nav-item')?.classList.add('active');
+      
+      document.getElementById('financeSection').style.display = section === 'finance' ? 'block' : 'none';
+      if (section === 'finance') {
+        loadFinanceDashboard();
+        if (!financeInterval) {
+          financeInterval = setInterval(loadFinanceDashboard, 30000);
+        }
+      } else if (financeInterval) {
+        clearInterval(financeInterval);
+        financeInterval = null;
+      }
+    }
+    
+    function formatCurrency(amount) {
+      if (amount === null || amount === undefined) return '0';
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+    }
+    
+    function formatPercent(value) {
+      if (value === null || value === undefined || isNaN(value)) return '0%';
+      return (value > 0 ? '+' : '') + value.toFixed(1) + '%';
+    }
+    
+    async function loadFinanceDashboard() {
+      try {
+        const period = document.getElementById('financePeriod')?.value || 'month';
+        const response = await fetch(`/api/dashboard/finance-kpis?period=${period}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (!response.ok) {
+          console.error('Finance API error:', response.status);
+          return;
+        }
+        
+        const result = await response.json();
+        if (!result.ok) {
+          console.error('Finance data error:', result.error);
+          return;
+        }
+        
+        const data = result.data;
+        
+        document.getElementById('financeIncome').textContent = formatCurrency(data.thisMonth.income);
+        document.getElementById('financeExpenses').textContent = formatCurrency(data.thisMonth.expenses);
+        document.getElementById('financeProfit').textContent = formatCurrency(data.thisMonth.profit);
+        document.getElementById('financeMargin').textContent = (data.thisMonth.margin || 0) + '%';
+        
+        document.getElementById('financeIncomeGrowth').textContent = formatPercent(data.growth.income) + ' vs tháng trước';
+        document.getElementById('financeExpenseGrowth').textContent = formatPercent(data.growth.expenses) + ' vs tháng trước';
+        document.getElementById('financeProfitGrowth').textContent = formatPercent(data.growth.profit) + ' vs tháng trước';
+        
+        const budgetHtml = `
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span>Ngân sách: ${formatCurrency(data.budget.total)}</span>
+            <span>Đã dùng: ${formatCurrency(data.budget.used)}</span>
+          </div>
+          <div style="background: var(--bg-input); border-radius: 8px; height: 12px; overflow: hidden;">
+            <div style="width: ${data.budget.usagePercent}%; background: ${data.budget.usagePercent > 80 ? 'var(--danger)' : 'var(--success)'}; height: 100%;"></div>
+          </div>
+          <div style="text-align: center; margin-top: 8px; font-size: 14px;">
+            ${data.budget.usagePercent}% đã sử dụng | Còn lại: ${formatCurrency(data.budget.remaining)}
+          </div>
+        `;
+        document.getElementById('financeBudget').innerHTML = budgetHtml;
+        
+      } catch (err) {
+        console.error('Load finance dashboard error:', err);
+      }
+    }
+    
+    async function loadFinanceSummary() {
+      try {
+        const period = document.getElementById('financePeriod')?.value || 'month';
+        const response = await fetch(`/api/dashboard/finance-summary?period=${period}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (!response.ok) return;
+        
+        const result = await response.json();
+        if (!result.ok) return;
+        
+        const data = result.data;
+        
+        if (data.recentIncome && data.recentIncome.length > 0) {
+          const incomeHtml = data.recentIncome.map(item => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-weight: 500;">${item.income_type || 'Thu'}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${item.transaction_date || ''}</div>
+              </div>
+              <div style="color: var(--success); font-weight: 600;">+${formatCurrency(item.amount)}</div>
+            </div>
+          `).join('');
+          document.getElementById('financeRecentIncome').innerHTML = incomeHtml;
+        } else {
+          document.getElementById('financeRecentIncome').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có dữ liệu</div>';
+        }
+        
+        if (data.recentExpenses && data.recentExpenses.length > 0) {
+          const expenseHtml = data.recentExpenses.map(item => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-weight: 500;">${item.expense_type || 'Chi'}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${item.transaction_date || ''}</div>
+              </div>
+              <div style="color: var(--danger); font-weight: 600;">-${formatCurrency(item.amount)}</div>
+            </div>
+          `).join('');
+          document.getElementById('financeRecentExpenses').innerHTML = expenseHtml;
+        } else {
+          document.getElementById('financeRecentExpenses').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có dữ liệu</div>';
+        }
+        
+        if (data.profitLossByCrop && data.profitLossByCrop.length > 0) {
+          const cropHtml = data.profitLossByCrop.map(item => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-weight: 500;">${item.crop_name || 'Cây trồng'}</div>
+              </div>
+              <div style="color: ${item.profit >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight: 600;">
+                ${formatCurrency(item.profit)} (${item.margin}%)
+              </div>
+            </div>
+          `).join('');
+          document.getElementById('financeProfitByCrop').innerHTML = cropHtml;
+        } else {
+          document.getElementById('financeProfitByCrop').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có dữ liệu cây trồng</div>';
+        }
+        
+      } catch (err) {
+        console.error('Load finance summary error:', err);
+      }
+    }
+    
+    document.getElementById('financePeriod')?.addEventListener('change', () => {
+      loadFinanceDashboard();
+      loadFinanceSummary();
+    });
   </script>
 </body>
 </html>

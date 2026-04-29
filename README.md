@@ -46,11 +46,12 @@ EcoSynTech Local Core là hệ thống phần mềm **on-premises** cho nông ng
 
 | Chỉ số | Giá trị |
 |--------|---------|
-| **Tổng file JS** | 287 files |
-| **Tổng dòng code** | ~44,554 lines |
-| **Trung bình** | ~155 lines/file |
-| **Modules** | 17 main modules |
-| **API Endpoints** | 40+ routes |
+| **Tổng file JS** | 290+ files |
+| **Tổng dòng code** | ~50,000+ lines |
+| **Trung bình** | ~160 lines/file |
+| **Modules** | 20+ main modules |
+| **API Endpoints** | 60+ routes |
+| **Database Tables** | 40+ tables |
 
 ### Cấu trúc Modules
 
@@ -154,7 +155,95 @@ EcoSynTech Local Core là hệ thống phần mềm **on-premises** cho nông ng
 - Schedule management
 - Trigger actions (irrigation, lighting, fertilization)
 
-### 3.5 Dashboard
+### 3.5 Quản lý Chu kỳ Cây trồng (Crop Cycle Management)
+- **Crop Templates**: Lúa, Dưa leo, Cà chua, Ớt, Dưa hấu, Bắp, Đậu xanh
+- **Giai đoạn cây trồng**: Gieo hạt → Cây con → Sinh trưởng → Ra hoa → Thu hoạch
+- **Tính KC tự động**: Hệ số cây trồng (Kc) theo từng giai đoạn
+- **Dự báo ngày thu hoạch**: Tự động tính toán dựa trên template
+- **Tính nhu cầu tưới tiêu**: ETC = ETo × Kc
+- **API Endpoints:**
+  ```
+  GET/POST /api/crops/plantings/v2      - Quản lý lô trồng
+  GET  /api/crops/irrigation/:id        - Tính nhu cầu tưới
+  GET  /api/crops/stats                 - Thống kê cây trồng
+  POST /api/crops/harvest/:id           - Ghi nhận thu hoạch
+  GET  /api/crops/timeline/:id          - Timeline các giai đoạn
+  POST /api/crops/advance-stage/:id     - Chuyển giai đoạn
+  ```
+
+### 3.6 Truy xuất Nguồn gốc & QR Code (Traceability)
+- **Tự động tạo batch**: Khi khởi tạo vụ mới (crop/aquaculture)
+- **Timeline liền mạch**: Gieo trồng → Hoạt động nông nghiệp → Thu hoạch → Cung ứng
+- **QR Code đầy đủ**: Bao gồm dữ liệu cây trồng, hoạt động, cảm biến
+- **Liên kết Supply Chain**: Tự động tạo đơn hàng khi thu hoạch
+- **API Endpoints:**
+  ```
+  POST /api/crops/plantings/:id/traceability  - Tạo/sync traceability
+  GET  /api/crops/traceability/batch/:code    - Dữ liệu QR đầy đủ
+  GET  /api/crops/traceability/batches        - Danh sách batch
+  POST /api/crops/plantings/:id/supply-chain  - Tạo supply chain
+  GET  /api/crops/traceability/:batchCode/full - Full traceability + activities
+  ```
+
+### 3.7 Hoạt động Nông nghiệp (Farm Activities)
+Ghi nhận các sự kiện thủ công của nông dân:
+- 💧 **Phun thuốc** (spray)
+- 🌱 **Bón phân** (fertilizer)
+- ✂️ **Cắt tỉa** (pruning)
+- 💉 **Tiêm phòng** (vaccination)
+- 🚿 **Tưới nước** (watering)
+- 🪴 **Làm đất** (soil_preparation)
+- 🐛 **Phòng trừ sâu bệnh** (pest_control)
+- 👁️ **Giám sát** (monitoring)
+
+Tự động sync vào **traceability stages** cho QR code.
+- **API Endpoints:**
+  ```
+  GET/POST    /api/crops/activities              - CRUD hoạt động
+  PUT/DELETE  /api/crops/activities/:id          - Cập nhật/xóa
+  GET         /api/crops/activities/stats        - Thống kê chi phí
+  GET         /api/crops/activities/timeline     - Timeline theo vụ
+  GET/POST    /api/crops/plantings/:id/activities - Theo lô trồng
+  ```
+
+### 3.8 Hệ thống Module Nông nghiệp Đa dạng (Farm Modules)
+Hệ thống dashboard tổng hợp cho nhiều loại hình nông nghiệp:
+
+| Module | Icon | Mô tả | Database |
+|--------|------|-------|----------|
+| **Crops** | 🌾 | Cây trồng đồng ruộng | crop_plantings |
+| **Aquaculture** | 🐟 | Thủy sản (tôm, cá) | aquaculture_spawning |
+| **Greenhouse** | 🏡 | Nhà màng/ nhà kính | greenhouse_zones |
+| **Hydroponics** | 💧 | Thủy canh (không đất) | hydroponic_systems |
+| **Livestock** | 🐄 | Chăn nuôi (bò, heo, gà) | livestock_batches |
+| **Aeroponics** | 💨 | Khí canh | aeroponic_systems |
+
+**Đặc điểm:**
+- Kiến trúc modular - dễ dàng thêm module mới
+- Thống kê tổng hợp cross-module
+- Timeline liên kết xuyên suốt
+- Tự động tạo traceability cho mọi module
+
+**API Endpoints:**
+  ```
+  GET  /api/crops/modules                  - Danh sách modules
+  GET  /api/crops/dashboard               - Dashboard tổng hợp
+  GET  /api/crops/module/:id/units        - Đơn vị theo module
+  GET  /api/crops/module/:id/stats        - Thống kê module
+  POST /api/crops/module/:id/units        - Tạo đơn vị mới
+  DELETE /api/crops/module/:id/units/:uid - Xóa đơn vị
+  GET  /api/crops/module/:id/timeline/:uid - Timeline chi tiết
+  ```
+
+### 3.9 Dashboard UI
+- **dashboard.html**: Dashboard giám sát thiết bị IoT
+- **dashboard-farm.html**: Dashboard nông nghiệp tổng hợp (mới)
+  - Tab navigation cho từng module
+  - Thống kê real-time
+  - Form thêm đơn vị mới
+  - Timeline hoạt động
+
+### 3.10
 - **Real-time monitoring**
 - **Light/Dark mode** với system preference detection
 - **Responsive design** - Mobile-first
@@ -289,21 +378,36 @@ EcoSynTech-Local-Core/
 │   │   ├── deviceAuth.js    # HMAC verification
 │   │   ├── i18n.js          # Internationalization
 │   │   └── cacheService.js  # Cache management
-│   ├── routes/              # API routes (40+ endpoints)
+│   ├── routes/              # API routes (60+ endpoints)
+│   │   ├── crops.js         # Crop cycle + Farm modules
+│   │   ├── traceability.js  # QR Code traceability
+│   │   ├── supply-chain.js  # Supply chain management
 │   │   ├── aiModels.js      # AI Model Management
-│   │   ├── devices.js      # Device CRUD
-│   │   ├── sensors.js      # Sensor data
-│   │   └── auth.js         # Authentication
-│   ├── services/           # Business logic
-│   │   ├── ingestQueue.js  # Data buffering
-│   │   └── ai/             # AI/ML services
-│   ├── config/             # Configuration
-│   ├── i18n/              # Translations (EN/VN/ZH)
-│   └── server/             # Modular server
+│   │   ├── devices.js       # Device CRUD
+│   │   ├── sensors.js       # Sensor data
+│   │   └── auth.js          # Authentication
+│   ├── services/            # Business logic
+│   │   ├── cropService.js        # Crop cycle management
+│   │   ├── batchService.js       # Traceability integration
+│   │   ├── farmActivityService.js # Farm activities
+│   │   ├── farmModuleService.js  # Modular farm dashboard
+│   │   ├── alertService.js       # Telegram/Zalo alerts
+│   │   ├── sensorValidator.js    # Data validation
+│   │   ├── ingestQueue.js        # Data buffering
+│   │   └── ai/                   # AI/ML services
+│   ├── config/              # Configuration
+│   │   └── database.js      # SQLite + schema
+│   ├── i18n/                # Translations (EN/VN/ZH)
+│   └── server/              # Modular server
 ├── public/                  # Dashboards
+│   ├── dashboard.html      # IoT monitoring
+│   └── dashboard-farm.html # Farm agriculture (NEW)
 ├── docs/                    # Documentation
 │   ├── ARCHITECTURE.md     # Architecture diagrams
 │   └── DATA_FLOW.md       # Data flow documentation
+├── .env.minimal            # Minimal profile (~130MB RAM)
+├── .env.basic              # Basic profile (~260MB RAM)
+├── .env.standard           # Standard profile (~320MB RAM)
 ├── docker-compose.yml      # Production deployment
 ├── server.js               # Entry point
 └── README.md              # This file

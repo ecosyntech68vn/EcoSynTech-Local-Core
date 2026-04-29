@@ -496,4 +496,77 @@ router.post('/create-irrigation-rule/:plantingId', auth, async (req, res) => {
   }
 });
 
+const batchService = require('../services/batchService');
+
+router.post('/plantings/:plantingId/traceability', auth, async (req, res) => {
+  try {
+    const { create_if_not_exists } = req.body;
+    
+    if (create_if_not_exists) {
+      const result = batchService.createBatchFromPlanting(req.params.plantingId);
+      return res.status(201).json({ ok: true, data: result });
+    }
+    
+    const result = batchService.syncPlantingToTraceability(req.params.plantingId);
+    
+    if (!result) {
+      return res.status(404).json({ ok: false, error: 'Không tìm thấy lô trồng' });
+    }
+    
+    res.json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/traceability/batch/:batchCode', auth, async (req, res) => {
+  try {
+    const data = batchService.getCompleteTraceabilityData(req.params.batchCode);
+    
+    if (!data) {
+      return res.status(404).json({ ok: false, error: 'Không tìm thấy batch' });
+    }
+    
+    res.json({ ok: true, data });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/traceability/batches', auth, async (req, res) => {
+  try {
+    const { farm_id, source_type } = req.query;
+    const batches = batchService.getBatchesWithSource(farm_id, source_type);
+    res.json({ ok: true, data: batches });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/plantings/:plantingId/supply-chain', auth, async (req, res) => {
+  try {
+    const { destination, buyer_name, buyer_contact, price } = req.body;
+    
+    const batchResult = batchService.syncPlantingToTraceability(req.params.plantingId);
+    if (!batchResult || batchResult.error) {
+      return res.status(400).json({ ok: false, error: 'Không tìm thấy batch truy xuất nguồn gốc' });
+    }
+    
+    const result = batchService.linkToSupplyChain(batchResult.batch_id, {
+      destination: destination || 'market',
+      buyer_name: buyer_name || '',
+      buyer_contact: buyer_contact || '',
+      price: price || 0
+    });
+    
+    if (result.error) {
+      return res.status(400).json({ ok: false, error: result.error });
+    }
+    
+    res.json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 module.exports = router;

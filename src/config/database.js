@@ -371,6 +371,10 @@ function createTables() {
       export_date TEXT,
       export_price REAL,
       export_unit TEXT,
+      source_type TEXT,
+      source_planting_id TEXT,
+      source_aquaculture_id TEXT,
+      current_stage TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
@@ -797,6 +801,7 @@ function createTables() {
       quantity REAL,
       unit TEXT,
       source_farm_id TEXT,
+      source_traceability_id TEXT,
       destination TEXT,
       status TEXT DEFAULT 'pending',
       harvest_date TEXT,
@@ -1052,6 +1057,23 @@ function createTables() {
       water_change_rate REAL,
       disease_risk TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS aquaculture_spawning (
+      id TEXT PRIMARY KEY,
+      species_id TEXT NOT NULL,
+      pond_id TEXT,
+      farm_id TEXT,
+      quantity INTEGER,
+      source_pool TEXT,
+      spawning_date TEXT,
+      expected_harvest_date TEXT,
+      status TEXT DEFAULT 'nursing',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
 

@@ -13,6 +13,7 @@
 const { v4: uuidv4 } = require('uuid');
 const { getOne, getAll, db } = require('../config/database');
 const logger = require('../config/logger');
+const batchService = require('./batchService');
 
 const CROP_STAGES = {
   GIEO_HAT: { name: 'Gieo hạt', code: 'gieo_hat', kcMin: 0.3, kcMax: 0.4, days: 20 },
@@ -56,6 +57,16 @@ function createPlanting(data) {
   const planting = getOne('SELECT * FROM crop_plantings WHERE id = ?', [id]);
   
   logger.info(`Tạo lô trồng mới: ${id}, crop_id: ${data.cropId}`);
+
+  if (data.createTraceability !== false) {
+    try {
+      const batchResult = batchService.createBatchFromPlanting(id);
+      logger.info(`Tạo traceability batch: ${batchResult.batch_code}`);
+      return { ...enrichPlanting(planting), traceability_batch: batchResult.batch_code };
+    } catch (err) {
+      logger.warn(`Không tạo được traceability batch: ${err.message}`);
+    }
+  }
   
   return enrichPlanting(planting);
 }
@@ -226,7 +237,7 @@ function getCropStats(farmId = null) {
   };
 }
 
-function recordHarvest(plantingId, quantity, quality, notes) {
+function recordHarvest(plantingId, quantity, quality, notes, createSupplyChain = false) {
   const planting = getOne('SELECT * FROM crop_plantings WHERE id = ?', [plantingId]);
   if (!planting) return null;
   
@@ -239,13 +250,44 @@ function recordHarvest(plantingId, quantity, quality, notes) {
   `, [harvestId, plantingId, now.split('T')[0], quantity, quality || '', notes || '']);
   
   db.run(
-    'UPDATE crop_plantings SET status = \'harvested\', yield_actual = ?, actual_harvest_date = ?, updated_at = ? WHERE id = ?',
-    [quantity, now.split('T')[0], now, plantingId]
+    'UPDATE crop_plantings SET status = ?, yield_actual = ?, actual_harvest_date = ?, updated_at = ? WHERE id = ?',
+    ['harvested', quantity, now.split('T')[0], now, plantingId]
   );
   
   logger.info(`Ghi nhận thu hoạch lô trồng ${plantingId}: ${quantity} ${planting.area_unit || 'kg'}`);
+
+  let traceabilityResult = null;
+  try {
+    traceabilityResult = batchService.recordHarvest(plantingId, quantity, quality);
+    logger.info(`Cập nhật traceability: ${traceabilityResult.batch_code}`);
+  } catch (err) {
+    logger.warn(`Không cập nhật được traceability: ${err.message}`);
+  }
+
+  let supplyChainResult = null;
+  if (createSupplyChain && traceabilityResult && !traceabilityResult.error) {
+    try {
+      supplyChainResult = batchService.linkToSupplyChain(traceabilityResult.batch_id, {
+        destination: 'market',
+        buyer_name: '',
+        buyer_contact: '',
+        price: 0
+      });
+      logger.info(`Tạo supply chain: ${supplyChainResult.supply_chain_id}`);
+    } catch (err) {
+      logger.warn(`Không tạo được supply chain: ${err.message}`);
+    }
+  }
   
-  return { harvest_id: harvestId, planting_id: plantingId, quantity, quality, harvest_date: now };
+  return { 
+    harvest_id: harvestId, 
+    planting_id: plantingId, 
+    quantity, 
+    quality, 
+    harvest_date: now,
+    traceability: traceabilityResult,
+    supply_chain: supplyChainResult
+  };
 }
 
 function getStageTimeline(plantingId) {

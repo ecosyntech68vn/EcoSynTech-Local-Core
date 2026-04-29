@@ -1370,6 +1370,206 @@ function createTables() {
     )
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS labor_workers (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      worker_code TEXT UNIQUE,
+      worker_name TEXT NOT NULL,
+      worker_name_vi TEXT,
+      identity_number TEXT,
+      phone TEXT,
+      email TEXT,
+      address TEXT,
+      birth_date TEXT,
+      gender TEXT,
+      position TEXT,
+      skill_level TEXT DEFAULT 'junior',
+      hourly_rate REAL DEFAULT 0,
+      monthly_salary REAL DEFAULT 0,
+      work_type TEXT DEFAULT 'daily',
+      status TEXT DEFAULT 'active',
+      hire_date TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS labor_shifts (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      shift_name TEXT NOT NULL,
+      shift_code TEXT,
+      start_time TEXT NOT NULL,
+      end_time TEXT NOT NULL,
+      break_duration INTEGER DEFAULT 60,
+      workday_mask TEXT DEFAULT '1111111',
+      is_night_shift INTEGER DEFAULT 0,
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS labor_attendance (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      worker_id TEXT NOT NULL,
+      shift_id TEXT,
+      work_date TEXT NOT NULL,
+      check_in TEXT,
+      check_out TEXT,
+      break_start TEXT,
+      break_end TEXT,
+      total_hours REAL DEFAULT 0,
+      overtime_hours REAL DEFAULT 0,
+      status TEXT DEFAULT 'present',
+      location_in TEXT,
+      location_out TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (worker_id) REFERENCES labor_workers(id),
+      FOREIGN KEY (shift_id) REFERENCES labor_shifts(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS labor_tasks (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      task_code TEXT UNIQUE,
+      task_name TEXT NOT NULL,
+      task_type TEXT,
+      description TEXT,
+      area_id TEXT,
+      crop_id TEXT,
+      estimated_hours REAL,
+      required_workers INTEGER DEFAULT 1,
+      priority TEXT DEFAULT 'normal',
+      scheduled_date TEXT,
+      start_time TEXT,
+      end_time TEXT,
+      status TEXT DEFAULT 'pending',
+      assigned_workers TEXT DEFAULT '[]',
+      completed_by TEXT,
+      completed_at TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS labor_task_assignments (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      task_id TEXT NOT NULL,
+      worker_id TEXT NOT NULL,
+      assigned_date TEXT,
+      hours_worked REAL DEFAULT 0,
+      productivity_score REAL,
+      quality_score REAL,
+      notes TEXT,
+      status TEXT DEFAULT 'assigned',
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (task_id) REFERENCES labor_tasks(id),
+      FOREIGN KEY (worker_id) REFERENCES labor_workers(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS labor_schedules (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      schedule_name TEXT NOT NULL,
+      schedule_type TEXT NOT NULL,
+      start_date TEXT NOT NULL,
+      end_date TEXT,
+      work_days TEXT DEFAULT '1111111',
+      shifts_json TEXT DEFAULT '[]',
+      assigned_workers TEXT DEFAULT '[]',
+      status TEXT DEFAULT 'active',
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS labor_payroll (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      payroll_code TEXT UNIQUE,
+      worker_id TEXT NOT NULL,
+      period_type TEXT NOT NULL,
+      period_start TEXT NOT NULL,
+      period_end TEXT NOT NULL,
+      basic_salary REAL DEFAULT 0,
+      total_hours REAL DEFAULT 0,
+      hourly_rate REAL DEFAULT 0,
+      overtime_hours REAL DEFAULT 0,
+      overtime_rate REAL DEFAULT 0,
+      overtime_pay REAL DEFAULT 0,
+      bonuses REAL DEFAULT 0,
+      deductions REAL DEFAULT 0,
+      total_work_days INTEGER DEFAULT 0,
+      absent_days INTEGER DEFAULT 0,
+      late_days INTEGER DEFAULT 0,
+      net_salary REAL DEFAULT 0,
+      payment_status TEXT DEFAULT 'unpaid',
+      payment_date TEXT,
+      payment_method TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (worker_id) REFERENCES labor_workers(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS labor_performance (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      worker_id TEXT NOT NULL,
+      evaluation_period TEXT NOT NULL,
+      evaluation_date TEXT,
+      attendance_score REAL DEFAULT 0,
+      productivity_score REAL DEFAULT 0,
+      quality_score REAL DEFAULT 0,
+      teamwork_score REAL DEFAULT 0,
+      safety_score REAL DEFAULT 0,
+      total_score REAL DEFAULT 0,
+      rating TEXT,
+      strengths TEXT,
+      improvements TEXT,
+      evaluator TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (worker_id) REFERENCES labor_workers(id)
+    )
+  `);
+
+  db.run(`
+    CREATE TABLE IF NOT EXISTS labor_cost_tracking (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      cost_type TEXT NOT NULL,
+      period TEXT NOT NULL,
+      category TEXT,
+      crop_id TEXT,
+      total_hours REAL DEFAULT 0,
+      total_workers INTEGER DEFAULT 0,
+      total_cost REAL DEFAULT 0,
+      hourly_average REAL DEFAULT 0,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   logger.info('Database tables created');
 }
 

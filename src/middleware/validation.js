@@ -70,6 +70,112 @@ const schemas = {
       password: Joi.string().min(6).required(),
       name: Joi.string().min(1).max(100).required()
     })
+  },
+
+  labor: {
+    workerCreate: Joi.object({
+      worker_name: Joi.string().min(1).max(100).required(),
+      worker_name_vi: Joi.string().max(100),
+      identity_number: Joi.string().max(50),
+      phone: Joi.string().max(20),
+      email: Joi.string().email().max(100),
+      address: Joi.string().max(500),
+      birth_date: Joi.date().iso(),
+      gender: Joi.string().valid('male', 'female', 'other'),
+      position: Joi.string().valid('manager', 'supervisor', 'worker', 'technician', 'driver', 'guard'),
+      skill_level: Joi.string().valid('junior', 'mid', 'senior', 'expert'),
+      hourly_rate: Joi.number().min(0),
+      monthly_salary: Joi.number().min(0),
+      work_type: Joi.string().valid('daily', 'contract', 'permanent'),
+      hire_date: Joi.date().iso(),
+      notes: Joi.string().max(1000),
+      farm_id: Joi.string()
+    }),
+    workerUpdate: Joi.object({
+      worker_name: Joi.string().min(1).max(100),
+      worker_name_vi: Joi.string().max(100),
+      identity_number: Joi.string().max(50),
+      phone: Joi.string().max(20),
+      email: Joi.string().email().max(100),
+      address: Joi.string().max(500),
+      birth_date: Joi.date().iso(),
+      gender: Joi.string().valid('male', 'female', 'other'),
+      position: Joi.string().valid('manager', 'supervisor', 'worker', 'technician', 'driver', 'guard'),
+      skill_level: Joi.string().valid('junior', 'mid', 'senior', 'expert'),
+      hourly_rate: Joi.number().min(0),
+      monthly_salary: Joi.number().min(0),
+      work_type: Joi.string().valid('daily', 'contract', 'permanent'),
+      status: Joi.string().valid('active', 'inactive', 'suspended'),
+      hire_date: Joi.date().iso(),
+      notes: Joi.string().max(1000)
+    }),
+    shiftCreate: Joi.object({
+      shift_name: Joi.string().min(1).max(100).required(),
+      shift_code: Joi.string().max(50),
+      start_time: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
+      end_time: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/).required(),
+      break_duration: Joi.number().min(0).max(180),
+      workday_mask: Joi.string().pattern(/^[0-1]{7}$/),
+      is_night_shift: Joi.boolean(),
+      notes: Joi.string().max(500),
+      farm_id: Joi.string()
+    }),
+    attendanceCheckIn: Joi.object({
+      worker_id: Joi.string().required(),
+      shift_id: Joi.string(),
+      location_in: Joi.string().max(200),
+      notes: Joi.string().max(500)
+    }),
+    attendanceCheckOut: Joi.object({
+      worker_id: Joi.string().required(),
+      break_start: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/),
+      break_end: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/),
+      location_out: Joi.string().max(200),
+      notes: Joi.string().max(500)
+    }),
+    taskCreate: Joi.object({
+      task_name: Joi.string().min(1).max(200).required(),
+      task_code: Joi.string().max(50),
+      task_type: Joi.string().valid('planting', 'fertilizing', 'spraying', 'harvesting', 'pruning', 'irrigation', 'feeding', 'cleaning', 'repair', 'monitoring'),
+      description: Joi.string().max(1000),
+      area_id: Joi.string(),
+      crop_id: Joi.string(),
+      estimated_hours: Joi.number().min(0).max(1000),
+      required_workers: Joi.number().min(1).max(100),
+      priority: Joi.string().valid('low', 'normal', 'high', 'urgent'),
+      scheduled_date: Joi.date().iso(),
+      start_time: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/),
+      end_time: Joi.string().pattern(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/),
+      assigned_workers: Joi.array().items(Joi.string()),
+      notes: Joi.string().max(1000),
+      farm_id: Joi.string()
+    }),
+    taskAssign: Joi.object({
+      worker_ids: Joi.array().items(Joi.string()).min(1).required()
+    }),
+    taskComplete: Joi.object({
+      worker_id: Joi.string(),
+      hours_worked: Joi.number().min(0).max(24),
+      productivity_score: Joi.number().min(0).max(100),
+      notes: Joi.string().max(500)
+    }),
+    payrollCreate: Joi.object({
+      worker_id: Joi.string().required(),
+      period_type: Joi.string().valid('daily', 'weekly', 'monthly'),
+      period_start: Joi.date().iso().required(),
+      period_end: Joi.date().iso().required(),
+      bonuses: Joi.number().min(0),
+      deductions: Joi.number().min(0),
+      notes: Joi.string().max(500)
+    }),
+    performanceCreate: Joi.object({
+      worker_id: Joi.string().required(),
+      evaluation_date: Joi.date().iso().required(),
+      task_id: Joi.string(),
+      score: Joi.number().min(0).max(100).required(),
+      comments: Joi.string().max(1000),
+      evaluator: Joi.string().max(100)
+    })
   }
 };
 
@@ -103,12 +209,12 @@ function validateMiddleware(schemaName) {
   return (req, res, next) => {
     const schema = getSchemaFromPath(schemaName);
     if (!schema) {
-      return res.status(500).json({ error: 'Invalid validation schema' });
+      return res.status(500).json({ ok: false, error: 'Invalid validation schema' });
     }
 
     const result = validate(schema, req.method === 'GET' ? req.query : req.body);
     if (!result.valid) {
-      return res.status(400).json({ error: 'Validation failed', details: result.errors });
+      return res.status(400).json({ ok: false, error: 'Validation failed', details: result.errors });
     }
 
     if (req.method === 'GET') {

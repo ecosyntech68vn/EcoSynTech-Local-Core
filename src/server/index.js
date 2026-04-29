@@ -50,6 +50,18 @@ class EcoSynTechServer {
     this.config = config;
     this.logger = logger;
     this.isInitialized = false;
+    // Global error guards
+    try {
+      process.on('uncaughtException', (err) => {
+        this.logger?.error('Uncaught Exception:', err);
+      });
+      process.on('unhandledRejection', (reason, p) => {
+        this.logger?.error('Unhandled Rejection at:', p, 'reason:', reason);
+      });
+    } catch (e) {
+      // If attaching handlers fails, log to console as a last resort
+      console.error('Failed to attach global error handlers', e);
+    }
   }
 
   /**

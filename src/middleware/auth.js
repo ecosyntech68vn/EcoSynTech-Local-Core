@@ -267,7 +267,8 @@ function apiKeyAuth(req, res, next) {
   const keyRecord = getOne('SELECT * FROM api_keys WHERE key = ? AND expires_at > datetime("now")', [apiKey]);
 
   if (!keyRecord) {
-    logger.warn(`[Auth] Invalid API key: ${apiKey.substring(0, 8)}...`);
+    const apiPreview = (typeof apiKey === 'string') ? apiKey.substring(0, 8) : 'unknown';
+    logger.warn(`[Auth] Invalid API key: ${apiPreview}...`);
     return res.status(401).json({ error: 'Invalid or expired API key' });
   }
 

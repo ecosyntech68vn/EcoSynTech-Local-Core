@@ -5,7 +5,9 @@ function requestDeduplication(req, res, next) {
   if (req.headers.authorization || req.headers['x-api-key']) {
     return next();
   }
-  const key = `${req.method}:${req.path}:${JSON.stringify(req.query)}:${JSON.stringify(req.body).substring(0, 200)}`;
+  // Safely stringify body to avoid undefined
+  const bodyStr = (typeof req.body === 'string') ? req.body : (req.body ? JSON.stringify(req.body) : '');
+  const key = `${req.method}:${req.path}:${JSON.stringify(req.query)}:${(bodyStr || '').substring(0, 200)}`;
   const now = Date.now();
   
   if (requestCache.has(key)) {
@@ -25,7 +27,7 @@ function requestDeduplication(req, res, next) {
         status: res.statusCode,
         headers: { 
           'X-Cache': 'HIT',
-          'X-Cache-Key': key.substring(0, 32)
+          'X-Cache-Key': (typeof key === 'string' ? key.substring(0, 32) : '')
         },
         response: body
       });

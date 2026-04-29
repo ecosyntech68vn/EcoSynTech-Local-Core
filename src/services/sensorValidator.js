@@ -47,7 +47,7 @@ class SensorValidator {
     }
 
     if (typeof value !== 'number' || isNaN(value)) {
-      issues.push(`Invalid value: not a number`);
+      issues.push('Invalid value: not a number');
       isValid = false;
       return { valid: false, issues, warnings, value: null };
     }

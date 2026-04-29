@@ -55,15 +55,15 @@ function registerMiddlewares(app) {
   app.use(helmet({
     contentSecurityPolicy: isProduction ? {
       directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "https:"],
-        connectSrc: ["'self'", "wss:", "https:"],
-        fontSrc: ["'self'", "https:"],
-        objectSrc: ["'none'"],
-        mediaSrc: ["'self'", "https:"],
-        frameSrc: ["'none'"],
+        defaultSrc: ['\'self\''],
+        scriptSrc: ['\'self\'', '\'unsafe-inline\''],
+        styleSrc: ['\'self\'', '\'unsafe-inline\''],
+        imgSrc: ['\'self\'', 'data:', 'https:'],
+        connectSrc: ['\'self\'', 'wss:', 'https:'],
+        fontSrc: ['\'self\'', 'https:'],
+        objectSrc: ['\'none\''],
+        mediaSrc: ['\'self\'', 'https:'],
+        frameSrc: ['\'none\''],
         upgradeInsecureRequests: []
       },
       reportOnly: false

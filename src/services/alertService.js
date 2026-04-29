@@ -125,7 +125,7 @@ class AlertService {
     const timestamp = new Date().toLocaleString('vi-VN');
     
     let message = `${type.emoji} *EcoSynTech Alert*\n`;
-    message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += '━━━━━━━━━━━━━━━━━━━━━\n';
     message += `🔔 *${alertType.replace(/_/g, ' ')}*\n`;
     message += `🕐 ${timestamp}\n\n`;
     
@@ -145,7 +145,7 @@ class AlertService {
       message += `\n📝 ${data.message}\n`;
     }
     
-    message += `\n━━━━━━━━━━━━━━━━━━━━━`;
+    message += '\n━━━━━━━━━━━━━━━━━━━━━';
     
     return message;
   }

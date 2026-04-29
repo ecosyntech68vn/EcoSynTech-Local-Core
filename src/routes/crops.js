@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const { v4: uuidv4 } = require('uuid');
 const { auth } = require('../middleware/auth');
-const { getAll, getOne } = require('../config/database');
+const { getAll, getOne, db } = require('../config/database');
+const logger = require('../config/logger');
 
 router.get('/crops', auth, async (req, res) => {
   try {
@@ -327,5 +329,171 @@ function calculateET0(temp, humidity, wind, kc) {
   const etc = (0.408 * delta * es + gamma * u2 * (es - ea)) / (delta + gamma * u2 * 0.34);
   return etc * kc;
 }
+
+const cropService = require('../services/cropService');
+
+router.get('/plantings/v2', auth, async (req, res) => {
+  try {
+    const { farm_id, status } = req.query;
+    const plantings = cropService.getAllPlantings(farm_id, status);
+    res.json({ ok: true, data: plantings });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/plantings/v2', auth, async (req, res) => {
+  try {
+    const { farm_id, crop_id, area, area_unit, planting_date, expected_harvest_date, yield_expected, notes } = req.body;
+    if (!crop_id) return res.status(400).json({ ok: false, error: 'crop_id là bắt buộc' });
+    
+    const planting = cropService.createPlanting({
+      farmId: farm_id,
+      cropId: crop_id,
+      area,
+      areaUnit: area_unit,
+      plantingDate: planting_date,
+      expectedHarvestDate: expected_harvest_date,
+      yieldExpected: yield_expected,
+      notes
+    });
+    
+    res.status(201).json({ ok: true, data: planting });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/irrigation/:plantingId', auth, async (req, res) => {
+  try {
+    const { eto } = req.query;
+    const etoValue = parseFloat(eto) || 4;
+    const irrigation = cropService.calculateIrrigationNeed(req.params.plantingId, etoValue);
+    
+    if (!irrigation) {
+      return res.status(404).json({ ok: false, error: 'Không tìm thấy lô trồng' });
+    }
+    
+    res.json({ ok: true, data: irrigation });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/stats', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const stats = cropService.getCropStats(farm_id);
+    res.json({ ok: true, data: stats });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/harvest/:plantingId', auth, async (req, res) => {
+  try {
+    const { quantity, quality, notes } = req.body;
+    if (!quantity) return res.status(400).json({ ok: false, error: 'quantity là bắt buộc' });
+    
+    const result = cropService.recordHarvest(req.params.plantingId, quantity, quality, notes);
+    
+    if (!result) {
+      return res.status(404).json({ ok: false, error: 'Không tìm thấy lô trồng' });
+    }
+    
+    res.json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/timeline/:plantingId', auth, async (req, res) => {
+  try {
+    const timeline = cropService.getStageTimeline(req.params.plantingId);
+    
+    if (!timeline) {
+      return res.status(404).json({ ok: false, error: 'Không tìm thấy lô trồng' });
+    }
+    
+    res.json({ ok: true, data: timeline });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/advance-stage/:plantingId', auth, async (req, res) => {
+  try {
+    const result = cropService.advanceStage(req.params.plantingId);
+    
+    if (!result) {
+      return res.status(404).json({ ok: false, error: 'Không tìm thấy lô trồng' });
+    }
+    
+    if (result.error) {
+      return res.status(400).json({ ok: false, error: result.error });
+    }
+    
+    res.json({ ok: true, data: result });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.post('/create-irrigation-rule/:plantingId', auth, async (req, res) => {
+  try {
+    const planting = cropService.enrichPlanting(getOne('SELECT * FROM crop_plantings WHERE id = ?', [req.params.plantingId]));
+    
+    if (!planting) {
+      return res.status(404).json({ ok: false, error: 'Không tìm thấy lô trồng' });
+    }
+    
+    const irrigation = cropService.calculateIrrigationNeed(req.params.plantingId);
+    if (!irrigation) {
+      return res.status(400).json({ ok: false, error: 'Không tính được nhu cầu tưới tiêu' });
+    }
+    
+    const ruleId = `rule-${uuidv4().slice(0, 8)}`;
+    const now = new Date().toISOString();
+    
+    const ruleName = `Tưới tiêu ${planting.crop_name} - ${planting.current_stage_name}`;
+    
+    db.run(`
+      INSERT INTO automation_rules (
+        id, name, description, type, enabled, condition, action,
+        cooldown_minutes, min_trigger_interval, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      ruleId, ruleName, 
+      `Tưới tiêu tự động theo giai đoạn ${planting.current_stage_name} (KC: ${irrigation.kc})`,
+      'ADAPTIVE', 1,
+      JSON.stringify({
+        sensor: 'soil_moisture',
+        operator: '<',
+        value: 40,
+        hysteresis: 5
+      }),
+      JSON.stringify({
+        type: 'irrigate',
+        durationSec: irrigation.recommendation.includes('30-45') ? 2700 : irrigation.recommendation.includes('45-60') ? 3600 : 1800,
+        priority: irrigation.water_need === 'high' ? 'high' : 'medium'
+      }),
+      60, 30, now, now
+    ]);
+    
+    logger.info(`Tạo rule tưới tiêu cho lô trồng ${req.params.plantingId}: ${ruleName}`);
+    
+    res.status(201).json({ 
+      ok: true, 
+      data: {
+        rule_id: ruleId,
+        rule_name: ruleName,
+        planting_id: req.params.plantingId,
+        irrigation: irrigation
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
 
 module.exports = router;

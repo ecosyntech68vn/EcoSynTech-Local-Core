@@ -33,7 +33,7 @@ function replayProtection(req, res, next) {
   const requestHash = `${req.method}:${req.path}:${req.ip}:${timestamp}:${JSON.stringify(req.body || {})}:`;
   
   if (recentRequests.has(requestHash)) {
-    logger.warn(`[Replay] Duplicate request detected`);
+    logger.warn('[Replay] Duplicate request detected');
     return res.status(429).json({ error: 'Duplicate request detected' });
   }
   

@@ -50,7 +50,7 @@ let saveTimeout = null;
 const SAVE_DEBOUNCE_MS = 500;
 const BACKUP_DIR = path.join(__dirname, '../../backups');
 const MAX_BACKUPS = 10;
-let dbFileDescriptor = null;
+const dbFileDescriptor = null;
 
 function ensureBackupDir() {
   if (!fs.existsSync(BACKUP_DIR)) {
@@ -1022,6 +1022,19 @@ function createTables() {
   `);
 
   db.run(`
+    CREATE TABLE IF NOT EXISTS crop_yields (
+      id TEXT PRIMARY KEY,
+      crop_id TEXT NOT NULL,
+      harvest_date TEXT,
+      quantity REAL,
+      quality TEXT,
+      notes TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (crop_id) REFERENCES crop_plantings(id)
+    )
+  `);
+
+  db.run(`
     CREATE TABLE IF NOT EXISTS aquaculture (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -1359,7 +1372,7 @@ function verifyRefreshToken(userId, token) {
 
 function rotateRefreshToken(userId, oldToken, newToken, ip, userAgent) {
   const current = getOne(
-    `SELECT * FROM refresh_tokens WHERE user_id = ? AND token = ? AND revoked = 0`,
+    'SELECT * FROM refresh_tokens WHERE user_id = ? AND token = ? AND revoked = 0',
     [userId, oldToken]
   );
   
@@ -1368,7 +1381,7 @@ function rotateRefreshToken(userId, oldToken, newToken, ip, userAgent) {
   }
   
   runQuery(
-    `UPDATE refresh_tokens SET rotated_at = datetime('now'), rotation_count = rotation_count + 1 WHERE id = ?`,
+    'UPDATE refresh_tokens SET rotated_at = datetime(\'now\'), rotation_count = rotation_count + 1 WHERE id = ?',
     [current.id]
   );
   
@@ -1386,33 +1399,33 @@ function rotateRefreshToken(userId, oldToken, newToken, ip, userAgent) {
 
 function revokeRefreshToken(userId, token) {
   runQuery(
-    `UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ? AND token = ?`,
+    'UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ? AND token = ?',
     [userId, token]
   );
 }
 
 function revokeAllUserRefreshTokens(userId) {
-  runQuery(`UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?`, [userId]);
+  runQuery('UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?', [userId]);
 }
 
 function cleanupOldRefreshTokens(userId) {
   runQuery(
-    `DELETE FROM refresh_tokens WHERE user_id = ? AND expires_at < datetime('now')`,
+    'DELETE FROM refresh_tokens WHERE user_id = ? AND expires_at < datetime(\'now\')',
     [userId]
   );
   
   const count = getOne(
-    `SELECT COUNT(*) as count FROM refresh_tokens WHERE user_id = ? AND revoked = 0`,
+    'SELECT COUNT(*) as count FROM refresh_tokens WHERE user_id = ? AND revoked = 0',
     [userId]
   );
   
   if (count?.count > 10) {
     const oldTokens = getAll(
-      `SELECT id FROM refresh_tokens WHERE user_id = ? AND revoked = 0 ORDER BY created_at ASC LIMIT ?`,
+      'SELECT id FROM refresh_tokens WHERE user_id = ? AND revoked = 0 ORDER BY created_at ASC LIMIT ?',
       [userId, count.count - 10]
     );
     for (const t of oldTokens) {
-      runQuery(`UPDATE refresh_tokens SET revoked = 1 WHERE id = ?`, [t.id]);
+      runQuery('UPDATE refresh_tokens SET revoked = 1 WHERE id = ?', [t.id]);
     }
   }
 }

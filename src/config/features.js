@@ -189,7 +189,7 @@ const FEATURES = {
  */
 function getMemoryEstimate() {
   let total = 0;
-  let active = [];
+  const active = [];
   
   for (const [name, config] of Object.entries(FEATURES)) {
     if (config.enabled) {

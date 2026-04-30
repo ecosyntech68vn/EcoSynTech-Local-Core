@@ -308,12 +308,12 @@ router.get('/finance-kpis', auth, async (req, res) => {
 
 router.get('/inventory-overview', auth, async (req, res) => {
   try {
-    const { farm_id, category } = req.query;
-    const stats = inventoryService.getInventoryStats(farm_id);
+    const { farm_id, category, startDate, endDate } = req.query;
+    const stats = inventoryService.getInventoryStats(farm_id, startDate, endDate);
     const lowStock = inventoryService.getLowStockItems(farm_id);
     const expiring = inventoryService.getExpiringItems(30, farm_id);
     const items = inventoryService.getItems(farm_id, category, 'active').slice(0, 10);
-    const transactions = inventoryService.getTransactions(null, farm_id, null, null).slice(0, 10);
+    const transactions = inventoryService.getTransactions(null, farm_id, startDate, endDate).slice(0, 10);
     
     res.json({
       ok: true,
@@ -394,11 +394,11 @@ router.get('/inventory-kpis', auth, async (req, res) => {
 
 router.get('/equipment-overview', auth, async (req, res) => {
   try {
-    const { farm_id, status } = req.query;
+    const { farm_id, status, startDate, endDate } = req.query;
     const equipment = equipmentService.getEquipment(farm_id, null, status);
-    const stats = equipmentService.getEquipmentStats(farm_id);
+    const stats = equipmentService.getEquipmentStats(farm_id, startDate, endDate);
     const maintenanceSchedules = equipmentService.getMaintenanceSchedules(farm_id, null, 'pending');
-    const assignments = equipmentService.getAssignments(farm_id, null, null, 'active');
+    const assignments = equipmentService.getAssignments(farm_id, null, startDate, endDate);
     
     const total = equipment?.length || 0;
     const online = equipment?.filter(e => e.status === 'online').length || 0;
@@ -495,10 +495,10 @@ router.get('/equipment-kpis', auth, async (req, res) => {
 
 router.get('/labor-overview', auth, async (req, res) => {
   try {
-    const { farm_id, status } = req.query;
+    const { farm_id, status, startDate, endDate } = req.query;
     const workers = laborService.getWorkers(farm_id, null, status);
-    const tasks = laborService.getTasks(farm_id, null, null, null, null);
-    const stats = laborService.getLaborStats(farm_id);
+    const tasks = laborService.getTasks(farm_id, null, startDate, endDate, null);
+    const stats = laborService.getLaborStats(farm_id, startDate, endDate);
     
     const total = workers?.length || 0;
     const active = workers?.filter(w => w.status === 'active').length || 0;
@@ -597,9 +597,9 @@ router.get('/labor-kpis', auth, async (req, res) => {
 
 router.get('/crops-overview', auth, async (req, res) => {
   try {
-    const { farm_id, status } = req.query;
-    const plantings = cropService.getAllPlantings(farm_id, status);
-    const stats = cropService.getCropStats(farm_id);
+    const { farm_id, status, startDate, endDate } = req.query;
+    const plantings = cropService.getAllPlantings(farm_id, status, startDate, endDate);
+    const stats = cropService.getCropStats(farm_id, startDate, endDate);
     
     const total = plantings?.length || 0;
     const active = plantings?.filter(p => p.status === 'active' || p.status === 'growing').length || 0;

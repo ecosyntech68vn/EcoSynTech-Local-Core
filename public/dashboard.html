@@ -934,9 +934,26 @@
           <button class="menu-toggle" id="menuToggle">☰</button>
           <h1 class="page-title">Tổng quan trang trại</h1>
         </div>
-        <div class="header-actions">
+        <div class="header-actions" style="display: flex; gap: 10px; align-items: center;">
+          <input type="date" id="globalDateStart" class="form-input" style="width: 140px; font-size: 12px;" title="Từ ngày">
+          <span style="color: var(--text-muted);">-</span>
+          <input type="date" id="globalDateEnd" class="form-input" style="width: 140px; font-size: 12px;" title="Đến ngày">
+          <select id="moduleFilter" class="form-input" style="width: 120px; font-size: 12px;" title="Module">
+            <option value="">Tất cả</option>
+            <option value="finance">Tài chính</option>
+            <option value="inventory">Tồn kho</option>
+            <option value="equipment">Máy móc</option>
+            <option value="labor">Lao động</option>
+            <option value="crops">Cây trồng</option>
+            <option value="weather">Thời tiết</option>
+          </select>
+          <select id="categoryFilter" class="form-input" style="width: 140px; font-size: 12px;" title="Danh mục">
+            <option value="">Tất cả danh mục</option>
+          </select>
+          <input type="text" id="globalSearch" class="form-input" style="width: 180px; font-size: 12px;" placeholder="🔍 Tìm kiếm..." title="Tìm kiếm">
+          <button class="btn btn-ghost" id="applyFiltersBtn" onclick="applyGlobalFilters()">Lọc</button>
           <button class="btn btn-ghost" id="refreshBtn">🔄 Làm mới</button>
-          <button class="btn btn-primary" id="addDeviceBtn">+ Thêm thiết bị</button>
+          <button class="btn btn-primary" id="exportBtn">📥 Export</button>
         </div>
       </header>
       
@@ -1775,6 +1792,138 @@
       });
     }
     
+    // ========== GLOBAL FILTERS ==========
+    const globalFilters = {
+      startDate: null,
+      endDate: null,
+      search: '',
+      currentSection: 'dashboard'
+    };
+    
+    function getGlobalFilters() {
+      return {
+        startDate: document.getElementById('globalDateStart')?.value || null,
+        endDate: document.getElementById('globalDateEnd')?.value || null,
+        search: document.getElementById('globalSearch')?.value || ''
+      };
+    }
+    
+    function applyGlobalFilters() {
+      globalFilters.startDate = document.getElementById('globalDateStart')?.value;
+      globalFilters.endDate = document.getElementById('globalDateEnd')?.value;
+      globalFilters.search = document.getElementById('globalSearch')?.value.toLowerCase() || '';
+      
+      clearAllCaches();
+      
+      const currentSection = document.querySelector('.nav-item.active')?.textContent?.trim() || '';
+      if (currentSection.includes('Tài chính') || globalFilters.currentSection === 'finance') {
+        loadFinanceDashboard();
+      } else if (currentSection.includes('Tồn kho') || globalFilters.currentSection === 'inventory') {
+        loadInventoryDashboard();
+      } else if (currentSection.includes('Máy móc') || globalFilters.currentSection === 'equipment') {
+        loadEquipmentDashboard();
+      } else if (currentSection.includes('Lao động') || globalFilters.currentSection === 'labor') {
+        loadLaborDashboard();
+      } else if (currentSection.includes('Cây trồng') || globalFilters.currentSection === 'crops') {
+        loadCropsDashboard();
+      }
+      
+      showToast('Đã áp dụng bộ lọc', 'success');
+    }
+    
+    function filterBySearch(items) {
+      if (!globalFilters.search) return items;
+      return items.filter(item => {
+        const searchStr = JSON.stringify(item).toLowerCase();
+        return searchStr.includes(globalFilters.search);
+      });
+    }
+    
+    function filterByDateRange(items, dateField = 'created_at') {
+      if (!globalFilters.startDate && !globalFilters.endDate) return items;
+      return items.filter(item => {
+        const itemDate = item[dateField] || item.transaction_date || item.planting_date;
+        if (!itemDate) return true;
+        const date = new Date(itemDate);
+        if (globalFilters.startDate && date < new Date(globalFilters.startDate)) return false;
+        if (globalFilters.endDate && date > new Date(globalFilters.endDate)) return false;
+        return true;
+      });
+    }
+    
+    // Initialize date inputs to current month
+    (function initDateFilters() {
+      const now = new Date();
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      document.getElementById('globalDateStart').value = monthStart.toISOString().split('T')[0];
+      document.getElementById('globalDateEnd').value = now.toISOString().split('T')[0];
+    })();
+
+    // ========== MODULE FILTER ==========
+    const categoryOptions = {
+      finance: [
+        { value: '', text: 'Tất cả' },
+        { value: 'income', text: 'Thu nhập' },
+        { value: 'expense', text: 'Chi phí' },
+        { value: 'budget', text: 'Ngân sách' },
+        { value: 'asset', text: 'Tài sản' },
+        { value: 'loan', text: 'Vay vốn' }
+      ],
+      inventory: [
+        { value: '', text: 'Tất cả' },
+        { value: 'seed', text: 'Hạt giống' },
+        { value: 'fertilizer', text: 'Phân bón' },
+        { value: 'pesticide', text: 'Thuốc trừ sâu' },
+        { value: 'fuel', text: 'Nhiên liệu' },
+        { value: 'tool', text: 'Công cụ' },
+        { value: 'other', text: 'Khác' }
+      ],
+      equipment: [
+        { value: '', text: 'Tất cả' },
+        { value: 'tractor', text: 'Máy kéo' },
+        { value: 'pump', text: 'Bơm nước' },
+        { value: 'sensor', text: 'Cảm biến' },
+        { value: 'irrigation', text: 'Hệ thống tưới' },
+        { value: 'harvester', text: 'Máy thu hoạch' }
+      ],
+      labor: [
+        { value: '', text: 'Tất cả' },
+        { value: 'manager', text: 'Quản lý' },
+        { value: 'worker', text: 'Công nhân' },
+        { value: 'technician', text: 'Kỹ thuật viên' },
+        { value: 'seasonal', text: 'Theo mùa' }
+      ],
+      crops: [
+        { value: '', text: 'Tất cả' },
+        { value: 'rice', text: 'Lúa' },
+        { value: 'vegetable', text: 'Rau' },
+        { value: 'fruit', text: 'Cây ăn quả' },
+        { value: 'industrial', text: 'Công nghiệp' }
+      ],
+      weather: [
+        { value: '', text: 'Tất cả' },
+        { value: 'current', text: 'Hiện tại' },
+        { value: 'forecast', text: 'Dự báo 5 ngày' }
+      ]
+    };
+
+    function updateCategoryFilter() {
+      const moduleSelect = document.getElementById('moduleFilter');
+      const categorySelect = document.getElementById('categoryFilter');
+      const selectedModule = moduleSelect?.value || '';
+      
+      categorySelect.innerHTML = '';
+      const options = categoryOptions[selectedModule] || [{ value: '', text: 'Tất cả danh mục' }];
+      options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt.value;
+        option.textContent = opt.text;
+        categorySelect.appendChild(option);
+      });
+    }
+
+    document.getElementById('moduleFilter')?.addEventListener('change', updateCategoryFilter);
+    
     // ========== CHARTS ==========
     let financeChart = null;
     let inventoryChart = null;
@@ -1969,6 +2118,138 @@
     document.getElementById('addDeviceBtn').addEventListener('click', () => {
       showToast('Mở form thêm thiết bị...', 'info');
     });
+
+    // ========== EXPORT FUNCTIONALITY ==========
+    document.getElementById('exportBtn')?.addEventListener('click', showExportModal);
+
+    function showExportModal() {
+      const modal = document.createElement('div');
+      modal.className = 'modal-overlay';
+      modal.innerHTML = `
+        <div class="modal" style="background: var(--bg-card); padding: 24px; border-radius: 12px; max-width: 400px; width: 90%;">
+          <h3 style="margin-bottom: 16px; color: var(--text);">📥 Xuất dữ liệu</h3>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button class="btn btn-primary" onclick="exportData('excel')">📊 Xuất Excel</button>
+            <button class="btn btn-secondary" onclick="exportData('pdf')">📄 Xuất PDF</button>
+            <button class="btn btn-ghost" onclick="exportData('csv')">📋 Xuất CSV</button>
+            <button class="btn btn-ghost" onclick="exportData('json')">💾 Xuất JSON</button>
+          </div>
+          <button class="btn btn-ghost" style="margin-top: 16px;" onclick="this.closest('.modal-overlay').remove()">Đóng</button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    }
+
+    async function exportData(format) {
+      const filters = getGlobalFilters();
+      const module = document.getElementById('moduleFilter')?.value || 'finance';
+      const category = document.getElementById('categoryFilter')?.value || '';
+      
+      try {
+        let endpoint = `/api/dashboard/${module}-overview`;
+        const params = new URLSearchParams(filters);
+        if (category) params.append('category', category);
+        
+        const response = await fetch(`${endpoint}?${params}`, { headers: getAuthHeaders() });
+        const result = await response.json();
+        
+        if (!result.ok) throw new Error(result.error || 'Lỗi lấy dữ liệu');
+        
+        const data = result.data;
+        
+        if (format === 'json') {
+          downloadFile(JSON.stringify(data, null, 2), `${module}_export.json`, 'application/json');
+        } else if (format === 'csv') {
+          downloadFile(arrayToCSV(flattenData(data)), `${module}_export.csv`, 'text/csv');
+        } else if (format === 'excel') {
+          downloadFile(arrayToCSV(flattenData(data)), `${module}_export.xls`, 'application/vnd.ms-excel');
+        } else if (format === 'pdf') {
+          showToast('Đang chuẩn bị PDF...', 'info');
+          setTimeout(() => {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(generatePDFHTML(data, module));
+            printWindow.document.close();
+            printWindow.print();
+          }, 500);
+        }
+        
+        showToast(`Đã xuất ${format.toUpperCase()} thành công!`, 'success');
+        document.querySelector('.modal-overlay')?.remove();
+      } catch (error) {
+        showToast('Lỗi xuất dữ liệu: ' + error.message, 'error');
+      }
+    }
+
+    function flattenData(data) {
+      const result = [];
+      const flatten = (obj, prefix = '') => {
+        for (const key in obj) {
+          if (Array.isArray(obj[key])) {
+            obj[key].forEach(item => {
+              if (typeof item === 'object') {
+                const row = {};
+                for (const k in item) row[`${prefix}${k}`] = item[k];
+                result.push(row);
+              } else {
+                result.push({ [prefix + key]: item });
+              }
+            });
+          } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+            flatten(obj[key], prefix + key + '_');
+          } else {
+            result.push({ [prefix + key]: obj[key] });
+          }
+        }
+      };
+      flatten(data);
+      return result.length > 0 ? result : [data];
+    }
+
+    function arrayToCSV(data) {
+      if (!data || data.length === 0) return '';
+      const headers = Object.keys(data[0]);
+      const rows = data.map(row => headers.map(h => {
+        const val = row[h];
+        return typeof val === 'string' && val.includes(',') ? `"${val}"` : val ?? '';
+      }));
+      return [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    }
+
+    function downloadFile(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function generatePDFHTML(data, module) {
+      const date = new Date().toLocaleDateString('vi-VN');
+      return `
+        <!DOCTYPE html>
+        <html><head><title>Báo cáo ${module}</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          h1 { color: #0D4D2B; }
+          table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background: #0D4D2B; color: white; }
+          .meta { color: #666; margin-bottom: 20px; }
+        </style></head>
+        <body>
+          <h1>Báo cáo ${module.toUpperCase()}</h1>
+          <p class="meta">Ngày xuất: ${date}</p>
+          <pre>${JSON.stringify(data, null, 2)}</pre>
+        </body></html>`;
+    }
+
+    function getAuthHeaders() {
+      const token = localStorage.getItem('token');
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
     
     // Simulate real-time updates
     setInterval(() => {
@@ -2233,7 +2514,8 @@
     async function loadFinanceDashboard() {
       try {
         const period = document.getElementById('financePeriod')?.value || 'month';
-        const cacheKey = `finance-kpis-${period}`;
+        const filters = getGlobalFilters();
+        const cacheKey = `finance-kpis-${period}-${filters.startDate}-${filters.endDate}`;
         const cached = getCache(cacheKey);
         
         if (cached) {
@@ -2241,8 +2523,12 @@
           return;
         }
         
+        let url = `/api/dashboard/finance-kpis?period=${period}`;
+        if (filters.startDate) url += `&start_date=${filters.startDate}`;
+        if (filters.endDate) url += `&end_date=${filters.endDate}`;
+        
         const result = await fetchWithCache(
-          `/api/dashboard/finance-kpis?period=${period}`,
+          url,
           { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } },
           cacheKey
         );

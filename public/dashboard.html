@@ -859,6 +859,11 @@
             <span>Tồn kho</span>
             <span class="nav-badge" id="inventoryAlert" style="display: none;">0</span>
           </a>
+          <a class="nav-item" href="#" onclick="showSection('equipment')">
+            <span class="nav-icon">🔧</span>
+            <span>Máy móc</span>
+            <span class="nav-badge" id="equipmentAlert" style="display: none;">0</span>
+          </a>
         </div>
         
         <div class="nav-section">
@@ -1315,6 +1320,102 @@
           </div>
           <div class="card-body">
             <div id="inventoryByCategory">
+              <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Equipment Dashboard (Hidden by default) -->
+      <div id="equipmentSection" style="display: none;">
+        <div class="card-header" style="margin-bottom: 20px;">
+          <h2 class="card-title">🔧 Tổng quan Máy móc thiết bị</h2>
+          <div style="display: flex; gap: 10px;">
+            <select id="equipmentStatus" class="form-input" style="width: auto;" onchange="loadEquipmentDashboard()">
+              <option value="">Tất cả</option>
+              <option value="online">Hoạt động</option>
+              <option value="offline">Offline</option>
+              <option value="maintenance">Bảo trì</option>
+            </select>
+            <button class="btn btn-ghost" onclick="loadEquipmentDashboard()">🔄</button>
+          </div>
+        </div>
+        
+        <!-- KPIs -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Tổng thiết bị</div>
+              <div id="equipmentTotal" style="font-size: 28px; font-weight: 700; color: var(--primary-light);">---</div>
+              <div id="equipmentCategories" style="font-size: 12px; color: var(--text-muted);">---</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Hoạt động</div>
+              <div id="equipmentOnline" style="font-size: 28px; font-weight: 700; color: var(--success);">---</div>
+              <div id="equipmentUsageRate" style="font-size: 12px; color: var(--text-muted);">---</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Cảnh báo</div>
+              <div id="equipmentAlerts" style="font-size: 28px; font-weight: 700; color: var(--danger);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Offline/Bảo trì</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Bảo trì sắp tới</div>
+              <div id="equipmentMaintenance" style="font-size: 28px; font-weight: 700; color: var(--warning);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Trong tháng</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Alerts & Status -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">⚠️ Thiết bị offline</h3>
+            </div>
+            <div class="card-body">
+              <div id="equipmentOfflineList">
+                <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📅 Bảo trì sắp tới</h3>
+            </div>
+            <div class="card-body">
+              <div id="equipmentMaintenanceList">
+                <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Recent Equipment -->
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <h3 class="card-title">📋 Thiết bị gần đây</h3>
+          </div>
+          <div class="card-body">
+            <div id="equipmentRecentList">
+              <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- By Status -->
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <h3 class="card-title">📊 Theo trạng thái</h3>
+          </div>
+          <div class="card-body">
+            <div id="equipmentByStatus">
               <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
             </div>
           </div>
@@ -1790,6 +1891,7 @@
     
     // Inventory Dashboard Functions
     let inventoryInterval = null;
+    let equipmentInterval = null;
     
     function showSection(section) {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
@@ -1797,6 +1899,7 @@
       
       document.getElementById('financeSection').style.display = section === 'finance' ? 'block' : 'none';
       document.getElementById('inventorySection').style.display = section === 'inventory' ? 'block' : 'none';
+      document.getElementById('equipmentSection').style.display = section === 'equipment' ? 'block' : 'none';
       
       if (section === 'finance') {
         loadFinanceDashboard();
@@ -1805,15 +1908,25 @@
           financeInterval = setInterval(() => { loadFinanceDashboard(); loadFinanceSummary(); }, 30000);
         }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
+        if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
       } else if (section === 'inventory') {
         loadInventoryDashboard();
         if (!inventoryInterval) {
           inventoryInterval = setInterval(loadInventoryDashboard, 30000);
         }
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
+        if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
+      } else if (section === 'equipment') {
+        loadEquipmentDashboard();
+        if (!equipmentInterval) {
+          equipmentInterval = setInterval(loadEquipmentDashboard, 30000);
+        }
+        if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
+        if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
       } else {
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
+        if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
       }
     }
     
@@ -1931,6 +2044,133 @@
     }
     
     document.getElementById('inventoryCategory')?.addEventListener('change', loadInventoryDashboard);
+    
+    // Equipment Dashboard Functions
+    let equipmentInterval = null;
+    
+    async function loadEquipmentDashboard() {
+      try {
+        const status = document.getElementById('equipmentStatus')?.value || '';
+        const response = await fetch(`/api/dashboard/equipment-overview?status=${status}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (!response.ok) {
+          console.error('Equipment API error:', response.status);
+          return;
+        }
+        
+        const result = await response.json();
+        if (!result.ok) {
+          console.error('Equipment data error:', result.error);
+          return;
+        }
+        
+        const data = result.data;
+        const stats = data.stats || {};
+        
+        document.getElementById('equipmentTotal').textContent = formatNumber(stats.total || 0);
+        document.getElementById('equipmentOnline').textContent = formatNumber(stats.online || 0);
+        document.getElementById('equipmentAlerts').textContent = (stats.offline || 0) + (stats.maintenance || 0);
+        document.getElementById('equipmentMaintenance').textContent = (data.upcomingMaintenance || []).length;
+        document.getElementById('equipmentUsageRate').textContent = (stats.usageRate || 0) + '% hoạt động';
+        
+        const badge = document.getElementById('equipmentAlert');
+        const totalAlerts = (stats.offline || 0) + (stats.maintenance || 0) + (data.upcomingMaintenance?.length || 0);
+        if (totalAlerts > 0) {
+          badge.style.display = 'inline';
+          badge.textContent = totalAlerts;
+        } else {
+          badge.style.display = 'none';
+        }
+        
+        if (data.equipment && data.equipment.length > 0) {
+          const equipHtml = data.equipment.map(item => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-weight: 500;">${item.equipment_name || 'Thiết bị'}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${item.category || ''} • ${item.location || ''}</div>
+              </div>
+              <span class="device-status ${item.status || 'offline'}">${item.status === 'online' ? 'Hoạt động' : item.status === 'maintenance' ? 'Bảo trì' : 'Offline'}</span>
+            </div>
+          `).join('');
+          document.getElementById('equipmentRecentList').innerHTML = equipHtml;
+        } else {
+          document.getElementById('equipmentRecentList').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có dữ liệu</div>';
+        }
+        
+        const offlineEquip = data.equipment?.filter(e => e.status === 'offline') || [];
+        if (offlineEquip.length > 0) {
+          const offlineHtml = offlineEquip.slice(0, 5).map(item => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-weight: 500;">${item.equipment_name || 'Thiết bị'}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${item.category || ''}</div>
+              </div>
+              <span style="color: var(--danger); font-weight: 600;">Offline</span>
+            </div>
+          `).join('');
+          document.getElementById('equipmentOfflineList').innerHTML = offlineHtml;
+        } else {
+          document.getElementById('equipmentOfflineList').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có thiết bị offline</div>';
+        }
+        
+        if (data.upcomingMaintenance && data.upcomingMaintenance.length > 0) {
+          const maintHtml = data.upcomingMaintenance.slice(0, 5).map(item => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-weight: 500;">${item.equipment_name || 'Thiết bị'}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${item.maintenance_type || 'Bảo trì'}</div>
+              </div>
+              <div style="color: var(--warning); font-weight: 600;">
+                ${item.next_maintenance_date || 'Sắp tới'}
+              </div>
+            </div>
+          `).join('');
+          document.getElementById('equipmentMaintenanceList').innerHTML = maintHtml;
+        } else {
+          document.getElementById('equipmentMaintenanceList').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có lịch bảo trì</div>';
+        }
+        
+        const kpisResponse = await fetch('/api/dashboard/equipment-kpis', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (kpisResponse.ok) {
+          const kpisResult = await kpisResponse.json();
+          if (kpisResult.ok && kpisResult.data.overview) {
+            const overview = kpisResult.data.overview;
+            const statusHtml = `
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                <span>🟢 Hoạt động</span>
+                <span style="color: var(--success);">${overview.byStatus?.online || 0}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                <span>🔴 Offline</span>
+                <span style="color: var(--danger);">${overview.byStatus?.offline || 0}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                <span>🟡 Bảo trì</span>
+                <span style="color: var(--warning);">${overview.byStatus?.maintenance || 0}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                <span>⚫ retired</span>
+                <span style="color: var(--text-muted);">${overview.byStatus?.retired || 0}</span>
+              </div>
+              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; justify-content: space-between;">
+                <span style="font-weight: 600;">Tổng chi phí bảo trì</span>
+                <span style="color: var(--accent); font-weight: 600;">${formatCurrency(overview.totalMaintenanceCost || 0)}</span>
+              </div>
+            `;
+            document.getElementById('equipmentByStatus').innerHTML = statusHtml;
+          }
+        }
+        
+      } catch (err) {
+        console.error('Load equipment dashboard error:', err);
+      }
+    }
+    
+    document.getElementById('equipmentStatus')?.addEventListener('change', loadEquipmentDashboard);
   </script>
 </body>
 </html>

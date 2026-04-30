@@ -4,6 +4,7 @@ const { auth } = require('../middleware/auth');
 const { getAll, getOne } = require('../config/database');
 const financeService = require('../services/financeService');
 const inventoryService = require('../services/inventoryService');
+const equipmentService = require('../services/equipmentService');
 const { getDashboardOverview, getSensorDataByZone, getAlertsQuick, getDevicesStatus, invalidateCache } = require('../services/performanceService');
 const si = require('systeminformation');
 const os = require('os');
@@ -349,6 +350,107 @@ router.get('/inventory-kpis', auth, async (req, res) => {
         byCategory: categoryLabels,
         usageByCrop: usageByCrop || [],
         recentUsage: usageByPeriod?.slice(0, 10) || []
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/equipment-overview', auth, async (req, res) => {
+  try {
+    const { farm_id, status } = req.query;
+    const equipment = equipmentService.getEquipment(farm_id, null, status);
+    const stats = equipmentService.getEquipmentStats(farm_id);
+    const maintenanceSchedules = equipmentService.getMaintenanceSchedules(farm_id, null, 'pending');
+    const assignments = equipmentService.getAssignments(farm_id, null, null, 'active');
+    
+    const total = equipment?.length || 0;
+    const online = equipment?.filter(e => e.status === 'online').length || 0;
+    const offline = equipment?.filter(e => e.status === 'offline').length || 0;
+    const maintenance = equipment?.filter(e => e.status === 'maintenance').length || 0;
+    
+    res.json({
+      ok: true,
+      data: {
+        stats: {
+          total,
+          online,
+          offline,
+          maintenance,
+          usageRate: total > 0 ? Math.round((online / total) * 100) : 0
+        },
+        equipment: equipment?.slice(0, 10) || [],
+        upcomingMaintenance: maintenanceSchedules?.slice(0, 5) || [],
+        activeAssignments: assignments?.slice(0, 5) || []
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/equipment-alerts', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const offline = equipmentService.getEquipment(farm_id, null, 'offline');
+    const maintenanceDue = equipmentService.getMaintenanceSchedules(farm_id, null, 'pending');
+    const overdueMaintenance = maintenanceDue?.filter(m => {
+      return m.next_maintenance_date && new Date(m.next_maintenance_date) < new Date();
+    }) || [];
+    
+    const alerts = {
+      offline: offline?.length || 0,
+      maintenanceDue: maintenanceDue?.length || 0,
+      overdue: overdueMaintenance?.length || 0,
+      equipment: offline?.map(e => ({
+        id: e.id,
+        name: e.equipment_name,
+        status: e.status,
+        lastUpdate: e.updated_at
+      })) || []
+    };
+    
+    res.json({ ok: true, data: alerts });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/equipment-kpis', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const stats = equipmentService.getEquipmentStats(farm_id);
+    const equipment = equipmentService.getEquipment(farm_id, null, null);
+    const categories = equipmentService.getCategories(farm_id);
+    
+    const byStatus = {
+      online: equipment?.filter(e => e.status === 'online').length || 0,
+      offline: equipment?.filter(e => e.status === 'offline').length || 0,
+      maintenance: equipment?.filter(e => e.status === 'maintenance').length || 0,
+      retired: equipment?.filter(e => e.status === 'retired').length || 0
+    };
+    
+    const byCategory = {};
+    equipment?.forEach(e => {
+      const cat = e.category || 'other';
+      byCategory[cat] = (byCategory[cat] || 0) + 1;
+    });
+    
+    const maintenanceCosts = equipmentService.getCostByEquipment(farm_id, null, null, null);
+    const totalCost = maintenanceCosts?.reduce((sum, c) => sum + (c.total_cost || 0), 0) || 0;
+    
+    res.json({
+      ok: true,
+      data: {
+        overview: {
+          total: equipment?.length || 0,
+          byStatus,
+          categories: categories?.length || 0,
+          totalMaintenanceCost: totalCost
+        },
+        byCategory: Object.entries(byCategory).map(([name, count]) => ({ name, count })),
+        maintenanceCosts: maintenanceCosts?.slice(0, 5) || []
       }
     });
   } catch (error) {

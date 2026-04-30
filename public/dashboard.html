@@ -334,6 +334,33 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    @media (max-width: 1200px) {
+      .header-actions {
+        max-width: 100%;
+        justify-content: flex-end;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .header-actions {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+      }
+      .header-actions input,
+      .header-actions select {
+        min-width: 100px;
+        font-size: 12px !important;
+      }
     }
     
     .btn {
@@ -347,6 +374,15 @@
       cursor: pointer;
       transition: all 0.2s ease;
       border: none;
+      min-height: 44px;
+      touch-action: manipulation;
+    }
+    
+    @media (pointer: coarse) {
+      .btn {
+        min-height: 48px;
+        padding: 12px 20px;
+      }
     }
     
     .btn-primary {
@@ -523,12 +559,19 @@
     /* Main grid */
     .content-grid {
       display: grid;
-      grid-template-columns: 2fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 24px;
     }
     
     @media (max-width: 1100px) {
       .content-grid { grid-template-columns: 1fr; }
+    }
+    
+    @media (max-width: 480px) {
+      .content-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
     }
     
     /* Cards */
@@ -554,6 +597,107 @@
     
     .card-body {
       padding: 20px 24px;
+    }
+    
+    /* Responsive Tables */
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 600px;
+    }
+    
+    @media (max-width: 768px) {
+      .table-container {
+        display: flex;
+        flex-direction: column;
+      }
+      .data-table {
+        display: none;
+      }
+      .table-card {
+        display: flex !important;
+        flex-direction: column;
+        padding: 12px;
+        margin-bottom: 8px;
+        background: var(--bg-input);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+      }
+      .table-card-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .table-card-row:last-child { border-bottom: none; }
+      .table-card-label { color: var(--text-muted); font-size: 12px; }
+      .table-card-value { font-weight: 500; }
+    }
+    
+    /* Bottom Navigation for Mobile */
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 8px 16px;
+      z-index: 1000;
+      justify-content: space-around;
+    }
+    
+    @media (max-width: 900px) {
+      .bottom-nav { display: flex; }
+      .main { padding-bottom: 80px; }
+    }
+    
+    .bottom-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 16px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 11px;
+      border-radius: var(--radius);
+      transition: all 0.2s;
+    }
+    
+    .bottom-nav-item.active {
+      color: var(--accent);
+      background: var(--bg-input);
+    }
+    
+    .bottom-nav-icon {
+      font-size: 20px;
+    }
+    
+    /* Pull to refresh */
+    .pull-refresh {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(180deg, var(--primary) 0%, transparent 100%);
+      justify-content: center;
+      align-items: center;
+      color: var(--text);
+      font-size: 14px;
+    }
+    
+    @media (max-width: 768px) {
+      .pull-refresh { display: flex; }
+    }
     }
     
     /* Sensor grid */
@@ -1736,6 +1880,30 @@
           </div>
         </div>
       </div>
+      
+      <!-- Bottom Navigation for Mobile -->
+      <nav class="bottom-nav">
+        <a href="#" class="bottom-nav-item active" onclick="showSection('dashboard'); return false;">
+          <span class="bottom-nav-icon">🏠</span>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="bottom-nav-item" onclick="showSection('finance'); return false;">
+          <span class="bottom-nav-icon">💰</span>
+          <span>Tài chính</span>
+        </a>
+        <a href="#" class="bottom-nav-item" onclick="showSection('inventory'); return false;">
+          <span class="bottom-nav-icon">📦</span>
+          <span>Kho</span>
+        </a>
+        <a href="#" class="bottom-nav-item" onclick="showSection('crops'); return false;">
+          <span class="bottom-nav-icon">🌾</span>
+          <span>Cây trồng</span>
+        </a>
+        <a href="#" class="bottom-nav-item" onclick="showSection('weather'); return false;">
+          <span class="bottom-nav-icon">🌤️</span>
+          <span>Thời tiết</span>
+        </a>
+      </nav>
     </main>
   </div>
   
@@ -2385,6 +2553,23 @@
         }
       });
     }
+    
+    // PWA Install Prompt
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (localStorage.getItem('pwaInstalled') !== 'true') {
+        setTimeout(() => {
+          showToast('Cài đặt ứng dụng để trải nghiệm tốt hơn! 📲', 'info', 5000);
+        }, 5000);
+      }
+    });
+    
+    window.addEventListener('appinstalled', () => {
+      localStorage.setItem('pwaInstalled', 'true');
+      showToast('Đã cài đặt thành công! ✅', 'success');
+    });
     
     // Theme Management - Light/Dark Mode with System Preference
     (function() {

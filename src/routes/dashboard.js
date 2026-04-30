@@ -5,6 +5,7 @@ const { getAll, getOne } = require('../config/database');
 const financeService = require('../services/financeService');
 const inventoryService = require('../services/inventoryService');
 const equipmentService = require('../services/equipmentService');
+const laborService = require('../services/laborService');
 const { getDashboardOverview, getSensorDataByZone, getAlertsQuick, getDevicesStatus, invalidateCache } = require('../services/performanceService');
 const si = require('systeminformation');
 const os = require('os');
@@ -451,6 +452,108 @@ router.get('/equipment-kpis', auth, async (req, res) => {
         },
         byCategory: Object.entries(byCategory).map(([name, count]) => ({ name, count })),
         maintenanceCosts: maintenanceCosts?.slice(0, 5) || []
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/labor-overview', auth, async (req, res) => {
+  try {
+    const { farm_id, status } = req.query;
+    const workers = laborService.getWorkers(farm_id, null, status);
+    const tasks = laborService.getTasks(farm_id, null, null, null, null);
+    const stats = laborService.getLaborStats(farm_id);
+    
+    const total = workers?.length || 0;
+    const active = workers?.filter(w => w.status === 'active').length || 0;
+    const onLeave = workers?.filter(w => w.status === 'on_leave').length || 0;
+    const pendingTasks = tasks?.filter(t => t.status === 'pending').length || 0;
+    const completedTasks = tasks?.filter(t => t.status === 'completed').length || 0;
+    
+    res.json({
+      ok: true,
+      data: {
+        stats: {
+          total,
+          active,
+          onLeave,
+          pendingTasks,
+          completedTasks,
+          completionRate: (pendingTasks + completedTasks) > 0 
+            ? Math.round((completedTasks / (pendingTasks + completedTasks)) * 100) 
+            : 0
+        },
+        workers: workers?.slice(0, 10) || [],
+        recentTasks: tasks?.slice(0, 10) || []
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/labor-alerts', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const workers = laborService.getWorkers(farm_id, null, 'active');
+    const tasks = laborService.getTasks(farm_id, 'pending', null, null, null);
+    const stats = laborService.getLaborStats(farm_id);
+    
+    const alerts = {
+      onLeave: workers?.filter(w => w.status === 'on_leave').length || 0,
+      pendingTasks: tasks?.length || 0,
+      workersCount: workers?.length || 0,
+      tasksOverview: {
+        pending: tasks?.filter(t => t.status === 'pending').length || 0,
+        inProgress: tasks?.filter(t => t.status === 'in_progress').length || 0,
+        completed: tasks?.filter(t => t.status === 'completed').length || 0
+      }
+    };
+    
+    res.json({ ok: true, data: alerts });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/labor-kpis', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const stats = laborService.getLaborStats(farm_id);
+    const workers = laborService.getWorkers(farm_id, null, null);
+    const tasks = laborService.getTasks(farm_id, null, null, null, null);
+    const laborCost = laborService.getLaborCostByCrop(farm_id, null, null);
+    
+    const byPosition = {};
+    workers?.forEach(w => {
+      const pos = w.position || 'other';
+      byPosition[pos] = (byPosition[pos] || 0) + 1;
+    });
+    
+    const totalCost = laborCost?.reduce((sum, c) => sum + (c.total_cost || 0), 0) || 0;
+    
+    const taskStats = {
+      pending: tasks?.filter(t => t.status === 'pending').length || 0,
+      inProgress: tasks?.filter(t => t.status === 'in_progress').length || 0,
+      completed: tasks?.filter(t => t.status === 'completed').length || 0,
+      total: tasks?.length || 0
+    };
+    
+    res.json({
+      ok: true,
+      data: {
+        overview: {
+          totalWorkers: workers?.length || 0,
+          activeWorkers: workers?.filter(w => w.status === 'active').length || 0,
+          totalTasks: taskStats.total,
+          completedTasks: taskStats.completed,
+          completionRate: taskStats.total > 0 ? Math.round((taskStats.completed / taskStats.total) * 100) : 0
+        },
+        byPosition: Object.entries(byPosition).map(([name, count]) => ({ name, count })),
+        laborCostByCrop: laborCost?.slice(0, 5) || [],
+        totalLaborCost: totalCost
       }
     });
   } catch (error) {

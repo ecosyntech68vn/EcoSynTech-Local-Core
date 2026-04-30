@@ -864,6 +864,11 @@
             <span>Máy móc</span>
             <span class="nav-badge" id="equipmentAlert" style="display: none;">0</span>
           </a>
+          <a class="nav-item" href="#" onclick="showSection('labor')">
+            <span class="nav-icon">👥</span>
+            <span>Lao động</span>
+            <span class="nav-badge" id="laborAlert" style="display: none;">0</span>
+          </a>
         </div>
         
         <div class="nav-section">
@@ -1422,6 +1427,89 @@
         </div>
       </div>
       
+      <!-- Labor Dashboard (Hidden by default) -->
+      <div id="laborSection" style="display: none;">
+        <div class="card-header" style="margin-bottom: 20px;">
+          <h2 class="card-title">👥 Tổng quan Lao động</h2>
+          <div style="display: flex; gap: 10px;">
+            <select id="laborStatus" class="form-input" style="width: auto;" onchange="loadLaborDashboard()">
+              <option value="">Tất cả</option>
+              <option value="active">Đang làm</option>
+              <option value="on_leave">Nghỉ phép</option>
+            </select>
+            <button class="btn btn-ghost" onclick="loadLaborDashboard()">🔄</button>
+          </div>
+        </div>
+        
+        <!-- KPIs -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Tổng nhân công</div>
+              <div id="laborTotalWorkers" style="font-size: 28px; font-weight: 700; color: var(--primary-light);">---</div>
+              <div id="laborActiveWorkers" style="font-size: 12px; color: var(--text-muted);">---</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Công việc</div>
+              <div id="laborTasks" style="font-size: 28px; font-weight: 700; color: var(--accent);">---</div>
+              <div id="laborCompletionRate" style="font-size: 12px; color: var(--text-muted);">---</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Chờ duyệt</div>
+              <div id="laborPendingTasks" style="font-size: 28px; font-weight: 700; color: var(--warning);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Công việc chờ</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Chi phí lao động</div>
+              <div id="laborCost" style="font-size: 28px; font-weight: 700; color: var(--danger);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Tổng chi phí</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Workers & Tasks -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">👷 Nhân công gần đây</h3>
+            </div>
+            <div class="card-body">
+              <div id="laborWorkersList">
+                <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📋 Công việc gần đây</h3>
+            </div>
+            <div class="card-body">
+              <div id="laborTasksList">
+                <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- By Position -->
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <h3 class="card-title">📊 Theo vị trí</h3>
+          </div>
+          <div class="card-body">
+            <div id="laborByPosition">
+              <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <!-- Devices -->
       <div class="card" style="margin-top: 24px;">
         <div class="card-header">
@@ -1892,6 +1980,7 @@
     // Inventory Dashboard Functions
     let inventoryInterval = null;
     let equipmentInterval = null;
+    let laborInterval = null;
     
     function showSection(section) {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
@@ -1900,6 +1989,7 @@
       document.getElementById('financeSection').style.display = section === 'finance' ? 'block' : 'none';
       document.getElementById('inventorySection').style.display = section === 'inventory' ? 'block' : 'none';
       document.getElementById('equipmentSection').style.display = section === 'equipment' ? 'block' : 'none';
+      document.getElementById('laborSection').style.display = section === 'labor' ? 'block' : 'none';
       
       if (section === 'finance') {
         loadFinanceDashboard();
@@ -1909,6 +1999,7 @@
         }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
+        if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
       } else if (section === 'inventory') {
         loadInventoryDashboard();
         if (!inventoryInterval) {
@@ -1916,6 +2007,7 @@
         }
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
+        if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
       } else if (section === 'equipment') {
         loadEquipmentDashboard();
         if (!equipmentInterval) {
@@ -1923,10 +2015,20 @@
         }
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
+        if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
+      } else if (section === 'labor') {
+        loadLaborDashboard();
+        if (!laborInterval) {
+          laborInterval = setInterval(loadLaborDashboard, 30000);
+        }
+        if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
+        if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
+        if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
       } else {
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
+        if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
       }
     }
     
@@ -2171,6 +2273,109 @@
     }
     
     document.getElementById('equipmentStatus')?.addEventListener('change', loadEquipmentDashboard);
+    
+    // Labor Dashboard Functions
+    let laborInterval = null;
+    
+    async function loadLaborDashboard() {
+      try {
+        const status = document.getElementById('laborStatus')?.value || '';
+        const response = await fetch(`/api/dashboard/labor-overview?status=${status}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (!response.ok) {
+          console.error('Labor API error:', response.status);
+          return;
+        }
+        
+        const result = await response.json();
+        if (!result.ok) {
+          console.error('Labor data error:', result.error);
+          return;
+        }
+        
+        const data = result.data;
+        const stats = data.stats || {};
+        
+        document.getElementById('laborTotalWorkers').textContent = formatNumber(stats.total || 0);
+        document.getElementById('laborActiveWorkers').textContent = (stats.active || 0) + ' đang làm';
+        document.getElementById('laborTasks').textContent = formatNumber((stats.pendingTasks || 0) + (stats.completedTasks || 0));
+        document.getElementById('laborCompletionRate').textContent = (stats.completionRate || 0) + '% hoàn thành';
+        document.getElementById('laborPendingTasks').textContent = formatNumber(stats.pendingTasks || 0);
+        
+        const badge = document.getElementById('laborAlert');
+        const totalAlerts = (stats.pendingTasks || 0) + (stats.onLeave || 0);
+        if (totalAlerts > 0) {
+          badge.style.display = 'inline';
+          badge.textContent = totalAlerts;
+        } else {
+          badge.style.display = 'none';
+        }
+        
+        if (data.workers && data.workers.length > 0) {
+          const workerHtml = data.workers.map(worker => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-weight: 500;">${worker.worker_name || 'Nhân công'}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${worker.position || ''} • ${worker.phone || ''}</div>
+              </div>
+              <span class="device-status ${worker.status === 'active' ? 'online' : 'offline'}">
+                ${worker.status === 'active' ? 'Đang làm' : worker.status === 'on_leave' ? 'Nghỉ phép' : worker.status || ''}
+              </span>
+            </div>
+          `).join('');
+          document.getElementById('laborWorkersList').innerHTML = workerHtml;
+        } else {
+          document.getElementById('laborWorkersList').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có dữ liệu</div>';
+        }
+        
+        if (data.recentTasks && data.recentTasks.length > 0) {
+          const taskHtml = data.recentTasks.map(task => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-weight: 500;">${task.task_name || 'Công việc'}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${task.crop_name || ''}</div>
+              </div>
+              <span style="font-weight: 600; color: ${task.status === 'completed' ? 'var(--success)' : task.status === 'pending' ? 'var(--warning)' : 'var(--text-muted)'}">
+                ${task.status === 'completed' ? 'Hoàn thành' : task.status === 'pending' ? 'Chờ' : task.status === 'in_progress' ? 'Đang làm' : task.status || ''}
+              </span>
+            </div>
+          `).join('');
+          document.getElementById('laborTasksList').innerHTML = taskHtml;
+        } else {
+          document.getElementById('laborTasksList').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có dữ liệu</div>';
+        }
+        
+        const kpisResponse = await fetch('/api/dashboard/labor-kpis', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (kpisResponse.ok) {
+          const kpisResult = await kpisResponse.json();
+          if (kpisResult.ok && kpisResult.data) {
+            const overview = kpisResult.data.overview;
+            document.getElementById('laborCost').textContent = formatCurrency(kpisResult.data.totalLaborCost || 0);
+            
+            if (kpisResult.data.byPosition && kpisResult.data.byPosition.length > 0) {
+              const posHtml = kpisResult.data.byPosition.map(pos => `
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                  <span>${pos.name}</span>
+                  <span style="color: var(--text-muted);">${pos.count} người</span>
+                </div>
+              `).join('');
+              document.getElementById('laborByPosition').innerHTML = posHtml;
+            } else {
+              document.getElementById('laborByPosition').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có dữ liệu</div>';
+            }
+          }
+        }
+        
+      } catch (err) {
+        console.error('Load labor dashboard error:', err);
+      }
+    }
+    
+    document.getElementById('laborStatus')?.addEventListener('change', loadLaborDashboard);
   </script>
 </body>
 </html>

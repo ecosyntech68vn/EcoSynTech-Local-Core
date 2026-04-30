@@ -656,6 +656,129 @@ router.get('/crops-kpis', auth, async (req, res) => {
   }
 });
 
+router.get('/weather-forecast', auth, async (req, res) => {
+  try {
+    const lat = req.query.lat || process.env.FARM_LAT || '10.7769';
+    const lon = req.query.lon || process.env.FARM_LON || '106.7009';
+    
+    const axios = require('axios');
+    const response = await axios.get(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weather_code,wind_speed_10m_max&forecast_days=5&timezone=auto`
+    );
+    const data = response.data;
+    const daily = data.daily;
+    
+    const forecast = daily.time.map((date, idx) => ({
+      date,
+      tempMax: daily.temperature_2m_max[idx],
+      tempMin: daily.temperature_2m_min[idx],
+      precipitation: daily.precipitation_sum[idx],
+      precipProbability: daily.precipitation_probability_max[idx],
+      weatherCode: daily.weather_code[idx],
+      windMax: daily.wind_speed_10m_max[idx]
+    }));
+    
+    res.json({
+      ok: true,
+      data: {
+        forecast,
+        location: { lat, lon },
+        updatedAt: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/weather-alerts', auth, async (req, res) => {
+  try {
+    const lat = req.query.lat || process.env.FARM_LAT || '10.7769';
+    const lon = req.query.lon || process.env.FARM_LON || '106.7009';
+    
+    const axios = require('axios');
+    const response = await axios.get(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=precipitation_probability,temperature_2m,weather_code&forecast_days=2&timezone=auto`
+    );
+    const data = response.data;
+    const hourly = data.hourly;
+    
+    const alerts = [];
+    for (let i = 0; i < hourly.time.length; i++) {
+      if (hourly.precipitation_probability[i] > 70) {
+        alerts.push({
+          type: 'rain',
+          time: hourly.time[i],
+          probability: hourly.precipitation_probability[i],
+          message: `Khả năng mưa ${hourly.precipitation_probability[i]}% lúc ${new Date(hourly.time[i]).getHours()}h`
+        });
+      }
+      if (hourly.temperature_2m[i] > 40) {
+        alerts.push({
+          type: 'heat',
+          time: hourly.time[i],
+          temperature: hourly.temperature_2m[i],
+          message: `Nhiệt độ cao ${hourly.temperature_2m[i]}°C - Cần tưới nước`
+        });
+      }
+    }
+    
+    res.json({
+      ok: true,
+      data: {
+        hasAlerts: alerts.length > 0,
+        alerts: alerts.slice(0, 5)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/weather-kpis', auth, async (req, res) => {
+  try {
+    const lat = req.query.lat || process.env.FARM_LAT || '10.7769';
+    const lon = req.query.lon || process.env.FARM_LON || '106.7009';
+    
+    const axios = require('axios');
+    const response = await axios.get(
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,precipitation,precipitation_probability,wind_speed_10m&forecast_days=5&timezone=auto`
+    );
+    const data = response.data;
+    const hourly = data.hourly;
+    
+    const temps = hourly.temperature_2m.filter(t => t !== null);
+    const humidities = hourly.relative_humidity_2m.filter(h => h !== null);
+    const precips = hourly.precipitation.filter(p => p !== null);
+    
+    const avgTemp = temps.length > 0 ? (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1) : 0;
+    const avgHumidity = humidities.length > 0 ? Math.round(humidities.reduce((a, b) => a + b, 0) / humidities.length) : 0;
+    const totalPrecip = precips.reduce((a, b) => a + b, 0).toFixed(1);
+    const rainyDays = hourly.time.filter((t, i) => hourly.precipitation[i] > 0).length;
+    
+    res.json({
+      ok: true,
+      data: {
+        overview: {
+          avgTemperature: parseFloat(avgTemp),
+          avgHumidity,
+          totalPrecipitation: parseFloat(totalPrecip),
+          rainyDays,
+          forecastDays: 5
+        },
+        hourly: hourly.time.slice(0, 24).map((t, i) => ({
+          time: t,
+          temp: hourly.temperature_2m[i],
+          humidity: hourly.relative_humidity_2m[i],
+          precip: hourly.precipitation[i]
+        }))
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 router.post('/cache-invalidate', auth, async (req, res) => {
   try {
     const { farmId } = req.body;

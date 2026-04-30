@@ -874,6 +874,11 @@
             <span>Cây trồng</span>
             <span class="nav-badge" id="cropsAlert" style="display: none;">0</span>
           </a>
+          <a class="nav-item" href="#" onclick="showSection('weather')">
+            <span class="nav-icon">🌤️</span>
+            <span>Thời tiết</span>
+            <span class="nav-badge" id="weatherAlert" style="display: none;">0</span>
+          </a>
         </div>
         
         <div class="nav-section">
@@ -1598,6 +1603,70 @@
         </div>
       </div>
       
+      <!-- Weather Dashboard (Hidden by default) -->
+      <div id="weatherSection" style="display: none;">
+        <div class="card-header" style="margin-bottom: 20px;">
+          <h2 class="card-title">🌤️ Dự báo Thời tiết</h2>
+          <button class="btn btn-ghost" onclick="loadWeatherDashboard()">🔄</button>
+        </div>
+        
+        <!-- Current Weather KPIs -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Nhiệt độ</div>
+              <div id="weatherTemp" style="font-size: 28px; font-weight: 700; color: var(--warning);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Hiện tại</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Độ ẩm</div>
+              <div id="weatherHumidity" style="font-size: 28px; font-weight: 700; color: var(--primary-light);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">%</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Mưa</div>
+              <div id="weatherPrecip" style="font-size: 28px; font-weight: 700; color: var(--accent);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">mm</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Ngày mưa</div>
+              <div id="weatherRainyDays" style="font-size: 28px; font-weight: 700; color: var(--danger);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Trong 5 ngày</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Alerts -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="card-header">
+            <h3 class="card-title">⚠️ Cảnh báo thời tiết</h3>
+          </div>
+          <div class="card-body">
+            <div id="weatherAlerts">
+              <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 5-Day Forecast -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title">📅 Dự báo 5 ngày</h3>
+          </div>
+          <div class="card-body">
+            <div id="weatherForecast" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+              <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <!-- Devices -->
       <div class="card" style="margin-top: 24px;">
         <div class="card-header">
@@ -2070,6 +2139,7 @@
     let equipmentInterval = null;
     let laborInterval = null;
     let cropsInterval = null;
+    let weatherInterval = null;
     
     function showSection(section) {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
@@ -2080,6 +2150,7 @@
       document.getElementById('equipmentSection').style.display = section === 'equipment' ? 'block' : 'none';
       document.getElementById('laborSection').style.display = section === 'labor' ? 'block' : 'none';
       document.getElementById('cropsSection').style.display = section === 'crops' ? 'block' : 'none';
+      document.getElementById('weatherSection').style.display = section === 'weather' ? 'block' : 'none';
       
       if (section === 'finance') {
         loadFinanceDashboard();
@@ -2091,6 +2162,7 @@
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
         if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
         if (cropsInterval) { clearInterval(cropsInterval); cropsInterval = null; }
+        if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
       } else if (section === 'inventory') {
         loadInventoryDashboard();
         if (!inventoryInterval) {
@@ -2100,6 +2172,7 @@
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
         if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
         if (cropsInterval) { clearInterval(cropsInterval); cropsInterval = null; }
+        if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
       } else if (section === 'equipment') {
         loadEquipmentDashboard();
         if (!equipmentInterval) {
@@ -2109,6 +2182,7 @@
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
         if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
         if (cropsInterval) { clearInterval(cropsInterval); cropsInterval = null; }
+        if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
       } else if (section === 'labor') {
         loadLaborDashboard();
         if (!laborInterval) {
@@ -2118,6 +2192,7 @@
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
         if (cropsInterval) { clearInterval(cropsInterval); cropsInterval = null; }
+        if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
       } else if (section === 'crops') {
         loadCropsDashboard();
         if (!cropsInterval) {
@@ -2127,12 +2202,25 @@
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
         if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
+        if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
+      } else if (section === 'weather') {
+        loadWeatherDashboard();
+        if (!weatherInterval) {
+          weatherInterval = setInterval(loadWeatherDashboard, 60000);
+        }
+        if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
+        if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
+        if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
+        if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
+        if (cropsInterval) { clearInterval(cropsInterval); cropsInterval = null; }
+        if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
       } else {
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
         if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
         if (cropsInterval) { clearInterval(cropsInterval); cropsInterval = null; }
+        if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
       }
     }
     
@@ -2590,6 +2678,94 @@
     }
     
     document.getElementById('cropsStatus')?.addEventListener('change', loadCropsDashboard);
+    
+    // Weather Dashboard Functions
+    let weatherInterval = null;
+    
+    function getWeatherIcon(code) {
+      if (code === 0) return '☀️';
+      if (code <= 3) return '⛅';
+      if (code <= 49) return '🌫️';
+      if (code <= 69) return '🌧️';
+      if (code <= 79) return '🌨️';
+      if (code <= 99) return '⛈️';
+      return '❓';
+    }
+    
+    async function loadWeatherDashboard() {
+      try {
+        const response = await fetch('/api/dashboard/weather-kpis', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (!response.ok) {
+          console.error('Weather API error:', response.status);
+          return;
+        }
+        
+        const result = await response.json();
+        if (!result.ok) {
+          console.error('Weather data error:', result.error);
+          return;
+        }
+        
+        const data = result.data;
+        const overview = data.overview || {};
+        
+        document.getElementById('weatherTemp').textContent = overview.avgTemperature + '°C';
+        document.getElementById('weatherHumidity').textContent = overview.avgHumidity;
+        document.getElementById('weatherPrecip').textContent = overview.totalPrecipitation;
+        document.getElementById('weatherRainyDays').textContent = overview.rainyDays;
+        
+        const alertResponse = await fetch('/api/dashboard/weather-alerts', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (alertResponse.ok) {
+          const alertResult = await alertResponse.json();
+          const badge = document.getElementById('weatherAlert');
+          if (alertResult.data?.hasAlerts) {
+            badge.style.display = 'inline';
+            badge.textContent = alertResult.data.alerts?.length || 0;
+            const alertsHtml = alertResult.data.alerts?.map(alert => `
+              <div style="padding: 8px; margin: 4px 0; background: ${alert.type === 'rain' ? 'rgba(59,130,246,0.1)' : 'rgba(239,68,68,0.1)'}; border-radius: 8px; display: flex; align-items: center; gap: 8px;">
+                <span>${alert.type === 'rain' ? '🌧️' : '🔥'}</span>
+                <span style="font-size: 14px;">${alert.message}</span>
+              </div>
+            `).join('');
+            document.getElementById('weatherAlerts').innerHTML = alertsHtml || '<div style="text-align: center; color: var(--text-muted);">Không có cảnh báo</div>';
+          } else {
+            badge.style.display = 'none';
+            document.getElementById('weatherAlerts').innerHTML = '<div style="text-align: center; color: var(--success);">✅ Thời tiết bình thường</div>';
+          }
+        }
+        
+        const forecastResponse = await fetch('/api/dashboard/weather-forecast', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (forecastResponse.ok) {
+          const forecastResult = await forecastResponse.json();
+          if (forecastResult.ok && forecastResult.data?.forecast) {
+            const forecastHtml = forecastResult.data.forecast.map(day => {
+              const date = new Date(day.date);
+              const dayName = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][date.getDay()];
+              return `
+                <div style="text-align: center; padding: 12px; background: var(--bg-card); border-radius: 12px;">
+                  <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">${dayName}</div>
+                  <div style="font-size: 24px; margin-bottom: 8px;">${getWeatherIcon(day.weatherCode)}</div>
+                  <div style="font-size: 14px; font-weight: 600;">${Math.round(day.tempMax)}°</div>
+                  <div style="font-size: 12px; color: var(--text-muted);">${Math.round(day.tempMin)}°</div>
+                  <div style="font-size: 11px; color: var(--accent); margin-top: 4px;">${day.precipProbability}% 🌧️</div>
+                </div>
+              `;
+            }).join('');
+            document.getElementById('weatherForecast').innerHTML = forecastHtml;
+          }
+        }
+        
+      } catch (err) {
+        console.error('Load weather dashboard error:', err);
+      }
+    }
   </script>
 </body>
 </html>

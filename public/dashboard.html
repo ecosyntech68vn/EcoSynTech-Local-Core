@@ -1967,138 +1967,69 @@
     
     // ========== INTERNATIONALIZATION (i18n) ==========
     const translations = {
-      vi: {
-        dashboard: 'Tổng quan trang trại',
-        finance: 'Tài chính',
-        inventory: 'Tồn kho',
-        equipment: 'Máy móc',
-        labor: 'Lao động',
-        crops: 'Cây trồng',
-        weather: 'Thời tiết',
-        automation: 'Tự động hóa',
-        settings: 'Cài đặt',
-        search: 'Tìm kiếm...',
-        filter: 'Lọc',
-        refresh: 'Làm mới',
-        export: 'Export',
-        add: 'Thêm',
-        save: 'Lưu',
-        cancel: 'Hủy',
-        delete: 'Xóa',
-        edit: 'Sửa',
-        close: 'Đóng',
-        confirm: 'Xác nhận',
-        success: 'Thành công',
-        error: 'Lỗi',
-        warning: 'Cảnh báo',
-        info: 'Thông tin',
-        loading: 'Đang tải...',
-        noData: 'Không có dữ liệu',
-        total: 'Tổng',
-        active: 'Hoạt động',
-        inactive: 'Không hoạt động',
-        online: 'Online',
-        offline: 'Offline',
-        income: 'Thu nhập',
-        expenses: 'Chi phí',
-        profit: 'Lợi nhuận',
-        budget: 'Ngân sách',
-        fromDate: 'Từ ngày',
-        toDate: 'Đến ngày',
-        allModules: 'Tất cả',
-        allCategories: 'Tất cả danh mục',
-        installApp: 'Cài đặt ứng dụng',
-        language: 'Ngôn ngữ'
-      },
-      en: {
-        dashboard: 'Farm Overview',
-        finance: 'Finance',
-        inventory: 'Inventory',
-        equipment: 'Equipment',
-        labor: 'Labor',
-        crops: 'Crops',
-        weather: 'Weather',
-        automation: 'Automation',
-        settings: 'Settings',
-        search: 'Search...',
-        filter: 'Filter',
-        refresh: 'Refresh',
-        export: 'Export',
-        add: 'Add',
-        save: 'Save',
-        cancel: 'Cancel',
-        delete: 'Delete',
-        edit: 'Edit',
-        close: 'Close',
-        confirm: 'Confirm',
-        success: 'Success',
-        error: 'Error',
-        warning: 'Warning',
-        info: 'Info',
-        loading: 'Loading...',
-        noData: 'No data',
-        total: 'Total',
-        active: 'Active',
-        inactive: 'Inactive',
-        online: 'Online',
-        offline: 'Offline',
-        income: 'Income',
-        expenses: 'Expenses',
-        profit: 'Profit',
-        budget: 'Budget',
-        fromDate: 'From date',
-        toDate: 'To date',
-        allModules: 'All',
-        allCategories: 'All categories',
-        installApp: 'Install app',
-        language: 'Language'
-      },
-      zh: {
-        dashboard: '农场概览',
-        finance: '财务',
-        inventory: '库存',
-        equipment: '设备',
-        labor: '劳动',
-        crops: '作物',
-        weather: '天气',
-        automation: '自动化',
-        settings: '设置',
-        search: '搜索...',
-        filter: '筛选',
-        refresh: '刷新',
-        export: '导出',
-        add: '添加',
-        save: '保存',
-        cancel: '取消',
-        delete: '删除',
-        edit: '编辑',
-        close: '关闭',
-        confirm: '确认',
-        success: '成功',
-        error: '错误',
-        warning: '警告',
-        info: '信息',
-        loading: '加载中...',
-        noData: '暂无数据',
-        total: '总计',
-        active: '活跃',
-        inactive: '不活跃',
-        online: '在线',
-        offline: '离线',
-        income: '收入',
-        expenses: '支出',
-        profit: '利润',
-        budget: '预算',
-        fromDate: '开始日期',
-        toDate: '结束日期',
-        allModules: '全部',
-        allCategories: '全部分类',
-        installApp: '安装应用',
-        language: '语言'
-      }
+      vi: null,
+      en: null,
+      zh: null
     };
-
+    
     let currentLang = localStorage.getItem('language') || 'vi';
+    let i18nLoaded = false;
+    
+    async function loadTranslations() {
+      if (i18nLoaded) return;
+      try {
+        const [viRes, enRes, zhRes] = await Promise.all([
+          fetch('/i18n/vi.json'),
+          fetch('/i18n/en.json'),
+          fetch('/i18n/zh.json')
+        ]);
+        translations.vi = await viRes.json();
+        translations.en = await enRes.json();
+        translations.zh = await zhRes.json();
+        i18nLoaded = true;
+      } catch (e) {
+        console.log('Using inline translations');
+        translations.vi = {
+          dashboard: 'Tổng quan trang trại', finance: 'Tài chính', inventory: 'Tồn kho',
+          equipment: 'Máy móc', labor: 'Lao động', crops: 'Cây trồng', weather: 'Thời tiết',
+          automation: 'Tự động hóa', settings: 'Cài đặt', search: 'Tìm kiếm...', filter: 'Lọc',
+          refresh: 'Làm mới', export: 'Export', add: 'Thêm', save: 'Lưu', cancel: 'Hủy',
+          delete: 'Xóa', edit: 'Sửa', close: 'Đóng', confirm: 'Xác nhận', success: 'Thành công',
+          error: 'Lỗi', warning: 'Cảnh báo', info: 'Thông tin', loading: 'Đang tải...',
+          noData: 'Không có dữ liệu', total: 'Tổng', active: 'Hoạt động', inactive: 'Không hoạt động',
+          online: 'Online', offline: 'Offline', income: 'Thu nhập', expenses: 'Chi phí',
+          profit: 'Lợi nhuận', budget: 'Ngân sách', fromDate: 'Từ ngày', toDate: 'Đến ngày',
+          allModules: 'Tất cả', allCategories: 'Tất cả danh mục', installApp: 'Cài đặt ứng dụng', language: 'Ngôn ngữ'
+        };
+        translations.en = {
+          dashboard: 'Farm Overview', finance: 'Finance', inventory: 'Inventory',
+          equipment: 'Equipment', labor: 'Labor', crops: 'Crops', weather: 'Weather',
+          automation: 'Automation', settings: 'Settings', search: 'Search...', filter: 'Filter',
+          refresh: 'Refresh', export: 'Export', add: 'Add', save: 'Save', cancel: 'Cancel',
+          delete: 'Delete', edit: 'Edit', close: 'Close', confirm: 'Confirm', success: 'Success',
+          error: 'Error', warning: 'Warning', info: 'Info', loading: 'Loading...',
+          noData: 'No data', total: 'Total', active: 'Active', inactive: 'Inactive',
+          online: 'Online', offline: 'Offline', income: 'Income', expenses: 'Expenses',
+          profit: 'Profit', budget: 'Budget', fromDate: 'From date', toDate: 'To date',
+          allModules: 'All', allCategories: 'All categories', installApp: 'Install app', language: 'Language'
+        };
+        translations.zh = {
+          dashboard: '农场概览', finance: '财务', inventory: '库存',
+          equipment: '设备', labor: '劳动', crops: '作物', weather: '天气',
+          automation: '自动化', settings: '设置', search: '搜索...', filter: '筛选',
+          refresh: '刷新', export: '导出', add: '添加', save: '保存', cancel: '取消',
+          delete: '删除', edit: '编辑', close: '关闭', confirm: '确认', success: '成功',
+          error: '错误', warning: '警告', info: '信息', loading: '加载中...',
+          noData: '暂无数据', total: '总计', active: '活跃', inactive: '不活跃',
+          online: '在线', offline: '离线', income: '收入', expenses: '支出',
+          profit: '利润', budget: '预算', fromDate: '开始日期', toDate: '结束日期',
+          allModules: '全部', allCategories: '全部分类', installApp: '安装应用', language: '语言'
+        };
+        i18nLoaded = true;
+      }
+    }
+    
+    loadTranslations();
 
     function t(key) {
       return translations[currentLang]?.[key] || translations['vi'][key] || key;

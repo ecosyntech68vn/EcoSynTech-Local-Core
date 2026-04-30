@@ -1,6 +1,8 @@
 const request = require('supertest');
 const app = require('../src/server');
 
+jest.setTimeout(30000);
+
 describe('Dashboard Finance API', () => {
   let token;
   

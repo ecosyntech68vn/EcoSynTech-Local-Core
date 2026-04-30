@@ -1,0 +1,153 @@
+{
+  "app": {
+    "name": "EcoSynTech",
+    "fullName": "EcoSynTech Farm OS",
+    "tagline": "Smart Agriculture IoT Platform with AI"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "finance": "Finance",
+    "inventory": "Inventory",
+    "equipment": "Equipment",
+    "labor": "Labor",
+    "crops": "Crops",
+    "weather": "Weather",
+    "automation": "Automation",
+    "settings": "Settings",
+    "sales": "Sales",
+    "products": "Products",
+    "reports": "Reports",
+    "alerts": "Alerts",
+    "devices": "Devices",
+    "sensors": "Sensors",
+    "traceability": "Traceability"
+  },
+  "actions": {
+    "search": "Search...",
+    "filter": "Filter",
+    "refresh": "Refresh",
+    "export": "Export",
+    "add": "Add",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "apply": "Apply",
+    "reset": "Reset",
+    "download": "Download",
+    "upload": "Upload",
+    "view": "View",
+    "create": "Create",
+    "update": "Update"
+  },
+  "status": {
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info",
+    "loading": "Loading...",
+    "noData": "No data",
+    "online": "Online",
+    "offline": "Offline",
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "completed": "Completed",
+    "failed": "Failed"
+  },
+  "finance": {
+    "income": "Income",
+    "expenses": "Expenses",
+    "profit": "Profit",
+    "budget": "Budget",
+    "revenue": "Revenue",
+    "cost": "Cost",
+    "margin": "Margin",
+    "totalIncome": "Total Income",
+    "totalExpense": "Total Expense",
+    "netProfit": "Net Profit",
+    "vsLastMonth": "vs last month"
+  },
+  "inventory": {
+    "items": "Items",
+    "stock": "Stock",
+    "lowStock": "Low Stock",
+    "expiring": "Expiring",
+    "categories": "Categories",
+    "quantity": "Quantity",
+    "unit": "Unit",
+    "value": "Value",
+    "import": "Import",
+    "export": "Export"
+  },
+  "equipment": {
+    "devices": "Devices",
+    "maintenance": "Maintenance",
+    "status": "Status",
+    "online": "Online",
+    "offline": "Offline",
+    "maintenanceDue": "Maintenance Due",
+    "lastUpdate": "Last Update"
+  },
+  "labor": {
+    "workers": "Workers",
+    "tasks": "Tasks",
+    "productivity": "Productivity",
+    "cost": "Labor Cost",
+    "position": "Position",
+    "attendance": "Attendance",
+    "performance": "Performance"
+  },
+  "crops": {
+    "plantings": "Plantings",
+    "harvest": "Harvest",
+    "growth": "Growth",
+    "stages": "Stages",
+    "area": "Area",
+    "yield": "Yield",
+    "status": "Status"
+  },
+  "weather": {
+    "current": "Current",
+    "forecast": "Forecast",
+    "temperature": "Temperature",
+    "humidity": "Humidity",
+    "rainfall": "Rainfall",
+    "wind": "Wind",
+    "alerts": "Weather Alerts",
+    "today": "Today",
+    "tomorrow": "Tomorrow"
+  },
+  "filters": {
+    "fromDate": "From date",
+    "toDate": "To date",
+    "allModules": "All",
+    "allCategories": "All categories",
+    "module": "Module",
+    "category": "Category"
+  },
+  "common": {
+    "total": "Total",
+    "average": "Average",
+    "minimum": "Minimum",
+    "maximum": "Maximum",
+    "date": "Date",
+    "time": "Time",
+    "name": "Name",
+    "description": "Description",
+    "amount": "Amount",
+    "quantity": "Quantity",
+    "price": "Price",
+    "notes": "Notes"
+  },
+  "messages": {
+    "savedSuccess": "Saved successfully",
+    "deletedSuccess": "Deleted successfully",
+    "updateSuccess": "Updated successfully",
+    "error": "An error occurred",
+    "confirmDelete": "Are you sure you want to delete?",
+    "noResults": "No results found"
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "app": {
+    "name": "EcoSynTech",
+    "fullName": "EcoSynTech Farm OS",
+    "tagline": "Nền tảng Nông nghiệp Thông minh IoT với AI"
+  },
+  "nav": {
+    "dashboard": "Tổng quan",
+    "finance": "Tài chính",
+    "inventory": "Tồn kho",
+    "equipment": "Máy móc",
+    "labor": "Lao động",
+    "crops": "Cây trồng",
+    "weather": "Thời tiết",
+    "automation": "Tự động hóa",
+    "settings": "Cài đặt",
+    "sales": "Bán hàng",
+    "products": "Sản phẩm",
+    "reports": "Báo cáo",
+    "alerts": "Cảnh báo",
+    "devices": "Thiết bị",
+    "sensors": "Cảm biến",
+    "traceability": "Truy xuất nguồn gốc"
+  },
+  "actions": {
+    "search": "Tìm kiếm...",
+    "filter": "Lọc",
+    "refresh": "Làm mới",
+    "export": "Export",
+    "add": "Thêm",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "close": "Đóng",
+    "confirm": "Xác nhận",
+    "apply": "Áp dụng",
+    "reset": "Đặt lại",
+    "download": "Tải xuống",
+    "upload": "Tải lên",
+    "view": "Xem",
+    "create": "Tạo",
+    "update": "Cập nhật"
+  },
+  "status": {
+    "success": "Thành công",
+    "error": "Lỗi",
+    "warning": "Cảnh báo",
+    "info": "Thông tin",
+    "loading": "Đang tải...",
+    "noData": "Không có dữ liệu",
+    "online": "Online",
+    "offline": "Offline",
+    "active": "Hoạt động",
+    "inactive": "Không hoạt động",
+    "pending": "Chờ xử lý",
+    "completed": "Hoàn thành",
+    "failed": "Thất bại"
+  },
+  "finance": {
+    "income": "Thu nhập",
+    "expenses": "Chi phí",
+    "profit": "Lợi nhuận",
+    "budget": "Ngân sách",
+    "revenue": "Doanh thu",
+    "cost": "Chi phí",
+    "margin": "Biên lợi nhuận",
+    "totalIncome": "Tổng thu",
+    "totalExpense": "Tổng chi",
+    "netProfit": "Lợi nhuận ròng",
+    "vsLastMonth": "so với tháng trước"
+  },
+  "inventory": {
+    "items": "Mặt hàng",
+    "stock": "Tồn kho",
+    "lowStock": "Tồn kho thấp",
+    "expiring": "Sắp hết hạn",
+    "categories": "Danh mục",
+    "quantity": "Số lượng",
+    "unit": "Đơn vị",
+    "value": "Giá trị",
+    "import": "Nhập kho",
+    "export": "Xuất kho"
+  },
+  "equipment": {
+    "devices": "Thiết bị",
+    "maintenance": "Bảo trì",
+    "status": "Trạng thái",
+    "online": "Hoạt động",
+    "offline": "Ngừng hoạt động",
+    "maintenanceDue": "Bảo trì định kỳ",
+    "lastUpdate": "Cập nhật cuối"
+  },
+  "labor": {
+    "workers": "Công nhân",
+    "tasks": "Công việc",
+    "productivity": "Năng suất",
+    "cost": "Chi phí lao động",
+    "position": "Vị trí",
+    "attendance": "Chấm công",
+    "performance": "Hiệu suất"
+  },
+  "crops": {
+    "plantings": "Trồng trọt",
+    "harvest": "Thu hoạch",
+    "growth": "Tăng trưởng",
+    "stages": "Giai đoạn",
+    "area": "Diện tích",
+    "yield": "Năng suất",
+    "status": "Trạng thái"
+  },
+  "weather": {
+    "current": "Hiện tại",
+    "forecast": "Dự báo",
+    "temperature": "Nhiệt độ",
+    "humidity": "Độ ẩm",
+    "rainfall": "Lượng mưa",
+    "wind": "Gió",
+    "alerts": "Cảnh báo thời tiết",
+    "today": "Hôm nay",
+    "tomorrow": "Ngày mai"
+  },
+  "filters": {
+    "fromDate": "Từ ngày",
+    "toDate": "Đến ngày",
+    "allModules": "Tất cả",
+    "allCategories": "Tất cả danh mục",
+    "module": "Module",
+    "category": "Danh mục"
+  },
+  "common": {
+    "total": "Tổng",
+    "average": "Trung bình",
+    "minimum": "Tối thiểu",
+    "maximum": "Tối đa",
+    "date": "Ngày",
+    "time": "Thời gian",
+    "name": "Tên",
+    "description": "Mô tả",
+    "amount": "Số tiền",
+    "quantity": "Số lượng",
+    "price": "Giá",
+    "notes": "Ghi chú"
+  },
+  "messages": {
+    "savedSuccess": "Lưu thành công",
+    "deletedSuccess": "Xóa thành công",
+    "updateSuccess": "Cập nhật thành công",
+    "error": "Đã xảy ra lỗi",
+    "confirmDelete": "Bạn có chắc chắn muốn xóa?",
+    "noResults": "Không tìm thấy kết quả"
+  }
+}

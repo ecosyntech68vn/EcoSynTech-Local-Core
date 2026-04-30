@@ -898,5 +898,87 @@ router.post('/cache-invalidate', auth, async (req, res) => {
   }
 });
 
+router.get('/sales-overview', auth, async (req, res) => {
+  try {
+    const { farm_id, startDate, endDate } = req.query;
+    let query = 'SELECT * FROM orders WHERE status = "completed"';
+    const params = [];
+    
+    if (farm_id) {
+      query += ' AND farm_id = ?';
+      params.push(farm_id);
+    }
+    if (startDate) {
+      query += ' AND created_at >= ?';
+      params.push(startDate);
+    }
+    if (endDate) {
+      query += ' AND created_at <= ?';
+      params.push(endDate);
+    }
+    query += ' ORDER BY created_at DESC LIMIT 50';
+    
+    const orders = getAll(query, params);
+    
+    const totalRevenue = orders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
+    const totalOrders = orders.length;
+    const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+    
+    res.json({
+      ok: true,
+      data: {
+        stats: {
+          totalOrders,
+          totalRevenue,
+          avgOrderValue,
+          completedOrders: totalOrders
+        },
+        recentOrders: orders.slice(0, 10)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/payment-overview', auth, async (req, res) => {
+  try {
+    const { farm_id, status } = req.query;
+    let query = 'SELECT * FROM payments WHERE 1=1';
+    const params = [];
+    
+    if (farm_id) {
+      query += ' AND farm_id = ?';
+      params.push(farm_id);
+    }
+    if (status) {
+      query += ' AND status = ?';
+      params.push(status);
+    }
+    query += ' ORDER BY created_at DESC LIMIT 50';
+    
+    const payments = getAll(query, params);
+    
+    const totalReceived = payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + (p.amount || 0), 0);
+    const totalPending = payments.filter(p => p.status === 'pending').reduce((sum, p) => sum + (p.amount || 0), 0);
+    const totalFailed = payments.filter(p => p.status === 'failed').reduce((sum, p) => sum + (p.amount || 0), 0);
+    
+    res.json({
+      ok: true,
+      data: {
+        stats: {
+          totalTransactions: payments.length,
+          totalReceived,
+          totalPending,
+          totalFailed
+        },
+        recentPayments: payments.slice(0, 10)
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 module.exports = router;
 module.exports.clearCache = clearDashboardCache;

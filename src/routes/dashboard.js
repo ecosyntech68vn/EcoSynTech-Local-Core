@@ -980,5 +980,42 @@ router.get('/payment-overview', auth, async (req, res) => {
   }
 });
 
+router.get('/audit-logs', auth, async (req, res) => {
+  try {
+    const { limit = 50, action, startDate, endDate } = req.query;
+    
+    let query = 'SELECT * FROM audit_logs WHERE 1=1';
+    const params = [];
+    
+    if (action) {
+      query += ' AND action LIKE ?';
+      params.push(`%${action}%`);
+    }
+    if (startDate) {
+      query += ' AND timestamp >= ?';
+      params.push(startDate);
+    }
+    if (endDate) {
+      query += ' AND timestamp <= ?';
+      params.push(endDate);
+    }
+    
+    query += ' ORDER BY timestamp DESC LIMIT ?';
+    params.push(parseInt(limit) || 50);
+    
+    const logs = getAll(query, params);
+    
+    res.json({
+      ok: true,
+      data: {
+        logs: logs || [],
+        total: logs?.length || 0
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 module.exports = router;
 module.exports.clearCache = clearDashboardCache;

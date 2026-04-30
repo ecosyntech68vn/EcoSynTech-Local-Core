@@ -147,3 +147,34 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
 });
+
+// Push Notifications
+self.addEventListener('push', (event) => {
+  const options = {
+    body: event.data?.text() || 'Có thông báo mới từ EcoSynTech',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    vibrate: [100, 50, 100],
+    data: {
+      url: '/dashboard.html'
+    },
+    actions: [
+      { action: 'view', title: 'Xem' },
+      { action: 'dismiss', title: 'Đóng' }
+    ]
+  };
+
+  event.waitUntil(
+    self.registration.showNotification('EcoSynTech', options)
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  
+  if (event.action === 'view' || !event.action) {
+    event.waitUntil(
+      clients.openWindow(event.notification.data?.url || '/dashboard.html')
+    );
+  }
+});

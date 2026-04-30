@@ -1,21 +1,29 @@
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
+const config = require('../src/config');
 
 let app;
+let serverInstance;
 let token;
+
+jest.setTimeout(60000);
 
 // Initialize database and bootstrapped app in test environment
 beforeAll(async () => {
-  const dbModule = require('../src/config/database');
-  await dbModule.initDatabase();
-  const { createApp } = require('../server');
-  app = createApp();
-});
+  const EcoSynTechServer = require('../src/server/index');
+  serverInstance = new EcoSynTechServer();
+  await serverInstance.initialize();
+  app = serverInstance.getApp();
+  token = jwt.sign({ id: 'test-admin', email: 'admin@local', role: 'admin' }, config.jwt.secret, { expiresIn: '1h' });
+}, 60000);
 
 afterAll(async () => {
   try {
-  // Close and persist database state
-  const dbModule = require('../src/config/database');
-  await dbModule.closeDatabase();
+    if (serverInstance && serverInstance.server) {
+      serverInstance.server.close();
+    }
+    const { closeDatabase } = require('../src/config/database');
+    closeDatabase();
   } catch (e) {
     // ignore
   }

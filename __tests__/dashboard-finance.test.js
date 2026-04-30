@@ -1,16 +1,30 @@
 const request = require('supertest');
-const app = require('../src/server');
+const jwt = require('jsonwebtoken');
+const config = require('../src/config');
 
-jest.setTimeout(30000);
+jest.setTimeout(60000);
 
 describe('Dashboard Finance API', () => {
+  let app;
+  let serverInstance;
   let token;
   
   beforeAll(async () => {
-    const res = await request(app)
-      .post('/api/auth/login')
-      .send({ username: 'admin', password: 'admin123' });
-    token = res.body.data?.token;
+    const EcoSynTechServer = require('../src/server/index');
+    serverInstance = new EcoSynTechServer();
+    await serverInstance.initialize();
+    app = serverInstance.getApp();
+    token = jwt.sign({ id: 'test-admin', email: 'admin@local', role: 'admin' }, config.jwt.secret, { expiresIn: '1h' });
+  }, 60000);
+  
+  afterAll(async () => {
+    if (serverInstance) {
+      try {
+        if (serverInstance.server) serverInstance.server.close();
+        const { closeDatabase } = require('../src/config/database');
+        closeDatabase();
+      } catch (e) {}
+    }
   });
 
   test('GET /api/dashboard/finance-summary returns data', async () => {

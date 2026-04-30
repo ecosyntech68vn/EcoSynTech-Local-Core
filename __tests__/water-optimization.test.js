@@ -29,7 +29,7 @@ describe('Water Optimization Service - ET0 Calculation', () => {
   let service;
 
   beforeEach(() => {
-    service = new waterService.WaterOptimizationService();
+    service = waterService;
   });
 
   describe('calculateET0 (Penman-Monteith FAO-56)', () => {
@@ -178,28 +178,28 @@ describe('Water Optimization Service - ET0 Calculation', () => {
 
 describe('Water Optimization Service - Configuration', () => {
   it('should have default min moisture threshold', () => {
-    const service = new waterService.WaterOptimizationService();
+    const service = waterService;
     expect(service.minMoisture).toBe(30);
   });
 
   it('should have default max moisture threshold', () => {
-    const service = new waterService.WaterOptimizationService();
+    const service = waterService;
     expect(service.maxMoisture).toBe(70);
   });
 
   it('should have default check interval', () => {
-    const service = new waterService.WaterOptimizationService();
+    const service = waterService;
     expect(service.checkIntervalMs).toBe(300000); // 5 minutes
   });
 
   it('should be disabled by default', () => {
-    const service = new waterService.WaterOptimizationService();
+    const service = waterService;
     expect(service.enabled).toBe(false);
   });
 });
 
 describe('Water Optimization - Kc Values Reference (FAO-56)', () => {
-  const service = new waterService.WaterOptimizationService();
+  const service = waterService;
 
   const expectedKcValues = {
     rice: { initial: 0.9, mid: 1.2, late: 0.9 },

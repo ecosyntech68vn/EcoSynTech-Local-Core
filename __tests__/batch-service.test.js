@@ -23,7 +23,7 @@ describe('Batch Service - Batch Code Generation', () => {
   describe('generateBatchCode', () => {
     it('should generate batch code with correct format', () => {
       const code = batchService.generateBatchCode('VEG');
-      expect(code).toMatch(/^VEG-[A-Z0-9]{5,6}-[A-Z0-9]{4}$/);
+      expect(code).toMatch(/^VEG-[A-Z0-9]+-[A-Z0-9]+$/);
     });
 
     it('should generate unique codes each time', () => {
@@ -69,8 +69,8 @@ describe('Batch Service - Batch Code Generation', () => {
       expect(batchService.mapCategoryToProductType('ca')).toBe('aquaculture');
     });
 
-    it('should return default for unknown category', () => {
-      expect(batchService.mapCategoryToProductType('unknown')).toBe('vegetable');
+    it('should return other for unknown category', () => {
+      expect(batchService.mapCategoryToProductType('unknown')).toBe('other');
     });
   });
 

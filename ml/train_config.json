@@ -13,15 +13,8 @@
   ],
   "target_col": "yield_tons_per_ha",
   "lgb_params": {
-    "n_estimators": 100,
-    "max_depth": 6,
-    "num_leaves": 31,
-    "learning_rate": 0.05,
-    "objective": "regression",
-    "random_state": 42,
-    "min_child_samples": 20,
-    "subsample": 0.8,
-    "colsample_bytree": 0.8
+    "n_estimators": 200,
+    "max_depth": 8
   },
   "min_samples": 10,
   "test_size": 0.2,

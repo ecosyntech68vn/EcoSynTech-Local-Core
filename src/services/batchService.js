@@ -525,6 +525,10 @@ module.exports = {
   getCompleteTraceabilityData,
   getBatchesWithSource,
   generateBatchCode,
+  mapCategoryToProductType,
+  getProductTypeLabel,
+  getStageOrder,
+  validateBatchData,
   PRODUCT_TYPES,
   STAGE_TYPES
 };

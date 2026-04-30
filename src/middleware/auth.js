@@ -186,14 +186,13 @@ function recordFailedLogin(userId) {
 function checkAccountLocked(userId) {
   const lockUntil = lockedAccounts.get(userId);
   if (lockUntil && lockUntil > Date.now()) {
-    const remainingSeconds = Math.ceil((lockUntil - Date.now()) / 1000);
-    return remainingSeconds;
+    return true;
   }
   if (lockUntil) {
     lockedAccounts.delete(userId);
     failedLoginAttempts.delete(userId);
   }
-  return 0;
+  return false;
 }
 
 function clearFailedLogins(userId) {

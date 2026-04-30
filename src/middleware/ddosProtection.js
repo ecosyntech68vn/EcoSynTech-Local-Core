@@ -18,7 +18,7 @@ function getClientIP(req) {
   return req.headers['x-forwarded-for']?.split(',')[0].trim() || 
          req.headers['x-real-ip'] || 
          req.ip || 
-         req.connection.remoteAddress;
+         req.connection?.remoteAddress;
 }
 
 function ddosProtection(req, res, next) {
@@ -106,4 +106,13 @@ setInterval(() => {
   }
 }, 60000);
 
-module.exports = { ddosProtection, clearBlocklist };
+module.exports = { 
+  ddosProtection, 
+  clearBlocklist,
+  getClientIP,
+  WINDOW_MS,
+  MAX_REQUESTS_NORMAL,
+  MAX_REQUESTS_WARNING,
+  MAX_REQUESTS_BLOCK,
+  BLOCK_DURATION_MS
+};

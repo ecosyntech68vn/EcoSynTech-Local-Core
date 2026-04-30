@@ -193,8 +193,12 @@ function getLimit(limitName) {
  */
 function getAvailableProfiles() {
   return PROFILE_ORDER.map(name => ({
-    name,
-    ...PROFILES[name]
+    name: name,
+    displayName: PROFILES[name].name,
+    description: PROFILES[name].description,
+    maxMemory: PROFILES[name].maxMemory,
+    features: PROFILES[name].features,
+    limits: PROFILES[name].limits
   }));
 }
 

@@ -779,6 +779,81 @@ router.get('/weather-kpis', auth, async (req, res) => {
   }
 });
 
+router.get('/automation-overview', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const rules = getAll('SELECT * FROM rules ORDER BY created_at DESC');
+    const devices = getAll('SELECT id, name, status FROM devices WHERE farm_id = ? OR farm_id IS NULL', [farm_id]);
+    const schedules = getAll('SELECT * FROM schedules WHERE farm_id = ? OR farm_id IS NULL ORDER BY next_run', [farm_id]);
+    
+    const totalRules = rules?.length || 0;
+    const activeRules = rules?.filter(r => r.enabled === 1).length || 0;
+    const totalDevices = devices?.length || 0;
+    const onlineDevices = devices?.filter(d => d.status === 'online').length || 0;
+    const totalSchedules = schedules?.length || 0;
+    
+    res.json({
+      ok: true,
+      data: {
+        stats: {
+          totalRules,
+          activeRules,
+          totalDevices,
+          onlineDevices,
+          totalSchedules,
+          onlineRate: totalDevices > 0 ? Math.round((onlineDevices / totalDevices) * 100) : 0
+        },
+        recentRules: rules?.slice(0, 10) || [],
+        recentSchedules: schedules?.slice(0, 10) || []
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/automation-kpis', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const rules = getAll('SELECT * FROM rules');
+    const schedules = getAll('SELECT * FROM schedules');
+    
+    const byType = {};
+    rules?.forEach(r => {
+      const type = r.type || 'static';
+      byType[type] = (byType[type] || 0) + 1;
+    });
+    
+    const byStatus = {
+      active: rules?.filter(r => r.enabled === 1).length || 0,
+      inactive: rules?.filter(r => r.enabled === 0).length || 0
+    };
+    
+    const scheduleStats = {
+      active: schedules?.filter(s => s.enabled === 1).length || 0,
+      paused: schedules?.filter(s => s.enabled === 0).length || 0,
+      total: schedules?.length || 0
+    };
+    
+    res.json({
+      ok: true,
+      data: {
+        overview: {
+          totalRules: rules?.length || 0,
+          activeRules: byStatus.active,
+          totalSchedules: scheduleStats.total,
+          activeSchedules: scheduleStats.active
+        },
+        byType: Object.entries(byType).map(([name, count]) => ({ name, count })),
+        byStatus,
+        scheduleStats
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
 router.post('/cache-invalidate', auth, async (req, res) => {
   try {
     const { farmId } = req.body;

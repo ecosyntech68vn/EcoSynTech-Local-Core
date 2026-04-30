@@ -3,6 +3,7 @@ const router = express.Router();
 const { auth } = require('../middleware/auth');
 const { getAll, getOne } = require('../config/database');
 const financeService = require('../services/financeService');
+const inventoryService = require('../services/inventoryService');
 const { getDashboardOverview, getSensorDataByZone, getAlertsQuick, getDevicesStatus, invalidateCache } = require('../services/performanceService');
 const si = require('systeminformation');
 const os = require('os');
@@ -262,6 +263,92 @@ router.get('/finance-kpis', auth, async (req, res) => {
         },
         incomeTypes: financeService.INCOME_TYPES,
         expenseTypes: financeService.EXPENSE_TYPES
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/inventory-overview', auth, async (req, res) => {
+  try {
+    const { farm_id, category } = req.query;
+    const stats = inventoryService.getInventoryStats(farm_id);
+    const lowStock = inventoryService.getLowStockItems(farm_id);
+    const expiring = inventoryService.getExpiringItems(30, farm_id);
+    const items = inventoryService.getItems(farm_id, category, 'active').slice(0, 10);
+    const transactions = inventoryService.getTransactions(null, farm_id, null, null).slice(0, 10);
+    
+    res.json({
+      ok: true,
+      data: {
+        stats: stats || { totalItems: 0, totalValue: 0, categories: {} },
+        lowStock: lowStock || [],
+        expiringItems: expiring || [],
+        recentItems: items || [],
+        recentTransactions: transactions || []
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/inventory-alerts', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const lowStock = inventoryService.getLowStockItems(farm_id);
+    const expiring = inventoryService.getExpiringItems(30, farm_id);
+    const alerts = inventoryService.getActiveAlerts(farm_id, true);
+    
+    const alertSummary = {
+      lowStock: lowStock?.length || 0,
+      expiringSoon: expiring?.length || 0,
+      unresolved: alerts?.length || 0,
+      items: lowStock?.map(item => ({
+        id: item.id,
+        name: item.item_name,
+        current: item.current_stock,
+        min: item.min_stock_alert,
+        category: item.category
+      })) || []
+    };
+    
+    res.json({ ok: true, data: alertSummary });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/inventory-kpis', auth, async (req, res) => {
+  try {
+    const { farm_id, period = 'month' } = req.query;
+    const stats = inventoryService.getInventoryStats(farm_id);
+    const usageByCrop = inventoryService.getUsageByCrop(farm_id);
+    const usageByPeriod = inventoryService.getUsageByPeriod(farm_id, null, null);
+    
+    const totalValue = stats?.totalValue || 0;
+    const totalItems = stats?.totalItems || 0;
+    const categoryCount = stats?.categories ? Object.keys(stats.categories).length : 0;
+    
+    const byCategory = stats?.categories || {};
+    const categoryLabels = Object.keys(byCategory).map(cat => ({
+      name: cat,
+      count: byCategory[cat].count || 0,
+      value: byCategory[cat].value || 0
+    }));
+    
+    res.json({
+      ok: true,
+      data: {
+        overview: {
+          totalItems,
+          totalValue,
+          categories: categoryCount
+        },
+        byCategory: categoryLabels,
+        usageByCrop: usageByCrop || [],
+        recentUsage: usageByPeriod?.slice(0, 10) || []
       }
     });
   } catch (error) {

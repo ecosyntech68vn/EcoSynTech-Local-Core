@@ -853,7 +853,11 @@
           <a class="nav-item" href="#" onclick="showSection('finance')">
             <span class="nav-icon">💰</span>
             <span>Tài chính</span>
-            <span class="nav-badge" id="financeAlert">NEW</span>
+          </a>
+          <a class="nav-item" href="#" onclick="showSection('inventory')">
+            <span class="nav-icon">📦</span>
+            <span>Tồn kho</span>
+            <span class="nav-badge" id="inventoryAlert" style="display: none;">0</span>
           </a>
         </div>
         
@@ -1213,6 +1217,104 @@
           </div>
           <div class="card-body">
             <div id="financeProfitByCrop">
+              <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Inventory Dashboard (Hidden by default) -->
+      <div id="inventorySection" style="display: none;">
+        <div class="card-header" style="margin-bottom: 20px;">
+          <h2 class="card-title">📦 Tổng quan Tồn kho</h2>
+          <div style="display: flex; gap: 10px;">
+            <select id="inventoryCategory" class="form-input" style="width: auto;" onchange="loadInventoryDashboard()">
+              <option value="">Tất cả</option>
+              <option value="seeds">Hạt giống</option>
+              <option value="fertilizer">Phân bón</option>
+              <option value="pesticide">Thuốc BVTV</option>
+              <option value="feed">Thức ăn</option>
+              <option value="other">Vật tư khác</option>
+            </select>
+            <button class="btn btn-ghost" onclick="loadInventoryDashboard()">🔄</button>
+          </div>
+        </div>
+        
+        <!-- KPIs -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Tổng vật tư</div>
+              <div id="inventoryTotalItems" style="font-size: 28px; font-weight: 700; color: var(--primary-light);">---</div>
+              <div id="inventoryCategories" style="font-size: 12px; color: var(--text-muted);">---</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Giá trị kho</div>
+              <div id="inventoryTotalValue" style="font-size: 28px; font-weight: 700; color: var(--accent);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Tổng giá trị</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Cảnh báo</div>
+              <div id="inventoryLowStock" style="font-size: 28px; font-weight: 700; color: var(--danger);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Tồn kho thấp</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Sắp hết hạn</div>
+              <div id="inventoryExpiring" style="font-size: 28px; font-weight: 700; color: var(--warning);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Trong 30 ngày</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Alerts & Details -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">⚠️ Vật tư sắp hết</h3>
+            </div>
+            <div class="card-body">
+              <div id="inventoryLowStockList">
+                <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📅 Sắp hết hạn</h3>
+            </div>
+            <div class="card-body">
+              <div id="inventoryExpiringList">
+                <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Recent Items -->
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <h3 class="card-title">📋 Vật tư gần đây</h3>
+          </div>
+          <div class="card-body">
+            <div id="inventoryRecentItems">
+              <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- By Category -->
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <h3 class="card-title">📊 Theo danh mục</h3>
+          </div>
+          <div class="card-body">
+            <div id="inventoryByCategory">
               <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
             </div>
           </div>
@@ -1685,6 +1787,150 @@
       loadFinanceDashboard();
       loadFinanceSummary();
     });
+    
+    // Inventory Dashboard Functions
+    let inventoryInterval = null;
+    
+    function showSection(section) {
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      event.target.closest('.nav-item')?.classList.add('active');
+      
+      document.getElementById('financeSection').style.display = section === 'finance' ? 'block' : 'none';
+      document.getElementById('inventorySection').style.display = section === 'inventory' ? 'block' : 'none';
+      
+      if (section === 'finance') {
+        loadFinanceDashboard();
+        loadFinanceSummary();
+        if (!financeInterval) {
+          financeInterval = setInterval(() => { loadFinanceDashboard(); loadFinanceSummary(); }, 30000);
+        }
+        if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
+      } else if (section === 'inventory') {
+        loadInventoryDashboard();
+        if (!inventoryInterval) {
+          inventoryInterval = setInterval(loadInventoryDashboard, 30000);
+        }
+        if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
+      } else {
+        if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
+        if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
+      }
+    }
+    
+    function formatNumber(num) {
+      if (num === null || num === undefined) return '0';
+      return new Intl.NumberFormat('vi-VN').format(num);
+    }
+    
+    async function loadInventoryDashboard() {
+      try {
+        const category = document.getElementById('inventoryCategory')?.value || '';
+        const response = await fetch(`/api/dashboard/inventory-overview?category=${category}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (!response.ok) {
+          console.error('Inventory API error:', response.status);
+          return;
+        }
+        
+        const result = await response.json();
+        if (!result.ok) {
+          console.error('Inventory data error:', result.error);
+          return;
+        }
+        
+        const data = result.data;
+        const stats = data.stats || {};
+        
+        document.getElementById('inventoryTotalItems').textContent = formatNumber(stats.totalItems || 0);
+        document.getElementById('inventoryCategories').textContent = Object.keys(stats.categories || {}).length + ' danh mục';
+        document.getElementById('inventoryTotalValue').textContent = formatCurrency(stats.totalValue || 0);
+        document.getElementById('inventoryLowStock').textContent = (data.lowStock || []).length;
+        document.getElementById('inventoryExpiring').textContent = (data.expiringItems || []).length;
+        
+        const badge = document.getElementById('inventoryAlert');
+        const totalAlerts = (data.lowStock?.length || 0) + (data.expiringItems?.length || 0);
+        if (totalAlerts > 0) {
+          badge.style.display = 'inline';
+          badge.textContent = totalAlerts;
+        } else {
+          badge.style.display = 'none';
+        }
+        
+        if (data.lowStock && data.lowStock.length > 0) {
+          const lowStockHtml = data.lowStock.slice(0, 5).map(item => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-weight: 500;">${item.item_name || 'Vật tư'}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${item.category || ''}</div>
+              </div>
+              <div style="color: var(--danger); font-weight: 600;">
+                ${item.current_stock || 0} / ${item.min_stock_alert || 0}
+              </div>
+            </div>
+          `).join('');
+          document.getElementById('inventoryLowStockList').innerHTML = lowStockHtml;
+        } else {
+          document.getElementById('inventoryLowStockList').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có cảnh báo</div>';
+        }
+        
+        if (data.expiringItems && data.expiringItems.length > 0) {
+          const expiringHtml = data.expiringItems.slice(0, 5).map(item => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-weight: 500;">${item.item_name || 'Vật tư'}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${item.expiry_date || ''}</div>
+              </div>
+              <div style="color: var(--warning); font-weight: 600;">
+                ${item.current_stock || 0} ${item.unit || ''}
+              </div>
+            </div>
+          `).join('');
+          document.getElementById('inventoryExpiringList').innerHTML = expiringHtml;
+        } else {
+          document.getElementById('inventoryExpiringList').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có vật tư sắp hết hạn</div>';
+        }
+        
+        if (data.recentItems && data.recentItems.length > 0) {
+          const itemsHtml = data.recentItems.map(item => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-weight: 500;">${item.item_name || 'Vật tư'}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${item.category || ''}</div>
+              </div>
+              <div style="color: var(--text);">
+                ${item.current_stock || 0} ${item.unit || ''}
+              </div>
+            </div>
+          `).join('');
+          document.getElementById('inventoryRecentItems').innerHTML = itemsHtml;
+        } else {
+          document.getElementById('inventoryRecentItems').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có dữ liệu</div>';
+        }
+        
+        const kpisResponse = await fetch('/api/dashboard/inventory-kpis', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (kpisResponse.ok) {
+          const kpisResult = await kpisResponse.json();
+          if (kpisResult.ok && kpisResult.data.byCategory) {
+            const catHtml = kpisResult.data.byCategory.map(cat => `
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                <span>${cat.name}</span>
+                <span style="color: var(--text-muted);">${cat.count} vật tư</span>
+              </div>
+            `).join('');
+            document.getElementById('inventoryByCategory').innerHTML = catHtml || '<div style="text-align: center; color: var(--text-muted);">Không có dữ liệu</div>';
+          }
+        }
+        
+      } catch (err) {
+        console.error('Load inventory dashboard error:', err);
+      }
+    }
+    
+    document.getElementById('inventoryCategory')?.addEventListener('change', loadInventoryDashboard);
   </script>
 </body>
 </html>

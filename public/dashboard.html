@@ -1076,9 +1076,14 @@
       <header class="header">
         <div>
           <button class="menu-toggle" id="menuToggle">☰</button>
-          <h1 class="page-title">Tổng quan trang trại</h1>
+          <h1 class="page-title" data-i18n="dashboard">Tổng quan trang trại</h1>
         </div>
         <div class="header-actions" style="display: flex; gap: 10px; align-items: center;">
+          <select id="langSwitch" class="form-input" style="width: 100px; font-size: 12px;" title="Ngôn ngữ" onchange="setLanguage(this.value)">
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="zh">🇨🇳 中文</option>
+          </select>
           <input type="date" id="globalDateStart" class="form-input" style="width: 140px; font-size: 12px;" title="Từ ngày">
           <span style="color: var(--text-muted);">-</span>
           <input type="date" id="globalDateEnd" class="form-input" style="width: 140px; font-size: 12px;" title="Đến ngày">
@@ -1885,23 +1890,23 @@
       <nav class="bottom-nav">
         <a href="#" class="bottom-nav-item active" onclick="showSection('dashboard'); return false;">
           <span class="bottom-nav-icon">🏠</span>
-          <span>Dashboard</span>
+          <span data-i18n="dashboard">Dashboard</span>
         </a>
         <a href="#" class="bottom-nav-item" onclick="showSection('finance'); return false;">
           <span class="bottom-nav-icon">💰</span>
-          <span>Tài chính</span>
+          <span data-i18n="finance">Tài chính</span>
         </a>
         <a href="#" class="bottom-nav-item" onclick="showSection('inventory'); return false;">
           <span class="bottom-nav-icon">📦</span>
-          <span>Kho</span>
+          <span data-i18n="inventory">Kho</span>
         </a>
         <a href="#" class="bottom-nav-item" onclick="showSection('crops'); return false;">
           <span class="bottom-nav-icon">🌾</span>
-          <span>Cây trồng</span>
+          <span data-i18n="crops">Cây trồng</span>
         </a>
         <a href="#" class="bottom-nav-item" onclick="showSection('weather'); return false;">
           <span class="bottom-nav-icon">🌤️</span>
-          <span>Thời tiết</span>
+          <span data-i18n="weather">Thời tiết</span>
         </a>
       </nav>
     </main>
@@ -1958,6 +1963,169 @@
       Object.keys(localStorage).forEach(key => {
         if (key.startsWith(CACHE_PREFIX)) localStorage.removeItem(key);
       });
+    }
+    
+    // ========== INTERNATIONALIZATION (i18n) ==========
+    const translations = {
+      vi: {
+        dashboard: 'Tổng quan trang trại',
+        finance: 'Tài chính',
+        inventory: 'Tồn kho',
+        equipment: 'Máy móc',
+        labor: 'Lao động',
+        crops: 'Cây trồng',
+        weather: 'Thời tiết',
+        automation: 'Tự động hóa',
+        settings: 'Cài đặt',
+        search: 'Tìm kiếm...',
+        filter: 'Lọc',
+        refresh: 'Làm mới',
+        export: 'Export',
+        add: 'Thêm',
+        save: 'Lưu',
+        cancel: 'Hủy',
+        delete: 'Xóa',
+        edit: 'Sửa',
+        close: 'Đóng',
+        confirm: 'Xác nhận',
+        success: 'Thành công',
+        error: 'Lỗi',
+        warning: 'Cảnh báo',
+        info: 'Thông tin',
+        loading: 'Đang tải...',
+        noData: 'Không có dữ liệu',
+        total: 'Tổng',
+        active: 'Hoạt động',
+        inactive: 'Không hoạt động',
+        online: 'Online',
+        offline: 'Offline',
+        income: 'Thu nhập',
+        expenses: 'Chi phí',
+        profit: 'Lợi nhuận',
+        budget: 'Ngân sách',
+        fromDate: 'Từ ngày',
+        toDate: 'Đến ngày',
+        allModules: 'Tất cả',
+        allCategories: 'Tất cả danh mục',
+        installApp: 'Cài đặt ứng dụng',
+        language: 'Ngôn ngữ'
+      },
+      en: {
+        dashboard: 'Farm Overview',
+        finance: 'Finance',
+        inventory: 'Inventory',
+        equipment: 'Equipment',
+        labor: 'Labor',
+        crops: 'Crops',
+        weather: 'Weather',
+        automation: 'Automation',
+        settings: 'Settings',
+        search: 'Search...',
+        filter: 'Filter',
+        refresh: 'Refresh',
+        export: 'Export',
+        add: 'Add',
+        save: 'Save',
+        cancel: 'Cancel',
+        delete: 'Delete',
+        edit: 'Edit',
+        close: 'Close',
+        confirm: 'Confirm',
+        success: 'Success',
+        error: 'Error',
+        warning: 'Warning',
+        info: 'Info',
+        loading: 'Loading...',
+        noData: 'No data',
+        total: 'Total',
+        active: 'Active',
+        inactive: 'Inactive',
+        online: 'Online',
+        offline: 'Offline',
+        income: 'Income',
+        expenses: 'Expenses',
+        profit: 'Profit',
+        budget: 'Budget',
+        fromDate: 'From date',
+        toDate: 'To date',
+        allModules: 'All',
+        allCategories: 'All categories',
+        installApp: 'Install app',
+        language: 'Language'
+      },
+      zh: {
+        dashboard: '农场概览',
+        finance: '财务',
+        inventory: '库存',
+        equipment: '设备',
+        labor: '劳动',
+        crops: '作物',
+        weather: '天气',
+        automation: '自动化',
+        settings: '设置',
+        search: '搜索...',
+        filter: '筛选',
+        refresh: '刷新',
+        export: '导出',
+        add: '添加',
+        save: '保存',
+        cancel: '取消',
+        delete: '删除',
+        edit: '编辑',
+        close: '关闭',
+        confirm: '确认',
+        success: '成功',
+        error: '错误',
+        warning: '警告',
+        info: '信息',
+        loading: '加载中...',
+        noData: '暂无数据',
+        total: '总计',
+        active: '活跃',
+        inactive: '不活跃',
+        online: '在线',
+        offline: '离线',
+        income: '收入',
+        expenses: '支出',
+        profit: '利润',
+        budget: '预算',
+        fromDate: '开始日期',
+        toDate: '结束日期',
+        allModules: '全部',
+        allCategories: '全部分类',
+        installApp: '安装应用',
+        language: '语言'
+      }
+    };
+
+    let currentLang = localStorage.getItem('language') || 'vi';
+
+    function t(key) {
+      return translations[currentLang]?.[key] || translations['vi'][key] || key;
+    }
+
+    function setLanguage(lang) {
+      if (translations[lang]) {
+        currentLang = lang;
+        localStorage.setItem('language', lang);
+        updateUILanguage();
+        showToast(t('success') + ' - ' + t('language'), 'success');
+      }
+    }
+
+    function updateUILanguage() {
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        el.textContent = t(key);
+      });
+      
+      // Update placeholders
+      const searchInput = document.getElementById('globalSearch');
+      if (searchInput) searchInput.placeholder = '🔍 ' + t('search');
+      
+      // Update page title
+      const pageTitle = document.querySelector('.page-title');
+      if (pageTitle) pageTitle.textContent = t('dashboard');
     }
     
     // ========== GLOBAL FILTERS ==========
@@ -2629,6 +2797,12 @@
       
       // Initialize on load
       initTheme();
+      
+      // Initialize language
+      const savedLang = localStorage.getItem('language') || 'vi';
+      document.getElementById('langSwitch').value = savedLang;
+      currentLang = savedLang;
+      updateUILanguage();
     })();
     
     // ==================== Automation Functions ====================

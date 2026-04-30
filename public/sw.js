@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ecosyntech-v1';
+const CACHE_NAME = 'ecosyntech-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -7,12 +7,13 @@ const STATIC_ASSETS = [
   '/policies.html',
   '/css/mobile-system.css',
   '/manifest.json',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png'
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/icon-512-maskable.png'
 ];
 
-const API_CACHE_NAME = 'ecosyntech-api-v1';
-const API_CACHE_DURATION = 5 * 60 * 1000;
+const API_CACHE_NAME = 'ecosyntech-api-v2';
+const API_CACHE_DURATION = 30 * 1000; // 30 seconds for real-time data
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -139,3 +140,10 @@ self.addEventListener('sync', (event) => {
 async function syncSensorData() {
   console.log('[SW] Syncing sensor data...');
 }
+
+// Background sync for offline actions
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});

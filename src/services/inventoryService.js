@@ -381,28 +381,32 @@ function getLowStockItems(farmId = null) {
 }
 
 function getInventoryStats(farmId = null) {
-  let whereClause = farmId ? ` WHERE farm_id = '${farmId}'` : '';
+  let baseWhere = farmId ? `WHERE farm_id = ? AND status = 'active'` : `WHERE status = 'active'`;
+  let params = farmId ? [farmId] : [];
   
-  const totalItems = getOne(`SELECT COUNT(*) as count FROM inventory_items${whereClause} AND status = 'active'`);
+  const totalItems = getOne(`SELECT COUNT(*) as count FROM inventory_items ${baseWhere}`, params);
   
   const byCategory = getAll(`
     SELECT category, 
            COUNT(*) as item_count, 
-           SUM(current_stock) as total_quantity,
-           SUM(current_stock * cost_per_unit) as total_value
-    FROM inventory_items${whereClause ? whereClause + ' AND' : ' WHERE'} status = 'active'
+           COALESCE(SUM(current_stock), 0) as total_quantity,
+           COALESCE(SUM(current_stock * cost_per_unit), 0) as total_value
+    FROM inventory_items 
+    WHERE ${farmId ? 'farm_id = ? AND' : ''} status = 'active'
     GROUP BY category
-  `);
-
+  `, farmId ? [farmId] : []);
+  
   const totalValue = getOne(`
-    SELECT SUM(current_stock * cost_per_unit) as total 
-    FROM inventory_items${whereClause} AND status = 'active'
-  `);
-
+    SELECT COALESCE(SUM(current_stock * cost_per_unit), 0) as total 
+    FROM inventory_items 
+    WHERE ${farmId ? 'farm_id = ? AND' : ''} status = 'active'
+  `, farmId ? [farmId] : []);
+  
   const lowStock = getOne(`
     SELECT COUNT(*) as count 
-    FROM inventory_items${whereClause ? whereClause + ' AND' : ' WHERE'} current_stock <= min_stock_alert AND status = 'active'
-  `);
+    FROM inventory_items 
+    WHERE ${farmId ? 'farm_id = ? AND' : ''} (current_stock IS NULL OR current_stock <= COALESCE(min_stock_alert, 10)) AND status = 'active'
+  `, farmId ? [farmId] : []);
 
   const expiringSoon = getOne(`
     SELECT COUNT(*) as count FROM inventory_batches ib

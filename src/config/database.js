@@ -2091,7 +2091,134 @@ function seedAquacultureData() {
 }
 
 function seedInitialData() {
-  // Seeding functions are skipped - re-enable when ready
+  if (!db) return;
+  const bcrypt = require('bcryptjs');
+  const hashedPassword = bcrypt.hashSync('admin123', 10);
+  
+  try {
+    db.run('INSERT OR IGNORE INTO users (id, email, password, name, role) VALUES (?, ?, ?, ?, ?)',
+      ['usr_admin', 'admin@ecosyntech.com', hashedPassword, 'Administrator', 'admin']);
+  } catch(e) {}
+  
+  try { seedInventoryData(); } catch(e) { logger.warn('[Seed] Inventory: ' + e.message); }
+  try { seedEquipmentData(); } catch(e) { logger.warn('[Seed] Equipment: ' + e.message); }
+  try { seedLaborData(); } catch(e) { logger.warn('[Seed] Labor: ' + e.message); }
+  try { seedCropsData(); } catch(e) { logger.warn('[Seed] Crops: ' + e.message); }
+  try { seedOrdersData(); } catch(e) { logger.warn('[Seed] Orders: ' + e.message); }
+  try { seedPaymentsData(); } catch(e) { logger.warn('[Seed] Payments: ' + e.message); }
+  try { seedAutomationData(); } catch(e) { logger.warn('[Seed] Automation: ' + e.message); }
+  
+  logger.info('[DB] Seed data initialized for all modules');
+}
+
+function seedInventoryData() {
+  const items = [
+    { id: 'inv_001', item_name: 'Hạt giống lúa IR42', category: 'seed', current_stock: 500, unit: 'kg', farm_id: 'farm_001' },
+    { id: 'inv_002', item_name: 'Phân NPK 16-16-8', category: 'fertilizer', current_stock: 200, unit: 'kg', farm_id: 'farm_001' },
+    { id: 'inv_003', item_name: 'Thuốc trừ sâu Striker', category: 'pesticide', current_stock: 50, unit: 'lit', farm_id: 'farm_001' },
+    { id: 'inv_004', item_name: 'Dầu DO', category: 'fuel', current_stock: 1000, unit: 'lit', farm_id: 'farm_001' },
+    { id: 'inv_005', item_name: 'Máy bơm nước', category: 'tool', current_stock: 5, unit: 'chiếc', farm_id: 'farm_001' },
+  ];
+  
+  for (const item of items) {
+    db.run('INSERT OR IGNORE INTO inventory_items (id, item_name, category, current_stock, unit, farm_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))',
+      [item.id, item.item_name, item.category, item.current_stock, item.unit, item.farm_id, 'active']);
+  }
+}
+
+function seedEquipmentData() {
+  const equipment = [
+    { id: 'eq_001', equipment_name: 'Máy kéo Kubota', equipment_type: 'tractor', status: 'active', farm_id: 'farm_001' },
+    { id: 'eq_002', equipment_name: 'Máy bơm nước 5HP', equipment_type: 'pump', status: 'active', farm_id: 'farm_001' },
+    { id: 'eq_003', equipment_name: 'Cảm biến độ ẩm đất', equipment_type: 'sensor', status: 'active', farm_id: 'farm_001' },
+    { id: 'eq_004', equipment_name: 'Hệ thống tưới phun', equipment_type: 'irrigation', status: 'active', farm_id: 'farm_001' },
+    { id: 'eq_005', equipment_name: 'Máy thu hoạch', equipment_type: 'harvester', status: 'maintenance', farm_id: 'farm_001' },
+  ];
+  
+  for (const eq of equipment) {
+    try {
+      db.run('INSERT OR IGNORE INTO equipment_inventory (id, equipment_name, equipment_type, status, farm_id, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))',
+        [eq.id, eq.equipment_name, eq.equipment_type, eq.status, eq.farm_id]);
+    } catch(e) { logger.warn('[Seed] Equipment: ' + e.message); }
+  }
+}
+
+function seedLaborData() {
+  const workers = [
+    { id: 'wrk_001', worker_name: 'Nguyễn Văn A', position: 'manager', farm_id: 'farm_001' },
+    { id: 'wrk_002', worker_name: 'Trần Thị B', position: 'worker', farm_id: 'farm_001' },
+    { id: 'wrk_003', worker_name: 'Lê Văn C', position: 'technician', farm_id: 'farm_001' },
+    { id: 'wrk_004', worker_name: 'Phạm Thị D', position: 'worker', farm_id: 'farm_001' },
+  ];
+  
+  for (const w of workers) {
+    try {
+      db.run('INSERT OR IGNORE INTO workers (id, worker_name, position, status, farm_id, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))',
+        [w.id, w.worker_name, w.position, 'active', w.farm_id]);
+    } catch(e) {}
+  }
+}
+
+function seedCropsData() {
+  const crops = [
+    { id: 'crop_001', crop_name: 'Lúa IR42', variety: 'IR42', area_hectares: 10, status: 'growing', farm_id: 'farm_001' },
+    { id: 'crop_002', crop_name: 'Lúa ST24', variety: 'ST24', area_hectares: 5, status: 'seedling', farm_id: 'farm_001' },
+    { id: 'crop_003', crop_name: 'Rau muống', variety: 'Local', area_hectares: 2, status: 'harvesting', farm_id: 'farm_001' },
+    { id: 'crop_004', crop_name: 'Cà chua', variety: 'Cherry', area_hectares: 1, status: 'growing', farm_id: 'farm_001' },
+  ];
+  
+  for (const c of crops) {
+    try {
+      db.run('INSERT OR IGNORE INTO crops (id, crop_name, variety, area_hectares, status, farm_id, planted_at, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))',
+        [c.id, c.crop_name, c.variety, c.area_hectares, c.status, c.farm_id]);
+    } catch(e) {}
+  }
+}
+
+function seedOrdersData() {
+  const orders = [
+    { id: 'ord_001', customer_name: 'Công ty ABC', total_amount: 50000000, status: 'completed', farm_id: 'farm_001' },
+    { id: 'ord_002', customer_name: 'Siêu thị XYZ', total_amount: 30000000, status: 'completed', farm_id: 'farm_001' },
+    { id: 'ord_003', customer_name: 'Nhà hàng 5 sao', total_amount: 15000000, status: 'pending', farm_id: 'farm_001' },
+  ];
+  
+  for (const o of orders) {
+    try {
+      db.run('INSERT OR IGNORE INTO orders (id, customer_name, total_amount, status, farm_id, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))',
+        [o.id, o.customer_name, o.total_amount, o.status, o.farm_id]);
+    } catch(e) {}
+  }
+}
+
+function seedPaymentsData() {
+  const payments = [
+    { id: 'pay_001', amount: 50000000, status: 'completed', farm_id: 'farm_001' },
+    { id: 'pay_002', amount: 30000000, status: 'completed', farm_id: 'farm_001' },
+    { id: 'pay_003', amount: 15000000, status: 'pending', farm_id: 'farm_001' },
+    { id: 'pay_004', amount: 2000000, status: 'failed', farm_id: 'farm_001' },
+  ];
+  
+  for (const p of payments) {
+    try {
+      db.run('INSERT OR IGNORE INTO payments (id, amount, status, farm_id, created_at) VALUES (?, ?, ?, ?, datetime("now"))',
+        [p.id, p.amount, p.status, p.farm_id]);
+    } catch(e) {}
+  }
+}
+
+function seedAutomationData() {
+  const rules = [
+    { id: 'rule_001', rule_name: 'Tưới nước tự động', trigger_condition: 'soil_moisture < 30', action: 'start_pump', status: 'active', farm_id: 'farm_001' },
+    { id: 'rule_002', rule_name: 'Báo động nhiệt độ cao', trigger_condition: 'temperature > 35', action: 'send_alert', status: 'active', farm_id: 'farm_001' },
+    { id: 'rule_003', rule_name: 'Tắt máy khi không dùng', trigger_condition: 'idle > 2hours', action: 'stop_engine', status: 'inactive', farm_id: 'farm_001' },
+  ];
+  
+  for (const r of rules) {
+    try {
+      db.run('INSERT OR IGNORE INTO automation_rules (id, rule_name, trigger_condition, action, status, farm_id, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))',
+        [r.id, r.rule_name, r.trigger_condition, r.action, r.status, r.farm_id]);
+    } catch(e) {}
+  }
 }
 
 function getDatabase() {

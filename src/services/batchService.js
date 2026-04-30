@@ -229,6 +229,44 @@ function mapCategoryToProductType(category) {
   return mapping[category] || 'other';
 }
 
+function getProductTypeLabel(productType) {
+  const labels = {
+    vegetable: 'Rau củ',
+    fruit: 'Trái cây',
+    herb: 'Thảo dược',
+    grain: 'Ngũ cốc',
+    aquaculture: 'Thủy sản',
+    livestock: 'Chăn nuôi',
+    other: 'Sản phẩm'
+  };
+  return labels[productType] || labels.other;
+}
+
+function getStageOrder(stageType) {
+  const stage = STAGE_TYPES[stageType];
+  return stage ? stage.order : 5;
+}
+
+function validateBatchData(data) {
+  const validTypes = ['vegetable', 'fruit', 'herb', 'grain', 'aquaculture', 'livestock'];
+  const errors = [];
+  
+  if (!data.batch_code) {
+    errors.push('batch_code là bắt buộc');
+  }
+  if (!data.product_type || !validTypes.includes(data.product_type)) {
+    errors.push('product_type không hợp lệ');
+  }
+  if (!data.farm_id) {
+    errors.push('farm_id là bắt buộc');
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
+
 function syncPlantingToTraceability(plantingId) {
   const batch = getOne(
     'SELECT * FROM traceability_batches WHERE source_planting_id = ?',

@@ -35,6 +35,17 @@ const TRANSACTION_TYPES = {
   discard: { label: 'Hủy bỏ', icon: '🗑️' }
 };
 
+/**
+ * Tạo vật tư mới trong kho
+ * @param {Object} data - Dữ liệu vật tư
+ * @param {string} data.item_name - Tên vật tư (bắt buộc)
+ * @param {string} [data.farm_id] - ID farm
+ * @param {string} [data.category] - Loại (seeds, fertilizer, pesticide, etc)
+ * @param {number} [data.current_stock] - Số lượng tồn kho
+ * @param {string} [data.unit] - Đơn vị
+ * @param {number} [data.cost_per_unit] - Giá/đơn vị
+ * @returns {Object} Vật tư đã tạo
+ */
 function createItem(data) {
   const id = uuidv4();
   const now = new Date().toISOString();
@@ -64,6 +75,13 @@ function createItem(data) {
   return getOne('SELECT * FROM inventory_items WHERE id = ?', [id]);
 }
 
+/**
+ * Lấy danh sách vật tư trong kho
+ * @param {string} [farmId] - ID farm
+ * @param {string} [category] - Loại vật tư
+ * @param {string} [status] - Trạng thái
+ * @returns {Array<Object>} Danh sách vật tư
+ */
 function getItems(farmId = null, category = null, status = null) {
   let query = 'SELECT * FROM inventory_items WHERE 1=1';
   const params = [];
@@ -380,6 +398,11 @@ function getLowStockItems(farmId = null) {
   return items;
 }
 
+/**
+ * Lấy thống kê tồn kho
+ * @param {string} [farmId] - ID farm
+ * @returns {Object} Thống kê kho
+ */
 function getInventoryStats(farmId = null) {
   let baseWhere = farmId ? `WHERE farm_id = ? AND status = 'active'` : `WHERE status = 'active'`;
   let params = farmId ? [farmId] : [];

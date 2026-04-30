@@ -58,6 +58,17 @@ const MAINTENANCE_TYPES = {
 
 // ========== CATEGORY FUNCTIONS ==========
 
+/**
+ * Tạo danh mục thiết bị mới
+ * @param {Object} data - Dữ liệu danh mục
+ * @param {string} [data.farm_id] - ID farm
+ * @param {string} [data.category_code] - Mã danh mục
+ * @param {string} data.category_name - Tên danh mục
+ * @param {string} [data.category_name_vi] - Tên tiếng Việt
+ * @param {string} [data.category_type] - Loại danh mục
+ * @param {string} [data.description] - Mô tả
+ * @returns {Object} Danh mục đã tạo
+ */
 function createCategory(data) {
   const id = uuidv4();
   const now = new Date().toISOString();
@@ -82,6 +93,12 @@ function createCategory(data) {
   return getOne('SELECT * FROM equipment_categories WHERE id = ?', [id]);
 }
 
+/**
+ * Lấy danh sách danh mục thiết bị
+ * @param {string} [farmId] - ID farm
+ * @param {string} [type] - Loại danh mục
+ * @returns {Array<Object>} Danh sách danh mục
+ */
 function getCategories(farmId, type) {
   let query = 'SELECT * FROM equipment_categories WHERE status = ?';
   const params = ['active'];
@@ -93,6 +110,19 @@ function getCategories(farmId, type) {
 
 // ========== EQUIPMENT INVENTORY FUNCTIONS ==========
 
+/**
+ * Tạo thiết bị mới
+ * @param {Object} data - Dữ liệu thiết bị
+ * @param {string} data.equipment_name - Tên thiết bị (bắt buộc)
+ * @param {string} [data.farm_id] - ID farm
+ * @param {string} [data.equipment_code] - Mã thiết bị
+ * @param {string} [data.category_id] - ID danh mục
+ * @param {string} [data.brand] - Hãng
+ * @param {string} [data.model] - Model
+ * @param {number} [data.purchase_price] - Giá mua
+ * @param {string} [data.status] - Trạng thái
+ * @returns {Object} Thiết bị đã tạo
+ */
 function createEquipment(data) {
   if (!data || !data.equipment_name) {
     throw new Error('Missing required field: equipment_name');
@@ -159,6 +189,13 @@ function createEquipment(data) {
   return getOne('SELECT * FROM equipment_inventory WHERE id = ?', [id]);
 }
 
+/**
+ * Lấy danh sách thiết bị
+ * @param {string} [farmId] - ID farm
+ * @param {string} [categoryId] - ID danh mục
+ * @param {string} [status] - Trạng thái (active, idle, maintenance, retired)
+ * @returns {Array<Object>} Danh sách thiết bị
+ */
 function getEquipment(farmId, categoryId, status) {
   let query = 'SELECT ei.*, ec.category_name FROM equipment_inventory ei LEFT JOIN equipment_categories ec ON ei.category_id = ec.id WHERE 1=1';
   const params = [];
@@ -593,6 +630,13 @@ function predictMaintenance(equipmentId, daysAhead = 30) {
 
 // ========== STATISTICS FUNCTIONS ==========
 
+/**
+ * Lấy thống kê thiết bị
+ * @param {string} [farmId] - ID farm
+ * @param {string} [startDate] - Ngày bắt đầu
+ * @param {string} [endDate] - Ngày kết thúc
+ * @returns {Object} Thống kê thiết bị
+ */
 function getEquipmentStats(farmId, startDate, endDate) {
   const stats = {
     total_equipment: 0,

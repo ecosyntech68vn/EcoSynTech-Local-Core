@@ -1816,6 +1816,91 @@ function createTables() {
     )
   `);
 
+  // ========== PAYMENTS TABLE ==========
+  db.run(`
+    CREATE TABLE IF NOT EXISTS payments (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      order_id TEXT,
+      amount REAL DEFAULT 0,
+      currency TEXT DEFAULT 'VND',
+      status TEXT DEFAULT 'pending',
+      payment_method TEXT,
+      transaction_id TEXT,
+      description TEXT,
+      customer_name TEXT,
+      customer_email TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // ========== AUTOMATION TABLES ==========
+  // Automation rules for IoT devices
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rules (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      name TEXT NOT NULL,
+      name_vi TEXT,
+      description TEXT,
+      type TEXT DEFAULT 'static',
+      trigger_type TEXT,
+      trigger_condition TEXT,
+      action TEXT,
+      enabled INTEGER DEFAULT 1,
+      priority INTEGER DEFAULT 0,
+      last_triggered TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // IoT devices
+  db.run(`
+    CREATE TABLE IF NOT EXISTS devices (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      device_code TEXT UNIQUE,
+      name TEXT NOT NULL,
+      name_vi TEXT,
+      device_type TEXT,
+      location TEXT,
+      status TEXT DEFAULT 'offline',
+      last_seen TEXT,
+      ip_address TEXT,
+      mac_address TEXT,
+      firmware_version TEXT,
+      battery_level REAL,
+      signal_strength INTEGER,
+      metadata TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Automation schedules
+  db.run(`
+    CREATE TABLE IF NOT EXISTS schedules (
+      id TEXT PRIMARY KEY,
+      farm_id TEXT,
+      schedule_code TEXT UNIQUE,
+      name TEXT NOT NULL,
+      name_vi TEXT,
+      schedule_type TEXT,
+      device_id TEXT,
+      action TEXT,
+      cron_expression TEXT,
+      interval_minutes INTEGER,
+      next_run TEXT,
+      last_run TEXT,
+      enabled INTEGER DEFAULT 1,
+      status TEXT DEFAULT 'active',
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   // ========== FINANCIAL MANAGEMENT TABLES ==========
   // 5S: Sort, Set in Order, Shine, Standardize, Sustain
   // PDCA: Plan, Do, Check, Act
@@ -2208,15 +2293,41 @@ function seedPaymentsData() {
 
 function seedAutomationData() {
   const rules = [
-    { id: 'rule_001', rule_name: 'Tưới nước tự động', trigger_condition: 'soil_moisture < 30', action: 'start_pump', status: 'active', farm_id: 'farm_001' },
-    { id: 'rule_002', rule_name: 'Báo động nhiệt độ cao', trigger_condition: 'temperature > 35', action: 'send_alert', status: 'active', farm_id: 'farm_001' },
-    { id: 'rule_003', rule_name: 'Tắt máy khi không dùng', trigger_condition: 'idle > 2hours', action: 'stop_engine', status: 'inactive', farm_id: 'farm_001' },
+    { id: 'rule_001', name: 'Tưới nước tự động', name_vi: 'Tưới nước tự động', description: 'Tưới nước khi độ ẩm thấp', type: 'sensor', trigger_condition: 'soil_moisture < 30', action: 'start_pump', enabled: 1, farm_id: 'farm_001' },
+    { id: 'rule_002', name: 'Báo động nhiệt độ cao', name_vi: 'Cảnh báo nhiệt độ', description: 'Gửi cảnh báo khi nhiệt độ cao', type: 'sensor', trigger_condition: 'temperature > 35', action: 'send_alert', enabled: 1, farm_id: 'farm_001' },
+    { id: 'rule_003', name: 'Tắt máy khi không dùng', name_vi: 'Tắt máy tiết kiệm', description: 'Tắt máy sau 2 giờ không sử dụng', type: 'timer', trigger_condition: 'idle > 2hours', action: 'stop_engine', enabled: 0, farm_id: 'farm_001' },
   ];
   
   for (const r of rules) {
     try {
-      db.run('INSERT OR IGNORE INTO automation_rules (id, rule_name, trigger_condition, action, status, farm_id, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"))',
-        [r.id, r.rule_name, r.trigger_condition, r.action, r.status, r.farm_id]);
+      db.run('INSERT OR IGNORE INTO rules (id, name, name_vi, description, type, trigger_condition, action, enabled, farm_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))',
+        [r.id, r.name, r.name_vi, r.description, r.type, r.trigger_condition, r.action, r.enabled, r.farm_id]);
+    } catch(e) {}
+  }
+
+  const devices = [
+    { id: 'dev_001', device_code: 'IOT-001', name: 'Cảm biến độ ẩm đất 1', name_vi: 'Cảm biến độ ẩm đất 1', device_type: 'sensor', location: 'Vườn A1', status: 'online', farm_id: 'farm_001' },
+    { id: 'dev_002', device_code: 'IOT-002', name: 'Cảm biến nhiệt độ 1', name_vi: 'Cảm biến nhiệt độ 1', device_type: 'sensor', location: 'Vườn A1', status: 'online', farm_id: 'farm_001' },
+    { id: 'dev_003', device_code: 'IOT-003', name: 'Bơm nước tự động', name_vi: 'Bơm nước tự động', device_type: 'actuator', location: 'Hồ nước', status: 'online', farm_id: 'farm_001' },
+    { id: 'dev_004', device_code: 'IOT-004', name: 'Camera giám sát', name_vi: 'Camera giám sát', device_type: 'camera', status: 'offline', farm_id: 'farm_001' },
+  ];
+
+  for (const d of devices) {
+    try {
+      db.run('INSERT OR IGNORE INTO devices (id, device_code, name, name_vi, device_type, location, status, farm_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))',
+        [d.id, d.device_code, d.name, d.name_vi, d.device_type, d.location, d.status, d.farm_id]);
+    } catch(e) {}
+  }
+
+  const schedules = [
+    { id: 'sch_001', schedule_code: 'SCH-001', name: 'Tưới nước buổi sáng', name_vi: 'Tưới nước buổi sáng', schedule_type: 'daily', device_id: 'dev_003', action: 'start_pump', cron_expression: '0 6 * * *', next_run: '2025-05-01 06:00:00', enabled: 1, farm_id: 'farm_001' },
+    { id: 'sch_002', schedule_code: 'SCH-002', name: 'Tưới nước buổi chiều', name_vi: 'Tưới nước buổi chiều', schedule_type: 'daily', device_id: 'dev_003', action: 'start_pump', cron_expression: '0 17 * * *', next_run: '2025-04-30 17:00:00', enabled: 1, farm_id: 'farm_001' },
+  ];
+
+  for (const s of schedules) {
+    try {
+      db.run('INSERT OR IGNORE INTO schedules (id, schedule_code, name, name_vi, schedule_type, device_id, action, cron_expression, next_run, enabled, farm_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))',
+        [s.id, s.schedule_code, s.name, s.name_vi, s.schedule_type, s.device_id, s.action, s.cron_expression, s.next_run, s.enabled, s.farm_id]);
     } catch(e) {}
   }
 }

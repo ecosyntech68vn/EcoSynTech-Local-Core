@@ -80,6 +80,13 @@ function createWorker(data) {
   return getOne('SELECT * FROM labor_workers WHERE id = ?', [id]);
 }
 
+/**
+ * Lấy danh sách công nhân
+ * @param {string} [farmId] - ID farm
+ * @param {string} [position] - Chức vụ
+ * @param {string} [status] - Trạng thái
+ * @returns {Array<Object>} Danh sách công nhân
+ */
 function getWorkers(farmId, position, status) {
   let query = 'SELECT * FROM labor_workers WHERE 1=1';
   const params = [];
@@ -240,6 +247,15 @@ function completeTask(taskId, workerId, hoursWorked, productivityScore, notes) {
   return { success: true, completed_at: now };
 }
 
+/**
+ * Lấy danh sách công việc
+ * @param {string} [farmId] - ID farm
+ * @param {string} [status] - Trạng thái
+ * @param {string} [cropId] - ID cây trồng
+ * @param {string} [startDate] - Ngày bắt đầu
+ * @param {string} [endDate] - Ngày kết thúc
+ * @returns {Array<Object>} Danh sách công việc
+ */
 function getTasks(farmId, status, cropId, startDate, endDate) {
   let query = 'SELECT lt.*, c.name_vi as crop_name FROM labor_tasks lt LEFT JOIN crops c ON lt.crop_id = c.id WHERE 1=1';
   const params = [];
@@ -316,6 +332,13 @@ function getLaborCostByCrop(farmId, startDate, endDate) {
   return getAll(query, params);
 }
 
+/**
+ * Lấy thống kê lao động
+ * @param {string} [farmId] - ID farm
+ * @param {string} [startDate] - Ngày bắt đầu
+ * @param {string} [endDate] - Ngày kết thúc
+ * @returns {Object} Thống kê lao động
+ */
 function getLaborStats(farmId, startDate, endDate) {
   const workers = getOne('SELECT COUNT(*) as count FROM labor_workers WHERE status = active' + (farmId ? ' AND farm_id = ?' : ''), farmId ? [farmId] : []);
   const attendance = getOne('SELECT COUNT(*) as total_shifts, SUM(total_hours) as total_hours FROM labor_attendance la WHERE 1=1' + (farmId ? ' AND la.farm_id = ?' : ''), farmId ? [farmId] : []);

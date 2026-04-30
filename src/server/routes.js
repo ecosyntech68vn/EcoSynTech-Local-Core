@@ -57,6 +57,11 @@ function registerRoutes(app) {
   app.use('/api/stats', require('../routes/stats'));
   app.use('/api/analytics', require('../routes/analytics'));
   app.use('/api/dashboard', require('../routes/dashboard'));
+  
+  // ============================================================
+  // API VERSIONING - v1 (Backward Compatible)
+  // ============================================================
+  app.use('/api/v1', require('../routes/v1'));
 
   // ============================================================
   // ALERTS & MONITORING - A.16 Incident Management

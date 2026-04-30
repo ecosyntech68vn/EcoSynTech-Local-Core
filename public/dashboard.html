@@ -2251,10 +2251,128 @@
       return token ? { 'Authorization': `Bearer ${token}` } : {};
     }
     
-    // Simulate real-time updates
+    // ========== REAL-TIME OPTIMIZATION ==========
+    const REFRESH_INTERVALS = {
+      sensors: 15000,
+      finance: 30000,
+      inventory: 30000,
+      equipment: 30000,
+      labor: 30000,
+      crops: 30000,
+      weather: 60000
+    };
+    
+    let isTabVisible = true;
+    let connectionStatus = 'online';
+    let wsConnection = null;
+    let lastDataHashes = {};
+    
+    function hashData(data) {
+      return JSON.stringify(data).slice(0, 50);
+    }
+    
+    function hasDataChanged(key, data) {
+      const newHash = hashData(data);
+      if (lastDataHashes[key] === newHash) return false;
+      lastDataHashes[key] = newHash;
+      return true;
+    }
+    
+    document.addEventListener('visibilitychange', () => {
+      isTabVisible = !document.hidden;
+      if (isTabVisible) {
+        refreshAllSections();
+        showToast('Đã cập nhật dữ liệu', 'success');
+      }
+    });
+    
+    window.addEventListener('online', () => {
+      connectionStatus = 'online';
+      updateConnectionIndicator();
+      showToast('Kết nối đã khôi phục', 'success');
+    });
+    
+    window.addEventListener('offline', () => {
+      connectionStatus = 'offline';
+      updateConnectionIndicator();
+      showToast('Mất kết nối mạng', 'error');
+    });
+    
+    function updateConnectionIndicator() {
+      const existing = document.getElementById('connectionIndicator');
+      if (existing) existing.remove();
+      
+      const indicator = document.createElement('div');
+      indicator.id = 'connectionIndicator';
+      indicator.style.cssText = `
+        position: fixed; bottom: 20px; right: 20px;
+        padding: 8px 16px; border-radius: 20px;
+        font-size: 12px; font-weight: 500;
+        background: ${connectionStatus === 'online' ? 'var(--success)' : 'var(--danger)'};
+        color: white; z-index: 9999;
+        display: flex; align-items: center; gap: 8px;
+      `;
+      indicator.innerHTML = connectionStatus === 'online' ? '🟢 Kết nối' : '🔴 Offline';
+      document.body.appendChild(indicator);
+      
+      if (connectionStatus === 'online') {
+        setTimeout(() => indicator.remove(), 3000);
+      }
+    }
+    
+    function refreshAllSections() {
+      const currentSection = document.querySelector('.nav-item.active')?.dataset?.section || 'dashboard';
+      if (currentSection === 'finance') loadFinanceDashboard();
+      else if (currentSection === 'inventory') loadInventoryDashboard();
+      else if (currentSection === 'equipment') loadEquipmentDashboard();
+      else if (currentSection === 'labor') loadLaborDashboard();
+      else if (currentSection === 'crops') loadCropsDashboard();
+      else if (currentSection === 'weather') loadWeatherDashboard();
+    }
+    
+    function smartRefresh(section, loadFn) {
+      if (!isTabVisible || connectionStatus !== 'online') return;
+      loadFn();
+    }
+    
+    // WebSocket for real-time updates (if available)
+    function initWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      
+      try {
+        wsConnection = new WebSocket(wsUrl);
+        
+        wsConnection.onopen = () => {
+          console.log('WebSocket connected');
+          updateConnectionIndicator();
+        };
+        
+        wsConnection.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'sensor_update' && isTabVisible) {
+              refreshAllSections();
+            }
+          } catch (e) {}
+        };
+        
+        wsConnection.onclose = () => {
+          setTimeout(initWebSocket, 5000);
+        };
+      } catch (e) {
+        console.log('WebSocket not available, using polling');
+      }
+    }
+    
+    if (WebSocket) initWebSocket();
+    
+    // Adaptive refresh - only refresh active section
     setInterval(() => {
-      showToast('Cập nhật cảm biến mới', 'success');
-    }, 30000);
+      if (isTabVisible && connectionStatus === 'online') {
+        refreshAllSections();
+      }
+    }, 45000);
 
     // PWA Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -2663,8 +2781,8 @@
       if (section === 'finance') {
         loadFinanceDashboard();
         loadFinanceSummary();
-        if (!financeInterval) {
-          financeInterval = setInterval(() => { loadFinanceDashboard(); loadFinanceSummary(); }, 30000);
+        if (!financeInterval && isTabVisible) {
+          financeInterval = setInterval(() => { if (isTabVisible) { loadFinanceDashboard(); loadFinanceSummary(); } }, REFRESH_INTERVALS.finance);
         }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
@@ -2673,8 +2791,8 @@
         if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
       } else if (section === 'inventory') {
         loadInventoryDashboard();
-        if (!inventoryInterval) {
-          inventoryInterval = setInterval(loadInventoryDashboard, 30000);
+        if (!inventoryInterval && isTabVisible) {
+          inventoryInterval = setInterval(() => { if (isTabVisible) loadInventoryDashboard(); }, REFRESH_INTERVALS.inventory);
         }
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
@@ -2683,8 +2801,8 @@
         if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
       } else if (section === 'equipment') {
         loadEquipmentDashboard();
-        if (!equipmentInterval) {
-          equipmentInterval = setInterval(loadEquipmentDashboard, 30000);
+        if (!equipmentInterval && isTabVisible) {
+          equipmentInterval = setInterval(() => { if (isTabVisible) loadEquipmentDashboard(); }, REFRESH_INTERVALS.equipment);
         }
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
@@ -2693,8 +2811,8 @@
         if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
       } else if (section === 'labor') {
         loadLaborDashboard();
-        if (!laborInterval) {
-          laborInterval = setInterval(loadLaborDashboard, 30000);
+        if (!laborInterval && isTabVisible) {
+          laborInterval = setInterval(() => { if (isTabVisible) loadLaborDashboard(); }, REFRESH_INTERVALS.labor);
         }
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
@@ -2703,8 +2821,8 @@
         if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
       } else if (section === 'crops') {
         loadCropsDashboard();
-        if (!cropsInterval) {
-          cropsInterval = setInterval(loadCropsDashboard, 30000);
+        if (!cropsInterval && isTabVisible) {
+          cropsInterval = setInterval(() => { if (isTabVisible) loadCropsDashboard(); }, REFRESH_INTERVALS.crops);
         }
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
@@ -2713,8 +2831,8 @@
         if (weatherInterval) { clearInterval(weatherInterval); weatherInterval = null; }
       } else if (section === 'weather') {
         loadWeatherDashboard();
-        if (!weatherInterval) {
-          weatherInterval = setInterval(loadWeatherDashboard, 60000);
+        if (!weatherInterval && isTabVisible) {
+          weatherInterval = setInterval(() => { if (isTabVisible) loadWeatherDashboard(); }, REFRESH_INTERVALS.weather);
         }
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }

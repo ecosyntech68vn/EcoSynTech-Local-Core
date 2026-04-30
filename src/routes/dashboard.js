@@ -6,6 +6,7 @@ const financeService = require('../services/financeService');
 const inventoryService = require('../services/inventoryService');
 const equipmentService = require('../services/equipmentService');
 const laborService = require('../services/laborService');
+const cropService = require('../services/cropService');
 const { getDashboardOverview, getSensorDataByZone, getAlertsQuick, getDevicesStatus, invalidateCache } = require('../services/performanceService');
 const si = require('systeminformation');
 const os = require('os');
@@ -554,6 +555,100 @@ router.get('/labor-kpis', auth, async (req, res) => {
         byPosition: Object.entries(byPosition).map(([name, count]) => ({ name, count })),
         laborCostByCrop: laborCost?.slice(0, 5) || [],
         totalLaborCost: totalCost
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/crops-overview', auth, async (req, res) => {
+  try {
+    const { farm_id, status } = req.query;
+    const plantings = cropService.getAllPlantings(farm_id, status);
+    const stats = cropService.getCropStats(farm_id);
+    
+    const total = plantings?.length || 0;
+    const active = plantings?.filter(p => p.status === 'active' || p.status === 'growing').length || 0;
+    const harvested = plantings?.filter(p => p.status === 'harvested').length || 0;
+    const dormant = plantings?.filter(p => p.status === 'dormant').length || 0;
+    
+    res.json({
+      ok: true,
+      data: {
+        stats: {
+          total,
+          active,
+          harvested,
+          dormant,
+          growthRate: total > 0 ? Math.round((active / total) * 100) : 0
+        },
+        plantings: plantings?.slice(0, 10) || [],
+        cropStats: stats || {}
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/crops-alerts', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const plantings = cropService.getAllPlantings(farm_id, 'active');
+    
+    const now = new Date();
+    const alerts = {
+      total: plantings?.length || 0,
+      active: plantings?.filter(p => p.status === 'active' || p.status === 'growing').length || 0,
+      needsWater: 0,
+      needsHarvest: 0,
+      recentlyPlanted: plantings?.filter(p => {
+        const planted = new Date(p.planting_date);
+        const daysDiff = (now - planted) / (1000 * 60 * 60 * 24);
+        return daysDiff <= 7;
+      }).length || 0
+    };
+    
+    res.json({ ok: true, data: alerts });
+  } catch (error) {
+    res.status(500).json({ ok: false, error: error.message });
+  }
+});
+
+router.get('/crops-kpis', auth, async (req, res) => {
+  try {
+    const { farm_id } = req.query;
+    const stats = cropService.getCropStats(farm_id);
+    const plantings = cropService.getAllPlantings(farm_id, null);
+    
+    const byStatus = {
+      active: plantings?.filter(p => p.status === 'active' || p.status === 'growing').length || 0,
+      harvested: plantings?.filter(p => p.status === 'harvested').length || 0,
+      dormant: plantings?.filter(p => p.status === 'dormant').length || 0,
+      failed: plantings?.filter(p => p.status === 'failed').length || 0
+    };
+    
+    const byCrop = {};
+    plantings?.forEach(p => {
+      const crop = p.crop_name || p.name || 'unknown';
+      byCrop[crop] = (byCrop[crop] || 0) + 1;
+    });
+    
+    const totalArea = plantings?.reduce((sum, p) => sum + (p.area || 0), 0) || 0;
+    
+    res.json({
+      ok: true,
+      data: {
+        overview: {
+          totalPlantings: plantings?.length || 0,
+          activePlantings: byStatus.active,
+          harvestedPlantings: byStatus.harvested,
+          totalArea,
+          byStatus
+        },
+        byCrop: Object.entries(byCrop).map(([name, count]) => ({ name, count })),
+        cropStats: stats || {}
       }
     });
   } catch (error) {

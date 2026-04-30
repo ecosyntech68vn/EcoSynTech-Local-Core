@@ -869,6 +869,11 @@
             <span>Lao động</span>
             <span class="nav-badge" id="laborAlert" style="display: none;">0</span>
           </a>
+          <a class="nav-item" href="#" onclick="showSection('crops')">
+            <span class="nav-icon">🌱</span>
+            <span>Cây trồng</span>
+            <span class="nav-badge" id="cropsAlert" style="display: none;">0</span>
+          </a>
         </div>
         
         <div class="nav-section">
@@ -1510,6 +1515,89 @@
         </div>
       </div>
       
+      <!-- Crops Dashboard (Hidden by default) -->
+      <div id="cropsSection" style="display: none;">
+        <div class="card-header" style="margin-bottom: 20px;">
+          <h2 class="card-title">🌱 Tổng quan Cây trồng</h2>
+          <div style="display: flex; gap: 10px;">
+            <select id="cropsStatus" class="form-input" style="width: auto;" onchange="loadCropsDashboard()">
+              <option value="">Tất cả</option>
+              <option value="active">Đang grow</option>
+              <option value="harvested">Đã thu hoạch</option>
+            </select>
+            <button class="btn btn-ghost" onclick="loadCropsDashboard()">🔄</button>
+          </div>
+        </div>
+        
+        <!-- KPIs -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Tổng lô trồng</div>
+              <div id="cropsTotal" style="font-size: 28px; font-weight: 700; color: var(--primary-light);">---</div>
+              <div id="cropsActive" style="font-size: 12px; color: var(--text-muted);">---</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Đang grow</div>
+              <div id="cropsGrowing" style="font-size: 28px; font-weight: 700; color: var(--success);">---</div>
+              <div id="cropsGrowthRate" style="font-size: 12px; color: var(--text-muted);">---</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Đã thu hoạch</div>
+              <div id="cropsHarvested" style="font-size: 28px; font-weight: 700; color: var(--accent);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Lô trồng</div>
+            </div>
+          </div>
+          <div class="card" style="margin: 0;">
+            <div class="card-body" style="text-align: center;">
+              <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 8px;">Tổng diện tích</div>
+              <div id="cropsArea" style="font-size: 28px; font-weight: 700; color: var(--warning);">---</div>
+              <div style="font-size: 12px; color: var(--text-muted);">m²</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Plantings & Status -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">🌿 Lô trồng gần đây</h3>
+            </div>
+            <div class="card-body">
+              <div id="cropsPlantingsList">
+                <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">📊 Theo trạng thái</h3>
+            </div>
+            <div class="card-body">
+              <div id="cropsByStatus">
+                <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- By Crop -->
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <h3 class="card-title">📈 Theo loại cây</h3>
+          </div>
+          <div class="card-body">
+            <div id="cropsByCrop">
+              <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <!-- Devices -->
       <div class="card" style="margin-top: 24px;">
         <div class="card-header">
@@ -1981,6 +2069,7 @@
     let inventoryInterval = null;
     let equipmentInterval = null;
     let laborInterval = null;
+    let cropsInterval = null;
     
     function showSection(section) {
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
@@ -1990,6 +2079,7 @@
       document.getElementById('inventorySection').style.display = section === 'inventory' ? 'block' : 'none';
       document.getElementById('equipmentSection').style.display = section === 'equipment' ? 'block' : 'none';
       document.getElementById('laborSection').style.display = section === 'labor' ? 'block' : 'none';
+      document.getElementById('cropsSection').style.display = section === 'crops' ? 'block' : 'none';
       
       if (section === 'finance') {
         loadFinanceDashboard();
@@ -2000,6 +2090,7 @@
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
         if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
+        if (cropsInterval) { clearInterval(cropsInterval); cropsInterval = null; }
       } else if (section === 'inventory') {
         loadInventoryDashboard();
         if (!inventoryInterval) {
@@ -2008,6 +2099,7 @@
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
         if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
+        if (cropsInterval) { clearInterval(cropsInterval); cropsInterval = null; }
       } else if (section === 'equipment') {
         loadEquipmentDashboard();
         if (!equipmentInterval) {
@@ -2016,6 +2108,7 @@
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
         if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
+        if (cropsInterval) { clearInterval(cropsInterval); cropsInterval = null; }
       } else if (section === 'labor') {
         loadLaborDashboard();
         if (!laborInterval) {
@@ -2024,11 +2117,22 @@
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
+        if (cropsInterval) { clearInterval(cropsInterval); cropsInterval = null; }
+      } else if (section === 'crops') {
+        loadCropsDashboard();
+        if (!cropsInterval) {
+          cropsInterval = setInterval(loadCropsDashboard, 30000);
+        }
+        if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
+        if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
+        if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
+        if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
       } else {
         if (financeInterval) { clearInterval(financeInterval); financeInterval = null; }
         if (inventoryInterval) { clearInterval(inventoryInterval); inventoryInterval = null; }
         if (equipmentInterval) { clearInterval(equipmentInterval); equipmentInterval = null; }
         if (laborInterval) { clearInterval(laborInterval); laborInterval = null; }
+        if (cropsInterval) { clearInterval(cropsInterval); cropsInterval = null; }
       }
     }
     
@@ -2376,6 +2480,116 @@
     }
     
     document.getElementById('laborStatus')?.addEventListener('change', loadLaborDashboard);
+    
+    // Crops Dashboard Functions
+    let cropsInterval = null;
+    
+    async function loadCropsDashboard() {
+      try {
+        const status = document.getElementById('cropsStatus')?.value || '';
+        const response = await fetch(`/api/dashboard/crops-overview?status=${status}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        
+        if (!response.ok) {
+          console.error('Crops API error:', response.status);
+          return;
+        }
+        
+        const result = await response.json();
+        if (!result.ok) {
+          console.error('Crops data error:', result.error);
+          return;
+        }
+        
+        const data = result.data;
+        const stats = data.stats || {};
+        
+        document.getElementById('cropsTotal').textContent = formatNumber(stats.total || 0);
+        document.getElementById('cropsActive').textContent = (stats.active || 0) + ' đang grow';
+        document.getElementById('cropsGrowing').textContent = formatNumber(stats.active || 0);
+        document.getElementById('cropsHarvested').textContent = formatNumber(stats.harvested || 0);
+        document.getElementById('cropsGrowthRate').textContent = (stats.growthRate || 0) + '% đang grow';
+        document.getElementById('cropsArea').textContent = formatNumber(Math.round(data.cropStats?.totalArea || 0));
+        
+        const badge = document.getElementById('cropsAlert');
+        const totalAlerts = (stats.active || 0);
+        if (totalAlerts > 0) {
+          badge.style.display = 'inline';
+          badge.textContent = totalAlerts;
+        } else {
+          badge.style.display = 'none';
+        }
+        
+        if (data.plantings && data.plantings.length > 0) {
+          const plantingHtml = data.plantings.map(planting => `
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border);">
+              <div>
+                <div style="font-weight: 500;">${planting.crop_name || planting.name || 'Cây trồng'}</div>
+                <div style="font-size: 12px; color: var(--text-muted);">${planting.area || 0} m² • ${planting.planting_date || ''}</div>
+              </div>
+              <span style="font-weight: 600; color: ${planting.status === 'active' || planting.status === 'growing' ? 'var(--success)' : planting.status === 'harvested' ? 'var(--accent)' : 'var(--text-muted)'}">
+                ${planting.status === 'active' || planting.status === 'growing' ? 'Đang grow' : planting.status === 'harvested' ? 'Đã thu hoạch' : planting.status === 'dormant' ? 'Ngủ' : planting.status || ''}
+              </span>
+            </div>
+          `).join('');
+          document.getElementById('cropsPlantingsList').innerHTML = plantingHtml;
+        } else {
+          document.getElementById('cropsPlantingsList').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có dữ liệu</div>';
+        }
+        
+        const kpisResponse = await fetch('/api/dashboard/crops-kpis', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        if (kpisResponse.ok) {
+          const kpisResult = await kpisResponse.json();
+          if (kpisResult.ok && kpisResult.data) {
+            const overview = kpisResult.data.overview;
+            
+            const statusHtml = `
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                <span>🌱 Đang grow</span>
+                <span style="color: var(--success);">${overview.byStatus?.active || 0}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                <span>🌾 Đã thu hoạch</span>
+                <span style="color: var(--accent);">${overview.byStatus?.harvested || 0}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                <span>💤 Ngủ</span>
+                <span style="color: var(--text-muted);">${overview.byStatus?.dormant || 0}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                <span>❌ Thất bại</span>
+                <span style="color: var(--danger);">${overview.byStatus?.failed || 0}</span>
+              </div>
+              <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; justify-content: space-between;">
+                <span style="font-weight: 600;">Tổng diện tích</span>
+                <span style="color: var(--warning); font-weight: 600;">${formatNumber(Math.round(overview.totalArea || 0))} m²</span>
+              </div>
+            `;
+            document.getElementById('cropsByStatus').innerHTML = statusHtml;
+            
+            if (kpisResult.data.byCrop && kpisResult.data.byCrop.length > 0) {
+              const cropHtml = kpisResult.data.byCrop.map(crop => `
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                  <span>${crop.name}</span>
+                  <span style="color: var(--text-muted);">${crop.count} lô</span>
+                </div>
+              `).join('');
+              document.getElementById('cropsByCrop').innerHTML = cropHtml;
+            } else {
+              document.getElementById('cropsByCrop').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có dữ liệu</div>';
+            }
+          }
+        }
+        
+      } catch (err) {
+        console.error('Load crops dashboard error:', err);
+      }
+    }
+    
+    document.getElementById('cropsStatus')?.addEventListener('change', loadCropsDashboard);
   </script>
 </body>
 </html>

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="/css/mobile-system.css">
   <link rel="manifest" href="/manifest.json">
   <style>
@@ -1233,6 +1234,17 @@
         <!-- Profit by Crop -->
         <div class="card" style="margin-top: 20px;">
           <div class="card-header">
+            <h3 class="card-title">📈 Biểu đồ Thu Chi</h3>
+          </div>
+          <div class="card-body">
+            <div style="height: 250px;">
+              <canvas id="financeChart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
             <h3 class="card-title">🌱 Lợi nhuận theo cây trồng</h3>
           </div>
           <div class="card-body">
@@ -1663,6 +1675,9 @@
             <div id="weatherForecast" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
               <div style="text-align: center; color: var(--text-muted);">Đang tải...</div>
             </div>
+            <div style="margin-top: 20px; height: 200px;">
+              <canvas id="weatherChart"></canvas>
+            </div>
           </div>
         </div>
       </div>
@@ -1757,6 +1772,155 @@
     function clearAllCaches() {
       Object.keys(localStorage).forEach(key => {
         if (key.startsWith(CACHE_PREFIX)) localStorage.removeItem(key);
+      });
+    }
+    
+    // ========== CHARTS ==========
+    let financeChart = null;
+    let inventoryChart = null;
+    let cropsChart = null;
+    let weatherChart = null;
+    
+    const chartDefaults = {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: '#86efac' }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#86efac' },
+          grid: { color: '#1a3d28' }
+        },
+        y: {
+          ticks: { color: '#86efac' },
+          grid: { color: '#1a3d28' }
+        }
+      }
+    };
+    
+    function createFinanceChart(summary) {
+      const ctx = document.getElementById('financeChart');
+      if (!ctx) return;
+      
+      if (financeChart) financeChart.destroy();
+      
+      const income = summary?.total_income || 0;
+      const expenses = summary?.total_expenses || 0;
+      const profit = summary?.net_profit || 0;
+      
+      financeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Thu', 'Chi', 'Lợi nhuận'],
+          datasets: [{
+            label: 'Số tiền (VND)',
+            data: [income, expenses, profit],
+            backgroundColor: [
+              'rgba(34, 197, 94, 0.7)',
+              'rgba(239, 68, 68, 0.7)',
+              profit >= 0 ? 'rgba(34, 197, 94, 0.7)' : 'rgba(239, 68, 68, 0.7)'
+            ],
+            borderColor: [
+              'rgb(34, 197, 94)',
+              'rgb(239, 68, 68)',
+              profit >= 0 ? 'rgb(34, 197, 94)' : 'rgb(239, 68, 68)'
+            ],
+            borderWidth: 1
+          }]
+        },
+        options: {
+          ...chartDefaults,
+          plugins: {
+            ...chartDefaults.plugins,
+            title: {
+              display: true,
+              text: 'Tổng quan Tài chính',
+              color: '#86efac',
+              font: { size: 14 }
+            }
+          }
+        }
+      });
+    }
+    
+    function createInventoryChart(stats) {
+      const ctx = document.getElementById('inventoryChart');
+      if (!ctx) return;
+      
+      if (inventoryChart) inventoryChart.destroy();
+      
+      const categories = stats?.categories || {};
+      const labels = Object.keys(categories);
+      const values = labels.map(cat => categories[cat].value || 0);
+      
+      inventoryChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: [
+              'rgba(34, 197, 94, 0.8)',
+              'rgba(59, 130, 246, 0.8)',
+              'rgba(245, 158, 11, 0.8)',
+              'rgba(139, 92, 246, 0.8)',
+              'rgba(236, 72, 153, 0.8)'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right',
+              labels: { color: '#86efac' }
+            }
+          }
+        }
+      });
+    }
+    
+    function createWeatherChart(forecast) {
+      const ctx = document.getElementById('weatherChart');
+      if (!ctx) return;
+      
+      if (weatherChart) weatherChart.destroy();
+      
+      const labels = forecast?.slice(0, 5).map(d => {
+        const date = new Date(d.date);
+        return ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][date.getDay()];
+      }) || [];
+      const maxTemps = forecast?.slice(0, 5).map(d => d.tempMax) || [];
+      const minTemps = forecast?.slice(0, 5).map(d => d.tempMin) || [];
+      
+      weatherChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Nhiệt độ cao',
+              data: maxTemps,
+              borderColor: 'rgb(239, 68, 68)',
+              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+              tension: 0.3,
+              fill: true
+            },
+            {
+              label: 'Nhiệt độ thấp',
+              data: minTemps,
+              borderColor: 'rgb(59, 130, 246)',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              tension: 0.3,
+              fill: true
+            }
+          ]
+        },
+        options: chartDefaults
       });
     }
     
@@ -2179,6 +2343,8 @@
         } else {
           document.getElementById('financeProfitByCrop').innerHTML = '<div style="text-align: center; color: var(--text-muted);">Không có dữ liệu cây trồng</div>';
         }
+        
+        createFinanceChart(data.summary);
         
       } catch (err) {
         console.error('Load finance summary error:', err);
@@ -2815,6 +2981,7 @@
               `;
             }).join('');
             document.getElementById('weatherForecast').innerHTML = forecastHtml;
+            createWeatherChart(forecastResult.data.forecast);
           }
         }
         

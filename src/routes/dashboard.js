@@ -11,6 +11,32 @@ const { getDashboardOverview, getSensorDataByZone, getAlertsQuick, getDevicesSta
 const si = require('systeminformation');
 const os = require('os');
 
+const CACHE_TTL = 30000;
+const cache = new Map();
+
+function getCached(key) {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  cache.delete(key);
+  return null;
+}
+
+function setCached(key, data) {
+  cache.set(key, { data, timestamp: Date.now() });
+}
+
+function clearDashboardCache() {
+  const keysToDelete = [];
+  for (const key of cache.keys()) {
+    if (key.startsWith('dashboard:')) {
+      keysToDelete.push(key);
+    }
+  }
+  keysToDelete.forEach(key => cache.delete(key));
+}
+
 router.get('/overview', auth, async (req, res) => {
   try {
     const devices = getOne('SELECT COUNT(*) as total, SUM(CASE WHEN status = "online" THEN 1 ELSE 0 END) as online FROM devices');
@@ -174,6 +200,12 @@ router.get('/devices-status', auth, async (req, res) => {
 router.get('/finance-summary', auth, async (req, res) => {
   try {
     const { farm_id, period = 'month' } = req.query;
+    const cacheKey = `dashboard:finance-summary:${farm_id}:${period}`;
+    const cached = getCached(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+    
     const now = new Date();
     let startDate, endDate;
     
@@ -208,6 +240,7 @@ router.get('/finance-summary', auth, async (req, res) => {
         period: { start: startDate, end: endDate, type: period }
       }
     });
+    setCached(cacheKey, res._data);
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
   }
@@ -858,6 +891,7 @@ router.post('/cache-invalidate', auth, async (req, res) => {
   try {
     const { farmId } = req.body;
     invalidateCache(farmId);
+    clearDashboardCache();
     res.json({ ok: true, message: 'Cache invalidated' });
   } catch (error) {
     res.status(500).json({ ok: false, error: error.message });
@@ -865,3 +899,4 @@ router.post('/cache-invalidate', auth, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.clearCache = clearDashboardCache;

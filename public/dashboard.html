@@ -1711,6 +1711,56 @@
   <div class="toast-container" id="toastContainer"></div>
   
   <script>
+    // ========== PERFORMANCE OPTIMIZATION ==========
+    const CACHE_PREFIX = 'ecosyntech_';
+    const CACHE_TTL = 30000;
+    
+    function getCache(key) {
+      try {
+        const cached = localStorage.getItem(CACHE_PREFIX + key);
+        if (!cached) return null;
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp > CACHE_TTL) {
+          localStorage.removeItem(CACHE_PREFIX + key);
+          return null;
+        }
+        return data;
+      } catch (e) { return null; }
+    }
+    
+    function setCache(key, data) {
+      try {
+        localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ data, timestamp: Date.now() }));
+      } catch (e) {}
+    }
+    
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
+    
+    async function fetchWithCache(url, options = {}, cacheKey = null) {
+      if (cacheKey && options.method === 'GET') {
+        const cached = getCache(cacheKey);
+        if (cached) return cached;
+      }
+      const response = await fetch(url, options);
+      if (!response.ok) throw new Error('Network error');
+      const data = await response.json();
+      if (cacheKey && response.ok) setCache(cacheKey, data);
+      return data;
+    }
+    
+    function clearAllCaches() {
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith(CACHE_PREFIX)) localStorage.removeItem(key);
+      });
+    }
+    
+    // ========== MOBILE MENU ==========
     // Mobile menu toggle
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.getElementById('sidebar');
@@ -2019,22 +2069,28 @@
     async function loadFinanceDashboard() {
       try {
         const period = document.getElementById('financePeriod')?.value || 'month';
-        const response = await fetch(`/api/dashboard/finance-kpis?period=${period}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
+        const cacheKey = `finance-kpis-${period}`;
+        const cached = getCache(cacheKey);
         
-        if (!response.ok) {
-          console.error('Finance API error:', response.status);
+        if (cached) {
+          updateFinanceUI(cached.data);
           return;
         }
         
-        const result = await response.json();
+        const result = await fetchWithCache(
+          `/api/dashboard/finance-kpis?period=${period}`,
+          { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } },
+          cacheKey
+        );
+        
         if (!result.ok) {
           console.error('Finance data error:', result.error);
           return;
         }
         
-        const data = result.data;
+        updateFinanceUI(result.data);
+        
+        function updateFinanceUI(data) {
         
         document.getElementById('financeIncome').textContent = formatCurrency(data.thisMonth.income);
         document.getElementById('financeExpenses').textContent = formatCurrency(data.thisMonth.expenses);

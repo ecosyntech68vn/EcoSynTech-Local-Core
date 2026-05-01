@@ -58,6 +58,12 @@ jobs:
           cd mobile-app
           npx cap sync android
 
+      - name: Setup Gradle Wrapper
+        run: |
+          cd mobile-app/android
+          touch settings.gradle
+          gradle wrapper --gradle-version 8.4
+
       - name: Build debug APK
         run: |
           cd mobile-app/android

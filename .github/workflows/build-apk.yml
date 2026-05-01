@@ -58,17 +58,22 @@ jobs:
           cd mobile-app
           npx cap sync android
 
-      - name: Setup Gradle Wrapper
+      - name: Check Android project
         run: |
-          cd mobile-app/android
-          touch settings.gradle
-          gradle wrapper --gradle-version 8.4
+          ls -la mobile-app/android/
 
       - name: Build debug APK
         run: |
           cd mobile-app/android
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          if [ -f "gradlew" ]; then
+            chmod +x gradlew
+            ./gradlew assembleDebug
+          else
+            touch settings.gradle
+            gradle wrapper --gradle-version 8.4
+            chmod +x gradlew
+            ./gradlew assembleDebug
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

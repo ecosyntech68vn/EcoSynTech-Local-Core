@@ -1,0 +1,60 @@
+name: Build Mobile APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'mobile-app/**'
+      - 'capacitor.config.json'
+  release:
+    types: [created]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-sdk@v1
+        with:
+          api-level: 34
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          cd mobile-app
+          npm install
+
+      - name: Sync Capacitor
+        run: |
+          cd mobile-app
+          npx cap sync android
+
+      - name: Build debug APK
+        run: |
+          cd mobile-app/android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecosyntech-debug.apk
+          path: mobile-app/android/app/build/outputs/apk/debug/app-debug.apk

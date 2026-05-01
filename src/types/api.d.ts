@@ -126,9 +126,106 @@
 // Export for use in JS files via JSDoc
 // ============================================================
 
+// ============================================================
+// Redis Cache Types
+// ============================================================
+
+/** @typedef {Object} CacheOptions
+ * @property {number} [ttl] - Time to live in seconds
+ * @property {string} [prefix] - Key prefix
+ */
+
+/** @typedef {Object} CacheEntry
+ * @property {any} value
+ * @property {number} expiresAt
+ */
+
+// ============================================================
+// Equipment Types
+// ============================================================
+
+/** @typedef {Object} Equipment
+ * @property {string} id
+ * @property {string} equipment_name
+ * @property {string} status
+ * @property {string} condition
+ * @property {number} current_value
+ */
+
+/** @typedef {Object} EquipmentStats
+ * @property {number} total
+ * @property {number} online
+ * @property {number} offline
+ * @property {number} maintenance
+ * @property {number} usageRate
+ */
+
+// ============================================================
+// Labor Types
+// ============================================================
+
+/** @typedef {Object} Worker
+ * @property {string} id
+ * @property {string} worker_name
+ * @property {string} position
+ * @property {string} status
+ * @property {number} salary
+ * @property {string} skill_level
+ */
+
+/** @typedef {Object} LaborStats
+ * @property {number} totalWorkers
+ * @property {number} activeWorkers
+ * @property {number} totalTasks
+ * @property {number} pendingTasks
+ */
+
+// ============================================================
+// Crop Types
+// ============================================================
+
+/** @typedef {Object} Crop
+ * @property {string} id
+ * @property {string} name
+ * @property {string} category
+ * @property {number} kc_initial
+ * @property {number} kc_mid
+ * @property {number} kc_end
+ */
+
+/** @typedef {Object} CropStats
+ * @property {number} totalPlantings
+ * @property {number} active
+ * @property {number} harvest
+ * @property {number} expectedYield
+ */
+
+// ============================================================
+// Sales Types
+// ============================================================
+
+/** @typedef {Object} Order
+ * @property {string} id
+ * @property {string} customer_name
+ * @property {number} total_amount
+ * @property {string} status
+ * @property {string} order_date
+ */
+
+/** @typedef {Object} SalesStats
+ * @property {number} totalOrders
+ * @property {number} totalRevenue
+ * @property {number} avgOrderValue
+ * @property {number} completedOrders
+ */
+
 module.exports = {
   ApiResponse: /** @type {import('./api').ApiResponse} */ ({}),
   FinanceSummary: /** @type {import('./api').FinanceSummary} */ ({}),
   InventoryStats: /** @type {import('./api').InventoryStats} */ ({}),
   SensorData: /** @type {import('./api').SensorData} */ ({}),
+  Equipment: /** @type {Equipment} */ ({}),
+  LaborStats: /** @type {LaborStats} */ ({}),
+  CropStats: /** @type {CropStats} */ ({}),
+  SalesStats: /** @type {SalesStats} */ ({}),
 };

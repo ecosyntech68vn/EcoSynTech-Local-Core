@@ -8,33 +8,24 @@ const equipmentService = require('../services/equipmentService');
 const laborService = require('../services/laborService');
 const cropService = require('../services/cropService');
 const { getDashboardOverview, getSensorDataByZone, getAlertsQuick, getDevicesStatus, invalidateCache } = require('../services/performanceService');
+const redisCache = require('../services/redisCache');
 const si = require('systeminformation');
 const os = require('os');
 
-const CACHE_TTL = 30000;
-const cache = new Map();
+const CACHE_TTL = 30;
+
+redisCache.initRedis().catch(() => {});
 
 function getCached(key) {
-  const cached = cache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data;
-  }
-  cache.delete(key);
-  return null;
+  return redisCache.get('dashboard:' + key);
 }
 
-function setCached(key, data) {
-  cache.set(key, { data, timestamp: Date.now() });
+function setCached(key, data, ttl = CACHE_TTL) {
+  return redisCache.set('dashboard:' + key, data, ttl);
 }
 
 function clearDashboardCache() {
-  const keysToDelete = [];
-  for (const key of cache.keys()) {
-    if (key.startsWith('dashboard:')) {
-      keysToDelete.push(key);
-    }
-  }
-  keysToDelete.forEach(key => cache.delete(key));
+  return redisCache.invalidateByPrefix('dashboard:');
 }
 
 router.get('/overview', auth, async (req, res) => {

@@ -5,6 +5,10 @@
   "main": "server.js",
   "scripts": {
     "setup-models": "./scripts/setup-models.sh",
+    "redis:install": "npm install redis",
+    "redis:start": "redis-server --daemonize yes",
+    "redis:stop": "redis-cli shutdown",
+    "redis:status": "redis-cli ping",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "start:lowmem": "node --max-old-space-size=256 server.js",
@@ -64,6 +68,7 @@
     "pdfkit": "^0.15.0",
     "pg": "^8.11.3",
     "qrcode": "^1.5.4",
+    "redis": "^5.12.1",
     "sharp": "^0.34.5",
     "sql.js": "^1.10.0",
     "swagger-jsdoc": "^6.2.8",

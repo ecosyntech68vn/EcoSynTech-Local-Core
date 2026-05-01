@@ -1,6 +1,6 @@
 {
-  "db_path": "/root/.local/share/opencode/worktree/235aa3d499aaf6c96fd60e7c52a229e9ffd9b946/hidden-eagle/data/ecosyntech.db",
-  "output_model_path": "/root/.local/share/opencode/worktree/235aa3d499aaf6c96fd60e7c52a229e9ffd9b946/hidden-eagle/models/lightgbm_yield.onnx",
+  "db_path": "/tmp/EcoSynTech-Local-Core/data/ecosyntech.db",
+  "output_model_path": "/tmp/EcoSynTech-Local-Core/models/lightgbm_yield.onnx",
   "feature_cols": [
     "temperature_avg",
     "rainfall_mm",
@@ -13,8 +13,15 @@
   ],
   "target_col": "yield_tons_per_ha",
   "lgb_params": {
-    "n_estimators": 200,
-    "max_depth": 8
+    "n_estimators": 100,
+    "max_depth": 6,
+    "num_leaves": 31,
+    "learning_rate": 0.05,
+    "objective": "regression",
+    "random_state": 42,
+    "min_child_samples": 20,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8
   },
   "min_samples": 10,
   "test_size": 0.2,

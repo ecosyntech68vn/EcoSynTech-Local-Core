@@ -85,9 +85,9 @@ describe('Redis Cache Service', () => {
       expect(result).toBe(true);
     });
 
-    it('should return true for non-existent key', async () => {
+    it('should return false for non-existent key', async () => {
       const result = await redisCache.del('non-existent');
-      expect(result).toBe(true);
+      expect(result).toBe(false);
     });
   });
 

@@ -93,18 +93,19 @@ async function get(key) {
 }
 
 async function set(key, value, ttl = DEFAULT_TTL) {
+  const effectiveTTL = ttl > 0 ? ttl : DEFAULT_TTL;
   const serialized = typeof value === 'string' ? value : JSON.stringify(value);
   
   if (!redisClient || !isConnected || useMemoryFallback) {
-    return memorySet(key, value, ttl * 1000);
+    return memorySet(key, value, effectiveTTL * 1000);
   }
   
   try {
-    await redisClient.setEx(key, ttl, serialized);
+    await redisClient.setEx(key, effectiveTTL, serialized);
     return true;
   } catch (err) {
     logger.warn('Redis set error: ' + err.message);
-    memorySet(key, value, ttl * 1000);
+    memorySet(key, value, effectiveTTL * 1000);
     return false;
   }
 }

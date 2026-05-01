@@ -16,7 +16,7 @@
   "dependencies": {
     "@capacitor/android": "^6.0.0",
     "@capacitor/core": "^6.0.0",
-    "@capacitor/haptics": "^2.0.0",
+    "@capacitor/haptics": "^1.1.0",
     "@capacitor/keyboard": "^2.0.0",
     "@capacitor/preferences": "^2.0.0",
     "@capacitor/push-notifications": "^2.0.0",

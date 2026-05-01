@@ -1,7 +1,7 @@
 {
   "appId": "com.ecosyntech.smartfarm",
   "appName": "EcoSynTech",
-  "webDir": ".",
+  "webDir": "www",
   "bundledWebDir": "./android/app/src/main/assets/public",
   "server": {
     "androidScheme": "https"

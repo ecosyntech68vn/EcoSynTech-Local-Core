@@ -53,24 +53,17 @@ jobs:
           cd mobile-app
           npm install
 
-      - name: Sync Capacitor
+      - name: Create Android project
         run: |
           cd mobile-app
-          npm install
-          npx cap sync android
-
-      - name: Check Android project
-        run: |
-          ls -la mobile-app/android/
+          rm -rf android
+          npx cap add android
 
       - name: Build debug APK
         run: |
           cd mobile-app/android
-          touch settings.gradle
-          gradle wrapper --gradle-version 8.4
           chmod +x gradlew
-          ./gradlew tasks --all 2>/dev/null || true
-          ./gradlew app:assemble
+          ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

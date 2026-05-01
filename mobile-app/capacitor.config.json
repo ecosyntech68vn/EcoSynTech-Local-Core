@@ -1,0 +1,23 @@
+{
+  "appId": "com.ecosyntech.smartfarm",
+  "appName": "EcoSynTech",
+  "webDir": ".",
+  "bundledWebDir": "./android/app/src/main/assets/public",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "webContentsDebuggingEnabled": true
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 3000,
+      "launchShowOriginalDuration": 3000,
+      "launchFadeOutDuration": 3000,
+      "backgroundColor": "#219465",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": true
+    }
+  }
+}

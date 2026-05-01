@@ -1,0 +1,41 @@
+/* EcoSynTech Mobile App Styles */
+:root {
+  --primary: #219465;
+  --primary-dark: #1a7a4a;
+  --secondary: #4CAF50;
+  --accent: #8BC34A;
+  --danger: #f44336;
+  --warning: #ff9800;
+  --info: #2196F3;
+  --light: #f5f5f5;
+  --dark: #212121;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--light); }
+.app-container { max-width: 480px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+.header { background: var(--primary); color: white; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+.header h1 { font-size: 18px; font-weight: 600; }
+.status-indicator { width: 10px; height: 10px; border-radius: 50%; background: var(--secondary); }
+.status-indicator.offline { background: var(--danger); }
+.content { padding: 16px; }
+.card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.card-title { font-size: 14px; color: #666; margin-bottom: 8px; }
+.card-value { font-size: 24px; font-weight: 600; color: var(--dark); }
+.card-unit { font-size: 14px; color: #999; font-weight: normal; }
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.metric { text-align: center; padding: 12px; background: var(--light); border-radius: 8px; }
+.metric-value { font-size: 20px; font-weight: 600; color: var(--primary); }
+.metric-label { font-size: 12px; color: #666; }
+.device-list { list-style: none; }
+.device-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+.device-name { font-weight: 500; }
+.device-status { font-size: 12px; padding: 4px 8px; border-radius: 4px; }
+.device-status.online { background: #e8f5e9; color: var(--secondary); }
+.device-status.offline { background: #ffebee; color: var(--danger); }
+.btn { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; width: 100%; cursor: pointer; }
+.btn:active { background: var(--primary-dark); }
+.nav { display: flex; background: white; border-top: 1px solid #eee; position: fixed; bottom: 0; width: 100%; max-width: 480px; }
+.nav-item { flex: 1; text-align: center; padding: 12px; color: #999; font-size: 12px; cursor: pointer; }
+.nav-item.active { color: var(--primary); }
+.content { padding: 16px 16px 80px; }
+.empty-state { text-align: center; padding: 40px; color: #999; }

@@ -28,7 +28,8 @@
     "migrate": "node run-migrations.js",
     "backup": "node scripts/backup.js",
     "restore": "node scripts/restore.js",
-    "test:dashboard": "echo 'Dashboard UI tested via browser at /dashboard-farm.html'"
+    "test:dashboard": "echo 'Dashboard UI tested via browser at /dashboard-farm.html'",
+    "mobile:icons": "node scripts/generate-mobile-icons.js public/assets/logo.svg public/assets/mobile-icons"
   },
   "bin": {
     "bootstrap-ai": "bin/bootstrap-ai.js"

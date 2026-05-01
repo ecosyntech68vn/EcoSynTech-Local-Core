@@ -4,7 +4,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --omit=dev 2>/dev/null || npm ci --only=production; npm cache clean --force
 
 FROM node:18-alpine
 

@@ -1,0 +1,28 @@
+/* Brand theme tokens for EcoSynTech */
+:root {
+  --brand-primary: #0D4D2B;      /* deep green */
+  --brand-primary-light: #1E7A3C; 
+  --brand-green: #8BC34A;        /* light green */
+  --bg: #f7fbf8;
+  --bg-card: #ffffff;
+  --text: #0a2b1a;
+  --text-muted: #5b6a52;
+  --border: #e0e0e0;
+  --shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+/* Light theme override */
+[data-theme="light"] {
+  --bg: #ffffff;
+  --bg-card: #ffffff;
+  --text: #0a2b1a;
+  --border: #e5e7eb;
+  --shadow: 0 4px 20px rgba(0,0,0,.08);
+}
+/* Dark theme override */
+[data-theme="dark"] {
+  --bg: #0b1a14;
+  --bg-card: #0e1f14;
+  --text: #e9fff0;
+  --border: #1a3d28;
+  --shadow: 0 4px 24px rgba(0,0,0,.4);
+}

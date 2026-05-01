@@ -46,7 +46,7 @@
       "sizeMB": 10,
       "version": "1.0",
       "loaded": true,
-      "loadedAt": "2026-04-26T08:02:21.905Z",
+      "loadedAt": "2026-05-01T00:59:11.645Z",
       "source": "AI_ONNX_URL env var (user-provided)",
       "sourceType": "HTTP or Google Drive",
       "classes": null,

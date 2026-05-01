@@ -57,9 +57,8 @@ jobs:
         run: |
           cd mobile-app
           npm install
-          if [ ! -d "android" ]; then
-            npx cap add android
-          fi
+          rm -rf android
+          npx cap add android
           npx cap sync android
 
       - name: Check Android project
@@ -69,15 +68,11 @@ jobs:
       - name: Build debug APK
         run: |
           cd mobile-app/android
-          if [ -f "gradlew" ]; then
-            chmod +x gradlew
-            ./gradlew assembleDebug
-          else
-            touch settings.gradle
-            gradle wrapper --gradle-version 8.4
-            chmod +x gradlew
-            ./gradlew assembleDebug
-          fi
+          touch settings.gradle
+          gradle wrapper --gradle-version 8.4
+          chmod +x gradlew
+          ./gradlew tasks --all 2>/dev/null || true
+          ./gradlew app:assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

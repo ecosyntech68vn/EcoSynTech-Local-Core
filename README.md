@@ -435,6 +435,23 @@ EcoSynTech-Local-Core/
 
 ---
 
+## 8. Roadmap MVP cho Mobile & Theme
+
+- Mục tiêu MVP:
+  - App icon và splash screen cho mobile app (Android/iOS) từ logo brand
+  - Hệ thống theme Dark/Light toàn diện cho toàn bộ dashboard
+  - Dashboard widgets customizable (mvp: 3 widget mẫu, lưu layout ở localStorage)
+- Deliverables:
+  - Script generate-mobile-icons.js để sinh icon + splash từ một logo SVG
+  - CSS variables cho theme và toggle control
+  - Widget manager MVP với drag-and-drop và lưu layout ở client
+- Yêu cầu assets:
+  - Logo SVG để generate icons
+- Kế hoạch nhanh:
+  - Phase 1 (2-3 ngày): MVP theme + icon generation + widget MVP
+  - Phase 2 (1-2 ngày): Tối ưu branding và chuẩn bị Capacitor skeleton
+- Tác động đến CI/CD: Có thể cần thêm job để build icons trong CI
+
 ## 8. Đóng góp
 
 1. Tạo feature branch: `git checkout -b feature/your-feature`

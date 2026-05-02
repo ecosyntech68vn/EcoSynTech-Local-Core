@@ -4,305 +4,505 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#219465">
-<title>EcoSynTech</title>
+<title>EcoSynTech - Smart Farming</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f5f5f5}
-.app{max-width:480px;margin:0 auto;background:white;min-height:100vh}
-.hdr{background:#219465;color:white;padding:12px 14px;display:flex;justify-content:space-between}
-.hdr h1{font-size:16px}
-.dot{width:8px;height:8px;border-radius:50%;background:#f44336}
-.dot.on{background:#4CAF50}
-.main{padding:46px 12px 70px}
-.card{background:white;border-radius:10px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
-.tt{font-size:12px;color:#888;margin-bottom:8px;display:flex;justify-content:space-between}
-.big{font-size:24px;font-weight:700}
-.unit{font-size:12px;color:#999}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
-.gbtn{background:#f0f0f0;padding:10px 4px;text-align:center;border-radius:6px;cursor:pointer}
-.gnum{font-size:18px;font-weight:700;color:#219465}
-.gtxt{font-size:9px;color:#666}
-.lst{max-height:280px;overflow-y:auto}
-.row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f0f2f5}
+.app{max-width:520px;margin:0 auto;background:white;min-height:100vh;position:relative}
+.hdr{background:linear-gradient(135deg,#219465,#1a7a4a);color:white;padding:16px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
+.hdr h1{font-size:18px;font-weight:600}
+.sts{display:flex;align-items:center;gap:8px}
+.st-dot{width:10px;height:10px;border-radius:50%;background:#ff5252}
+.st-dot.on{background:#69f0ae}
+.st-txt{font-size:10px;opacity:0.8}
+.main{padding:16px 12px 80px}
+.card{background:white;border-radius:12px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.tt{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.tt span{font-size:13px;font-weight:600;color:#333}
+.tt .btn{background:#219465;color:white;border:none;width:28px;height:28px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.big{font-size:28px;font-weight:700}
+.unit{font-size:14px;color:#888;font-weight:400}
+.g{grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.gbtn{background:white;border-radius:8px;padding:12px 8px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,0.08);cursor:pointer}
+.gnum{font-size:20px;font-weight:700;color:#219465}
+.gtxt{font-size:10px;color:#666;margin-top:4px}
+.lst{max-height:350px;overflow-y:auto}
+.r{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0f0}
+.r:active{background:#fafafa}
 .l{flex:1}
-.n{font-weight:500;font-size:13px}
-.d{font-size:11px;color:#888;margin-top:2px}
-.bt{background:#219465;color:white;border:none;padding:6px 10px;border-radius:4px;font-size:12px;cursor:pointer}
-.btx{background:#f44336;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer;margin-left:4px}
-.bedit{background:#2196F3;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer;margin-left:4px}
-.sw{width:36px;height:20px;background:#ccc;border-radius:10px;position:relative;cursor:pointer;border:none}
-.sw.on{background:#4CAF50}
-.sw::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:white;border-radius:50%}
-.sw.on::after{left:18px}
-.nav{display:flex;position:fixed;bottom:0;width:100%;max-width:480px;background:white;border-top:1px solid #ddd}
-.nb{flex:1;text-align:center;padding:10px 4px;color:#999;font-size:8px;cursor:pointer;border:none;background:none}
+.n{font-weight:600;font-size:14px;color:#222}
+.d{font-size:12px;color:#777;margin-top:3px}
+.rd{background:#f5f5f5;padding:8px 12px;border-radius:6px;margin:4px 0;font-size:12px;color:#555}
+.bt{background:#219465;color:white;border:none;padding:8px 14px;border-radius:6px;font-size:13px;cursor:pointer;font-weight:600;margin:4px 0}
+.bt:active{background:#1a7a4a}
+.bt2{background:white;color:#333;border:1px solid #ddd;padding:8px 14px;border-radius:6px;font-size:13px;font-weight:500}
+.bted{background:#2196f3;color:white;border:none;padding:6px 10px;border-radius:4px;font-size:12px}
+.btx{background:#ff5252;color:white;border:none;padding:6px 10px;border-radius:4px;font-size:12px;margin-left:4px}
+.nav{display:flex;position:fixed;bottom:0;width:100%;max-width:520px;background:white;border-top:1px solid #e0e0e0;box-shadow:0 -2px 10px rgba(0,0,0,0.05)}
+.nb{flex:1;text-align:center;padding:10px 6px;color:#888;font-size:9px;cursor:pointer;border:none;background:none}
+.nb:active{background:#f5f5f5}
 .nb.on{color:#219465;background:#e8f5e9}
-.nic{display:block;font-size:18px;margin-bottom:2px}
-.tb{display:none}
-.tb.on{display:block}
-.frm{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:100;display:none}
-.frm.on{display:block}
-.fbox{background:white;width:90%;max-width:400px;margin:50px auto;border-radius:12px;padding:14px}
-.fh{display:flex;justify-content:space-between;margin-bottom:12px}
-.ft{font-size:15px;font-weight:600}
-.fc{background:none;border:none;font-size:20px;color:#888;cursor:pointer}
-.fg{margin-bottom:10px}
-.lb{display:block;font-size:11px;color:#666;margin-bottom:4px}
-.in{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:13px}
-.se{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:13px}
-.btn{background:#219465;color:white;border:none;padding:12px;border-radius:6px;width:100%;font-size:14px;font-weight:600;cursor:pointer}
-.btnsec{background:#f0f0f0;color:#333}
-.ts{position:fixed;top:10px;left:50%;transform:translateX(-50%);padding:10px 16px;border-radius:6px;z-index:200;font-size:12px;color:white;display:none}
-.ts.d{display:block}
-.tsok{background:#4CAF50}
-.tser{background:#f44336}
-.emp{text-align:center;padding:30px;color:#999;font-size:12px}
-.st{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;font-size:12px}
-.sl{color:#666}
-.sv{font-weight:600}
+.nic{display:block;font-size:20px;margin-bottom:2px}
+.t{display:none}
+.t.on{display:block}
+.f{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:200;display:none;align-items:center;justify-content:center}
+.f.on{display:flex}
+.bx{background:white;width:92%;max-width:420px;max-height:85%;border-radius:14px;padding:18px;overflow-y:auto}
+.h{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.h span{font-size:16px;font-weight:600}
+.h button{background:none;border:none;font-size:24px;color:#888;cursor:pointer}
+.gp{margin-bottom:12px}
+.lb{display:block;font-size:12px;color:#555;margin-bottom:6px;font-weight:500}
+.fi{width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:14px}
+.fi:focus{outline:none;border-color:#219465}
+.sel{width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:14px;background:white}
+.ts{position:fixed;top:12px;left:50%;transform:translateX(-50%);padding:12px 20px;border-radius:8px;z-index:300;font-size:13px;color:white;font-weight:500}
+.ts.d{display:block;animation:sl 0.3s}
+.tsok{background:#4caf50}
+.tser{background:#ff5252}
+@keyframes sl{from{transform:translateX(-50%) translateY(-20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+.st{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0}
+.st label{color:#666;font-size:12px}
+.st span{font-weight:600;color:#333}
+.st span.s{color:#4caf50}
+.st span.e{color:#ff5252}
+.emp{text-align:center;padding:40px;color:#999;font-size:13px}
+.bgr{background:#f8f8f8;padding:12px;border-radius:8px;margin:8px 0}
+.bgrd{display:inline-block;padding:4px 10px;background:#e3f2fd;color:#1976d2;border-radius:4px;font-size:11px;margin:4px 4px 4px 0}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="hdr"><h1>EcoSynTech</h1><div class="dot" id="stdot"></div></div>
+<div class="hdr">
+<h1>EcoSynTech</h1>
+<div class="sts"><div class="st-dot" id="dot"></div><span class="st-txt" id="sttxt">Offline</span></div>
+</div>
 
+<div class="main"></div>
+
+<!-- DASHBOARD -->
+<div id="t0" class="t on">
 <div class="main">
-<div id="tab0" class="tb on">
 <div class="card"><div class="big" id="tmp">--<span class="unit">°C</span></div></div>
 <div class="card"><div class="big" id="hum">--<span class="unit">%</span></div></div>
-<div class="grid"><div class="gbtn" onclick="tab(1)"><div class="gnum" id="ccnt">0</div><div class="gtxt">Crops</div></div>
-<div class="gbtn" onclick="tab(2)"><div class="gnum" id="dcnt">0</div><div class="gtxt">IoT</div></div>
-<div class="gbtn" onclick="tab(4)"><div class="gnum" id="tcnt">0</div><div class="gtxt">Trace</div></div>
-<div class="gbtn" onclick="tab(5)"><div class="gnum" id="mcnt">0</div><div class="gtxt">Money</div></div></div>
-<div class="card"><div class="tt"><span>Thiet bi</span></div><div class="lst" id="devlst"><div class="emp">Chua co</div></div></div>
-<button class="btn" onclick="refresh()">Cap nhat</button>
+<div class="g">
+<div class="gbtn" onclick="go(1)"><div class="gnum" id="ccnt">0</div><div class="gtxt">Crops</div></div>
+<div class="gbtn" onclick="go(2)"><div class="gnum" id="dcnt">0</div><div class="gtxt">Devices</div></div>
+<div class="gbtn" onclick="go(4)"><div class="gnum" id="acnt">0</div><div class="gtxt">Alerts</div></div>
+<div class="gbtn" onclick="go(6)"><div class="gnum" id="tcnt">0</div><div class="gtxt">Trace</div></div>
+</div>
+<div class="card">
+<div class="tt"><span>Thiet bi cam bien</span></div>
+<div class="lst" id="devlst"><div class="emp">Chua co thiet bi</div></div>
+</div>
+<div class="card">
+<div class="tt"><span>Cam bien chi tiet</span></div>
+<div class="lst" id="snlst"><div class="emp">Chua co du lieu</div></div>
+</div>
+<button class="bt" style="width:100%" onclick="refresh()">Dong bo du lieu</button>
+</div>
 </div>
 
-<div id="tab1" class="tb"><div class="card"><div class="tt"><span>Cay trong</span><button class="bt" onclick="openForm('crop')">+</button></div><div class="lst" id="clst"><div class="emp">Chua co</div></div></div></div>
-<div id="tab2" class="tb"><div class="card"><div class="tt"><span>Thiet bi IoT</span><button class="bt" onclick="openForm('device')">+</button></div><div class="lst" id="dlst"><div class="emp">Chua co</div></div></div></div>
-<div id="tab3" class="tb"><div class="card"><div class="tt"><span>Luat Auto</span><button class="bt" onclick="openForm('rule')">+</button></div><div class="lst" id="rlst"><div class="emp">Chua co</div></div></div><div class="card"><div class="tt"><span>Lich</span><button class="bt" onclick="openForm('sched')">+</button></div><div class="lst" id="slst"><div class="emp">Chua co</div></div></div></div>
-<div id="tab4" class="tb"><div class="card"><div class="tt"><span>Truy xuat</span><button class="bt" onclick="openForm('trace')">+</button></div><div class="lst" id="tlst"><div class="emp">Chua co</div></div></div><div class="card"><div class="tt"><span>QR Check</span></div><input class="in" id="qrcode" placeholder="Nhap ma..."><button class="btn" style="margin-top:8px" onclick="checkQR()">Kiem tra</button><div id="qrres" style="margin-top:8px;font-size:12px"></div></div></div>
-<div id="tab5" class="tb"><div class="card"><div class="st"><span class="sl">Thu</span><span class="sv" id="incv" style="color:#4CAF50">0</span></div><div class="st"><span class="sl">Chi</span><span class="sv" id="expv" style="color:#f44336">0</span></div><div class="st"><span class="sl">Loi nhuan</span><span class="sv" id="pfv">0</span></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn" onclick="openForm('inc')">+ Thu</button><button class="btn btnsec" onclick="openForm('exp')">+ Chi</button></div></div>
-<div id="tab6" class="tb"><div class="card"><div class="st"><span class="sl">Server</span><span class="sv" id="srv">--</span></div><div class="st"><span class="sl">Cap nhat</span><span class="sv" id="last">--</span></div><div class="st"><span class="sl">Ver</span><span class="sv">1.0.6</span></div></div><button class="btn" onclick="refresh()">Dong bo</button><button class="btn btnsec" style="margin-top:8px" onclick="clearAll()">Xoa all</button></div>
-</div>
+<!-- CROPS -->
+<div id="t1" class="t"><div class="main">
+<div class="card"><div class="tt"><span>Danh sach cay trong</span><button class="btn" onclick="fm('cropFM')">+</button></div><div class="lst" id="clst"><div class="emp">Chua co cay trong</div></div></div></div></div>
 
+<!-- DEVICES -->
+<div id="t2" class="t"><div class="main">
+<div class="card"><div class="tt"><span>Thiet bi</span><button class="btn" onclick="fm('deviceFM')">+</button></div><div class="lst" id="dlst"><div class="emp">Chua co</div></div></div></div></div>
+
+<!-- RULES -->
+<div id="t3" class="t"><div class="main">
+<div class="card"><div class="tt"><span>Luat dieu tuyen</span><button class="btn" onclick="fm('ruleFM')">+</button></div><div class="lst" id="rlst"><div class="emp">Chua co luat</div></div></div>
+<div class="card"><div class="tt"><span>Lich trinh</span><button class="btn" onclick="fm('schedFM')">+</button></div><div class="lst" id="slst"><div class="emp">Chua co lich</div></div></div></div></div>
+
+<!-- ALERTS -->
+<div id="t4" class="t"><div class="main">
+<div class="card"><div class="tt"><span>Canh bao & Thong bao</span></div><div class="lst" id="alst"><div class="emp">Chua co canh bao</div></div></div></div></div>
+
+<!-- TRACE -->
+<div id="t5" class="t"><div class="main">
+<div class="card"><div class="tt"><span>Lot san pham</span><button class="btn" onclick="fm('traceFM')">+</button></div><div class="lst" id="tlst"><div class="emp">Chua co lot</div></div></div>
+<div class="card"><div class="tt"><span>Tra cuu QR</span></div>
+<input class="fi" id="qrcode" placeholder="Nhap ma QR...">
+<button class="bt" style="margin-top:8px" onclick="chkQR()">Tra cuu</button>
+<div id="qrres" style="margin-top:12px"></div>
+</div></div></div>
+
+<!-- FINANCE -->
+<div id="t6" class="t"><div class="main">
+<div class="card">
+<div class="st"><label>Doanh thu</label><span class="s" id="incv">0</span></div>
+<div class="st"><label>Chi phi</label><span class="e" id="expv">0</span></div>
+<div class="st"><label>Loi nhuan</label><span id="pfv">0</span></div>
+</div>
+<div class="g" style="grid-template-columns:1fr 1fr"><button class="bt" onclick="fm('incFM')">+ Thu</button><button class="bt2" onclick="fm('expFM')">+ Chi</button></div>
+</div></div>
+
+<!-- SETTINGS -->
+<div id="t7" class="t"><div class="main">
+<div class="card">
+<div class="st"><label>May chu</label><span id="srv">--</span></div>
+<div class="st"><label>Cap nhat cuoi</label><span id="last">--</span></div>
+<div class="st"><label>Phien ban</label><span>1.0.7-PRO</span></div>
+</div>
+<button class="bt" onclick="refresh()">Dong bo tu server</button>
+<button class="bt2" onclick="clr()">Xoa all data</button>
+</div></div>
+
+<!-- NAV -->
 <nav class="nav">
-<button class="nb on" id="nb0" onclick="tab(0)"><span class="nic">📊</span>Dash</button>
-<button class="nb" id="nb1" onclick="tab(1)"><span class="nic">🌱</span>Crops</button>
-<button class="nb" id="nb2" onclick="tab(2)"><span class="nic">📱</span>IoT</button>
-<button class="nb" id="nb3" onclick="tab(3)"><span class="nic">⚡</span>Auto</button>
-<button class="nb" id="nb4" onclick="tab(4)"><span class="nic">🏷️</span>Trace</button>
-<button class="nb" id="nb5" onclick="tab(5)"><span class="nic">💰</span>Money</button>
-<button class="nb" id="nb6" onclick="tab(6)"><span class="nic">⚙️</span>Set</button>
+<button class="nb on" id="b0" onclick="go(0)"><span class="nic">📊</span>Dash</button>
+<button class="nb" id="b1" onclick="go(1)"><span class="nic">🌱</span>Crops</button>
+<button class="nb" id="b2" onclick="go(2)"><span class="nic">📱</span>IoT</button>
+<button class="nb" id="b3" onclick="go(3)"><span class="nic">⚡</span>Auto</button>
+<button class="nb" id="b4" onclick="go(4)"><span class="nic">🔔</span>Alert</button>
+<button class="nb" id="b5" onclick="go(5)"><span class="nic">🏷️</span>Trace</button>
+<button class="nb" id="b6" onclick="go(6)"><span class="nic">💰</span>Fin</button>
+<button class="nb" id="b7" onclick="go(7)"><span class="nic">⚙️</span>Set</button>
 </nav>
 </div>
 
-<!-- CROP FORM -->
-<div id="cropform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Cay trong</span><button class="fc" onclick="closeForm()">×</button></div><input type="hidden" id="cropId"><div class="fg"><label class="lb">Ten</label><input class="in" id="cropName"></div><button class="btn" onclick="saveCrop()">Luu</button></div></div>
+<!-- CROP FM -->
+<div id="cropFM" class="f"><div class="bx">
+<div class="h"><span>Them/ Sua cay trong</span><button onclick="cl('cropFM')">&times;</button></div>
+<input type="hidden" id="cropId">
+<div class="gp"><label class="lb">Ten cay trong (*)</label><input class="fi" id="cname" placeholder="VD: Lua, Dong lot, Ca chua..."></div>
+<div class="gp"><label class="lb">Giai doan sinh truong</label><select class="sel" id="cstage"><option value="gieo">Gieo hat</option><option value="noc">Noc mai</option><option value="sinh">Sinh truong</option><option value="rahoa">Ra hoa</option><option value="dinhqua">Dinh qua</option><option value="thuhoach">Thu hoach</option></select></div>
+<div class="gp"><label class="lb">Loai cay</label><select class="sel" id="ctype"><option value="lua">Lua</option><option value="donglot">Dong lot</option><option value="cachua">Ca chua</option><option value="dualuoi">Dua luoi</option><option value="bap">Bap ca</option><option value="tao">Tao</option><option value="chuoi">Chuoi</option><option value="cafe">Ca phe</option></select></div>
+<div class="gp"><label class="lb">Khu vuc</label><input class="fi" id="czone" placeholder="VD: Vuon 1, Nha kinh A..."></div>
+<div class="gp"><label class="lb">Ngay trong</label><input type="date" class="fi" id="cdate"></div>
+<button class="bt" onclick="svCrop()">Luu</button>
+</div></div>
 
-<!-- DEVICE FORM -->
-<div id="deviceform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Thiet bi</span><button class="fc" onclick="closeForm()">×</button></div><input type="hidden" id="deviceId"><div class="fg"><label class="lb">Ten</label><input class="in" id="deviceName"></div><div class="fg"><label class="lb">Loai</label><select class="se" id="deviceType"><option value="esp32">ESP32</option><option value="dht22">DHT22</option><option value="soil">Soil</option><option value="relay">Relay</option><option value="pump">Pump</option></select></div><button class="btn" onclick="saveDevice()">Luu</button></div></div>
+<!-- DEVICE FM -->
+<div id="deviceFM" class="f"><div class="bx">
+<div class="h"><span>Them thiet bi</span><button onclick="cl('deviceFM')">&times;</button></div>
+<input type="hidden" id="deviceId">
+<div class="gp"><label class="lb">Ten thiet bi (*)</label><input class="fi" id="dname" placeholder="VD: Cam bien nhiet 1"></div>
+<div class="gp"><label class="lb">Loai thiet bi</label><select class="sel" id="dtype"><option value="esp32">ESP32</option><option value="dht22">DHT22 (Nhiet/Am)</option><option value="ds18b20">DS18B20 (Nhiet)</option><option value="soil">Soil Moisture</option><option value="light">Light sensor</option><option value="relay">Relay</option><option value="pump">Bom nuoc</option><option value="valve">Van dien tu</option><option value="camera">Camera</option><option value="ph">pH sensor</option></select></div>
+<div class="gp"><label class="lb">MAC Address</label><input class="fi" id="dmac" placeholder="XX:XX:XX:XX:XX:XX"></div>
+<div class="gp"><label class="lb">Vi tri lap dat</label><input class="fi" id="dloc" placeholder="VD: Goc vuon, Tren cay..."></div>
+<div class="gp"><label class="lb">Khu vuc</label><input class="fi" id="dzone" placeholder="Khu vuc"></div>
+<div class="gp"><label class="lb">Nguon dien (V)</label><input type="number" class="fi" id="dvolt" placeholder="5V/12V/220V"></div>
+<button class="bt" onclick="svDevice()">Luu</button>
+</div></div>
 
-<!-- RULE FORM -->
-<div id="ruleform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Luat</span><button class="fc" onclick="closeForm()">×</button></div><input type="hidden" id="ruleId"><div class="fg"><label class="lb">Ten luat</label><input class="in" id="ruleName"></div><button class="btn" onclick="saveRule()">Luu</button></div></div>
+<!-- RULE FM -->
+<div id="ruleFM" class="f"><div class="bx">
+<div class="h"><span>Luat dieu tuyen</span><button onclick="cl('ruleFM')">&times;</button></div>
+<input type="hidden" id="ruleId">
+<div class="gp"><label class="lb">Ten luat (*)</label><input class="fi" id="rname" placeholder="VD: Bom nuoc khi han"></div>
+<div class="gp"><label class="lb">Dieu kien 1</label>
+<select class="sel" id="rsen1"><option value="temperature">Nhiet do</option><option value="humidity">Do am khong khi</option><option value="soil_moisture">Do am dat</option><option value="light">Cuong do anh sang</option></select>
+<select class="sel" id="rop1" style="margin-top:4px"><option value=">">Lon hon (&gt;)</option><option value="<">Nho hon (&lt;)</option><option value=">=">Lon hon hoac bang</option><option value="<=">Nho hon hoac bang</option><option value="=">Bang (=)</option></select>
+<input type="number" class="fi" id="rval1" placeholder="Gia tri" style="margin-top:4px"></div>
+<div class="gp"><label class="lb">Ket hop voi dieu kien 2</label>
+<select class="sel" id="rlog"><option value="AND">AND (Va)</option><option value="OR">OR (Hoac)</option></select>
+</div>
+<div class="gp"><label class="lb">Dieu kien 2 (neu can)</label>
+<select class="sel" id="rsen2"><option value="temperature">Nhiet do</option><option value="humidity">Do am</option><option value="soil_moisture">Do am dat</option></select>
+<select class="sel" id="rop2" style="margin-top:4px"><option value=">">&gt;</option><option value="<">&lt;</option></select>
+<input type="number" class="fi" id="rval2" placeholder="Gia tri" style="margin-top:4px"></div>
+<div class="gp"><label class="lb">Hanh dong khi thoa man</label>
+<select class="sel" id="ract"><option value="turn_on">Bat thiet bi</option><option value="turn_off">Tat thiet bi</option><option value="send_alert">Gui canh bao</option><option value="log">Ghi log</option><option value="email">Gui email</option></select></div>
+<div class="gp"><label class="lb">Thiet bi thuc hien</label><input class="fi" id="rtgt" placeholder="Chon thiet bi..."></div>
+<button class="bt" onclick="svRule()">Luu</button>
+</div></div>
 
-<!-- SCHED FORM -->
-<div id="schedform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Lich</span><button class="fc" onclick="closeForm()">×</button></div><input type="hidden" id="schedId"><div class="fg"><label class="lb">Ten</label><input class="in" id="schedName"></div><button class="btn" onclick="saveSched()">Luu</button></div></div>
+<!-- SCHED FM -->
+<div id="schedFM" class="f"><div class="bx">
+<div class="h"><span>Lich trinh</span><button onclick="cl('schedFM')">&times;</button></div>
+<input type="hidden" id="schedId">
+<div class="gp"><label class="lb">Ten lich (*)</label><input class="fi" id="sname" placeholder="VD: Tuoi nuoc sang"></div>
+<div class="gp"><label class="lb">Gio thuc hien</label><input type="time" class="fi" id="stime"></div>
+<div class="gp"><label class="lb">Lap lai</label><select class="sel" id="srep"><option value="once">1 lan</option><option value="daily">Hang ngay</option><option value="weekly">Hang tuan</option><option value="monthly">Hang thang</option></select></div>
+<div class="gp"><label class="lb">Ngay bat dau</label><input type="date" class="fi" id="sstart"></div>
+<div class="gp"><label class="lb">Hanh dong</label><select class="sel" id="sact"><option value="irrigation">Tuoi nuoc</option><option value="fertilizer">Bon phan</option><option value="turn_on">Bat thiet bi</option><option value="turn_off">Tat thiet bi</option></select></div>
+<button class="bt" onclick="svSched()">Luu</button>
+</div></div>
 
-<!-- TRACE FORM -->
-<div id="traceform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Lot</span><button class="fc" onclick="closeForm()">×</button></div><input type="hidden" id="traceId"><div class="fg"><label class="lb">Ma lot</label><input class="in" id="traceCode"></div><button class="btn" onclick="saveTrace()">Luu</button></div></div>
+<!-- TRACE FM -->
+<div id="traceFM" class="f"><div class="bx">
+<div class="h"><span>Lot san pham</span><button onclick="cl('traceFM')">&times;</button></div>
+<input type="hidden" id="traceId">
+<div class="gp"><label class="lb">Ma lot (*)</label><input class="fi" id="tcode" placeholder="VD: LOT-2024-001"></div>
+<div class="gp"><label class="lb">Cay trong</label><input class="fi" id="tcrop" placeholder="Ten cay"></div>
+<div class="gp"><label class="lb">Khoi luong (kg)</label><input type="number" class="fi" id="twgt" placeholder="0"></div>
+<div class="gp"><label class="lb">Ngay thu hoach</label><input type="date" class="fi" id="thv"></div>
+<div class="gp"><label class="lb">Khu vuc</label><input class="fi" id="tzone" placeholder="Khu vuc"></div>
+<div class="gp"><label class="lb">Ghi chu</label><textarea class="fi" id="tnote" rows="2"></textarea></div>
+<button class="bt" onclick="svTrace()">Luu</button>
+</div></div>
 
-<!-- INC FORM -->
-<div id="incform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Thu tien</span><button class="fc" onclick="closeForm()">×</button></div><div class="fg"><label class="lb">Mo ta</label><input class="in" id="incDesc"></div><div class="fg"><label class="lb">So tien</label><input type="number" class="in" id="incAmt"></div><button class="btn" onclick="saveInc()">Luu</button></div></div>
+<!-- INC FM -->
+<div id="incFM" class="f"><div class="bx">
+<div class="h"><span>Thu tien</span><button onclick="cl('incFM')">&times;</button></div>
+<div class="gp"><label class="lb">Mo ta</label><input class="fi" id="idesc" placeholder="VD: Ban rau, Ban ca..."></div>
+<div class="gp"><label class="lb">So tien (*)</label><input type="number" class="fi" id="iamt" placeholder="0"></div>
+<button class="bt" onclick="svInc()">Luu</button>
+</div></div>
 
-<!-- EXP FORM -->
-<div id="expform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Chi tien</span><button class="fc" onclick="closeForm()">×</button></div><div class="fg"><label class="lb">Mo ta</label><input class="in" id="expDesc"></div><div class="fg"><label class="lb">So tien</label><input type="number" class="in" id="expAmt"></div><button class="btn" onclick="saveExp()">Luu</button></div></div>
+<!-- EXP FM -->
+<div id="expFM" class="f"><div class="bx">
+<div class="h"><span>Chi tien</span><button onclick="cl('expFM')">&times;</button></div>
+<div class="gp"><label class="lb">Mo ta</label><input class="fi" id="edesc" placeholder="VD: Mua phan bon, Dien..."></div>
+<div class="gp"><label class="lb">So tien (*)</label><input type="number" class="fi" id="eamt" placeholder="0"></div>
+<button class="bt" onclick="svExp()">Luu</button>
+</div></div>
 
 <div class="ts" id="ts">Da luu!</div>
 
 <script>
-var API = 'http://10.0.2.2:3000';
-var key = 'est_v6';
-var dt = {crops:[], devices:[], rules:[], scheds:[], traces:[], inc:0, exp:0};
+// CONFIG
+var API_URL = 'http://10.0.2.2:3000';
+var KEY = 'est_pro_v7';
+var dt = {crops:[], devices:[], rules:[], scheds:[], traces:[], alerts:[], finance:{inc:0,exp:0,tx:[]}, sensors:{}};
 
-function init(){
-  try{ var x = localStorage.getItem(key); if(x) dt = JSON.parse(x); }catch(e){}
-  document.getElementById('srv').textContent = API;
-  render(); init();
+// INIT
+(function(){
+  try{var x=localStorage.getItem(KEY);if(x)dt=JSON.parse(x);}catch(e){}
+  document.getElementById('srv').textContent = API_URL;
+  render();
+  checkOnline();
+})();
+
+function sv(){
+  try{localStorage.setItem(KEY,JSON.stringify(dt));}catch(e){}
 }
-window.onload = init;
 
-function saveT(){
-  localStorage.setItem(key, JSON.stringify(dt));
+function checkOnline(){
+  if(navigator.onLine){
+    document.getElementById('dot').classList.add('on');
+    document.getElementById('sttxt').textContent = 'Online';
+  }else{
+    document.getElementById('dot').classList.remove('on');
+    document.getElementById('sttxt').textContent = 'Offline';
+  }
 }
+window.addEventListener('online',checkOnline);
+window.addEventListener('offline',checkOnline);
 
-function tab(n){
-  for(var i=0;i<7;i++){
-    document.getElementById('nb'+i).classList.toggle('on',i===n);
-    document.getElementById('tab'+i).classList.toggle('on',i===n);
+function go(n){
+  for(var i=0;i<8;i++){
+    document.getElementById('b'+i).classList.toggle('on',i===n);
+    document.getElementById('t'+i).classList.toggle('on',i===n);
   }
   render();
 }
 
+function cl(id){document.getElementById(id).classList.remove('on');}
+function fm(id){
+  document.getElementById(id).classList.add('on');
+  // Clear inputs
+  var ids = ['cropId','deviceId','ruleId','schedId','traceId'];
+  ids.forEach(function(x){var el=document.getElementById(x);if(el)el.value='';});
+}
+
+// RENDER
 function render(){
-  document.getElementById('tmp').innerHTML = (dt.sens?dt.sens.temp:'--')+'<span class="unit">°C</span>';
-  document.getElementById('hum').innerHTML = (dt.sens?dt.sens.humid:'--')+'<span class="unit">%</span>';
+  document.getElementById('tmp').innerHTML = (dt.sensors.temperature||'--')+'<span class="unit">°C</span>';
+  document.getElementById('hum').innerHTML = (dt.sensors.humidity||'--')+'<span class="unit">%</span>';
   document.getElementById('ccnt').textContent = dt.crops.length;
   document.getElementById('dcnt').textContent = dt.devices.length;
   document.getElementById('tcnt').textContent = dt.traces.length;
-  document.getElementById('mcnt').textContent = dt.inc - dt.exp;
-  document.getElementById('incv').textContent = dt.inc;
-  document.getElementById('expv').textContent = dt.exp;
-  document.getElementById('pfv').textContent = dt.inc - dt.exp;
+  document.getElementById('acnt').textContent = dt.alerts.length;
+  document.getElementById('incv').innerHTML = dt.finance.inc.toLocaleString()+' d';
+  document.getElementById('expv').innerHTML = dt.finance.exp.toLocaleString()+' d';
+  document.getElementById('pfv').innerHTML = (dt.finance.inc - dt.finance.exp).toLocaleString()+' d';
   
-  // devices
+  // Devices
   var h = dt.devices.length?'':'<div class="emp">Chua co</div>';
   dt.devices.forEach(function(d,i){
-    h += '<div class="row"><div class="l"><div class="n">'+d.name+'</div><div class="d">'+d.type+'</div></div><div><button class="bedit" onclick="editDev('+i+')">✏</button><button class="btx" onclick="delDev('+i+')">X</button></div></div>';
+    h += '<div class="r"><div class="l"><div class="n">'+d.name+'</div><div class="d">'+d.type+' | '+(d.location||d.zone||'--')+' | '+(d.status||'offline')+'</div></div><div><button class="bted" onclick="edDev('+i+')">'+String.fromCharCode(9998)+'</button><button class="btx" onclick="dlDev('+i+')">X</button></div></div>';
   });
   document.getElementById('devlst').innerHTML = h;
   document.getElementById('dlst').innerHTML = h;
   
-  // crops
+  // Crops
   h = dt.crops.length?'':'<div class="emp">Chua co</div>';
   dt.crops.forEach(function(c,i){
-    h += '<div class="row"><div class="l"><div class="n">'+c.name+'</div></div><div><button class="bedit" onclick="editCrop('+i+')">✏</button><button class="btx" onclick="delCrop('+i+')">X</button></div></div>';
+    h += '<div class="r"><div class="l"><div class="n">'+c.name+'</div><div class="d">'+c.type+' | '+c.stage+' | '+(c.plantedDate||'')+'</div></div><div><button class="bted" onclick="edCrop('+i+')">'+String.fromCharCode(9998)+'</button><button class="btx" onclick="dlCrop('+i+')">X</button></div></div>';
   });
   document.getElementById('clst').innerHTML = h;
   
-  // rules
+  // Sensors detail
+  var s = dt.sensors;
+  h = Object.keys(s).length?'':'<div class="emp">Chua co du lieu</div>';
+  Object.keys(s).forEach(function(k){
+    h += '<div class="rd">'+k+': <b>'+s[k]+'</b></div>';
+  });
+  document.getElementById('snlst').innerHTML = h;
+  
+  // Rules
   h = dt.rules.length?'':'<div class="emp">Chua co</div>';
   dt.rules.forEach(function(r,i){
-    h += '<div class="row"><div class="l"><div class="n">'+r.name+'</div></div><button class="btx" onclick="delRule('+i+')">X</button></div>';
+    h += '<div class="r"><div class="l"><div class="n">'+r.name+'</div><div class="d">'+r.sensor1+' '+r.op1+' '+r.val1+' -> '+(r.action||'--')+'</div></div><button class="btx" onclick="dlRule('+i+')">X</button></div>';
   });
   document.getElementById('rlst').innerHTML = h;
   
-  // scheds
+  // Scheds
   h = dt.scheds.length?'':'<div class="emp">Chua co</div>';
   dt.scheds.forEach(function(s,i){
-    h += '<div class="row"><div class="l"><div class="n">'+s.name+'</div></div><button class="btx" onclick="delSched('+i+')">X</button></div>';
+    h += '<div class="r"><div class="l"><div class="n">'+s.name+'</div><div class="d">'+s.time+' | '+s.repeat+'</div></div><button class="btx" onclick="dlSched('+i+')">X</button></div>';
   });
   document.getElementById('slst').innerHTML = h;
   
-  // traces
+  // Alerts
+  h = dt.alerts.length?'':'<div class="emp">Chua co canh bao</div>';
+  dt.alerts.forEach(function(a,i){
+    h += '<div class="r"><div class="l"><div class="n">'+a.msg+'</div><div class="d">'+a.time+'</div></div></div>';
+  });
+  document.getElementById('alst').innerHTML = h;
+  
+  // Traces
   h = dt.traces.length?'':'<div class="emp">Chua co</div>';
   dt.traces.forEach(function(t,i){
-    h += '<div class="row"><div class="l"><div class="n">'+t.code+'</div></div><button class="btx" onclick="delTrace('+i+')">X</button></div>';
+    h += '<div class="r"><div class="l"><div class="n">'+t.code+'</div><div class="d">'+t.crop+' | '+t.weight+'kg | '+(t.date||'')+'</div></div><div><button class="bted" onclick="edTrace('+i+')">'+String.fromCharCode(9998)+'</button><button class="btx" onclick="dlTrace('+i+')">X</button></div></div>';
   });
   document.getElementById('tlst').innerHTML = h;
 }
 
-function openForm(type){
-  document.getElementById(type+'form').classList.add('on');
-  document.getElementById(type+'Id').value = '';
-  if(type==='device'){
-    document.getElementById('deviceName').value = '';
-    document.getElementById('deviceType').value = 'esp32';
-  }else if(type==='crop'){
-    document.getElementById('cropName').value = '';
-  }else if(type==='rule'){
-    document.getElementById('ruleName').value = '';
-  }else if(type==='sched'){
-    document.getElementById('schedName').value = '';
-  }else if(type==='trace'){
-    document.getElementById('traceCode').value = '';
+// CRUD
+function edCrop(i){
+  var c = dt.crops[i];
+  document.getElementById('cropId').value = i;
+  document.getElementById('cname').value = c.name;
+  document.getElementById('cstage').value = c.stage;
+  document.getElementById('ctype').value = c.type;
+  document.getElementById('czone').value = c.zone;
+  document.getElementById('cdate').value = c.plantedDate;
+  fm('cropFM');
+}
+function dlCrop(i){
+  if(!confirm('Xoa cay trong?')) return;
+  dt.crops.splice(i,1); sv(); render();
+  msg('Da xoa');
+}
+function svCrop(){
+  var nm = document.getElementById('cname').value;
+  if(!nm) return msg('Nhap ten cay','err');
+  var id = document.getElementById('cropId').value;
+  var item = {name:nm, stage:document.getElementById('cstage').value, type:document.getElementById('ctype').value, zone:document.getElementById('czone').value, plantedDate:document.getElementById('cdate').value};
+  if(id!==''){dt.crops[id]=item;}else{dt.crops.push(item);}
+  sv(); cl('cropFM'); render(); msg('Da luu!');
+}
+
+function edDev(i){
+  var d = dt.devices[i];
+  document.getElementById('deviceId').value = i;
+  document.getElementById('dname').value = d.name;
+  document.getElementById('dtype').value = d.type;
+  document.getElementById('dmac').value = d.mac||'';
+  document.getElementById('dloc').value = d.location||'';
+  document.getElementById('dzone').value = d.zone||'';
+  fm('deviceFM');
+}
+function dlDev(i){
+  if(!confirm('Xoa thiet bi?')) return;
+  dt.devices.splice(i,1); sv(); render(); msg('Da xoa');
+}
+function svDevice(){
+  var nm = document.getElementById('dname').value;
+  if(!nm) return msg('Nhap ten','err');
+  var id = document.getElementById('deviceId').value;
+  var item = {name:nm, type:document.getElementById('dtype').value, mac:document.getElementById('dmac').value, location:document.getElementById('dloc').value, zone:document.getElementById('dzone').value, status:'online', voltage:document.getElementById('dvolt').value};
+  if(id!==''){dt.devices[id]=item;}else{dt.devices.push(item);}
+  sv(); cl('deviceFM'); render(); msg('Da luu!');
+}
+
+function dlRule(i){ if(!confirm('Xoa?')) return; dt.rules.splice(i,1); sv(); render(); msg('Da xoa'); }
+function svRule(){
+  var nm = document.getElementById('rname').value;
+  if(!nm) return msg('Nhap ten','err');
+  var id = document.getElementById('ruleId').value;
+  var item = {name:nm, sensor1:document.getElementById('rsen1').value, op1:document.getElementById('rop1').value, val1:document.getElementById('rval1').value, logic:document.getElementById('rlog').value, sensor2:document.getElementById('rsen2').value, op2:document.getElementById('rop2').value, val2:document.getElementById('rval2').value, action:document.getElementById('ract').value, target:document.getElementById('rtgt').value, active:true};
+  if(id!==''){dt.rules[id]=item;}else{dt.rules.push(item);}
+  sv(); cl('ruleFM'); render(); msg('Da luu!');
+}
+
+function dlSched(i){ if(!confirm('Xoa?')) return; dt.scheds.splice(i,1); sv(); render(); msg('Da xoa'); }
+function svSched(){
+  var nm = document.getElementById('sname').value;
+  if(!nm) return msg('Nhap ten','err');
+  var id = document.getElementById('schedId').value;
+  var item = {name:nm, time:document.getElementById('stime').value, repeat:document.getElementById('srep').value, startDate:document.getElementById('sstart').value, action:document.getElementById('sact').value, active:true};
+  if(id!==''){dt.scheds[id]=item;}else{dt.scheds.push(item);}
+  sv(); cl('schedFM'); render(); msg('Da luu!');
+}
+
+function edTrace(i){
+  var t = dt.traces[i];
+  document.getElementById('traceId').value = i;
+  document.getElementById('tcode').value = t.code;
+  document.getElementById('tcrop').value = t.crop;
+  document.getElementById('twgt').value = t.weight;
+  document.getElementById('thv').value = t.date;
+  document.getElementById('tzone').value = t.zone;
+  document.getElementById('tnote').value = t.note;
+  fm('traceFM');
+}
+function dlTrace(i){ if(!confirm('Xoa?')) return; dt.traces.splice(i,1); sv(); render(); msg('Da xoa'); }
+function svTrace(){
+  var cd = document.getElementById('tcode').value;
+  if(!cd) return msg('Nhap ma','err');
+  var id = document.getElementById('traceId').value;
+  var item = {code:cd, crop:document.getElementById('tcrop').value, weight:document.getElementById('twgt').value, date:document.getElementById('thv').value, zone:document.getElementById('tzone').value, note:document.getElementById('tnote').value};
+  if(id!==''){dt.traces[id]=item;}else{dt.traces.push(item);}
+  sv(); cl('traceFM'); render(); msg('Da luu!');
+}
+
+function svInc(){
+  var amt = parseInt(document.getElementById('iamt').value)||0;
+  if(amt<=0) return msg('Nhap tien','err');
+  dt.finance.inc += amt;
+  dt.finance.tx.push({type:'inc',desc:document.getElementById('idesc').value,amt:amt,date:new Date().toISOString()});
+  sv(); cl('incFM'); render(); msg('Da luu!');
+}
+function svExp(){
+  var amt = parseInt(document.getElementById('eamt').value)||0;
+  if(amt<=0) return msg('Nhap tien','err');
+  dt.finance.exp += amt;
+  dt.finance.tx.push({type:'exp',desc:document.getElementById('edesc').value,amt:amt,date:new Date().toISOString()});
+  sv(); cl('expFM'); render(); msg('Da luu!');
+}
+
+function chkQR(){
+  var cd = document.getElementById('qrcode').value;
+  var t = dt.traces.find(function(x){return x.code === cd;});
+  var r = document.getElementById('qrres');
+  if(t){
+    r.innerHTML = '<div class="bgr">Ma: <b>'+t.code+'</b></div><div class="bgr">Cay: '+t.crop+'</div><div class="bgr">KL: '+t.weight+'kg</div><div class="bgr">Ngay: '+(t.date||'')+'</div><div class="bgr">KV: '+(t.zone||'')+'</div><div class="bgr">Ghi chu: '+(t.note||'')+'</div>';
+  }else{
+    r.innerHTML = '<div class="emp">Khong tim thay ma nay</div>';
   }
 }
 
-function closeForm(){
-  var frms = document.querySelectorAll('.frm');
-  frms.forEach(function(f){ f.classList.remove('on'); });
-}
-
-function editCrop(i){ var c = dt.crops[i]; openForm('crop'); document.getElementById('cropId').value = i; document.getElementById('cropName').value = c.name; }
-function delCrop(i){ if(confirm('Xoa/crops/'+i+'?')){ dt.crops.splice(i,1); saveT(); render(); show('Da xoa'); } }
-function editDev(i){ var d = dt.devices[i]; openForm('device'); document.getElementById('deviceId').value = i; document.getElementById('deviceName').value = d.name; document.getElementById('deviceType').value = d.type; }
-function delDev(i){ if(confirm('Xoa/device/'+i+'?')){ dt.devices.splice(i,1); saveT(); render(); show('Da xoa'); } }
-function delRule(i){ if(confirm('Xoa?')){ dt.rules.splice(i,1); saveT(); render(); show('Da xoa'); } }
-function delSched(i){ if(confirm('Xoa?')){ dt.scheds.splice(i,1); saveT(); render(); show('Da xoa'); } }
-function delTrace(i){ if(confirm('Xoa?')){ dt.traces.splice(i,1); saveT(); render(); show('Da xoa'); } }
-
-function saveCrop(){
-  var nm = document.getElementById('cropName').value;
-  if(!nm){ show('Nhap ten','err'); return; }
-  var id = document.getElementById('cropId').value;
-  if(id!==''){ dt.crops[id] = {name:nm}; }else{ dt.crops.push({name:nm}); }
-  saveT(); closeForm(); render(); show('Da luu!');
-}
-function saveDevice(){
-  var nm = document.getElementById('deviceName').value;
-  if(!nm){ show('Nhap ten','err'); return; }
-  var id = document.getElementById('deviceId').value;
-  var it = {name:nm, type:document.getElementById('deviceType').value, on:true};
-  if(id!==''){ dt.devices[id] = it; }else{ dt.devices.push(it); }
-  saveT(); closeForm(); render(); show('Da luu!');
-}
-function saveRule(){
-  var nm = document.getElementById('ruleName').value;
-  if(!nm){ show('Nhap ten','err'); return; }
-  var id = document.getElementById('ruleId').value;
-  if(id!==''){ dt.rules[id] = {name:nm}; }else{ dt.rules.push({name:nm}); }
-  saveT(); closeForm(); render(); show('Da luu!');
-}
-function saveSched(){
-  var nm = document.getElementById('schedName').value;
-  if(!nm){ show('Nhap ten','err'); return; }
-  var id = document.getElementById('schedId').value;
-  if(id!==''){ dt.scheds[id] = {name:nm}; }else{ dt.scheds.push({name:nm}); }
-  saveT(); closeForm(); render(); show('Da luu!');
-}
-function saveTrace(){
-  var cd = document.getElementById('traceCode').value;
-  if(!cd){ show('Nhap ma','err'); return; }
-  var id = document.getElementById('traceId').value;
-  if(id!==''){ dt.traces[id] = {code:cd}; }else{ dt.traces.push({code:cd}); }
-  saveT(); closeForm(); render(); show('Da luu!');
-}
-function saveInc(){
-  var amt = parseInt(document.getElementById('incAmt').value)||0;
-  if(amt<=0){ show('Nhap tien','err'); return; }
-  dt.inc += amt;
-  saveT(); closeForm(); render(); show('Da luu!');
-}
-function saveExp(){
-  var amt = parseInt(document.getElementById('expAmt').value)||0;
-  if(amt<=0){ show('Nhap tien','err'); return; }
-  dt.exp += amt;
-  saveT(); closeForm(); render(); show('Da luu!');
-}
-
-function checkQR(){
-  var cd = document.getElementById('qrcode').value;
-  var t = dt.traces.find(function(x){return x.code === cd;});
-  document.getElementById('qrres').innerHTML = t ? 'Ma: '+t.code : 'Khong tim thay';
-}
-
 function refresh(){
-  show('Dang tai...','info');
-  fetch(API+'/api/sensors/latest').then(function(r){return r.json();}).then(function(d){
-    if(d.temp){ dt.sens = {temp:d.temp, humid:d.humid}; }
-    saveT(); render();
-    document.getElementById('stdot').classList.add('on');
-    show('Da cap nhat');
+  msg('Dang doi...','ok');
+  fetch(API_URL+'/api/sensors/latest').then(function(r){return r.json();}).then(function(d){
+    if(d.temperature){dt.sensors.temperature = d.temperature; dt.sensors.humidity = d.humidity;}
+    if(d.devices && d.devices.length>0 && dt.devices.length===0){dt.devices = d.devices.map(function(x){return {name:x.name,type:'sensor',status:x.status};});}
+    sv(); render();
+    document.getElementById('dot').classList.add('on');
+    document.getElementById('sttxt').textContent = 'Online';
+    msg('Da cap nhat!');
   }).catch(function(e){
-    document.getElementById('stdot').classList.remove('on');
-    show('Offline','err');
+    document.getElementById('dot').classList.remove('on');
+    document.getElementById('sttxt').textContent = 'Offline';
+    msg('Khong ket noi duoc','err');
   });
   document.getElementById('last').textContent = new Date().toLocaleString('vi-VN');
 }
 
-function clearAll(){
-  if(confirm('Xoa ALL du lieu?')){
-    localStorage.clear();
-    location.reload();
-  }
-}
+function clr(){ if(confirm('Xoa ALL du lieu?')){localStorage.clear();location.reload();} }
 
-function show(msg,err){
-  var t = document.getElementById('ts');
-  t.textContent = msg;
-  t.className = 'ts d '+(err?'tser':'tsok');
-  setTimeout(function(){t.className='ts';},2000);
+function msg(t,ty){
+  var ts = document.getElementById('ts');
+  ts.textContent = t;
+  ts.className = 'ts d '+(ty==='err'?'tser':'tsok');
+  setTimeout(function(){ts.className='ts';},2500);
 }
 </script>
 </body>

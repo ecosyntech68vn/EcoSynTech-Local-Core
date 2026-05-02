@@ -1,622 +1,479 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#219465">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <title>EcoSynTech - Smart Farming</title>
-  <style>
-    :root { --primary: #219465; --primary-dark: #1a7a4a; --secondary: #4CAF50; --danger: #f44336; --warning: #ff9800; --info: #2196F3; --light: #f5f5f5; --dark: #212121; }
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--light); overflow: hidden; }
-    .app { display: flex; flex-direction: column; height: 100%; max-width: 480px; margin: 0 auto; background: white; }
-    .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; }
-    .header h1 { font-size: 16px; font-weight: 600; }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
-    .status-dot.online { background: var(--secondary); }
-    .content { flex: 1; overflow-y: auto; padding: 12px; padding-bottom: 65px; }
-    .card { background: white; border-radius: 10px; padding: 12px; margin-bottom: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-    .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .card-title { font-size: 12px; color: #666; font-weight: 500; }
-    .btn-add { background: var(--primary); color: white; border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 16px; cursor: pointer; line-height: 1; }
-    .val { font-size: 24px; font-weight: 700; color: var(--dark); }
-    .unit { font-size: 12px; color: #999; }
-    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-    .grid-item { text-align: center; padding: 8px 4px; background: var(--light); border-radius: 6px; cursor: pointer; }
-    .grid-val { font-size: 18px; font-weight: 700; color: var(--primary); }
-    .grid-lbl { font-size: 9px; color: #666; }
-    .list { max-height: 300px; overflow-y: auto; }
-    .item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f5f5f5; }
-    .item:last-child { border: none; }
-    .item-left { flex: 1; }
-    .item-name { font-weight: 500; font-size: 13px; }
-    .item-desc { font-size: 11px; color: #888; margin-top: 1px; }
-    .item-btns { display: flex; gap: 4px; }
-    .icon-btn { background: none; border: none; font-size: 14px; cursor: pointer; padding: 4px; opacity: 0.7; }
-    .icon-btn.on { color: var(--secondary); opacity: 1; }
-    .icon-btn.off { color: #ccc; }
-    .icon-btn.del { color: var(--danger); }
-    .onoff-toggle { position: relative; width: 36px; height: 20px; background: #ccc; border-radius: 10px; cursor: pointer; border: none; }
-    .onoff-toggle.on { background: var(--secondary); }
-    .onoff-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: 0.2s; }
-    .onoff-toggle.on::after { left: 18px; }
-    .nav { display: flex; background: white; border-top: 1px solid #eee; }
-    .nav-item { flex: 1; text-align: center; padding: 8px 2px; color: #999; font-size: 8px; cursor: pointer; }
-    .nav-item.active { color: var(--primary); background: #e8f5e9; }
-    .nav-icon { font-size: 16px; display: block; }
-    .tab { display: none; }
-    .tab.active { display: block; }
-    .form-group { margin-bottom: 10px; }
-    .form-label { display: block; font-size: 11px; color: #666; margin-bottom: 4px; }
-    .form-input, .form-select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .btn { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; font-size: 13px; font-weight: 600; width: 100%; cursor: pointer; }
-    .btn-sec { background: var(--light); color: var(--dark); }
-    .btn-danger { background: var(--danger); }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; }
-    .modal.active { display: flex; }
-    .modal-box { background: white; width: 90%; max-width: 400px; border-radius: 12px; padding: 14px; max-height: 85%; overflow-y: auto; }
-    .modal-head { display: flex; justify-content: space-between; margin-bottom: 12px; }
-    .modal-title { font-size: 15px; font-weight: 600; }
-    .modal-close { background: none; border: none; font-size: 20px; color: #999; cursor: pointer; }
-    .toast { display: none; position: fixed; top: 10px; left: 50%; transform: translateX(-50%); padding: 10px 16px; border-radius: 6px; z-index: 200; font-size: 12px; color: white; }
-    .toast.show { display: block; }
-    .toast.succ { background: var(--secondary); }
-    .toast.err { background: var(--danger); }
-    .toast.info { background: var(--dark); }
-    .empty { text-align: center; padding: 30px; color: #999; font-size: 12px; }
-    .badge { font-size: 9px; padding: 2px 5px; border-radius: 3px; background: var(--light); color: #666; }
-    .badge.on { background: #e8f5e9; color: var(--secondary); }
-    .badge.off { background: #ffebee; color: var(--danger); }
-    .section { font-size: 10px; color: #999; margin-bottom: 6px; text-transform: uppercase; }
-    .stat { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: 12px; }
-    .stat-label { color: #666; }
-    .stat-val { font-weight: 600; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#219465">
+<title>EcoSynTech</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f5f5f5}
+.app{max-width:480px;margin:0 auto;min-height:100vh;background:white;position:relative}
+.header{background:#219465;color:white;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;position:fixed;top:0;width:100%;max-width:480px;z-index:10}
+.header h1{font-size:16px}
+.dot{width:8px;height:8px;border-radius:50%;background:#f44336}
+.dot.on{background:#4CAF50}
+.main{padding:48px 12px 70px}
+.card{background:white;border-radius:10px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+.toptitle{font-size:12px;color:#888;margin-bottom:8px;display:flex;justify-content:space-between}
+.big{font-size:24px;font-weight:700}
+.unit{font-size:12px;color:#999}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.gridbtn{background:#f0f0f0;padding:10px 4px;text-align:center;border-radius:6px;cursor:pointer}
+.gridbtn:active{background:#ddd}
+.gridnum{font-size:18px;font-weight:700;color:#219465}
+.gridtxt{font-size:9px;color:#666}
+.lst{max-height:280px;overflow-y:auto}
+.row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee}
+.row:active{background:#f9f9f9}
+.lbl{flex:1}
+.name{font-weight:500;font-size:13px}
+.desc{font-size:11px;color:#888;margin-top:2px}
+.btn{background:#219465;color:white;border:none;padding:8px;border-radius:4px;font-size:12px;width:20px;height:20px;cursor:pointer}
+.btnx{background:#f44336;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:12px;cursor:pointer;margin-left:4px}
+.sw{width:36px;height:20px;background:#ccc;border-radius:10px;position:relative;cursor:pointer;border:flex;align-items:center;justify-content:center}
+.sw.on{background:#4CAF50}
+.sw::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:white;border-radius:50%}
+.sw.on::after{left:18px}
+.nav{display:flex;position:fixed;bottom:0;width:100%;max-width:480px;background:white;border-top:1px solid #ddd;z-index:10}
+.navbtn{flex:1;text-align:center;padding:10px 4px;color:#999;font-size:8px;cursor:pointer;border:none;background:none}
+.navbtn:active{background:#f0f0f0}
+.navbtn.on{color:#219465;background:#e8f5e9}
+.navic{display:block;font-size:18px;margin-bottom:2px}
+.tab{display:none}
+.tab.on{display:block}
+.frm{padding:12px}
+.fgrp{margin-bottom:10px}
+.flab{display:block;font-size:11px;color:#666;margin-bottom:4px}
+.fin{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:13px}
+.bbtn{background:#219465;color:white;border:none;padding:12px;border-radius:6px;width:100%;font-size:14px;font-weight:600;cursor:pointer}
+.bbtn:active{background:#1a7a4a}
+.bmod{background:#f0f0f0;color:#333}
+.bmod:active{background:#ddd}
+.md{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:100;justify-content:center;align-items:center}
+.MD{background:white;width:90%;max-width:400px;border-radius:12px;padding:14px}
+.mdhead{display:flex;justify-content:space-between;margin-bottom:12px}
+.mdttl{font-size:15px;font-weight:600}
+.mdcl{background:none;border:none;font-size:20px;color:#888;cursor:pointer}
+.ts{display:none;position:fixed;top:10px;left:50%;transform:translateX(-50%);padding:10px 16px;border-radius:6px;z-index:200;font-size:12px;color:white}
+.ts.sh{display:block}
+.tsok{background:#4CAF50}
+.tser{background:#f44336}
+.emp{text-align:center;padding:30px;color:#999;font-size:12px}
+.stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;font-size:12px}
+.statlb{color:#666}
+.statval{font-weight:600}
+</style>
 </head>
 <body>
-  <div class="app">
-    <div class="header">
-      <h1>EcoSynTech</h1>
-      <div class="status-dot" id="netStatus"></div>
-    </div>
-    
-    <!-- DASHBOARD -->
-    <div id="tab-dashboard" class="tab active">
-      <div class="content">
-        <div class="card"><div class="val" id="tempVal">--<span class="unit">°C</span></div></div>
-        <div class="card"><div class="val" id="humidVal">--<span class="unit">%</span></div></div>
-        <div class="grid">
-          <div class="grid-item" data-nav="devices"><div class="grid-val" id="devCnt">0</div><div class="grid-lbl">IoT</div></div>
-          <div class="grid-item" data-nav="alerts"><div class="grid-val" id="alertCnt">0</div><div class="grid-lbl">Alert</div></div>
-          <div class="grid-item" data-nav="crops"><div class="grid-val" id="cropCnt">0</div><div class="grid-lbl">Crops</div></div>
-          <div class="grid-item" data-nav="trace"><div class="grid-val" id="traceCnt">0</div><div class="grid-lbl">Trace</div></div>
-        </div>
-        <div class="card" style="margin-top:10px">
-          <div class="card-head"><span class="card-title">Thiet bi</span></div>
-          <div class="list" id="devListDash"><div class="empty">Chua co</div></div>
-        </div>
-        <button class="btn" onclick="refresh()">Cap nhat</button>
-      </div>
-    </div>
+<div class="app">
+<div class="header"><h1>EcoSynTech</h1><div class="dot" id="stdot"></div></div>
+<div class="main">
+<div id="tab-dash" class="tab on">
+<div class="card"><div class="big" id="tmp">--<span class="unit">°C</span></div></div>
+<div class="card"><div class="big" id="hum">--<span class="unit">%</span></div></div>
+<div class="grid">
+<div class="gridbtn" onclick="showTab(2)"><div class="gridnum" id="dcnt">0</div><div class="gridtxt">IoT</div></div>
+<div class="gridbtn" onclick="showTab(5)"><div class="gridnum" id="tcnt">0</div><div class="gridtxt">Trace</div></div>
+<div class="gridbtn" onclick="showTab(1)"><div class="gridnum" id="ccnt">0</div><div class="gridtxt">Crops</div></div>
+<div class="gridbtn" onclick="showTab(6)"><div class="gridnum" id="acnt">0</div><div class="gridtxt">Money</div></div>
+</div>
+<div class="card">
+<div class="toptitle"><span>Thiet bi</span></div>
+<div class="lst" id="devlst"><div class="emp">Chua co</div></div>
+</div>
+<button class="bbtn" onclick="refresh()">Cap nhat</button>
+</div>
+<div id="tab-crop" class="tab">
+<div class="card">
+<div class="toptitle"><span>Cay trong</span><button class="btn" onclick="openModal('cmodal')">+</button></div>
+<div class="lst" id="clst"><div class="emp">Chua co</div></div>
+</div>
+</div>
+<div id="tab-dev" class="tab">
+<div class="card">
+<div class="toptitle"><span>Thiet bi IoT</span><button class="btn" onclick="openModal('dmodal')">+</button></div>
+<div class="lst" id="dlst"><div class="emp">Chua co</div></div>
+</div>
+</div>
+<div id="tab-rule" class="tab">
+<div class="card">
+<div class="toptitle"><span>Luat Auto</span><button class="btn" onclick="openModal('rmodal')">+</button></div>
+<div class="lst" id="rlst"><div class="emp">Chua co</div></div>
+</div>
+<div class="card">
+<div class="toptitle"><span>Lich trinh</span><button class="btn" onclick="openModal('smodal')">+</button></div>
+<div class="lst" id="slst"><div class="emp">Chua co</div></div>
+</div>
+</div>
+<div id="tab-zone" class="tab">
+<div class="card">
+<div class="toptitle"><span>Khu vuc</span><button class="btn" onclick="openModal('zmodal')">+</button></div>
+<div class="lst" id="zlst"><div class="emp">Chua co</div></div>
+</div>
+</div>
+<div id="tab-trace" class="tab">
+<div class="card">
+<div class="toptitle"><span>Truy xuat</span><button class="btn" onclick="openModal('tmodal')">+</button></div>
+<div class="lst" id="tlst"><div class="emp">Chua co</div></div>
+</div>
+<div class="card">
+<div class="toptitle"><span>Check QR</span></div>
+<input class="fin" id="qrinput" placeholder="Nhap ma...">
+<button class="bbtn" style="margin-top:8px" onclick="checkQR()">Kiem tra</button>
+<div id="qrres" style="margin-top:8px;font-size:12px"></div>
+</div>
+</div>
+<div id="tab-fin" class="tab">
+<div class="card">
+<div class="stat"><span class="statlb">Thu</span><span class="statval" id="incv" style="color:#4CAF50">0</span></div>
+<div class="stat"><span class="statlb">Chi</span><span class="statval" id="expv" style="color:#f44336">0</span></div>
+<div class="stat"><span class="statlb">Loi nhuan</span><span class="statval" id="pfv">0</span></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<button class="bbtn" onclick="openModal('incmodal')">+ Thu</button>
+<button class="bbtn bmod" onclick="openModal('expmodal')">+ Chi</button>
+</div>
+</div>
+<div id="tab-set" class="tab">
+<div class="card">
+<div class="stat"><span class="statlb">Server</span><span class="statval" id="srv">--</span></div>
+<div class="stat"><span class="statlb">Cap nhat</span><span class="statval" id="last">--</span></div>
+<div class="stat"><span class="statlb">Phien ban</span><span class="statval">1.0.5</span></div>
+</div>
+<button class="bbtn" onclick="refresh()">Dong bo</button>
+<button class="bbtn bmod" style="margin-top:8px" onclick="clearAll()">Xoa all</button>
+</div>
+</div>
+<nav class="nav">
+<button class="navbtn on" id="nb0" onclick="showTab(0)"><span class="navic">📊</span>Dash</button>
+<button class="navbtn" id="nb1" onclick="showTab(1)"><span class="navic">🌱</span>Crops</button>
+<button class="navbtn" id="nb2" onclick="showTab(2)"><span class="navic">📱</span>IoT</button>
+<button class="navbtn" id="nb3" onclick="showTab(3)"><span class="navic">⚡</span>Auto</button>
+<button class="navbtn" id="nb4" onclick="showTab(4)"><span class="navic">🏠</span>Zone</button>
+<button class="navbtn" id="nb5" onclick="showTab(5)"><span class="navic">🏷️</span>Trace</button>
+<button class="navbtn" id="nb6" onclick="showTab(6)"><span class="navic">💰</span>Money</button>
+<button class="navbtn" id="nb7" onclick="showTab(7)"><span class="navic">⚙️</span>Set</button>
+</nav>
+</div>
 
-    <!-- CROPS -->
-    <div id="tab-crops" class="tab">
-      <div class="content">
-        <div class="card">
-          <div class="card-head"><span class="card-title">Cay trong</span><button class="btn-add" onclick="openM('cropModal')">+</button></div>
-          <div class="list" id="cropList"><div class="empty">Chua co cay</div></div>
-        </div>
-      </div>
-    </div>
+<div id="cmodal" class="MD" style="display:none"><div class="MDbox">
+<div class="mdhead"><span class="mdttl">Cay trong</span><button class="mdcl" onclick="closeModal('cmodal')">×</button></div>
+<input type="hidden" id="cid">
+<div class="fgrp"><label class="flab">Ten</label><input class="fin" id="cname"></div>
+<button class="bbtn" onclick="saveData('crop')">Luu</button>
+</div></div>
 
-    <!-- DEVICES -->
-    <div id="tab-devices" class="tab">
-      <div class="content">
-        <div class="card">
-          <div class="card-head"><span class="card-title">Thiet bi IoT</span><button class="btn-add" onclick="openM('deviceModal')">+</button></div>
-          <div class="list" id="devListFull"><div class="empty">Chua co</div></div>
-        </div>
-      </div>
-    </div>
+<div id="dmodal" class="MD" style="display:none"><div class="MDbox">
+<div class="mdhead"><span class="mdttl">Thiet bi</span><button class="mdcl" onclick="closeModal('dmodal')">×</button></div>
+<input type="hidden" id="did">
+<div class="fgrp"><label class="flab">Ten</label><input class="fin" id="dname"></div>
+<div class="fgrp"><label class="flab">Loai</label><select class="fin" id="dtype"><option value="esp32">ESP32</option><option value="dht22">DHT22</option><option value="soil">Soil</option><option value="relay">Relay</option></select></div>
+<button class="bbtn" onclick="saveData('device')">Luu</button>
+</div></div>
 
-    <!-- SENSORS -->
-    <div id="tab-sensors" class="tab">
-      <div class="content">
-        <div class="card">
-          <div class="card-head"><span class="card-title">Cam bien</span></div>
-          <div class="list" id="sensorList"><div class="empty">Chua co du lieu</div></div>
-        </div>
-      </div>
-    </div>
+<div id="rmodal" class="MD" style="display:none"><div class="MDbox">
+<div class="mdhead"><span class="mdttl">Luat</span><button class="mdcl" onclick="closeModal('rmodal')">×</button></div>
+<input type="hidden" id="rid">
+<div class="fgrp"><label class="flab">Ten</label><input class="fin" id="rname"></div>
+<div class="fgrp"><label class="flab">Dieu kien</label><select class="fin" id="rsen"><option value="temp">Nhiet do</option><option value="humid">Do am</option></select></div>
+<button class="bbtn" onclick="saveData('rule')">Luu</button>
+</div></div>
 
-    <!-- RULES -->
-    <div id="tab-rules" class="tab">
-      <div class="content">
-        <div class="card">
-          <div class="card-head"><span class="card-title">Luat Auto</span><button class="btn-add" onclick="openM('ruleModal')">+</button></div>
-          <div class="list" id="ruleList"><div class="empty">Chua co</div></div>
-        </div>
-        <div class="card">
-          <div class="card-head"><span class="card-title">Lich trinh</span><button class="btn-add" onclick="openM('schedModal')">+</button></div>
-          <div class="list" id="schedList"><div class="empty">Chua co</div></div>
-        </div>
-      </div>
-    </div>
+<div id="smodal" class="MD" style="display:none"><div class="MDbox">
+<div class="mdhead"><span class="mdttl">Lich</span><button class="mdcl" onclick="closeModal('smodal')">×</button></div>
+<input type="hidden" id="sid">
+<div class="fgrp"><label class="flab">Ten</label><input class="fin" id="sname"></div>
+<button class="bbtn" onclick="saveData('sched')">Luu</button>
+</div></div>
 
-    <!-- ZONES -->
-    <div id="tab-zones" class="tab">
-      <div class="content">
-        <div class="card">
-          <div class="card-head"><span class="card-title">Khu vuc</span><button class="btn-add" onclick="openM('zoneModal')">+</button></div>
-          <div class="list" id="zoneList"><div class="empty">Chua co</div></div>
-        </div>
-      </div>
-    </div>
+<div id="zmodal" class="MD" style="display:none"><div class="MDbox">
+<div class="mdhead"><span class="mdttl">Khu vuc</span><button class="mdcl" onclick="closeModal('zmodal')">×</button></div>
+<input type="hidden" id="zid">
+<div class="fgrp"><label class="flab">Ten</label><input class="fin" id="zname"></div>
+<button class="bbtn" onclick="saveData('zone')">Luu</button>
+</div></div>
 
-    <!-- INVENTORY -->
-    <div id="tab-inventory" class="tab">
-      <div class="content">
-        <div class="card">
-          <div class="card-head"><span class="card-title">Kho</span><button class="btn-add" onclick="openM('itemModal')">+</button></div>
-          <div class="list" id="itemList"><div class="empty">Chua co</div></div>
-        </div>
-      </div>
-    </div>
+<div id="tmodal" class="MD" style="display:none"><div class="MDbox">
+<div class="mdhead"><span class="mdttl">Lot</span><button class="mdcl" onclick="closeModal('tmodal')">×</button></div>
+<input type="hidden" id="tid">
+<div class="fgrp"><label class="flab">Ma</label><input class="fin" id="tcode"></div>
+<button class="bbtn" onclick="saveData('trace')">Luu</button>
+</div></div>
 
-    <!-- FINANCE -->
-    <div id="tab-finance" class="tab">
-      <div class="content">
-        <div class="card">
-          <div class="section">Tai chinh</div>
-          <div class="stat"><span class="stat-label">Thu</span><span class="stat-val" id="incVal" style="color:var(--secondary)">0</span></div>
-          <div class="stat"><span class="stat-label">Chi</span><span class="stat-val" id="expVal" style="color:var(--danger)">0</span></div>
-          <div class="stat"><span class="stat-label">Loi nhuan</span><span class="stat-val" id="profitVal">0</span></div>
-        </div>
-        <div class="form-row"><button class="btn" onclick="openM('incModal')">+ Thu</button><button class="btn btn-sec" onclick="openM('expModal')">+ Chi</button></div>
-        <div class="card" style="margin-top:10px">
-          <div class="card-head"><span class="card-title">Giao dich</span></div>
-          <div class="list" id="txList"><div class="empty">Chua co</div></div>
-        </div>
-      </div>
-    </div>
+<div id="incmodal" class="MD" style="display:none"><div class="MDbox">
+<div class="mdhead"><span class="mdttl">Thu</span><button class="mdcl" onclick="closeModal('incmodal')">×</button></div>
+<div class="fgrp"><label class="flab">Mo ta</label><input class="fin" id="idesc"></div>
+<div class="fgrp"><label class="flab">So tien</label><input type="number" class="fin" id="iamt"></div>
+<button class="bbtn" onclick="saveData('inc')">Luu</button>
+</div></div>
 
-    <!-- TRACEABILITY -->
-    <div id="tab-trace" class="tab">
-      <div class="content">
-        <div class="card">
-          <div class="card-head"><span class="card-title">Truy xuat nguon goc</span><button class="btn-add" onclick="openM('traceModal')">+</button></div>
-          <div class="list" id="traceList"><div class="empty">Chua co lot san pham</div></div>
-        </div>
-        <div class="card">
-          <div class="section">QR Code</div>
-          <div class="form-input" id="qrInput" placeholder="Nhap ma QR..." style="margin-bottom:8px"></div>
-          <button class="btn" onclick="checkTrace()">Kiem tra</button>
-          <div id="traceResult" style="margin-top:10px;font-size:12px"></div>
-        </div>
-      </div>
-    </div>
+<div id="expmodal" class="MD" style="display:none"><div class="MDbox">
+<div class="mdhead"><span class="mdttl">Chi</span><button class="mdcl" onclick="closeModal('expmodal')">×</button></div>
+<div class="fgrp"><label class="flab">Mo ta</label><input class="fin" id="edesc"></div>
+<div class="fgrp"><label class="flab">So tien</label><input type="number" class="fin" id="eamt"></div>
+<button class="bbtn" onclick="saveData('exp')">Luu</button>
+</div></div>
 
-    <!-- JOURNAL -->
-    <div id="tab-journal" class="tab">
-      <div class="content">
-        <div class="card">
-          <div class="card-head"><span class="card-title">Nhat ky</span><button class="btn-add" onclick="openM('noteModal')">+</button></div>
-          <div class="list" id="noteList"><div class="empty">Chua co</div></div>
-        </div>
-      </div>
-    </div>
+<div class="ts" id="ts"></div>
 
-    <!-- SETTINGS -->
-    <div id="tab-settings" class="tab">
-      <div class="content">
-        <div class="card">
-          <div class="section">Thong tin</div>
-          <div class="stat"><span class="stat-label">Server</span><span class="stat-val" id="srvVal">--</span></div>
-          <div class="stat"><span class="stat-label">Cap nhat</span><span class="stat-val" id="lastVal">--</span></div>
-          <div class="stat"><span class="stat-label">Phien ban</span><span class="stat-val">1.0.4</span></div>
-        </div>
-        <button class="btn" onclick="sync()">Dong bo</button>
-        <button class="btn btn-danger" onclick="clearAll()" style="margin-top:8px">Xoa all</button>
-      </div>
-    </div>
+<script>
+var API = 'http://10.0.2.2:3000';
+var KEY = 'est_data_v5';
+var dt = {crops:[],devices:[],rules:[],scheds:[],zones:[],traces:[],inc:0,exp:0,tx:[],sens:{}};
+var cur = 0;
 
-    <!-- NAV -->
-    <nav class="nav">
-      <div class="nav-item active" data-tab="dashboard"><span class="nav-icon">📊</span>Dash</div>
-      <div class="nav-item" data-tab="crops"><span class="nav-icon">🌱</span>Crops</div>
-      <div class="nav-item" data-tab="devices"><span class="nav-icon">📱</span>IoT</div>
-      <div class="nav-item" data-tab="rules"><span class="nav-icon">⚡</span>Auto</div>
-      <div class="nav-item" data-tab="zones"><span class="nav-icon">🏠</span>Zone</div>
-      <div class="nav-item" data-tab="trace"><span class="nav-icon">🏷️</span>Trace</div>
-      <div class="nav-item" data-tab="finance"><span class="nav-icon">💰</span>Money</div>
-      <div class="nav-item" data-tab="settings"><span class="nav-icon">⚙️</span>Set</div>
-    </nav>
-  </div>
+function init(){
+  try{ var x = localStorage.getItem(KEY); if(x) dt = JSON.parse(x); }catch(e){}
+  document.getElementById('srv').textContent = API;
+  renderAll();
+}
+init();
 
-  <!-- MODALS -->
-  <div id="cropModal" class="modal"><div class="modal-box">
-    <div class="modal-head"><span class="modal-title">Cay trong</span><button class="modal-close" onclick="closeM('cropModal')">&times;</button></div>
-    <input type="hidden" id="cropId">
-    <div class="form-group"><label class="form-label">Ten</label><input type="text" class="form-input" id="cropName"></div>
-    <div class="form-group"><label class="form-label">Giai doan</label><select class="form-input" id="cropStage"><option value="gieo">Gieo</option><option value="noc">Noc</option><option value="sinh">Sinh</option><option value="rahoa">Ra hoa</option><option value="dinhqua">Dinh qua</option></select></div>
-    <button class="btn" onclick="save('crops')">Luu</button>
-  </div></div>
+function saveTo(){
+  try{ localStorage.setItem(KEY,JSON.stringify(dt)); }catch(e){}
+}
 
-  <div id="deviceModal" class="modal"><div class="modal-box">
-    <div class="modal-head"><span class="modal-title">Thiet bi</span><button class="modal-close" onclick="closeM('deviceModal')">&times;</button></div>
-    <input type="hidden" id="deviceId">
-    <div class="form-group"><label class="form-label">Ten</label><input type="text" class="form-input" id="deviceName"></div>
-    <div class="form-group"><label class="form-label">Loai</label><select class="form-input" id="deviceType"><option value="esp32">ESP32</option><option value="dht22">DHT22</option><option value="soil">Soil</option><option value="relay">Relay</option><option value="pump">Pump</option><option value="led">LED</option><option value="camera">Camera</option></select></div>
-    <button class="btn" onclick="save('devices')">Luu</button>
-  </div></div>
+function showTab(n){
+  cur = n;
+  var tabs = ['dash','crop','dev','rule','zone','trace','fin','set'];
+  for(var i=0;i<8;i++){
+    document.getElementById('nb'+i).classList.toggle('on',i===n);
+    document.getElementById('tab-'+tabs[i]).classList.toggle('on',i===n);
+  }
+  renderAll();
+}
 
-  <div id="ruleModal" class="modal"><div class="modal-box">
-    <div class="modal-head"><span class="modal-title">Luat</span><button class="modal-close" onclick="closeM('ruleModal')">&times;</button></div>
-    <input type="hidden" id="ruleId">
-    <div class="form-group"><label class="form-label">Ten luat</label><input type="text" class="form-input" id="ruleName"></div>
-    <div class="form-group"><label class="form-label">Dieu kien</label><div class="form-row"><select class="form-input" id="ruleSensor"><option value="temp">Nhiet</option><option value="humid">Am</option></select><select class="form-input" id="ruleOp"><option value=">">&gt;</option><option value="<">&lt;</option></select><input type="number" class="form-input" id="ruleValue"></div></div>
-    <div class="form-group"><label class="form-label">Hanh dong</label><select class="form-input" id="ruleAction"><option value="on">Bat</option><option value="off">Tat</option><option value="alert">Alert</option></select></div>
-    <button class="btn" onclick="save('rules')">Luu</button>
-  </div></div>
+function renderAll(){
+  document.getElementById('tmp').innerHTML = (dt.sens.temp||'--')+'<span class="unit">°C</span>';
+  document.getElementById('hum').innerHTML = (dt.sens.humid||'--')+'<span class="unit">%</span>';
+  document.getElementById('dcnt').textContent = dt.devices.length;
+  document.getElementById('ccnt').textContent = dt.crops.length;
+  document.getElementById('tcnt').textContent = dt.traces.length;
+  
+  var html = dt.devices.length?'':'<div class="emp">Chua co</div>';
+  dt.devices.forEach(function(d,i){
+    html += '<div class="row"><div class="lbl"><div class="name">'+d.name+'</div><div class="desc">'+d.type+'</div></div>'+
+      '<button class="sw '+(d.on?'on':'')+'" onclick="toggleDev('+i+')"></button></div>';
+  });
+  document.getElementById('dev_lst').innerHTML = html;
+  
+  html = dt.devices.length?'':'<div class="emp">Chua co</div>';
+  dt.devices.forEach(function(d,i){
+    html += '<div class="row"><div class="lbl"><div class="name">'+d.name+'</div><div class="desc">'+d.type+'</div></div>'+
+      '<div><button class="btn" onclick="editDev('+i+')">'+String.fromCharCode(9998)+'</button><button class="btnx" onclick="delDev('+i+')">X</button></div></div>';
+  });
+  document.getElementById('dlst').innerHTML = html;
+  
+  html = dt.crops.length?'':'<div class="emp">Chua co</div>';
+  dt.crops.forEach(function(c,i){
+    html += '<div class="row"><div class="lbl"><div class="name">'+c.name+'</div></div>'+
+      '<div><button class="btn" onclick="editCrop('+i+')">'+String.fromCharCode(9998)+'</button><button class="btnx" onclick="delCrop('+i+')">X</button></div></div>';
+  });
+  document.getElementById('clst').innerHTML = html;
+  
+  html = dt.rules.length?'':'<div class="emp">Chua co</div>';
+  dt.rules.forEach(function(r,i){
+    html += '<div class="row"><div class="lbl"><div class="name">'+r.name+'</div><div class="desc">'+r.sen+' '+r.op+' '+r.val+'</div></div>'+
+      '<button class="btnx" onclick="delRule('+i+')">X</button></div>';
+  });
+  document.getElementById('rlst').innerHTML = html;
+  
+  html = dt.scheds.length?'':'<div class="emp">Chua co</div>';
+  dt.scheds.forEach(function(s,i){
+    html += '<div class="row"><div class="lbl"><div class="name">'+s.name+'</div><div class="desc">'+s.time+'</div></div>'+
+      '<button class="btnx" onclick="delSched('+i+')">X</button></div>';
+  });
+  document.getElementById('slst').innerHTML = html;
+  
+  html = dt.zones.length?'':'<div class="emp">Chua co</div>';
+  dt.zones.forEach(function(z,i){
+    html += '<div class="row"><div class="lbl"><div class="name">'+z.name+'</div></div>'+
+      '<button class="btnx" onclick="delZone('+i+')">X</button></div>';
+  });
+  document.getElementById('zlst').innerHTML = html;
+  
+  html = dt.traces.length?'':'<div class="emp">Chua co</div>';
+  dt.traces.forEach(function(t,i){
+    html += '<div class="row"><div class="lbl"><div class="name">'+t.code+'</div></div>'+
+      '<button class="btnx" onclick="delTrace('+i+')">X</button></div>';
+  });
+  document.getElementById('tlst').innerHTML = html;
+  
+  document.getElementById('incv').textContent = dt.inc;
+  document.getElementById('expv').textContent = dt.exp;
+  document.getElementById('pfv').textContent = dt.inc - dt.exp;
+}
 
-  <div id="schedModal" class="modal"><div class="modal-box">
-    <div class="modal-head"><span class="modal-title">Lich</span><button class="modal-close" onclick="closeM('schedModal')">&times;</button></div>
-    <input type="hidden" id="schedId">
-    <div class="form-group"><label class="form-label">Ten</label><input type="text" class="form-input" id="schedName"></div>
-    <div class="form-group"><label class="form-label">Gio</label><input type="time" class="form-input" id="schedTime"></div>
-    <div class="form-group"><label class="form-label">Lap</label><select class="form-input" id="schedRepeat"><option value="once">1 lan</option><option value="daily">Ngay</option><option value="weekly">Tuan</option></select></div>
-    <button class="btn" onclick="save('schedules')">Luu</button>
-  </div></div>
+function toggleDev(i){
+  dt.devices[i].on = !dt.devices[i].on;
+  saveTo();
+  renderAll();
+}
 
-  <div id="zoneModal" class="modal"><div class="modal-box">
-    <div class="modal-head"><span class="modal-title">Khu vuc</span><button class="modal-close" onclick="closeM('zoneModal')">&times;</button></div>
-    <input type="hidden" id="zoneId">
-    <div class="form-group"><label class="form-label">Ten</label><input type="text" class="form-input" id="zoneName"></div>
-    <div class="form-group"><label class="form-label">Loai</label><select class="form-input" id="zoneType"><option value="greenhouse">Nha kinh</option><option value="garden">Vuon</option><option value="livestock">Chuong</option><option value="aqua">Ao nuoi</option></select></div>
-    <button class="btn" onclick="save('zones')">Luu</button>
-  </div></div>
+function openModal(id){
+  document.getElementById(id).style.display = 'flex';
+  document.getElementById(id.replace('modal','')+'id').value = '';
+}
+function closeModal(id){
+  document.getElementById(id).style.display = 'none';
+}
 
-  <div id="itemModal" class="modal"><div class="modal-box">
-    <div class="modal-head"><span class="modal-title">Mat hang</span><button class="modal-close" onclick="closeM('itemModal')">&times;</button></div>
-    <input type="hidden" id="itemId">
-    <div class="form-group"><label class="form-label">Ten</label><input type="text" class="form-input" id="itemName"></div>
-    <div class="form-group"><label class="form-label">So luong</label><input type="number" class="form-input" id="itemQty"></div>
-    <button class="btn" onclick="save('inventory')">Luu</button>
-  </div></div>
+function editDev(i){
+  var d = dt.devices[i];
+  openModal('dmodal');
+  document.getElementById('did').value = i;
+  document.getElementById('dname').value = d.name;
+  document.getElementById('dtype').value = d.type;
+}
+function delDev(i){
+  if(!confirm('Xoa thiet bi?')) return;
+  dt.devices.splice(i,1);
+  saveTo();
+  renderAll();
+  showMsg('Da xoa');
+}
+function editCrop(i){
+  var c = dt.crops[i];
+  openModal('cmodal');
+  document.getElementById('cid').value = i;
+  document.getElementById('cname').value = c.name;
+}
+function delCrop(i){
+  if(!confirm('Xoa?')) return;
+  dt.crops.splice(i,1);
+  saveTo();
+  renderAll();
+  showMsg('Da xoa');
+}
+function delRule(i){
+  if(!confirm('Xoa?')) return;
+  dt.rules.splice(i,1);
+  saveTo();
+  renderAll();
+  showMsg('Da xoa');
+}
+function delSched(i){
+  if(!confirm('Xoa?')) return;
+  dt.scheds.splice(i,1);
+  saveTo();
+  renderAll();
+  showMsg('Da xoa');
+}
+function delZone(i){
+  if(!confirm('Xoa?')) return;
+  dt.zones.splice(i,1);
+  saveTo();
+  renderAll();
+  showMsg('Da xoa');
+}
+function delTrace(i){
+  if(!confirm('Xoa?')) return;
+  dt.traces.splice(i,1);
+  saveTo();
+  renderAll();
+  showMsg('Da xoa');
+}
 
-  <div id="incModal" class="modal"><div class="modal-box">
-    <div class="modal-head"><span class="modal-title">Thu</span><button class="modal-close" onclick="closeM('incModal')">&times;</button></div>
-    <div class="form-group"><label class="form-label">Mo ta</label><input type="text" class="form-input" id="incDesc"></div>
-    <div class="form-group"><label class="form-label">Tien</label><input type="number" class="form-input" id="incAmt"></div>
-    <button class="btn" onclick="save('inc')">Luu</button>
-  </div></div>
+function saveData(typ){
+  switch(typ){
+    case 'crop':
+      var nm = document.getElementById('cname').value;
+      if(!nm) return showMsg('Nhap ten','err');
+      var id = document.getElementById('cid').value;
+      var it = {name:nm,stage:'gieo'};
+      if(id!==''){dt.crops[id]=it;}else{dt.crops.push(it);}
+      break;
+    case 'device':
+      var nm = document.getElementById('dname').value;
+      if(!nm) return showMsg('Nhap ten','err');
+      var id = document.getElementById('did').value;
+      var it = {name:nm,type:document.getElementById('dtype').value,on:true};
+      if(id!==''){dt.devices[id]=it;}else{dt.devices.push(it);}
+      break;
+    case 'rule':
+      var nm = document.getElementById('rname').value;
+      if(!nm) return showMsg('Nhap ten','err');
+      var id = document.getElementById('rid').value;
+      var it = {name:nm,sen:document.getElementById('rsen').value,op:'>',val:''};
+      if(id!==''){dt.rules[id]=it;}else{dt.rules.push(it);}
+      break;
+    case 'sched':
+      var nm = document.getElementById('sname').value;
+      if(!nm) return showMsg('Nhap ten','err');
+      var id = document.getElementById('sid').value;
+      var it = {name:nm,time:''};
+      if(id!==''){dt.scheds[id]=it;}else{dt.scheds.push(it);}
+      break;
+    case 'zone':
+      var nm = document.getElementById('zname').value;
+      if(!nm) return showMsg('Nhap ten','err');
+      var id = document.getElementById('zid').value;
+      var it = {name:nm};
+      if(id!==''){dt.zones[id]=it;}else{dt.zones.push(it);}
+      break;
+    case 'trace':
+      var cd = document.getElementById('tcode').value;
+      if(!cd) return showMsg('Nhap ma','err');
+      var id = document.getElementById('tid').value;
+      var it = {code:cd};
+      var ex = dt.traces.findIndex(function(t){return t.code === cd;});
+      if(ex>=0){dt.traces[ex]=it;}else{dt.traces.push(it);}
+      break;
+    case 'inc':
+      var amt = parseInt(document.getElementById('iamt').value)||0;
+      if(amt<=0) return showMsg('Nhap tien','err');
+      dt.inc += amt;
+      dt.tx.push({t:'inc',d:document.getElementById('idesc').value,a:amt});
+      break;
+    case 'exp':
+      var amt = parseInt(document.getElementById('eamt').value)||0;
+      if(amt<=0) return showMsg('Nhap tien','err');
+      dt.exp += amt;
+      dt.tx.push({t:'exp',d:document.getElementById('edesc').value,a:amt});
+      break;
+  }
+  saveTo();
+  closeModal(typ+'modal');
+  renderAll();
+  showMsg('Da luu!');
+}
 
-  <div id="expModal" class="modal"><div class="modal-box">
-    <div class="modal-head"><span class="modal-title">Chi</span><button class="modal-close" onclick="closeM('expModal')">&times;</button></div>
-    <div class="form-group"><label class="form-label">Mo ta</label><input type="text" class="form-input" id="expDesc"></div>
-    <div class="form-group"><label class="form-label">Tien</label><input type="number" class="form-input" id="expAmt"></div>
-    <button class="btn" onclick="save('exp')">Luu</button>
-  </div></div>
+function checkQR(){
+  var cd = document.getElementById('qrinput').value;
+  var t = dt.traces.find(function(x){return x.code === cd;});
+  var r = document.getElementById('qrres');
+  r.innerHTML = t ? 'Ma: '+t.code : 'Khong tim thay';
+}
 
-  <div id="traceModal" class="modal"><div class="modal-box">
-    <div class="modal-head"><span class="modal-title">Lot san pham</span><button class="modal-close" onclick="closeM('traceModal')">&times;</button></div>
-    <input type="hidden" id="traceId">
-    <div class="form-group"><label class="form-label">Ma lot</label><input type="text" class="form-input" id="traceCode"></div>
-    <div class="form-group"><label class="form-label">Cay trong</label><input type="text" class="form-input" id="traceCrop"></div>
-    <div class="form-group"><label class="form-label">Khoi luong</label><input type="number" class="form-input" id="traceWeight"></div>
-    <div class="form-group"><label class="form-label">Ngay thu hoach</label><input type="date" class="form-input" id="traceDate"></div>
-    <button class="btn" onclick="save('traces')">Luu</button>
-  </div></div>
+function refresh(){
+  showMsg('Dang tai...','info');
+  fetch(API+'/api/sensors/latest').then(function(r){return r.json();}).then(function(d){
+    if(d.temp){ dt.sens = {temp:d.temp,humid:d.humid}; }
+    saveTo();
+    renderAll();
+    document.getElementById('stdot').classList.add('on');
+    showMsg('Da cap nhat');
+  }).catch(function(e){
+    document.getElementById('stdot').classList.remove('on');
+    showMsg('Offline');
+  });
+  document.getElementById('last').textContent = new Date().toLocaleString('vi-VN');
+}
 
-  <div id="noteModal" class="modal"><div class="modal-box">
-    <div class="modal-head"><span class="modal-title">Nhat ky</span><button class="modal-close" onclick="closeM('noteModal')">&times;</button></div>
-    <input type="hidden" id="noteId">
-    <div class="form-group"><label class="form-label">Tieu de</label><input type="text" class="form-input" id="noteTitle"></div>
-    <div class="form-group"><label class="form-label">Loai</label><select class="form-input" id="noteType"><option value="water">Tuoi</option><option value="fert">Phan</option><option value="pest">Thuoc</option><option value="harvest">Thu hoach</option></select></div>
-    <button class="btn" onclick="save('journal')">Luu</button>
-  </div></div>
+function clearAll(){
+  if(confirm('Xoa ALL du lieu?')){
+    localStorage.clear();
+    location.reload();
+  }
+}
 
-  <div class="toast" id="toast"></div>
-
-  <script>
-    // DATA
-    const API = 'http://10.0.2.2:3000';
-    const KEY = 'est_data_v4';
-    
-    let data = { crops:[], devices:[], rules:[], schedules:[], zones:[], inventory:[], traces:[], journal:[], income:0, expense:0, transactions:[], sensors:{} };
-    let tab = 'dashboard';
-    
-    // INIT
-    (function init() {
-      load();
-      initNav();
-      render();
-      document.getElementById('srvVal').textContent = API;
-    })();
-    
-    function load() {
-      try {
-        const x = localStorage.getItem(KEY);
-        if (x) data = JSON.parse(x);
-      } catch(e) {}
-    }
-    
-    function saveData() {
-      try {
-        localStorage.setItem(KEY, JSON.stringify(data));
-      } catch(e) { alert('Loi luu: ' + e.message); }
-    }
-    
-    function initNav() {
-      document.querySelectorAll('.nav-item, .grid-item').forEach(el => {
-        el.onclick = function() {
-          tab = this.dataset.nav || this.getAttribute('data-nav');
-          document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-          document.querySelector('.nav-item[data-tab="'+tab+'"]').classList.add('active');
-          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-          document.getElementById('tab-'+tab).classList.add('active');
-          renderTab(tab);
-        };
-      });
-    }
-    
-    function render() {
-      document.getElementById('tempVal').innerHTML = (data.sensors.temp||'--')+'<span class="unit">°C</span>';
-      document.getElementById('humidVal').innerHTML = (data.sensors.humid||'--')+'<span class="unit">%</span>';
-      document.getElementById('devCnt').textContent = data.devices.length;
-      document.getElementById('alertCnt').textContent = data.traces.filter(t => t.status === 'alert').length;
-      document.getElementById('cropCnt').textContent = data.crops.length;
-      document.getElementById('traceCnt').textContent = data.traces.length;
-      renderTab(tab);
-    }
-    
-    function renderTab(t) {
-      switch(t) {
-        case 'dashboard': renderDev(data.devices, 'devListDash'); break;
-        case 'crops': render(data.crops, 'cropList', ['name','stage']); break;
-        case 'devices': renderDevFull(); break;
-        case 'rules': render(data.rules, 'ruleList', ['name','sensor']); render(data.schedules, 'schedList', ['name','time']); break;
-        case 'zones': render(data.zones, 'zoneList', ['name','type']); break;
-        case 'inventory': renderInv(); break;
-        case 'trace': render(data.traces, 'traceList', ['code','crop']); break;
-        case 'journal': render(data.journal, 'noteList', ['title','type']); break;
-        case 'finance': renderFin(); break;
-        default: renderDev(data.devices, 'devListDash');
-      }
-    }
-    
-    function render(items, id, keys) {
-      const el = document.getElementById(id);
-      if (!items || items.length === 0) { el.innerHTML = '<div class="empty">Chua co du lieu</div>'; return; }
-      el.innerHTML = items.map((item,i) => {
-        const name = item.name || item.title || item.code || '-';
-        const desc = keys.slice(1).map(k => item[k]||'').join(' | ');
-        return '<div class="item"><div class="item-left"><div class="item-name">'+name+'</div><div class="item-desc">'+desc+'</div></div>'+
-          '<div class="item-btns"><button class="icon-btn" onclick="edit('+id+','+i+')">✏️</button><button class="icon-btn del" onclick="del('+id+','+i+')">🗑️</button></div></div>';
-      }).join('');
-    }
-    
-    function renderDev(items, id) {
-      const el = document.getElementById(id);
-      if (!items || items.length === 0) { el.innerHTML = '<div class="empty">Chua co</div>'; return; }
-      el.innerHTML = items.map((d,i) => 
-        '<div class="item"><div class="item-left"><div class="item-name">'+d.name+'</div><div class="item-desc">'+d.type+'</div></div>'+
-        '<button class="onoff-toggle '+(d.on?'on':'')+'" onclick="toggleDev('+i+')"></button></div>'
-      ).join('');
-    }
-    
-    function renderDevFull() {
-      const el = document.getElementById('devListFull');
-      if (data.devices.length === 0) { el.innerHTML = '<div class="empty">Chua co</div>'; return; }
-      el.innerHTML = data.devices.map((d,i) => 
-        '<div class="item"><div class="item-left"><div class="item-name">'+d.name+'</div><div class="item-desc">'+d.type+'</div></div>'+
-        '<div class="item-btns"><button class="icon-btn" onclick="editDev('+i+')">✏️</button><button class="icon-btn del" onclick="delDev('+i+')">🗑️</button></div></div>'
-      ).join('');
-    }
-    
-    function renderInv() {
-      const el = document.getElementById('itemList');
-      if (data.inventory.length === 0) { el.innerHTML = '<div class="empty">Chua co</div>'; return; }
-      el.innerHTML = data.inventory.map((it, i) => 
-        '<div class="item"><div class="item-left"><div class="item-name">'+it.name+'</div><div class="item-desc">SL: '+it.qty+'</div></div>'+
-        '<div class="item-btns"><button class="icon-btn" onclick="editInv('+i+')">✏️</button><button class="icon-btn del" onclick="delInv('+i+')">🗑️</button></div></div>'
-      ).join('');
-    }
-    
-    function renderFin() {
-      document.getElementById('incVal').textContent = data.income;
-      document.getElementById('expVal').textContent = data.expense;
-      document.getElementById('profitVal').textContent = data.income - data.expense;
-      const el = document.getElementById('txList');
-      if (!data.transactions.length) { el.innerHTML = '<div class="empty">Chua co</div>'; return; }
-      el.innerHTML = data.transactions.slice(-10).reverse().map(t => 
-        '<div class="stat"><span class="stat-label">'+t.desc+'</span><span class="stat-val" style="color:'+(t.t==='inc'?'var(--secondary)':'var(--danger)')+'">'+(t.t==='inc'?'+':'-')+t.amt+'</span></div>'
-      ).join('');
-    }
-    
-    // CRUD
-    function edit(listId, idx) {
-      const items = { cropList: data.crops, ruleList: data.rules, schedList: data.schedules, zoneList: data.zones, traceList: data.traces, noteList: data.journal };
-      const item = items[listId][idx];
-      const map = { cropList:'crop', ruleList:'rule', schedList:'sched', zoneList:'zone', traceList:'trace', noteList:'note' };
-      const modal = map[listId] + 'Modal';
-      document.getElementById(modal).classList.add('active');
-      document.getElementById(map[listId]+'Id').value = item.id || idx;
-      // fill fields
-      ['Name','Type','Stage','Code','Crop','Title','Weight','Value','Sensor','Op','Action','Desc'].forEach(f => {
-        const el = document.getElementById(map[listId] + f);
-        if (el) el.value = item[f.toLowerCase()] || '';
-      });
-    }
-    
-    function del(listId, idx) {
-      if (!confirm('Xoa?')) return;
-      const items = { cropList: data.crops, ruleList: data.rules, schedList: data.schedules, zoneList: data.zones, traceList: data.traces, noteList: data.journal };
-      items[listId].splice(idx, 1);
-      saveData();
-      show('Da xoa', 'succ');
-      renderTab(tab);
-    }
-    
-    function editDev(idx) {
-      const d = data.devices[idx];
-      openM('deviceModal');
-      document.getElementById('deviceId').value = d.id || idx;
-      document.getElementById('deviceName').value = d.name || '';
-      document.getElementById('deviceType').value = d.type || '';
-    }
-    
-    function delDev(idx) {
-      if (!confirm('Xoa thiet bi?')) return;
-      data.devices.splice(idx, 1);
-      saveData();
-      show('Da xoa', 'succ');
-      renderTab(tab);
-    }
-    
-    function editInv(idx) {
-      const it = data.inventory[idx];
-      openM('itemModal');
-      document.getElementById('itemId').value = idx;
-      document.getElementById('itemName').value = it.name || '';
-      document.getElementById('itemQty').value = it.qty || '';
-    }
-    
-    function delInv(idx) {
-      if (!confirm('Xoa?')) return;
-      data.inventory.splice(idx, 1);
-      saveData();
-      show('Da xoa', 'succ');
-      renderTab('inventory');
-    }
-    
-    function toggleDev(idx) {
-      data.devices[idx].on = !data.devices[idx].on;
-      saveData();
-      renderDev(data.devices, 'devListDash');
-    }
-    
-    function save(type) {
-      let item = {};
-      const id = document.getElementById(type + 'Id');
-      
-      switch(type) {
-        case 'crops':
-          item = { id:id ? id.value : Date.now(), name: document.getElementById('cropName').value, stage: document.getElementById('cropStage').value };
-          if (!item.name) return show('Nhap ten', 'err');
-          const ci = data.crops.findIndex(c => c.id == item.id);
-          if (ci >= 0) data.crops[ci] = item; else data.crops.push(item);
-          break;
-        case 'devices':
-          item = { id:id ? id.value : Date.now(), name: document.getElementById('deviceName').value, type: document.getElementById('deviceType').value, on: true };
-          if (!item.name) return show('Nhap ten', 'err');
-          const di = data.devices.findIndex(d => d.id == item.id);
-          if (di >= 0) data.devices[di] = item; else data.devices.push(item);
-          break;
-        case 'rules':
-          item = { id:id ? id.value : Date.now(), name: document.getElementById('ruleName').value, sensor: document.getElementById('ruleSensor').value, op: document.getElementById('ruleOp').value, value: document.getElementById('ruleValue').value, action: document.getElementById('ruleAction').value };
-          if (!item.name) return show('Nhap ten', 'err');
-          const ri = data.rules.findIndex(r => r.id == item.id);
-          if (ri >= 0) data.rules[ri] = item; else data.rules.push(item);
-          break;
-        case 'schedules':
-          item = { id:id ? id.value : Date.now(), name: document.getElementById('schedName').value, time: document.getElementById('schedTime').value, repeat: document.getElementById('schedRepeat').value };
-          if (!item.name) return show('Nhap ten', 'err');
-          const si = data.schedules.findIndex(s => s.id == item.id);
-          if (si >= 0) data.schedules[si] = item; else data.schedules.push(item);
-          break;
-        case 'zones':
-          item = { id:id ? id.value : Date.now(), name: document.getElementById('zoneName').value, type: document.getElementById('zoneType').value };
-          if (!item.name) return show('Nhap ten', 'err');
-          const zi = data.zones.findIndex(z => z.id == item.id);
-          if (zi >= 0) data.zones[zi] = item; else data.zones.push(item);
-          break;
-        case 'inventory':
-          item = { id: id ? id.value : Date.now(), name: document.getElementById('itemName').value, qty: parseInt(document.getElementById('itemQty').value)||0 };
-          if (!item.name) return show('Nhap ten', 'err');
-          const ii = data.inventory.findIndex(i => i.id == item.id);
-          if (ii >= 0) data.inventory[ii] = item; else data.inventory.push(item);
-          break;
-        case 'inc':
-          const incAmt = parseInt(document.getElementById('incAmt').value)||0;
-          if (!incAmt) return show('Nhap tien', 'err');
-          data.income += incAmt;
-          data.transactions.push({t:'inc', desc: document.getElementById('incDesc').value, amt:incAmt});
-          break;
-        case 'exp':
-          const expAmt = parseInt(document.getElementById('expAmt').value)||0;
-          if (!expAmt) return show('Nhap tien', 'err');
-          data.expense += expAmt;
-          data.transactions.push({t:'exp', desc: document.getElementById('expDesc').value, amt:expAmt});
-          break;
-        case 'traces':
-          item = { id:id ? id.value : Date.now(), code: document.getElementById('traceCode').value, crop: document.getElementById('traceCrop').value, weight: document.getElementById('traceWeight').value, date: document.getElementById('traceDate').value, status:'active' };
-          if (!item.code) return show('Nhap ma', 'err');
-          const ti = data.traces.findIndex(t => t.code == item.code);
-          if (ti >= 0) data.traces[ti] = item; else data.traces.push(item);
-          break;
-        case 'journal':
-          item = { id:id ? id.value : Date.now(), title: document.getElementById('noteTitle').value, type: document.getElementById('noteType').value, date: new Date().toISOString() };
-          if (!item.title) return show('Nhap tieu de', 'err');
-          const ji = data.journal.findIndex(j => j.id == item.id);
-          if (ji >= 0) data.journal[ji] = item; else data.journal.push(item);
-          break;
-      }
-      
-      saveData();
-      closeM(type + 'Modal');
-      show('Da luu!', 'succ');
-      render();
-    }
-    
-    function checkTrace() {
-      const code = document.getElementById('qrInput').value;
-      const t = data.traces.find(x => x.code === code);
-      const res = document.getElementById('traceResult');
-      if (t) {
-        res.innerHTML = '<b>Ma:</b> ' + t.code + '<br><b>Cay:</b> ' + t.crop + '<br><b>KL:</b> ' + t.weight + '<br><b>Ngay:</b> ' + t.date + '<br><b>Trang thai:</b> ' + t.status;
-      } else {
-        res.innerHTML = 'Khong tim thay';
-      }
-    }
-    
-    // UTILS
-    function openM(id) { document.getElementById(id).classList.add('active'); }
-    function closeM(id) { document.getElementById(id).classList.remove('active'); }
-    function show(msg, type) {
-      const t = document.getElementById('toast');
-      t.textContent = msg; t.className = 'toast show ' + type;
-      setTimeout(() => t.classList.remove('show'), 2000);
-    }
-    
-    function refresh() {
-      show('Dang tai...', 'info');
-      fetch(API + '/api/sensors/latest').then(r => r.json()).then(d => {
-        if (d.temp) data.sensors = { temp: d.temp, humid: d.humid };
-        saveData();
-        render();
-        document.getElementById('netStatus').classList.add('online');
-        show('Da cap nhat', 'succ');
-      }).catch(e => {
-        document.getElementById('netStatus').classList.remove('online');
-        show('Offline', 'info');
-      });
-      document.getElementById('lastVal').textContent = new Date().toLocaleString('vi-VN');
-    }
-    
-    function sync() { refresh(); }
-    
-    function clearAll() {
-      if (confirm('Xoa TAT CA du lieu?')) {
-        localStorage.removeItem(KEY);
-        data = { crops:[], devices:[], rules:[], schedules:[], zones:[], inventory:[], traces:[], journal:[], income:0, expense:0, transactions:[], sensors:{} };
-        show('Da xoa', 'succ');
-        render();
-      }
-    }
-  </script>
+function showMsg(t,ty){
+  var ts = document.getElementById('ts');
+  ts.textContent = t;
+  ts.className = 'ts sh '+(ty==='err'?'tser':'tsok');
+  setTimeout(function(){ts.className='ts';},2000);
+}
+</script>
 </body>
 </html>

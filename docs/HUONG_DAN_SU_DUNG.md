@@ -1,14 +1,16 @@
-# Hướng Dẫn Sử Dụng EcoSynTech Local Core V5.1
+# Hướng Dẫn Sử Dụng EcoSynTech Local Core V5.1 (Chi Tiết)
 
 ## Mục Lục
 1. [Dashboard - Tổng Quan](#1-dashboard---tổng-quan)
 2. [Truy Xuất Nguồn Gốc](#2-truy-xuất-nguồn-gốc-traceability)
-3. [Quản Lý Cây Trồng](#3-quản-lý-cây-trồng-crops)
-4. [Quản Lý Kho](#4-quản-lý-kho-inventory)
-5. [Quản Lý Nhân Sự](#5-quản-lý-nhân-sự-labor)
-6. [Tài Chính](#6-tài-chính-finance)
-7. [Thiết Bị IoT](#7-thiết-bị-iot-devices)
-8. [Bảo Mật](#8-bảo-mật-security)
+3. [Quản Lý Thiết Bị - Máy Móc](#3-quản-lý-thiết-bị---máy-móc-equipment)
+4. [Quản Lý Tồn Kho](#4-quản-lý-tồn-kho-inventory)
+5. [Quản Lý Tài Chính](#5-quản-lý-tài-chính-finance)
+6. [Quản Lý Nhân Sự](#6-quản-lý-nhân-sự-labor)
+7. [Quản Lý Cây Trồng](#7-quản-lý-cây-trồng-crops)
+8. [Thiết Bị IoT](#8-thiết-bị-iot-devices)
+9. [Bảo Mật](#9-bảo-mật-security)
+10. [Authentication](#10-authentication)
 
 ---
 

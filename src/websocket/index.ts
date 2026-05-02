@@ -1,18 +1,38 @@
-const WebSocket = require('ws');
-const jwt = require('jsonwebtoken');
-const config = require('../config');
-const logger = require('../config/logger');
+import WebSocket from 'ws';
+import jwt from 'jsonwebtoken';
+import config from '../config';
+import logger from '../config/logger';
 
-let wss = null;
-const clients = new Set();
+interface AuthData {
+  token?: string;
+}
 
-function initWebSocket(server) {
+interface SubscribeData {
+  topics?: string | string[];
+}
+
+interface ClientMessage {
+  type: string;
+  [key: string]: unknown;
+}
+
+interface WSClient extends WebSocket {
+  clientId?: string;
+  isAlive?: boolean;
+  user?: jwt.JwtPayload;
+  subscriptions?: Set<string>;
+}
+
+let wss: WebSocket.Server | null = null;
+const clients = new Set<WSClient>();
+
+export function initWebSocket(server: unknown): WebSocket.Server {
   wss = new WebSocket.Server({ 
-    server,
+    server: server as WebSocket.Server.Options['server'],
     path: '/ws'
   });
 
-  wss.on('connection', (ws, _req) => {
+  wss.on('connection', (ws: WSClient, _req: unknown) => {
     const clientId = `client-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     ws.clientId = clientId;
     ws.isAlive = true;
@@ -24,12 +44,13 @@ function initWebSocket(server) {
       ws.isAlive = true;
     });
 
-    ws.on('message', (message) => {
+    ws.on('message', (message: WebSocket.Data) => {
       try {
-        const data = JSON.parse(message);
+        const data = JSON.parse(message.toString()) as ClientMessage;
         handleClientMessage(ws, data);
-      } catch (err) {
-        logger.error('Failed to parse WebSocket message:', err);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        logger.error('Failed to parse WebSocket message:', errorMessage);
         ws.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }));
       }
     });
@@ -39,13 +60,9 @@ function initWebSocket(server) {
       logger.info(`WebSocket client disconnected: ${clientId}`);
     });
 
-    ws.on('error', (err) => {
+    ws.on('error', (err: Error) => {
       logger.error(`WebSocket error for ${clientId}:`, err);
       clients.delete(ws);
-    });
-
-    ws.on('unexpected-response', (req, res) => {
-      logger.warn(`WebSocket unexpected response for ${clientId}: ${res.statusCode}`);
     });
 
     ws.send(JSON.stringify({
@@ -56,13 +73,14 @@ function initWebSocket(server) {
   });
 
   const interval = setInterval(() => {
-    wss.clients.forEach((ws) => {
-      if (ws.isAlive === false) {
-        clients.delete(ws);
-        return ws.terminate();
+    wss!.clients.forEach((ws: WebSocket) => {
+      const client = ws as WSClient;
+      if (client.isAlive === false) {
+        clients.delete(client);
+        return client.terminate();
       }
-      ws.isAlive = false;
-      ws.ping();
+      client.isAlive = false;
+      client.ping();
     });
   }, 30000);
 
@@ -74,26 +92,26 @@ function initWebSocket(server) {
   return wss;
 }
 
-function handleClientMessage(ws, data) {
+function handleClientMessage(ws: WSClient, data: ClientMessage): void {
   switch (data.type) {
   case 'auth':
-    handleAuth(ws, data);
+    handleAuth(ws, data as unknown as AuthData);
     break;
   case 'ping':
     ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
     break;
   case 'subscribe':
-    handleSubscribe(ws, data);
+    handleSubscribe(ws, data as unknown as SubscribeData);
     break;
   case 'unsubscribe':
-    handleUnsubscribe(ws, data);
+    handleUnsubscribe(ws, data as unknown as SubscribeData);
     break;
   default:
     ws.send(JSON.stringify({ type: 'error', message: `Unknown message type: ${data.type}` }));
   }
 }
 
-function handleAuth(ws, data) {
+function handleAuth(ws: WSClient, data: AuthData): void {
   const { token } = data;
   
   if (!token) {
@@ -102,7 +120,7 @@ function handleAuth(ws, data) {
   }
 
   try {
-    const decoded = jwt.verify(token, config.jwt.secret);
+    const decoded = jwt.verify(token, (config as { jwt: { secret: string } }).jwt.secret) as jwt.JwtPayload;
     ws.user = decoded;
     ws.send(JSON.stringify({ 
       type: 'auth', 
@@ -115,7 +133,7 @@ function handleAuth(ws, data) {
   }
 }
 
-function handleSubscribe(ws, data) {
+function handleSubscribe(ws: WSClient, data: SubscribeData): void {
   const { topics } = data;
   
   if (!ws.subscriptions) {
@@ -123,7 +141,7 @@ function handleSubscribe(ws, data) {
   }
   
   if (Array.isArray(topics)) {
-    topics.forEach(topic => ws.subscriptions.add(topic));
+    topics.forEach(topic => ws.subscriptions!.add(topic));
   } else if (topics) {
     ws.subscriptions.add(topics);
   }
@@ -134,7 +152,7 @@ function handleSubscribe(ws, data) {
   }));
 }
 
-function handleUnsubscribe(ws, data) {
+function handleUnsubscribe(ws: WSClient, data: SubscribeData): void {
   const { topics } = data;
   
   if (!ws.subscriptions) return;
@@ -151,13 +169,13 @@ function handleUnsubscribe(ws, data) {
   }));
 }
 
-function broadcast(data, topics = null) {
+export function broadcast(data: unknown, topics: string[] | null = null): void {
   const message = JSON.stringify(data);
   
   clients.forEach((client) => {
     if (client.readyState === WebSocket.OPEN) {
       if (topics && client.subscriptions) {
-        const hasMatchingTopic = topics.some(topic => client.subscriptions.has(topic));
+        const hasMatchingTopic = topics.some(topic => client.subscriptions!.has(topic));
         if (!hasMatchingTopic) return;
       }
       client.send(message);
@@ -165,7 +183,7 @@ function broadcast(data, topics = null) {
   });
 }
 
-function broadcastSensorUpdate(sensorData) {
+export function broadcastSensorUpdate(sensorData: unknown): void {
   broadcast({
     type: 'sensor-update',
     data: sensorData,
@@ -173,7 +191,7 @@ function broadcastSensorUpdate(sensorData) {
   }, 'sensors');
 }
 
-function broadcastAlert(alertData) {
+export function broadcastAlert(alertData: unknown): void {
   broadcast({
     type: 'alert',
     data: alertData,
@@ -181,7 +199,7 @@ function broadcastAlert(alertData) {
   }, 'alerts');
 }
 
-function broadcastDeviceUpdate(deviceData) {
+export function broadcastDeviceUpdate(deviceData: unknown): void {
   broadcast({
     type: 'device-update',
     data: deviceData,
@@ -189,11 +207,11 @@ function broadcastDeviceUpdate(deviceData) {
   }, 'devices');
 }
 
-function getConnectedClients() {
+export function getConnectedClients(): number {
   return clients.size;
 }
 
-module.exports = {
+export default {
   initWebSocket,
   broadcast,
   broadcastSensorUpdate,

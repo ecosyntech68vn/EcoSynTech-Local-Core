@@ -1,27 +1,26 @@
-/**
- * Unified Payment API Routes
- * Supports: VNPay, MoMo, SePay
- */
+import { Router, Request, Response } from 'express';
+import { auth } from '../middleware/auth';
+import { PricingService, PLANS } from '../services/pricingService';
+import { PaymentService as VNPayService } from '../services/paymentService';
+import { MoMoService } from '../services/momoService';
+import { SepayService } from '../services/sepayService';
 
-const express = require('express');
-const router = express.Router();
-const { auth } = require('../middleware/auth');
-const { PricingService, PLANS } = require('../services/pricingService');
-const { PaymentService: VNPayService } = require('../services/paymentService');
-const { MoMoService } = require('../services/momoService');
-const { SepayService } = require('../services/sepayService');
+const router = Router();
 
 const vnPay = new VNPayService();
 const momo = new MoMoService();
 const sepay = new SepayService();
 
-// Helper: generate order ID
-function generateOrderId(prefix = 'ECO') {
+function generateOrderId(prefix = 'ECO'): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 }
 
-// GET /api/payment/methods - Get available payment methods
-router.get('/methods', async (req, res) => {
+interface CreatePaymentBody {
+  method: string;
+  plan: string;
+}
+
+router.get('/methods', async (req: Request, res: Response) => {
   res.json({
     ok: true,
     data: [
@@ -58,15 +57,14 @@ router.get('/methods', async (req, res) => {
   });
 });
 
-// POST /api/payment/create - Create payment link
-router.post('/create', auth, async (req, res) => {
+router.post('/create', auth, async (req: Request, res: Response) => {
   try {
-    const { method, plan } = req.body;
-    const userId = req.user?.id || 'unknown';
+    const { method, plan } = req.body as CreatePaymentBody;
+    const userId = (req as any).user?.id || 'unknown';
     
-    // Validate plan
     if (!PLANS[plan]) {
-      return res.status(400).json({ ok: false, error: 'Invalid plan' });
+      res.status(400).json({ ok: false, error: 'Invalid plan' });
+      return;
     }
     
     const orderId = generateOrderId();
@@ -87,7 +85,8 @@ router.post('/create', auth, async (req, res) => {
       break;
         
     default:
-      return res.status(400).json({ ok: false, error: 'Unsupported payment method' });
+      res.status(400).json({ ok: false, error: 'Unsupported payment method' });
+      return;
     }
     
     res.json({
@@ -99,12 +98,11 @@ router.post('/create', auth, async (req, res) => {
     });
     
   } catch (error) {
-    res.status(500).json({ ok: false, error: error.message });
+    res.status(500).json({ ok: false, error: (error as Error).message });
   }
 });
 
-// GET /api/payment/status/:orderId - Check payment status
-router.get('/status/:orderId', auth, async (req, res) => {
+router.get('/status/:orderId', auth, async (req: Request, res: Response) => {
   try {
     const { orderId } = req.params;
     const { method } = req.query;
@@ -119,7 +117,6 @@ router.get('/status/:orderId', auth, async (req, res) => {
       result = await sepay.checkStatus(orderId);
       break;
     case 'momo':
-      // MoMo doesn't have direct query API
       result = { ok: false, error: 'MoMo requires webhook callback' };
       break;
     default:
@@ -129,19 +126,15 @@ router.get('/status/:orderId', auth, async (req, res) => {
     res.json({ ok: true, data: result });
     
   } catch (error) {
-    res.status(500).json({ ok: false, error: error.message });
+    res.status(500).json({ ok: false, error: (error as Error).message });
   }
 });
 
-// VNPay return/callback
-router.get('/vnpay-return', async (req, res) => {
+router.get('/vnpay-return', async (req: Request, res: Response) => {
   try {
     const result = vnPay.handleCallback(req.query);
     
     if (result.ok) {
-      // Update user plan in DB
-      // await updateUserPlan(result.transactionId, userId);
-      
       res.redirect(`/payment/success?order=${result.transactionId}`);
     } else {
       res.redirect(`/payment/failed?error=${result.error}`);
@@ -152,8 +145,7 @@ router.get('/vnpay-return', async (req, res) => {
   }
 });
 
-// SePay return/callback
-router.get('/sepay-return', async (req, res) => {
+router.get('/sepay-return', async (req: Request, res: Response) => {
   try {
     const result = sepay.handleCallback(req.query);
     
@@ -168,13 +160,11 @@ router.get('/sepay-return', async (req, res) => {
   }
 });
 
-// Webhook endpoints (IPN)
-router.post('/vnpay-ipn', async (req, res) => {
+router.post('/vnpay-ipn', async (req: Request, res: Response) => {
   try {
     const result = vnPay.handleCallback(req.body);
     
     if (result.ok) {
-      // Update user plan
       console.log('[Payment] VNPay success:', result.transactionId);
     }
     
@@ -186,7 +176,7 @@ router.post('/vnpay-ipn', async (req, res) => {
   }
 });
 
-router.post('/sepay-ipn', async (req, res) => {
+router.post('/sepay-ipn', async (req: Request, res: Response) => {
   try {
     const result = sepay.handleCallback(req.body);
     
@@ -202,13 +192,12 @@ router.post('/sepay-ipn', async (req, res) => {
   }
 });
 
-router.post('/momo-ipn', async (req, res) => {
+router.post('/momo-ipn', async (req: Request, res: Response) => {
   try {
     const { resultCode, orderId, transId } = req.body;
     
     if (resultCode === 0) {
       console.log('[Payment] MoMo success:', orderId);
-      // Update user plan here
     }
     
     res.json({ result: 'ok' });
@@ -219,4 +208,4 @@ router.post('/momo-ipn', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

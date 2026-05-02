@@ -9,42 +9,35 @@
   <title>EcoSynTech - Smart Farming</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    :root {
-      --primary: #219465;
-      --primary-dark: #1a7a4a;
-      --secondary: #4CAF50;
-      --accent: #8BC34A;
-      --danger: #f44336;
-      --warning: #ff9800;
-      --info: #2196F3;
-      --light: #f5f5f5;
-      --dark: #212121;
-    }
+    :root { --primary: #219465; --primary-dark: #1a7a4a; --secondary: #4CAF50; --accent: #8BC34A; --danger: #f44336; --warning: #ff9800; --info: #2196F3; --light: #f5f5f5; --dark: #212121; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--light); }
-    .app-container { max-width: 480px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+    .app-container { max-width: 480px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.1); padding-bottom: 60px; }
     .header { background: var(--primary); color: white; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
     .header h1 { font-size: 18px; font-weight: 600; }
+    .header-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
     .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: var(--secondary); }
     .status-indicator.offline { background: var(--danger); }
-    .content { padding: 16px 16px 80px; }
+    .content { padding: 16px; }
     .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .card-title { font-size: 14px; color: #666; margin-bottom: 8px; }
+    .card-title { font-size: 14px; color: #666; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
     .card-value { font-size: 24px; font-weight: 600; color: var(--dark); }
     .card-unit { font-size: 14px; color: #999; font-weight: normal; }
     .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .metric { text-align: center; padding: 12px; background: var(--light); border-radius: 8px; cursor: pointer; }
     .metric-value { font-size: 20px; font-weight: 600; color: var(--primary); }
     .metric-label { font-size: 12px; color: #666; }
-    .device-list { list-style: none; }
-    .device-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; cursor: pointer; }
+    .device-list, .item-list { list-style: none; }
+    .device-item, .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; cursor: pointer; }
     .device-name { font-weight: 500; }
     .device-status { font-size: 12px; padding: 4px 8px; border-radius: 4px; }
     .device-status.online { background: #e8f5e9; color: var(--secondary); }
     .device-status.offline { background: #ffebee; color: var(--danger); }
-    .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; width: 100%; margin-top: 8px; }
+    .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; width: 100%; margin-top: 8px; cursor: pointer; }
     .btn:active { background: var(--primary-dark); }
     .btn-secondary { background: var(--light); color: var(--dark); }
+    .btn-danger { background: var(--danger); }
+    .btn-small { padding: 6px 12px; font-size: 12px; width: auto; }
     .nav { display: flex; background: white; border-top: 1px solid #eee; position: fixed; bottom: 0; width: 100%; max-width: 480px; flex-wrap: wrap; }
     .nav-item { flex: 1; text-align: center; padding: 12px 8px; color: #999; font-size: 11px; cursor: pointer; min-width: 25%; }
     .nav-item.active { color: var(--primary); }
@@ -61,19 +54,32 @@
     .menu-item { background: var(--light); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; }
     .menu-icon { font-size: 24px; display: block; margin-bottom: 4px; }
     .menu-label { font-size: 12px; color: var(--dark); }
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+    .form-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+    .form-select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white; }
+    .form-textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; min-height: 80px; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+    .modal.active { display: block; }
+    .modal-content { background: white; max-width: 480px; margin: 50px auto; border-radius: 12px; padding: 16px; max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-title { font-size: 18px; font-weight: 600; }
+    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; }
+    .action-row { display: flex; gap: 8px; margin-top: 8px; }
     .alert-badge { background: var(--danger); color: white; border-radius: 10px; padding: 2px 6px; font-size: 10px; position: absolute; }
     .alert-item { border-left: 3px solid var(--danger); padding-left: 12px; margin-bottom: 8px; }
     .alert-title { font-weight: 500; }
     .alert-time { font-size: 11px; color: #999; }
-    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-    .stat-label { color: #666; }
-    .stat-value { font-weight: 600; }
     .table-list { width: 100%; border-collapse: collapse; }
     .table-list th, .table-list td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
     .table-list th { color: #666; font-weight: 500; }
-    .form-group { margin-bottom: 12px; }
-    .form-label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
-    .form-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
+    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+    .stat-label { color: #666; }
+    .stat-value { font-weight: 600; }
+    .toast { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--dark); color: white; padding: 12px 24px; border-radius: 8px; z-index: 2000; }
+    .toast.show { display: block; }
+    .toast.success { background: var(--secondary); }
+    .toast.error { background: var(--danger); }
   </style>
 </head>
 <body>
@@ -90,12 +96,10 @@
           <div class="card-title">Nhiet do</div>
           <div class="card-value" id="tempValue">--<span class="card-unit">C</span></div>
         </div>
-        
         <div class="card">
           <div class="card-title">Do am dat</div>
           <div class="card-value" id="humidityValue">--<span class="card-unit">%</span></div>
         </div>
-        
         <div class="metric-grid">
           <div class="metric" onclick="navTo('devices')">
             <div class="metric-value" id="deviceCount">0</div>
@@ -106,14 +110,10 @@
             <div class="metric-label">Canh bao</div>
           </div>
         </div>
-        
         <div class="card" style="margin-top: 16px;">
           <div class="card-title">Thiet bi</div>
-          <ul class="device-list" id="deviceList">
-            <li class="empty-state">Dang tai...</li>
-          </ul>
+          <ul class="device-list" id="deviceList"><li class="empty-state">Dang tai...</li></ul>
         </div>
-        
         <div class="card">
           <div class="card-title">Dieu khien</div>
           <button class="btn" id="refreshBtn">Lam moi du lieu</button>
@@ -125,12 +125,9 @@
     <div id="tab-crops" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="card-title">Danh sach cay trong</div>
-          <div id="cropList">
-            <div class="empty-state">Nhan de tai du lieu...</div>
-          </div>
+          <div class="card-title">Danh sach cay trong <button class="btn-small" onclick="openModal('cropModal')">+ Them</button></div>
+          <div id="cropList"><div class="empty-state">Nhan de tai...</div></div>
         </div>
-        <button class="btn" id="addCropBtn">Them cay trong moi</button>
       </div>
     </div>
 
@@ -138,10 +135,8 @@
     <div id="tab-devices" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="card-title">Quan ly thiet bi</div>
-          <ul class="device-list" id="deviceListFull">
-            <li class="empty-state">Nhan de tai...</li>
-          </ul>
+          <div class="card-title">Quan ly thiet bi <button class="btn-small" onclick="openModal('deviceModal')">+ Them</button></div>
+          <ul class="device-list" id="deviceListFull"><li class="empty-state">Nhan de tai...</li></ul>
         </div>
       </div>
     </div>
@@ -151,9 +146,7 @@
       <div class="content">
         <div class="card">
           <div class="card-title">Du lieu cam bien</div>
-          <div id="sensorData">
-            <div class="empty-state">Nhan de tai...</div>
-          </div>
+          <div id="sensorData"><div class="empty-state">Nhan de tai...</div></div>
         </div>
       </div>
     </div>
@@ -163,9 +156,7 @@
       <div class="content">
         <div class="card">
           <div class="card-title">Canh bao & Su kien</div>
-          <div id="alertList">
-            <div class="empty-state">Nhan de tai...</div>
-          </div>
+          <div id="alertList"><div class="empty-state">Nhan de tai...</div></div>
         </div>
       </div>
     </div>
@@ -176,18 +167,30 @@
         <div class="card">
           <div class="card-title">Dieu tuyen</div>
           <div class="menu-grid">
-            <div class="menu-item" onclick="loadData('rules')">
-              <span class="menu-icon">⚙️</span>
-              <span class="menu-label">Luat</span>
-            </div>
-            <div class="menu-item" onclick="loadData('schedules')">
-              <span class="menu-icon">📅</span>
-              <span class="menu-label">Lich trinh</span>
-            </div>
+            <div class="menu-item" onclick="loadTabData('rules')"><span class="menu-icon">⚙️</span><span class="menu-label">Luat</span></div>
+            <div class="menu-item" onclick="loadTabData('schedules')"><span class="menu-icon">📅</span><span class="menu-label">Lich trinh</span></div>
           </div>
         </div>
-        <div id="automationList">
-          <div class="empty-state">Nhan de tai...</div>
+        <div id="automationList"><div class="empty-state">Chon menu tren</div></div>
+      </div>
+    </div>
+
+    <!-- RULES -->
+    <div id="tab-rules" class="tab-content">
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Luat dieu tuyen <button class="btn-small" onclick="openModal('ruleModal')">+ Them</button></div>
+          <div id="ruleList"><div class="empty-state">Nhan de tai...</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHEDULES -->
+    <div id="tab-schedules" class="tab-content">
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Lich trinh <button class="btn-small" onclick="openModal('scheduleModal')">+ Them</button></div>
+          <div id="scheduleList"><div class="empty-state">Nhan de tai...</div></div>
         </div>
       </div>
     </div>
@@ -196,10 +199,8 @@
     <div id="tab-inventory" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="card-title">Kho hang</div>
-          <div id="inventoryList">
-            <div class="empty-state">Nhan de tai...</div>
-          </div>
+          <div class="card-title">Kho hang <button class="btn-small" onclick="openModal('inventoryModal')">+ Them</button></div>
+          <div id="inventoryList"><div class="empty-state">Nhan de tai...</div></div>
         </div>
       </div>
     </div>
@@ -209,8 +210,10 @@
       <div class="content">
         <div class="card">
           <div class="card-title">Tai chinh</div>
-          <table class="table-list">
-            <tr><th>Khoan thu/chi</th><th>So tien</th></tr>
+          <button class="btn btn-secondary" onclick="openModal('incomeModal')">+ Thu</button>
+          <button class="btn btn-secondary" onclick="openModal('expenseModal')">+ Chi</button>
+          <table class="table-list" style="margin-top:12px">
+            <tr><th>Khoan</th><th>So tien</th></tr>
             <tr><td>Doanh thu</td><td id="revenue">--</td></tr>
             <tr><td>Chi phi</td><td id="expense">--</td></tr>
             <tr><td>Loi nhuan</td><td id="profit">--</td></tr>
@@ -223,25 +226,8 @@
     <div id="tab-journal" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="card-title">Nhat ky trong cay</div>
-          <div id="journalList">
-            <div class="empty-state">Nhan de tai...</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TRACEABILITY -->
-    <div id="tab-traceability" class="tab-content">
-      <div class="content">
-        <div class="card">
-          <div class="card-title">Truy xuat nguon goc</div>
-          <div class="form-group">
-            <label class="form-label">Ma QR</label>
-            <input type="text" class="form-input" id="qrCode" placeholder="Nhap ma...">
-          </div>
-          <button class="btn" onclick="checkTraceability()">Kiem tra</button>
-          <div id="traceResult" style="margin-top: 12px;"></div>
+          <div class="card-title">Nhat ky trong cay <button class="btn-small" onclick="openModal('journalModal')">+ Them</button></div>
+          <div id="journalList"><div class="empty-state">Nhan de tai...</div></div>
         </div>
       </div>
     </div>
@@ -250,18 +236,9 @@
     <div id="tab-settings" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="setting-item">
-            <span class="setting-label">May chu</span>
-            <span class="setting-value" id="serverUrl">--</span>
-          </div>
-          <div class="setting-item">
-            <span class="setting-label">Cap nhat</span>
-            <span class="setting-value" id="lastUpdate">--</span>
-          </div>
-          <div class="setting-item">
-            <span class="setting-label">Phien ban</span>
-            <span class="setting-value">1.0.0</span>
-          </div>
+          <div class="setting-item"><span class="setting-label">May chu</span><span class="setting-value" id="serverUrl">--</span></div>
+          <div class="setting-item"><span class="setting-label">Cap nhat</span><span class="setting-value" id="lastUpdate">--</span></div>
+          <div class="setting-item"><span class="setting-label">Phien ban</span><span class="setting-value">1.0.1</span></div>
         </div>
         <button class="btn btn-secondary" id="clearCacheBtn">Xoa cache</button>
       </div>
@@ -269,39 +246,121 @@
     
     <!-- NAVIGATION -->
     <nav class="nav">
-      <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
-      <div class="nav-item" data-tab="crops">🌱 Crops</div>
-      <div class="nav-item" data-tab="devices">📱 Devices</div>
-      <div class="nav-item" data-tab="sensors">🌡️ Sensors</div>
-      <div class="nav-item" data-tab="alerts">🔔 Alerts</div>
-      <div class="nav-item" data-tab="automation">⚡ Auto</div>
-      <div class="nav-item" data-tab="inventory">📦 Invent</div>
-      <div class="nav-item" data-tab="finance">💰 Finance</div>
+      <div class="nav-item active" data-tab="dashboard">📊</div>
+      <div class="nav-item" data-tab="crops">🌱</div>
+      <div class="nav-item" data-tab="devices">📱</div>
+      <div class="nav-item" data-tab="sensors">🌡️</div>
+      <div class="nav-item" data-tab="alerts">🔔</div>
+      <div class="nav-item" data-tab="automation">⚡</div>
+      <div class="nav-item" data-tab="inventory">📦</div>
+      <div class="nav-item" data-tab="finance">💰</div>
     </nav>
   </div>
 
+  <!-- MODALS -->
+  <div id="cropModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><span class="modal-title">Them cay trong</span><button class="modal-close" onclick="closeModal('cropModal')">&times;</button></div>
+      <div class="form-group"><label class="form-label">Ten cay</label><input type="text" class="form-input" id="cropName" placeholder="VD: Lua, Dong lot..."></div>
+      <div class="form-group"><label class="form-label">Giai doan</label><select class="form-select" id="cropStage"><option value="gieo">Gieo hat</option><option value="noc">Noc</option><option value="sinh">Sinh truong</option><option value="ra_hoa">Ra hoa</option><option value="dinh_qua">Dinh qua</option></select></div>
+      <div class="form-group"><label class="form-label">Ngay trong</label><input type="date" class="form-input" id="cropPlantedDate"></div>
+      <button class="btn" onclick="saveCrop()">Luu</button>
+    </div>
+  </div>
+
+  <div id="deviceModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><span class="modal-title">Them thiet bi</span><button class="modal-close" onclick="closeModal('deviceModal')">&times;</button></div>
+      <div class="form-group"><label class="form-label">Ten thiet bi</label><input type="text" class="form-input" id="deviceName" placeholder="VD: Cam bien nhiet do 1"></div>
+      <div class="form-group"><label class="form-label">Loai</label><select class="form-select" id="deviceType"><option value="sensor">Cam bien</option><option value="relay">Relay</option><option value="pump">Bom</option><option value="camera">Camera</option></select></div>
+      <div class="form-group"><label class="form-label">Vi tri</label><input type="text" class="form-input" id="deviceLocation" placeholder="VD: Vuon 1"></div>
+      <button class="btn" onclick="saveDevice()">Luu</button>
+    </div>
+  </div>
+
+  <div id="ruleModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><span class="modal-title">Them luat</span><button class="modal-close" onclick="closeModal('ruleModal')">&times;</button></div>
+      <div class="form-group"><label class="form-label">Ten luat</label><input type="text" class="form-input" id="ruleName" placeholder="VD: Bom nuoc khi han"></div>
+      <div class="form-group"><label class="form-label">Dieu kien</label><select class="form-select" id="ruleCondition"><option value="temperature > 30">Nhiet > 30C</option><option value="humidity < 40">Do am < 40%</option><option value="temperature < 15">Nhiet < 15C</option></select></div>
+      <div class="form-group"><label class="form-label">Hanh dong</label><select class="form-select" id="ruleAction"><option value="turn_on">Bat bom</option><option value="turn_off">Tat bom</option><option value="send_alert">Gui canh bao</option></select></div>
+      <button class="btn" onclick="saveRule()">Luu</button>
+    </div>
+  </div>
+
+  <div id="scheduleModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><span class="modal-title">Them lich trinh</span><button class="modal-close" onclick="closeModal('scheduleModal')">&times;</button></div>
+      <div class="form-group"><label class="form-label">Ten lich</label><input type="text" class="form-input" id="scheduleName" placeholder="VD: Tuoi nuoc sang"></div>
+      <div class="form-group"><label class="form-label">Thoi gian</label><input type="time" class="form-input" id="scheduleTime"></div>
+      <div class="form-group"><label class="form-label">Lap lai</label><select class="form-select" id="scheduleRepeat"><option value="daily">Hang ngay</option><option value="weekly">Hang tuan</option><option value="monthly">Hang thang</option></select></div>
+      <button class="btn" onclick="saveSchedule()">Luu</button>
+    </div>
+  </div>
+
+  <div id="inventoryModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><span class="modal-title">Them mat hang</span><button class="modal-close" onclick="closeModal('inventoryModal')">&times;</button></div>
+      <div class="form-group"><label class="form-label">Ten mat hang</label><input type="text" class="form-input" id="itemName" placeholder="VD: Phan bon"></div>
+      <div class="form-group"><label class="form-label">So luong</label><input type="number" class="form-input" id="itemQuantity" placeholder="0"></div>
+      <div class="form-group"><label class="form-label">Don vi</label><select class="form-select" id="itemUnit"><option value="kg">kg</option><option value="bao">Bao</option><option value="chai">Chai</option><option value="cuon">Cuon</option></select></div>
+      <button class="btn" onclick="saveInventory()">Luu</button>
+    </div>
+  </div>
+
+  <div id="incomeModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><span class="modal-title">Thu tien</span><button class="modal-close" onclick="closeModal('incomeModal')">&times;</button></div>
+      <div class="form-group"><label class="form-label">Khoan thu</label><input type="text" class="form-input" id="incomeDesc" placeholder="VD: Ban rau"></div>
+      <div class="form-group"><label class="form-label">So tien</label><input type="number" class="form-input" id="incomeAmount" placeholder="0"></div>
+      <button class="btn" onclick="saveFinance('income')">Luu</button>
+    </div>
+  </div>
+
+  <div id="expenseModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><span class="modal-title">Chi tien</span><button class="modal-close" onclick="closeModal('expenseModal')">&times;</button></div>
+      <div class="form-group"><label class="form-label">Khoan chi</label><input type="text" class="form-input" id="expenseDesc" placeholder="VD: Mua phan bon"></div>
+      <div class="form-group"><label class="form-label">So tien</label><input type="number" class="form-input" id="expenseAmount" placeholder="0"></div>
+      <button class="btn" onclick="saveFinance('expense')">Luu</button>
+    </div>
+  </div>
+
+  <div id="journalModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><span class="modal-title">Them nhat ky</span><button class="modal-close" onclick="closeModal('journalModal')">&times;</button></div>
+      <div class="form-group"><label class="form-label">Tieu de</label><input type="text" class="form-input" id="journalTitle" placeholder="VD: Tuoi nuoc"></div>
+      <div class="form-group"><label class="form-label">Noi dung</label><textarea class="form-textarea" id="journalContent" placeholder="Mo ta chi tiet..."></textarea></div>
+      <div class="form-group"><label class="form-label">Loai</label><select class="form-select" id="journalType"><option value="irrigation">Tuoi nuoc</option><option value="fertilizer">Bon phan</option><option value="pest">Phong tru</option><option value="harvest">Thu hoach</option><option value="other">Khac</option></select></div>
+      <button class="btn" onclick="saveJournal()">Luu</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
   <script>
-    const API_BASE = (window.Capacitor && window.Capacitor.isNativePlatform) 
-      ? 'http://10.0.2.2:3000' 
-      : (window.location.origin || 'http://localhost:3000');
-    const WS_URL = (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + (window.location.hostname || 'localhost') + ':3000/ws';
+    const API_BASE = (window.Capacitor && window.Capacitor.isNativePlatform) ? 'http://10.0.2.2:3000' : (window.location.origin || 'http://localhost:3000');
+    const AUTH_HEADER = { 'Content-Type': 'application/json' };
     
     let ws = null;
     let reconnectTimer = null;
-    let isOffline = false;
+    let currentTab = 'dashboard';
     
-    function showError(msg) {
-      console.error(msg);
-      document.getElementById('tempValue').innerHTML = '--<span class="card-unit">C</span>';
-      document.getElementById('humidityValue').innerHTML = '--<span class="card-unit">%</span>';
-      document.getElementById('deviceList').innerHTML = '<li class="empty-state">' + msg + '</li>';
+    function showToast(msg, type='info') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + type;
+      setTimeout(() => t.classList.remove('show'), 3000);
     }
     
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    
     function initNavigation() {
-      const navItems = document.querySelectorAll('.nav-item');
-      navItems.forEach(item => {
+      document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', function() {
           const tabName = this.getAttribute('data-tab');
+          currentTab = tabName;
           document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
           this.classList.add('active');
           document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -312,6 +371,7 @@
     }
     
     function navTo(tabName) {
+      currentTab = tabName;
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       document.querySelector('.nav-item[data-tab="' + tabName + '"]').classList.add('active');
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -325,6 +385,8 @@
         case 'devices': loadDevices(); break;
         case 'sensors': loadSensors(); break;
         case 'alerts': loadAlerts(); break;
+        case 'rules': loadRules(); break;
+        case 'schedules': loadSchedules(); break;
         case 'automation': loadAutomation(); break;
         case 'inventory': loadInventory(); break;
         case 'finance': loadFinance(); break;
@@ -336,279 +398,186 @@
       }
     }
     
+    async function apiCall(endpoint, method='GET', body=null) {
+      try {
+        const opts = { method, headers: AUTH_HEADER };
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(API_BASE + endpoint, opts);
+        if (!res.ok) throw new Error('API error');
+        return await res.json();
+      } catch (err) {
+        console.error(err);
+        showToast('Loi: ' + err.message, 'error');
+        return null;
+      }
+    }
+    
+    // CROPS
     async function loadCrops() {
-      try {
-        const res = await fetch(API_BASE + '/api/crops', { headers: { 'Content-Type': 'application/json' } });
-        if (!res.ok) throw new Error('API error');
-        const crops = await res.json();
-        const list = document.getElementById('cropList');
-        if (crops && crops.length > 0) {
-          list.innerHTML = crops.map(c => 
-            '<div class="crop-card"><div class="crop-name">' + (c.name || 'Cay trong') + '</div>' +
-            '<div class="crop-info">Giai doan: ' + (c.stage || '--') + ' | Ngay trong: ' + (c.plantedDate || '--') + '</div></div>'
-          ).join('');
-        } else {
-          list.innerHTML = '<div class="empty-state">Chua co cay trong</div>';
-        }
-      } catch (err) {
-        document.getElementById('cropList').innerHTML = '<div class="empty-state">Khong the tai du lieu</div>';
-      }
+      const crops = await apiCall('/api/crops');
+      const list = document.getElementById('cropList');
+      if (crops && crops.length > 0) {
+        list.innerHTML = crops.map(c => '<div class="crop-card"><div class="crop-name">' + (c.name||'-') + '</div><div class="crop-info">' + (c.stage||'-') + ' | ' + (c.plantedDate||'-') + '</div></div>').join('');
+      } else { list.innerHTML = '<div class="empty-state">Chua co cay trong</div>'; }
     }
     
+    async function saveCrop() {
+      const body = { name: document.getElementById('cropName').value, stage: document.getElementById('cropStage').value, plantedDate: document.getElementById('cropPlantedDate').value };
+      if (!body.name) return showToast('Nhap ten cay', 'error');
+      const result = await apiCall('/api/crops', 'POST', body);
+      if (result) { showToast('Da luu', 'success'); closeModal('cropModal'); loadCrops(); }
+    }
+    
+    // DEVICES
     async function loadDevices() {
-      try {
-        const res = await fetch(API_BASE + '/api/devices', { headers: { 'Content-Type': 'application/json' } });
-        if (!res.ok) throw new Error('API error');
-        const devices = await res.json();
-        const list = document.getElementById('deviceListFull');
-        if (devices && devices.length > 0) {
-          document.getElementById('deviceCount').textContent = devices.length;
-          list.innerHTML = devices.map(d => 
-            '<li class="device-item"><span class="device-name">' + (d.name || 'Thiet bi') + '</span><span class="device-status ' + (d.status || 'offline') + '">' + (d.status || 'offline') + '</span></li>'
-          ).join('');
-        } else {
-          list.innerHTML = '<div class="empty-state">Khong co thiet bi</div>';
-        }
-      } catch (err) {
-        document.getElementById('deviceListFull').innerHTML = '<div class="empty-state">Khong the tai</div>';
-      }
+      const devices = await apiCall('/api/devices');
+      document.getElementById('deviceCount').textContent = devices?.length || 0;
+      const list = document.getElementById('deviceListFull');
+      if (devices && devices.length > 0) {
+        list.innerHTML = devices.map(d => '<li class="device-item"><span class="device-name">' + (d.name||'-') + '</span><span class="device-status ' + (d.status||'offline') + '">' + (d.status||'offline') + '</span></li>').join('');
+      } else { list.innerHTML = '<div class="empty-state">Chua co thiet bi</div>'; }
     }
     
+    async function saveDevice() {
+      const body = { name: document.getElementById('deviceName').value, type: document.getElementById('deviceType').value, location: document.getElementById('deviceLocation').value };
+      if (!body.name) return showToast('Nhap ten thiet bi', 'error');
+      const result = await apiCall('/api/devices', 'POST', body);
+      if (result) { showToast('Da luu', 'success'); closeModal('deviceModal'); loadDevices(); }
+    }
+    
+    // SENSORS
     async function loadSensors() {
-      try {
-        const res = await fetch(API_BASE + '/api/sensors/latest', { headers: { 'Content-Type': 'application/json' } });
-        if (!res.ok) throw new Error('API error');
-        const data = await res.json();
-        const container = document.getElementById('sensorData');
-        let html = '';
-        for (const [key, value] of Object.entries(data)) {
-          html += '<div class="stat-row"><span class="stat-label">' + key + '</span><span class="stat-value">' + value + '</span></div>';
-        }
-        container.innerHTML = html || '<div class="empty-state">Khong co du lieu</div>';
-      } catch (err) {
-        document.getElementById('sensorData').innerHTML = '<div class="empty-state">Khong the tai</div>';
-      }
+      const data = await apiCall('/api/sensors/latest');
+      let html = '';
+      for (const [k, v] of Object.entries(data||{})) html += '<div class="stat-row"><span class="stat-label">' + k + '</span><span class="stat-value">' + v + '</span></div>';
+      document.getElementById('sensorData').innerHTML = html || '<div class="empty-state">Khong co du lieu</div>';
     }
     
+    // ALERTS
     async function loadAlerts() {
-      try {
-        const res = await fetch(API_BASE + '/api/alerts?limit=10', { headers: { 'Content-Type': 'application/json' } });
-        if (!res.ok) throw new Error('API error');
-        const alerts = await res.json();
-        const list = document.getElementById('alertList');
-        document.getElementById('alertCount').textContent = alerts.length || 0;
-        if (alerts && alerts.length > 0) {
-          list.innerHTML = alerts.slice(0,5).map(a => 
-            '<div class="alert-item"><div class="alert-title">' + (a.message || 'Canh bao') + '</div><div class="alert-time">' + (a.timestamp || '') + '</div></div>'
-          ).join('');
-        } else {
-          list.innerHTML = '<div class="empty-state">Khong co canh bao</div>';
-        }
-      } catch (err) {
-        document.getElementById('alertList').innerHTML = '<div class="empty-state">Khong the tai</div>';
-      }
+      const alerts = await apiCall('/api/alerts?limit=10');
+      document.getElementById('alertCount').textContent = alerts?.length || 0;
+      const list = document.getElementById('alertList');
+      if (alerts && alerts.length > 0) {
+        list.innerHTML = alerts.slice(0,5).map(a => '<div class="alert-item"><div class="alert-title">' + (a.message||'Canh bao') + '</div><div class="alert-time">' + (a.timestamp||'') + '</div></div>').join('');
+      } else { list.innerHTML = '<div class="empty-state">Khong co canh bao</div>'; }
     }
     
-    async function loadAutomation() {
-      try {
-        const [rulesRes, schedRes] = await Promise.all([
-          fetch(API_BASE + '/api/rules', { headers: { 'Content-Type': 'application/json' } }),
-          fetch(API_BASE + '/api/schedules', { headers: { 'Content-Type': 'application/json' } })
-        ]);
-        const rules = await rulesRes.json();
-        const scheds = await schedRes.json();
-        const list = document.getElementById('automationList');
-        let html = '<div class="crop-card"><strong>Luat (' + (rules.length||0) + ')</strong></div>';
-        html += '<div class="crop-card"><strong>Lich trinh (' + (scheds.length||0) + ')</strong></div>';
-        list.innerHTML = html;
-      } catch (err) {
-        document.getElementById('automationList').innerHTML = '<div class="empty-state">Khong the tai</div>';
-      }
+    // RULES
+    async function loadRules() {
+      const rules = await apiCall('/api/rules');
+      const list = document.getElementById('ruleList');
+      if (rules && rules.length > 0) {
+        list.innerHTML = rules.map(r => '<div class="crop-card"><div class="crop-name">' + (r.name||'-') + '</div><div class="crop-info">' + (r.condition||'-') + ' -> ' + (r.action||'-') + '</div></div>').join('');
+      } else { list.innerHTML = '<div class="empty-state">Chua co luat</div>'; }
     }
     
+    async function saveRule() {
+      const body = { name: document.getElementById('ruleName').value, condition: document.getElementById('ruleCondition').value, action: document.getElementById('ruleAction').value };
+      if (!body.name) return showToast('Nhap ten luat', 'error');
+      const result = await apiCall('/api/rules', 'POST', body);
+      if (result) { showToast('Da luu', 'success'); closeModal('ruleModal'); loadRules(); }
+    }
+    
+    // SCHEDULES
+    async function loadSchedules() {
+      const scheds = await apiCall('/api/schedules');
+      const list = document.getElementById('scheduleList');
+      if (scheds && scheds.length > 0) {
+        list.innerHTML = scheds.map(s => '<div class="crop-card"><div class="crop-name">' + (s.name||'-') + '</div><div class="crop-info">' + (s.time||'-') + ' | ' + (s.repeat||'-') + '</div></div>').join('');
+      } else { list.innerHTML = '<div class="empty-state">Chua co lich trinh</div>'; }
+    }
+    
+    async function saveSchedule() {
+      const body = { name: document.getElementById('scheduleName').value, time: document.getElementById('scheduleTime').value, repeat: document.getElementById('scheduleRepeat').value };
+      if (!body.name) return showToast('Nhap ten lich', 'error');
+      const result = await apiCall('/api/schedules', 'POST', body);
+      if (result) { showToast('Da luu', 'success'); closeModal('scheduleModal'); loadSchedules(); }
+    }
+    
+    // INVENTORY
     async function loadInventory() {
-      try {
-        const res = await fetch(API_BASE + '/api/inventory', { headers: { 'Content-Type': 'application/json' } });
-        if (!res.ok) throw new Error('API error');
-        const items = await res.json();
-        const list = document.getElementById('inventoryList');
-        if (items && items.length > 0) {
-          list.innerHTML = '<table class="table-list"><tr><th>Mat hang</th><th>So luong</th></tr>' + 
-            items.slice(0,10).map(i => '<tr><td>' + (i.name||'-') + '</td><td>' + (i.quantity||0) + '</td></tr>').join('') + '</table>';
-        } else {
-          list.innerHTML = '<div class="empty-state">Khong co hang</div>';
-        }
-      } catch (err) {
-        document.getElementById('inventoryList').innerHTML = '<div class="empty-state">Khong the tai</div>';
-      }
+      const items = await apiCall('/api/inventory');
+      const list = document.getElementById('inventoryList');
+      if (items && items.length > 0) {
+        list.innerHTML = '<table class="table-list"><tr><th>Mat hang</th><th>SL</th></tr>' + items.slice(0,10).map(i => '<tr><td>'+(i.name||'-')+'</td><td>'+(i.quantity||0)+'</td></tr>').join('') + '</table>';
+      } else { list.innerHTML = '<div class="empty-state">Chua co hang</div>'; }
     }
     
+    async function saveInventory() {
+      const body = { name: document.getElementById('itemName').value, quantity: parseInt(document.getElementById('itemQuantity').value)||0, unit: document.getElementById('itemUnit').value };
+      if (!body.name) return showToast('Nhap ten mat hang', 'error');
+      const result = await apiCall('/api/inventory', 'POST', body);
+      if (result) { showToast('Da luu', 'success'); closeModal('inventoryModal'); loadInventory(); }
+    }
+    
+    // FINANCE
     async function loadFinance() {
-      try {
-        const res = await fetch(API_BASE + '/api/finance/summary', { headers: { 'Content-Type': 'application/json' } });
-        if (!res.ok) throw new Error('API error');
-        const data = await res.json();
-        document.getElementById('revenue').textContent = data.revenue || data.totalIncome || 0;
-        document.getElementById('expense').textContent = data.expense || data.totalExpense || 0;
-        document.getElementById('profit').textContent = data.profit || (data.revenue - data.expense) || 0;
-      } catch (err) {
-        document.getElementById('revenue').textContent = '--';
-        document.getElementById('expense').textContent = '--';
-        document.getElementById('profit').textContent = '--';
-      }
+      const data = await apiCall('/api/finance/summary');
+      document.getElementById('revenue').textContent = data?.revenue || data?.totalIncome || 0;
+      document.getElementById('expense').textContent = data?.expense || data?.totalExpense || 0;
+      document.getElementById('profit').textContent = data?.profit || 0;
     }
     
+    async function saveFinance(type) {
+      const amount = parseInt(type === 'income' ? document.getElementById('incomeAmount').value : document.getElementById('expenseAmount').value);
+      const desc = type === 'income' ? document.getElementById('incomeDesc').value : document.getElementById('expenseDesc').value;
+      if (!desc || !amount) return showToast('Nhap day du thong tin', 'error');
+      const body = { type, description: desc, amount };
+      const result = await apiCall('/api/finance/transaction', 'POST', body);
+      if (result) { showToast('Da luu', 'success'); closeModal(type + 'Modal'); loadFinance(); }
+    }
+    
+    // JOURNAL
     async function loadJournal() {
-      try {
-        const res = await fetch(API_BASE + '/api/journal?limit=10', { headers: { 'Content-Type': 'application/json' } });
-        if (!res.ok) throw new Error('API error');
-        const entries = await res.json();
-        const list = document.getElementById('journalList');
-        if (entries && entries.length > 0) {
-          list.innerHTML = entries.map(e => 
-            '<div class="crop-card"><div class="crop-name">' + (e.title || 'Bai viet') + '</div>' +
-            '<div class="crop-info">' + (e.date || '') + '</div></div>'
-          ).join('');
-        } else {
-          list.innerHTML = '<div class="empty-state">Chua co ban ghi</div>';
-        }
-      } catch (err) {
-        document.getElementById('journalList').innerHTML = '<div class="empty-state">Khong the tai</div>';
-      }
+      const entries = await apiCall('/api/journal?limit=10');
+      const list = document.getElementById('journalList');
+      if (entries && entries.length > 0) {
+        list.innerHTML = entries.map(e => '<div class="crop-card"><div class="crop-name">' + (e.title||'-') + '</div><div class="crop-info">' + (e.date||'') + '</div></div>').join('');
+      } else { list.innerHTML = '<div class="empty-state">Chua co ban ghi</div>'; }
     }
     
-    async function checkTraceability() {
-      const qr = document.getElementById('qrCode').value;
-      if (!qr) return;
-      try {
-        const res = await fetch(API_BASE + '/api/traceability/' + qr, { headers: { 'Content-Type': 'application/json' } });
-        const data = await res.json();
-        document.getElementById('traceResult').innerHTML = '<div class="crop-card">' + JSON.stringify(data, null, 2) + '</div>';
-      } catch (err) {
-        document.getElementById('traceResult').innerHTML = '<div class="empty-state">Khong tim thay</div>';
-      }
+    async function saveJournal() {
+      const body = { title: document.getElementById('journalTitle').value, content: document.getElementById('journalContent').value, type: document.getElementById('journalType').value };
+      if (!body.title) return showToast('Nhap tieu de', 'error');
+      const result = await apiCall('/api/journal/manual', 'POST', body);
+      if (result) { showToast('Da luu', 'success'); closeModal('journalModal'); loadJournal(); }
     }
     
-    function loadData(endpoint) {
-      loadTabData(endpoint);
+    // AUTOMATION
+    async function loadAutomation() {
+      const [rules, scheds] = await Promise.all([apiCall('/api/rules'), apiCall('/api/schedules')]);
+      document.getElementById('automationList').innerHTML = '<div class="crop-card"><strong>Luat: ' + (rules?.length||0) + '</strong></div><div class="crop-card"><strong>Lich: ' + (scheds?.length||0) + '</strong></div>';
     }
     
-    function loadCachedData() {
-      const cached = localStorage.getItem('dashboardData');
-      if (cached) {
-        try {
-          const data = JSON.parse(cached);
-          updateDashboard(data);
-          console.log('Loaded cached data');
-        } catch (e) {}
-      }
-    }
-    
-    function cacheData(data) {
-      localStorage.setItem('dashboardData', JSON.stringify({ ...data, timestamp: Date.now() }));
-    }
-    
+    // WEBSOCKET
     function connect() {
       try {
+        const WS_URL = (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + (window.location.hostname || 'localhost') + ':3000/ws';
         ws = new WebSocket(WS_URL);
-        ws.onopen = () => {
-          console.log('WS Connected');
-          document.getElementById('connectionStatus').classList.remove('offline');
-          isOffline = false;
-        };
-        ws.onclose = () => {
-          console.log('WS Disconnected');
-          document.getElementById('connectionStatus').classList.add('offline');
-          isOffline = true;
-          if (reconnectTimer) clearTimeout(reconnectTimer);
-          reconnectTimer = setTimeout(connect, 5000);
-        };
-        ws.onerror = (err) => {
-          console.error('WS Error:', err);
-          isOffline = true;
-          loadCachedData();
-        };
-        ws.onmessage = (e) => {
-          try {
-            const data = JSON.parse(e.data);
-            if (data.type === 'sensor-data' || data.temperature !== undefined) {
-              updateDashboard(data);
-              cacheData(data);
-            }
-          } catch (err) {
-            console.error('Parse error:', err);
-          }
-        };
-      } catch (err) {
-        console.error('WS Init Error:', err);
-        isOffline = true;
-        loadCachedData();
-      }
+        ws.onopen = () => { document.getElementById('connectionStatus').classList.remove('offline'); };
+        ws.onclose = () => { document.getElementById('connectionStatus').classList.add('offline'); };
+        ws.onmessage = (e) => { try { const d = JSON.parse(e.data); if (d.temperature) updateDashboard(d); } catch(e){} };
+      } catch (err) { console.error(err); }
     }
     
     function updateDashboard(data) {
-      if (data.temperature !== undefined && data.temperature !== null) {
-        document.getElementById('tempValue').innerHTML = data.temperature + '<span class="card-unit">C</span>';
-      }
-      if (data.humidity !== undefined && data.humidity !== null) {
-        document.getElementById('humidityValue').innerHTML = data.humidity + '<span class="card-unit">%</span>';
-      }
-      if (data.devices) {
-        document.getElementById('deviceCount').textContent = data.devices.length;
-        const list = document.getElementById('deviceList');
-        list.innerHTML = data.devices.map(d => 
-          '<li class="device-item"><span class="device-name">' + (d.name || 'Thiet bi') + '</span><span class="device-status ' + (d.status || 'offline') + '">' + (d.status || 'offline') + '</span></li>'
-        ).join('') || '<li class="empty-state">Khong co thiet bi</li>';
-      }
+      if (data.temperature) document.getElementById('tempValue').innerHTML = data.temperature + '<span class="card-unit">C</span>';
+      if (data.humidity) document.getElementById('humidityValue').innerHTML = data.humidity + '<span class="card-unit">%</span>';
     }
     
     async function fetchData() {
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000);
-        
-        const res = await fetch(API_BASE + '/api/sensors/latest', { 
-          signal: controller.signal,
-          headers: { 'Content-Type': 'application/json' }
-        });
-        clearTimeout(timeout);
-        
-        if (!res.ok) throw new Error('API error: ' + res.status);
-        
-        const data = await res.json();
-        updateDashboard(data);
-        cacheData(data);
-        document.getElementById('connectionStatus').classList.remove('offline');
-      } catch (err) {
-        console.error('Fetch Error:', err.message);
-        document.getElementById('connectionStatus').classList.add('offline');
-        loadCachedData();
-        showError('Khong the ket noi may chu');
-      }
+      const data = await apiCall('/api/sensors/latest');
+      if (data) { updateDashboard(data); localStorage.setItem('dashboardData', JSON.stringify(data)); }
     }
     
-    document.getElementById('refreshBtn').addEventListener('click', function() {
-      this.textContent = 'Dang tai...';
-      fetchData().finally(() => {
-        setTimeout(() => { this.textContent = 'Lam moi du lieu'; }, 1000);
-      });
-    });
-    
-    document.getElementById('clearCacheBtn').addEventListener('click', function() {
-      localStorage.clear();
-      alert('Da xoa cache');
-      document.getElementById('lastUpdate').textContent = new Date().toLocaleString('vi-VN');
-    });
-    
-    document.getElementById('cropList').addEventListener('click', loadCrops);
-    document.getElementById('deviceListFull') && document.getElementById('deviceListFull').addEventListener('click', loadDevices);
+    // INIT
+    document.getElementById('refreshBtn').addEventListener('click', fetchData);
+    document.getElementById('clearCacheBtn').addEventListener('click', () => { localStorage.clear(); showToast('Da xoa cache'); });
     
     initNavigation();
-    loadCachedData();
     connect();
     fetchData();
-    
-    setInterval(fetchData, 30000);
   </script>
 </body>
 </html>

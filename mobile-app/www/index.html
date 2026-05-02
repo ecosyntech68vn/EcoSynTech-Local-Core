@@ -2,461 +2,291 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#219465">
 <title>EcoSynTech</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f5f5f5}
-.app{max-width:480px;margin:0 auto;min-height:100vh;background:white;position:relative}
-.header{background:#219465;color:white;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;position:fixed;top:0;width:100%;max-width:480px;z-index:10}
-.header h1{font-size:16px}
+.app{max-width:480px;margin:0 auto;background:white;min-height:100vh}
+.hdr{background:#219465;color:white;padding:12px 14px;display:flex;justify-content:space-between}
+.hdr h1{font-size:16px}
 .dot{width:8px;height:8px;border-radius:50%;background:#f44336}
 .dot.on{background:#4CAF50}
-.main{padding:48px 12px 70px}
+.main{padding:46px 12px 70px}
 .card{background:white;border-radius:10px;padding:12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
-.toptitle{font-size:12px;color:#888;margin-bottom:8px;display:flex;justify-content:space-between}
+.tt{font-size:12px;color:#888;margin-bottom:8px;display:flex;justify-content:space-between}
 .big{font-size:24px;font-weight:700}
 .unit{font-size:12px;color:#999}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
-.gridbtn{background:#f0f0f0;padding:10px 4px;text-align:center;border-radius:6px;cursor:pointer}
-.gridbtn:active{background:#ddd}
-.gridnum{font-size:18px;font-weight:700;color:#219465}
-.gridtxt{font-size:9px;color:#666}
+.gbtn{background:#f0f0f0;padding:10px 4px;text-align:center;border-radius:6px;cursor:pointer}
+.gnum{font-size:18px;font-weight:700;color:#219465}
+.gtxt{font-size:9px;color:#666}
 .lst{max-height:280px;overflow-y:auto}
 .row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #eee}
-.row:active{background:#f9f9f9}
-.lbl{flex:1}
-.name{font-weight:500;font-size:13px}
-.desc{font-size:11px;color:#888;margin-top:2px}
-.btn{background:#219465;color:white;border:none;padding:8px;border-radius:4px;font-size:12px;width:20px;height:20px;cursor:pointer}
-.btnx{background:#f44336;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:12px;cursor:pointer;margin-left:4px}
-.sw{width:36px;height:20px;background:#ccc;border-radius:10px;position:relative;cursor:pointer;border:flex;align-items:center;justify-content:center}
+.l{flex:1}
+.n{font-weight:500;font-size:13px}
+.d{font-size:11px;color:#888;margin-top:2px}
+.bt{background:#219465;color:white;border:none;padding:6px 10px;border-radius:4px;font-size:12px;cursor:pointer}
+.btx{background:#f44336;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer;margin-left:4px}
+.bedit{background:#2196F3;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer;margin-left:4px}
+.sw{width:36px;height:20px;background:#ccc;border-radius:10px;position:relative;cursor:pointer;border:none}
 .sw.on{background:#4CAF50}
 .sw::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:white;border-radius:50%}
 .sw.on::after{left:18px}
-.nav{display:flex;position:fixed;bottom:0;width:100%;max-width:480px;background:white;border-top:1px solid #ddd;z-index:10}
-.navbtn{flex:1;text-align:center;padding:10px 4px;color:#999;font-size:8px;cursor:pointer;border:none;background:none}
-.navbtn:active{background:#f0f0f0}
-.navbtn.on{color:#219465;background:#e8f5e9}
-.navic{display:block;font-size:18px;margin-bottom:2px}
-.tab{display:none}
-.tab.on{display:block}
-.frm{padding:12px}
-.fgrp{margin-bottom:10px}
-.flab{display:block;font-size:11px;color:#666;margin-bottom:4px}
-.fin{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:13px}
-.bbtn{background:#219465;color:white;border:none;padding:12px;border-radius:6px;width:100%;font-size:14px;font-weight:600;cursor:pointer}
-.bbtn:active{background:#1a7a4a}
-.bmod{background:#f0f0f0;color:#333}
-.bmod:active{background:#ddd}
-.md{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:100;justify-content:center;align-items:center}
-.MD{background:white;width:90%;max-width:400px;border-radius:12px;padding:14px}
-.mdhead{display:flex;justify-content:space-between;margin-bottom:12px}
-.mdttl{font-size:15px;font-weight:600}
-.mdcl{background:none;border:none;font-size:20px;color:#888;cursor:pointer}
-.ts{display:none;position:fixed;top:10px;left:50%;transform:translateX(-50%);padding:10px 16px;border-radius:6px;z-index:200;font-size:12px;color:white}
-.ts.sh{display:block}
+.nav{display:flex;position:fixed;bottom:0;width:100%;max-width:480px;background:white;border-top:1px solid #ddd}
+.nb{flex:1;text-align:center;padding:10px 4px;color:#999;font-size:8px;cursor:pointer;border:none;background:none}
+.nb.on{color:#219465;background:#e8f5e9}
+.nic{display:block;font-size:18px;margin-bottom:2px}
+.tb{display:none}
+.tb.on{display:block}
+.frm{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:100;display:none}
+.frm.on{display:block}
+.fbox{background:white;width:90%;max-width:400px;margin:50px auto;border-radius:12px;padding:14px}
+.fh{display:flex;justify-content:space-between;margin-bottom:12px}
+.ft{font-size:15px;font-weight:600}
+.fc{background:none;border:none;font-size:20px;color:#888;cursor:pointer}
+.fg{margin-bottom:10px}
+.lb{display:block;font-size:11px;color:#666;margin-bottom:4px}
+.in{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:13px}
+.se{width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;font-size:13px}
+.btn{background:#219465;color:white;border:none;padding:12px;border-radius:6px;width:100%;font-size:14px;font-weight:600;cursor:pointer}
+.btnsec{background:#f0f0f0;color:#333}
+.ts{position:fixed;top:10px;left:50%;transform:translateX(-50%);padding:10px 16px;border-radius:6px;z-index:200;font-size:12px;color:white;display:none}
+.ts.d{display:block}
 .tsok{background:#4CAF50}
 .tser{background:#f44336}
 .emp{text-align:center;padding:30px;color:#999;font-size:12px}
-.stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;font-size:12px}
-.statlb{color:#666}
-.statval{font-weight:600}
+.st{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;font-size:12px}
+.sl{color:#666}
+.sv{font-weight:600}
 </style>
 </head>
 <body>
 <div class="app">
-<div class="header"><h1>EcoSynTech</h1><div class="dot" id="stdot"></div></div>
+<div class="hdr"><h1>EcoSynTech</h1><div class="dot" id="stdot"></div></div>
+
 <div class="main">
-<div id="tab-dash" class="tab on">
+<div id="tab0" class="tb on">
 <div class="card"><div class="big" id="tmp">--<span class="unit">°C</span></div></div>
 <div class="card"><div class="big" id="hum">--<span class="unit">%</span></div></div>
-<div class="grid">
-<div class="gridbtn" onclick="showTab(2)"><div class="gridnum" id="dcnt">0</div><div class="gridtxt">IoT</div></div>
-<div class="gridbtn" onclick="showTab(5)"><div class="gridnum" id="tcnt">0</div><div class="gridtxt">Trace</div></div>
-<div class="gridbtn" onclick="showTab(1)"><div class="gridnum" id="ccnt">0</div><div class="gridtxt">Crops</div></div>
-<div class="gridbtn" onclick="showTab(6)"><div class="gridnum" id="acnt">0</div><div class="gridtxt">Money</div></div>
+<div class="grid"><div class="gbtn" onclick="tab(1)"><div class="gnum" id="ccnt">0</div><div class="gtxt">Crops</div></div>
+<div class="gbtn" onclick="tab(2)"><div class="gnum" id="dcnt">0</div><div class="gtxt">IoT</div></div>
+<div class="gbtn" onclick="tab(4)"><div class="gnum" id="tcnt">0</div><div class="gtxt">Trace</div></div>
+<div class="gbtn" onclick="tab(5)"><div class="gnum" id="mcnt">0</div><div class="gtxt">Money</div></div></div>
+<div class="card"><div class="tt"><span>Thiet bi</span></div><div class="lst" id="devlst"><div class="emp">Chua co</div></div></div>
+<button class="btn" onclick="refresh()">Cap nhat</button>
 </div>
-<div class="card">
-<div class="toptitle"><span>Thiet bi</span></div>
-<div class="lst" id="devlst"><div class="emp">Chua co</div></div>
+
+<div id="tab1" class="tb"><div class="card"><div class="tt"><span>Cay trong</span><button class="bt" onclick="openForm('crop')">+</button></div><div class="lst" id="clst"><div class="emp">Chua co</div></div></div></div>
+<div id="tab2" class="tb"><div class="card"><div class="tt"><span>Thiet bi IoT</span><button class="bt" onclick="openForm('device')">+</button></div><div class="lst" id="dlst"><div class="emp">Chua co</div></div></div></div>
+<div id="tab3" class="tb"><div class="card"><div class="tt"><span>Luat Auto</span><button class="bt" onclick="openForm('rule')">+</button></div><div class="lst" id="rlst"><div class="emp">Chua co</div></div></div><div class="card"><div class="tt"><span>Lich</span><button class="bt" onclick="openForm('sched')">+</button></div><div class="lst" id="slst"><div class="emp">Chua co</div></div></div></div>
+<div id="tab4" class="tb"><div class="card"><div class="tt"><span>Truy xuat</span><button class="bt" onclick="openForm('trace')">+</button></div><div class="lst" id="tlst"><div class="emp">Chua co</div></div></div><div class="card"><div class="tt"><span>QR Check</span></div><input class="in" id="qrcode" placeholder="Nhap ma..."><button class="btn" style="margin-top:8px" onclick="checkQR()">Kiem tra</button><div id="qrres" style="margin-top:8px;font-size:12px"></div></div></div>
+<div id="tab5" class="tb"><div class="card"><div class="st"><span class="sl">Thu</span><span class="sv" id="incv" style="color:#4CAF50">0</span></div><div class="st"><span class="sl">Chi</span><span class="sv" id="expv" style="color:#f44336">0</span></div><div class="st"><span class="sl">Loi nhuan</span><span class="sv" id="pfv">0</span></div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn" onclick="openForm('inc')">+ Thu</button><button class="btn btnsec" onclick="openForm('exp')">+ Chi</button></div></div>
+<div id="tab6" class="tb"><div class="card"><div class="st"><span class="sl">Server</span><span class="sv" id="srv">--</span></div><div class="st"><span class="sl">Cap nhat</span><span class="sv" id="last">--</span></div><div class="st"><span class="sl">Ver</span><span class="sv">1.0.6</span></div></div><button class="btn" onclick="refresh()">Dong bo</button><button class="btn btnsec" style="margin-top:8px" onclick="clearAll()">Xoa all</button></div>
 </div>
-<button class="bbtn" onclick="refresh()">Cap nhat</button>
-</div>
-<div id="tab-crop" class="tab">
-<div class="card">
-<div class="toptitle"><span>Cay trong</span><button class="btn" onclick="openModal('cmodal')">+</button></div>
-<div class="lst" id="clst"><div class="emp">Chua co</div></div>
-</div>
-</div>
-<div id="tab-dev" class="tab">
-<div class="card">
-<div class="toptitle"><span>Thiet bi IoT</span><button class="btn" onclick="openModal('dmodal')">+</button></div>
-<div class="lst" id="dlst"><div class="emp">Chua co</div></div>
-</div>
-</div>
-<div id="tab-rule" class="tab">
-<div class="card">
-<div class="toptitle"><span>Luat Auto</span><button class="btn" onclick="openModal('rmodal')">+</button></div>
-<div class="lst" id="rlst"><div class="emp">Chua co</div></div>
-</div>
-<div class="card">
-<div class="toptitle"><span>Lich trinh</span><button class="btn" onclick="openModal('smodal')">+</button></div>
-<div class="lst" id="slst"><div class="emp">Chua co</div></div>
-</div>
-</div>
-<div id="tab-zone" class="tab">
-<div class="card">
-<div class="toptitle"><span>Khu vuc</span><button class="btn" onclick="openModal('zmodal')">+</button></div>
-<div class="lst" id="zlst"><div class="emp">Chua co</div></div>
-</div>
-</div>
-<div id="tab-trace" class="tab">
-<div class="card">
-<div class="toptitle"><span>Truy xuat</span><button class="btn" onclick="openModal('tmodal')">+</button></div>
-<div class="lst" id="tlst"><div class="emp">Chua co</div></div>
-</div>
-<div class="card">
-<div class="toptitle"><span>Check QR</span></div>
-<input class="fin" id="qrinput" placeholder="Nhap ma...">
-<button class="bbtn" style="margin-top:8px" onclick="checkQR()">Kiem tra</button>
-<div id="qrres" style="margin-top:8px;font-size:12px"></div>
-</div>
-</div>
-<div id="tab-fin" class="tab">
-<div class="card">
-<div class="stat"><span class="statlb">Thu</span><span class="statval" id="incv" style="color:#4CAF50">0</span></div>
-<div class="stat"><span class="statlb">Chi</span><span class="statval" id="expv" style="color:#f44336">0</span></div>
-<div class="stat"><span class="statlb">Loi nhuan</span><span class="statval" id="pfv">0</span></div>
-</div>
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-<button class="bbtn" onclick="openModal('incmodal')">+ Thu</button>
-<button class="bbtn bmod" onclick="openModal('expmodal')">+ Chi</button>
-</div>
-</div>
-<div id="tab-set" class="tab">
-<div class="card">
-<div class="stat"><span class="statlb">Server</span><span class="statval" id="srv">--</span></div>
-<div class="stat"><span class="statlb">Cap nhat</span><span class="statval" id="last">--</span></div>
-<div class="stat"><span class="statlb">Phien ban</span><span class="statval">1.0.5</span></div>
-</div>
-<button class="bbtn" onclick="refresh()">Dong bo</button>
-<button class="bbtn bmod" style="margin-top:8px" onclick="clearAll()">Xoa all</button>
-</div>
-</div>
+
 <nav class="nav">
-<button class="navbtn on" id="nb0" onclick="showTab(0)"><span class="navic">📊</span>Dash</button>
-<button class="navbtn" id="nb1" onclick="showTab(1)"><span class="navic">🌱</span>Crops</button>
-<button class="navbtn" id="nb2" onclick="showTab(2)"><span class="navic">📱</span>IoT</button>
-<button class="navbtn" id="nb3" onclick="showTab(3)"><span class="navic">⚡</span>Auto</button>
-<button class="navbtn" id="nb4" onclick="showTab(4)"><span class="navic">🏠</span>Zone</button>
-<button class="navbtn" id="nb5" onclick="showTab(5)"><span class="navic">🏷️</span>Trace</button>
-<button class="navbtn" id="nb6" onclick="showTab(6)"><span class="navic">💰</span>Money</button>
-<button class="navbtn" id="nb7" onclick="showTab(7)"><span class="navic">⚙️</span>Set</button>
+<button class="nb on" id="nb0" onclick="tab(0)"><span class="nic">📊</span>Dash</button>
+<button class="nb" id="nb1" onclick="tab(1)"><span class="nic">🌱</span>Crops</button>
+<button class="nb" id="nb2" onclick="tab(2)"><span class="nic">📱</span>IoT</button>
+<button class="nb" id="nb3" onclick="tab(3)"><span class="nic">⚡</span>Auto</button>
+<button class="nb" id="nb4" onclick="tab(4)"><span class="nic">🏷️</span>Trace</button>
+<button class="nb" id="nb5" onclick="tab(5)"><span class="nic">💰</span>Money</button>
+<button class="nb" id="nb6" onclick="tab(6)"><span class="nic">⚙️</span>Set</button>
 </nav>
 </div>
 
-<div id="cmodal" class="MD" style="display:none"><div class="MDbox">
-<div class="mdhead"><span class="mdttl">Cay trong</span><button class="mdcl" onclick="closeModal('cmodal')">×</button></div>
-<input type="hidden" id="cid">
-<div class="fgrp"><label class="flab">Ten</label><input class="fin" id="cname"></div>
-<button class="bbtn" onclick="saveData('crop')">Luu</button>
-</div></div>
+<!-- CROP FORM -->
+<div id="cropform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Cay trong</span><button class="fc" onclick="closeForm()">×</button></div><input type="hidden" id="cropId"><div class="fg"><label class="lb">Ten</label><input class="in" id="cropName"></div><button class="btn" onclick="saveCrop()">Luu</button></div></div>
 
-<div id="dmodal" class="MD" style="display:none"><div class="MDbox">
-<div class="mdhead"><span class="mdttl">Thiet bi</span><button class="mdcl" onclick="closeModal('dmodal')">×</button></div>
-<input type="hidden" id="did">
-<div class="fgrp"><label class="flab">Ten</label><input class="fin" id="dname"></div>
-<div class="fgrp"><label class="flab">Loai</label><select class="fin" id="dtype"><option value="esp32">ESP32</option><option value="dht22">DHT22</option><option value="soil">Soil</option><option value="relay">Relay</option></select></div>
-<button class="bbtn" onclick="saveData('device')">Luu</button>
-</div></div>
+<!-- DEVICE FORM -->
+<div id="deviceform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Thiet bi</span><button class="fc" onclick="closeForm()">×</button></div><input type="hidden" id="deviceId"><div class="fg"><label class="lb">Ten</label><input class="in" id="deviceName"></div><div class="fg"><label class="lb">Loai</label><select class="se" id="deviceType"><option value="esp32">ESP32</option><option value="dht22">DHT22</option><option value="soil">Soil</option><option value="relay">Relay</option><option value="pump">Pump</option></select></div><button class="btn" onclick="saveDevice()">Luu</button></div></div>
 
-<div id="rmodal" class="MD" style="display:none"><div class="MDbox">
-<div class="mdhead"><span class="mdttl">Luat</span><button class="mdcl" onclick="closeModal('rmodal')">×</button></div>
-<input type="hidden" id="rid">
-<div class="fgrp"><label class="flab">Ten</label><input class="fin" id="rname"></div>
-<div class="fgrp"><label class="flab">Dieu kien</label><select class="fin" id="rsen"><option value="temp">Nhiet do</option><option value="humid">Do am</option></select></div>
-<button class="bbtn" onclick="saveData('rule')">Luu</button>
-</div></div>
+<!-- RULE FORM -->
+<div id="ruleform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Luat</span><button class="fc" onclick="closeForm()">×</button></div><input type="hidden" id="ruleId"><div class="fg"><label class="lb">Ten luat</label><input class="in" id="ruleName"></div><button class="btn" onclick="saveRule()">Luu</button></div></div>
 
-<div id="smodal" class="MD" style="display:none"><div class="MDbox">
-<div class="mdhead"><span class="mdttl">Lich</span><button class="mdcl" onclick="closeModal('smodal')">×</button></div>
-<input type="hidden" id="sid">
-<div class="fgrp"><label class="flab">Ten</label><input class="fin" id="sname"></div>
-<button class="bbtn" onclick="saveData('sched')">Luu</button>
-</div></div>
+<!-- SCHED FORM -->
+<div id="schedform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Lich</span><button class="fc" onclick="closeForm()">×</button></div><input type="hidden" id="schedId"><div class="fg"><label class="lb">Ten</label><input class="in" id="schedName"></div><button class="btn" onclick="saveSched()">Luu</button></div></div>
 
-<div id="zmodal" class="MD" style="display:none"><div class="MDbox">
-<div class="mdhead"><span class="mdttl">Khu vuc</span><button class="mdcl" onclick="closeModal('zmodal')">×</button></div>
-<input type="hidden" id="zid">
-<div class="fgrp"><label class="flab">Ten</label><input class="fin" id="zname"></div>
-<button class="bbtn" onclick="saveData('zone')">Luu</button>
-</div></div>
+<!-- TRACE FORM -->
+<div id="traceform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Lot</span><button class="fc" onclick="closeForm()">×</button></div><input type="hidden" id="traceId"><div class="fg"><label class="lb">Ma lot</label><input class="in" id="traceCode"></div><button class="btn" onclick="saveTrace()">Luu</button></div></div>
 
-<div id="tmodal" class="MD" style="display:none"><div class="MDbox">
-<div class="mdhead"><span class="mdttl">Lot</span><button class="mdcl" onclick="closeModal('tmodal')">×</button></div>
-<input type="hidden" id="tid">
-<div class="fgrp"><label class="flab">Ma</label><input class="fin" id="tcode"></div>
-<button class="bbtn" onclick="saveData('trace')">Luu</button>
-</div></div>
+<!-- INC FORM -->
+<div id="incform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Thu tien</span><button class="fc" onclick="closeForm()">×</button></div><div class="fg"><label class="lb">Mo ta</label><input class="in" id="incDesc"></div><div class="fg"><label class="lb">So tien</label><input type="number" class="in" id="incAmt"></div><button class="btn" onclick="saveInc()">Luu</button></div></div>
 
-<div id="incmodal" class="MD" style="display:none"><div class="MDbox">
-<div class="mdhead"><span class="mdttl">Thu</span><button class="mdcl" onclick="closeModal('incmodal')">×</button></div>
-<div class="fgrp"><label class="flab">Mo ta</label><input class="fin" id="idesc"></div>
-<div class="fgrp"><label class="flab">So tien</label><input type="number" class="fin" id="iamt"></div>
-<button class="bbtn" onclick="saveData('inc')">Luu</button>
-</div></div>
+<!-- EXP FORM -->
+<div id="expform" class="frm"><div class="fbox"><div class="fh"><span class="ft">Chi tien</span><button class="fc" onclick="closeForm()">×</button></div><div class="fg"><label class="lb">Mo ta</label><input class="in" id="expDesc"></div><div class="fg"><label class="lb">So tien</label><input type="number" class="in" id="expAmt"></div><button class="btn" onclick="saveExp()">Luu</button></div></div>
 
-<div id="expmodal" class="MD" style="display:none"><div class="MDbox">
-<div class="mdhead"><span class="mdttl">Chi</span><button class="mdcl" onclick="closeModal('expmodal')">×</button></div>
-<div class="fgrp"><label class="flab">Mo ta</label><input class="fin" id="edesc"></div>
-<div class="fgrp"><label class="flab">So tien</label><input type="number" class="fin" id="eamt"></div>
-<button class="bbtn" onclick="saveData('exp')">Luu</button>
-</div></div>
-
-<div class="ts" id="ts"></div>
+<div class="ts" id="ts">Da luu!</div>
 
 <script>
 var API = 'http://10.0.2.2:3000';
-var KEY = 'est_data_v5';
-var dt = {crops:[],devices:[],rules:[],scheds:[],zones:[],traces:[],inc:0,exp:0,tx:[],sens:{}};
-var cur = 0;
+var key = 'est_v6';
+var dt = {crops:[], devices:[], rules:[], scheds:[], traces:[], inc:0, exp:0};
 
 function init(){
-  try{ var x = localStorage.getItem(KEY); if(x) dt = JSON.parse(x); }catch(e){}
+  try{ var x = localStorage.getItem(key); if(x) dt = JSON.parse(x); }catch(e){}
   document.getElementById('srv').textContent = API;
-  renderAll();
+  render(); init();
 }
-init();
+window.onload = init;
 
-function saveTo(){
-  try{ localStorage.setItem(KEY,JSON.stringify(dt)); }catch(e){}
+function saveT(){
+  localStorage.setItem(key, JSON.stringify(dt));
 }
 
-function showTab(n){
-  cur = n;
-  var tabs = ['dash','crop','dev','rule','zone','trace','fin','set'];
-  for(var i=0;i<8;i++){
+function tab(n){
+  for(var i=0;i<7;i++){
     document.getElementById('nb'+i).classList.toggle('on',i===n);
-    document.getElementById('tab-'+tabs[i]).classList.toggle('on',i===n);
+    document.getElementById('tab'+i).classList.toggle('on',i===n);
   }
-  renderAll();
+  render();
 }
 
-function renderAll(){
-  document.getElementById('tmp').innerHTML = (dt.sens.temp||'--')+'<span class="unit">°C</span>';
-  document.getElementById('hum').innerHTML = (dt.sens.humid||'--')+'<span class="unit">%</span>';
-  document.getElementById('dcnt').textContent = dt.devices.length;
+function render(){
+  document.getElementById('tmp').innerHTML = (dt.sens?dt.sens.temp:'--')+'<span class="unit">°C</span>';
+  document.getElementById('hum').innerHTML = (dt.sens?dt.sens.humid:'--')+'<span class="unit">%</span>';
   document.getElementById('ccnt').textContent = dt.crops.length;
+  document.getElementById('dcnt').textContent = dt.devices.length;
   document.getElementById('tcnt').textContent = dt.traces.length;
-  
-  var html = dt.devices.length?'':'<div class="emp">Chua co</div>';
-  dt.devices.forEach(function(d,i){
-    html += '<div class="row"><div class="lbl"><div class="name">'+d.name+'</div><div class="desc">'+d.type+'</div></div>'+
-      '<button class="sw '+(d.on?'on':'')+'" onclick="toggleDev('+i+')"></button></div>';
-  });
-  document.getElementById('dev_lst').innerHTML = html;
-  
-  html = dt.devices.length?'':'<div class="emp">Chua co</div>';
-  dt.devices.forEach(function(d,i){
-    html += '<div class="row"><div class="lbl"><div class="name">'+d.name+'</div><div class="desc">'+d.type+'</div></div>'+
-      '<div><button class="btn" onclick="editDev('+i+')">'+String.fromCharCode(9998)+'</button><button class="btnx" onclick="delDev('+i+')">X</button></div></div>';
-  });
-  document.getElementById('dlst').innerHTML = html;
-  
-  html = dt.crops.length?'':'<div class="emp">Chua co</div>';
-  dt.crops.forEach(function(c,i){
-    html += '<div class="row"><div class="lbl"><div class="name">'+c.name+'</div></div>'+
-      '<div><button class="btn" onclick="editCrop('+i+')">'+String.fromCharCode(9998)+'</button><button class="btnx" onclick="delCrop('+i+')">X</button></div></div>';
-  });
-  document.getElementById('clst').innerHTML = html;
-  
-  html = dt.rules.length?'':'<div class="emp">Chua co</div>';
-  dt.rules.forEach(function(r,i){
-    html += '<div class="row"><div class="lbl"><div class="name">'+r.name+'</div><div class="desc">'+r.sen+' '+r.op+' '+r.val+'</div></div>'+
-      '<button class="btnx" onclick="delRule('+i+')">X</button></div>';
-  });
-  document.getElementById('rlst').innerHTML = html;
-  
-  html = dt.scheds.length?'':'<div class="emp">Chua co</div>';
-  dt.scheds.forEach(function(s,i){
-    html += '<div class="row"><div class="lbl"><div class="name">'+s.name+'</div><div class="desc">'+s.time+'</div></div>'+
-      '<button class="btnx" onclick="delSched('+i+')">X</button></div>';
-  });
-  document.getElementById('slst').innerHTML = html;
-  
-  html = dt.zones.length?'':'<div class="emp">Chua co</div>';
-  dt.zones.forEach(function(z,i){
-    html += '<div class="row"><div class="lbl"><div class="name">'+z.name+'</div></div>'+
-      '<button class="btnx" onclick="delZone('+i+')">X</button></div>';
-  });
-  document.getElementById('zlst').innerHTML = html;
-  
-  html = dt.traces.length?'':'<div class="emp">Chua co</div>';
-  dt.traces.forEach(function(t,i){
-    html += '<div class="row"><div class="lbl"><div class="name">'+t.code+'</div></div>'+
-      '<button class="btnx" onclick="delTrace('+i+')">X</button></div>';
-  });
-  document.getElementById('tlst').innerHTML = html;
-  
+  document.getElementById('mcnt').textContent = dt.inc - dt.exp;
   document.getElementById('incv').textContent = dt.inc;
   document.getElementById('expv').textContent = dt.exp;
   document.getElementById('pfv').textContent = dt.inc - dt.exp;
+  
+  // devices
+  var h = dt.devices.length?'':'<div class="emp">Chua co</div>';
+  dt.devices.forEach(function(d,i){
+    h += '<div class="row"><div class="l"><div class="n">'+d.name+'</div><div class="d">'+d.type+'</div></div><div><button class="bedit" onclick="editDev('+i+')">✏</button><button class="btx" onclick="delDev('+i+')">X</button></div></div>';
+  });
+  document.getElementById('devlst').innerHTML = h;
+  document.getElementById('dlst').innerHTML = h;
+  
+  // crops
+  h = dt.crops.length?'':'<div class="emp">Chua co</div>';
+  dt.crops.forEach(function(c,i){
+    h += '<div class="row"><div class="l"><div class="n">'+c.name+'</div></div><div><button class="bedit" onclick="editCrop('+i+')">✏</button><button class="btx" onclick="delCrop('+i+')">X</button></div></div>';
+  });
+  document.getElementById('clst').innerHTML = h;
+  
+  // rules
+  h = dt.rules.length?'':'<div class="emp">Chua co</div>';
+  dt.rules.forEach(function(r,i){
+    h += '<div class="row"><div class="l"><div class="n">'+r.name+'</div></div><button class="btx" onclick="delRule('+i+')">X</button></div>';
+  });
+  document.getElementById('rlst').innerHTML = h;
+  
+  // scheds
+  h = dt.scheds.length?'':'<div class="emp">Chua co</div>';
+  dt.scheds.forEach(function(s,i){
+    h += '<div class="row"><div class="l"><div class="n">'+s.name+'</div></div><button class="btx" onclick="delSched('+i+')">X</button></div>';
+  });
+  document.getElementById('slst').innerHTML = h;
+  
+  // traces
+  h = dt.traces.length?'':'<div class="emp">Chua co</div>';
+  dt.traces.forEach(function(t,i){
+    h += '<div class="row"><div class="l"><div class="n">'+t.code+'</div></div><button class="btx" onclick="delTrace('+i+')">X</button></div>';
+  });
+  document.getElementById('tlst').innerHTML = h;
 }
 
-function toggleDev(i){
-  dt.devices[i].on = !dt.devices[i].on;
-  saveTo();
-  renderAll();
-}
-
-function openModal(id){
-  document.getElementById(id).style.display = 'flex';
-  document.getElementById(id.replace('modal','')+'id').value = '';
-}
-function closeModal(id){
-  document.getElementById(id).style.display = 'none';
-}
-
-function editDev(i){
-  var d = dt.devices[i];
-  openModal('dmodal');
-  document.getElementById('did').value = i;
-  document.getElementById('dname').value = d.name;
-  document.getElementById('dtype').value = d.type;
-}
-function delDev(i){
-  if(!confirm('Xoa thiet bi?')) return;
-  dt.devices.splice(i,1);
-  saveTo();
-  renderAll();
-  showMsg('Da xoa');
-}
-function editCrop(i){
-  var c = dt.crops[i];
-  openModal('cmodal');
-  document.getElementById('cid').value = i;
-  document.getElementById('cname').value = c.name;
-}
-function delCrop(i){
-  if(!confirm('Xoa?')) return;
-  dt.crops.splice(i,1);
-  saveTo();
-  renderAll();
-  showMsg('Da xoa');
-}
-function delRule(i){
-  if(!confirm('Xoa?')) return;
-  dt.rules.splice(i,1);
-  saveTo();
-  renderAll();
-  showMsg('Da xoa');
-}
-function delSched(i){
-  if(!confirm('Xoa?')) return;
-  dt.scheds.splice(i,1);
-  saveTo();
-  renderAll();
-  showMsg('Da xoa');
-}
-function delZone(i){
-  if(!confirm('Xoa?')) return;
-  dt.zones.splice(i,1);
-  saveTo();
-  renderAll();
-  showMsg('Da xoa');
-}
-function delTrace(i){
-  if(!confirm('Xoa?')) return;
-  dt.traces.splice(i,1);
-  saveTo();
-  renderAll();
-  showMsg('Da xoa');
-}
-
-function saveData(typ){
-  switch(typ){
-    case 'crop':
-      var nm = document.getElementById('cname').value;
-      if(!nm) return showMsg('Nhap ten','err');
-      var id = document.getElementById('cid').value;
-      var it = {name:nm,stage:'gieo'};
-      if(id!==''){dt.crops[id]=it;}else{dt.crops.push(it);}
-      break;
-    case 'device':
-      var nm = document.getElementById('dname').value;
-      if(!nm) return showMsg('Nhap ten','err');
-      var id = document.getElementById('did').value;
-      var it = {name:nm,type:document.getElementById('dtype').value,on:true};
-      if(id!==''){dt.devices[id]=it;}else{dt.devices.push(it);}
-      break;
-    case 'rule':
-      var nm = document.getElementById('rname').value;
-      if(!nm) return showMsg('Nhap ten','err');
-      var id = document.getElementById('rid').value;
-      var it = {name:nm,sen:document.getElementById('rsen').value,op:'>',val:''};
-      if(id!==''){dt.rules[id]=it;}else{dt.rules.push(it);}
-      break;
-    case 'sched':
-      var nm = document.getElementById('sname').value;
-      if(!nm) return showMsg('Nhap ten','err');
-      var id = document.getElementById('sid').value;
-      var it = {name:nm,time:''};
-      if(id!==''){dt.scheds[id]=it;}else{dt.scheds.push(it);}
-      break;
-    case 'zone':
-      var nm = document.getElementById('zname').value;
-      if(!nm) return showMsg('Nhap ten','err');
-      var id = document.getElementById('zid').value;
-      var it = {name:nm};
-      if(id!==''){dt.zones[id]=it;}else{dt.zones.push(it);}
-      break;
-    case 'trace':
-      var cd = document.getElementById('tcode').value;
-      if(!cd) return showMsg('Nhap ma','err');
-      var id = document.getElementById('tid').value;
-      var it = {code:cd};
-      var ex = dt.traces.findIndex(function(t){return t.code === cd;});
-      if(ex>=0){dt.traces[ex]=it;}else{dt.traces.push(it);}
-      break;
-    case 'inc':
-      var amt = parseInt(document.getElementById('iamt').value)||0;
-      if(amt<=0) return showMsg('Nhap tien','err');
-      dt.inc += amt;
-      dt.tx.push({t:'inc',d:document.getElementById('idesc').value,a:amt});
-      break;
-    case 'exp':
-      var amt = parseInt(document.getElementById('eamt').value)||0;
-      if(amt<=0) return showMsg('Nhap tien','err');
-      dt.exp += amt;
-      dt.tx.push({t:'exp',d:document.getElementById('edesc').value,a:amt});
-      break;
+function openForm(type){
+  document.getElementById(type+'form').classList.add('on');
+  document.getElementById(type+'Id').value = '';
+  if(type==='device'){
+    document.getElementById('deviceName').value = '';
+    document.getElementById('deviceType').value = 'esp32';
+  }else if(type==='crop'){
+    document.getElementById('cropName').value = '';
+  }else if(type==='rule'){
+    document.getElementById('ruleName').value = '';
+  }else if(type==='sched'){
+    document.getElementById('schedName').value = '';
+  }else if(type==='trace'){
+    document.getElementById('traceCode').value = '';
   }
-  saveTo();
-  closeModal(typ+'modal');
-  renderAll();
-  showMsg('Da luu!');
+}
+
+function closeForm(){
+  var frms = document.querySelectorAll('.frm');
+  frms.forEach(function(f){ f.classList.remove('on'); });
+}
+
+function editCrop(i){ var c = dt.crops[i]; openForm('crop'); document.getElementById('cropId').value = i; document.getElementById('cropName').value = c.name; }
+function delCrop(i){ if(confirm('Xoa/crops/'+i+'?')){ dt.crops.splice(i,1); saveT(); render(); show('Da xoa'); } }
+function editDev(i){ var d = dt.devices[i]; openForm('device'); document.getElementById('deviceId').value = i; document.getElementById('deviceName').value = d.name; document.getElementById('deviceType').value = d.type; }
+function delDev(i){ if(confirm('Xoa/device/'+i+'?')){ dt.devices.splice(i,1); saveT(); render(); show('Da xoa'); } }
+function delRule(i){ if(confirm('Xoa?')){ dt.rules.splice(i,1); saveT(); render(); show('Da xoa'); } }
+function delSched(i){ if(confirm('Xoa?')){ dt.scheds.splice(i,1); saveT(); render(); show('Da xoa'); } }
+function delTrace(i){ if(confirm('Xoa?')){ dt.traces.splice(i,1); saveT(); render(); show('Da xoa'); } }
+
+function saveCrop(){
+  var nm = document.getElementById('cropName').value;
+  if(!nm){ show('Nhap ten','err'); return; }
+  var id = document.getElementById('cropId').value;
+  if(id!==''){ dt.crops[id] = {name:nm}; }else{ dt.crops.push({name:nm}); }
+  saveT(); closeForm(); render(); show('Da luu!');
+}
+function saveDevice(){
+  var nm = document.getElementById('deviceName').value;
+  if(!nm){ show('Nhap ten','err'); return; }
+  var id = document.getElementById('deviceId').value;
+  var it = {name:nm, type:document.getElementById('deviceType').value, on:true};
+  if(id!==''){ dt.devices[id] = it; }else{ dt.devices.push(it); }
+  saveT(); closeForm(); render(); show('Da luu!');
+}
+function saveRule(){
+  var nm = document.getElementById('ruleName').value;
+  if(!nm){ show('Nhap ten','err'); return; }
+  var id = document.getElementById('ruleId').value;
+  if(id!==''){ dt.rules[id] = {name:nm}; }else{ dt.rules.push({name:nm}); }
+  saveT(); closeForm(); render(); show('Da luu!');
+}
+function saveSched(){
+  var nm = document.getElementById('schedName').value;
+  if(!nm){ show('Nhap ten','err'); return; }
+  var id = document.getElementById('schedId').value;
+  if(id!==''){ dt.scheds[id] = {name:nm}; }else{ dt.scheds.push({name:nm}); }
+  saveT(); closeForm(); render(); show('Da luu!');
+}
+function saveTrace(){
+  var cd = document.getElementById('traceCode').value;
+  if(!cd){ show('Nhap ma','err'); return; }
+  var id = document.getElementById('traceId').value;
+  if(id!==''){ dt.traces[id] = {code:cd}; }else{ dt.traces.push({code:cd}); }
+  saveT(); closeForm(); render(); show('Da luu!');
+}
+function saveInc(){
+  var amt = parseInt(document.getElementById('incAmt').value)||0;
+  if(amt<=0){ show('Nhap tien','err'); return; }
+  dt.inc += amt;
+  saveT(); closeForm(); render(); show('Da luu!');
+}
+function saveExp(){
+  var amt = parseInt(document.getElementById('expAmt').value)||0;
+  if(amt<=0){ show('Nhap tien','err'); return; }
+  dt.exp += amt;
+  saveT(); closeForm(); render(); show('Da luu!');
 }
 
 function checkQR(){
-  var cd = document.getElementById('qrinput').value;
+  var cd = document.getElementById('qrcode').value;
   var t = dt.traces.find(function(x){return x.code === cd;});
-  var r = document.getElementById('qrres');
-  r.innerHTML = t ? 'Ma: '+t.code : 'Khong tim thay';
+  document.getElementById('qrres').innerHTML = t ? 'Ma: '+t.code : 'Khong tim thay';
 }
 
 function refresh(){
-  showMsg('Dang tai...','info');
+  show('Dang tai...','info');
   fetch(API+'/api/sensors/latest').then(function(r){return r.json();}).then(function(d){
-    if(d.temp){ dt.sens = {temp:d.temp,humid:d.humid}; }
-    saveTo();
-    renderAll();
+    if(d.temp){ dt.sens = {temp:d.temp, humid:d.humid}; }
+    saveT(); render();
     document.getElementById('stdot').classList.add('on');
-    showMsg('Da cap nhat');
+    show('Da cap nhat');
   }).catch(function(e){
     document.getElementById('stdot').classList.remove('on');
-    showMsg('Offline');
+    show('Offline','err');
   });
   document.getElementById('last').textContent = new Date().toLocaleString('vi-VN');
 }
@@ -468,11 +298,11 @@ function clearAll(){
   }
 }
 
-function showMsg(t,ty){
-  var ts = document.getElementById('ts');
-  ts.textContent = t;
-  ts.className = 'ts sh '+(ty==='err'?'tser':'tsok');
-  setTimeout(function(){ts.className='ts';},2000);
+function show(msg,err){
+  var t = document.getElementById('ts');
+  t.textContent = msg;
+  t.className = 'ts d '+(err?'tser':'tsok');
+  setTimeout(function(){t.className='ts';},2000);
 }
 </script>
 </body>

@@ -11,113 +11,108 @@
   <style>
     :root { --primary: #219465; --primary-dark: #1a7a4a; --secondary: #4CAF50; --accent: #8BC34A; --danger: #f44336; --warning: #ff9800; --info: #2196F3; --light: #f5f5f5; --dark: #212121; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--light); }
-    .app-container { max-width: 480px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.1); padding-bottom: 60px; }
-    .header { background: var(--primary); color: white; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+    html, body { height: 100%; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--light); overflow: hidden; }
+    .app-wrapper { display: flex; flex-direction: column; height: 100%; max-width: 480px; margin: 0 auto; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+    .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 16px; display: flex; align-items: center; justify-content: space-between; }
     .header h1 { font-size: 18px; font-weight: 600; }
-    .header-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
-    .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: var(--secondary); }
-    .status-indicator.offline { background: var(--danger); }
-    .content { padding: 16px; }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .sync-badge { font-size: 11px; padding: 4px 8px; background: rgba(255,255,255,0.2); border-radius: 12px; }
+    .sync-badge.synced { background: var(--secondary); }
+    .content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 70px; }
     .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .card-title { font-size: 14px; color: #666; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .card-value { font-size: 24px; font-weight: 600; color: var(--dark); }
-    .card-unit { font-size: 14px; color: #999; font-weight: normal; }
-    .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .metric { text-align: center; padding: 12px; background: var(--light); border-radius: 8px; cursor: pointer; }
-    .metric-value { font-size: 20px; font-weight: 600; color: var(--primary); }
-    .metric-label { font-size: 12px; color: #666; }
-    .device-list, .item-list { list-style: none; }
-    .device-item, .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; cursor: pointer; }
-    .device-name { font-weight: 500; }
-    .device-status { font-size: 12px; padding: 4px 8px; border-radius: 4px; }
-    .device-status.online { background: #e8f5e9; color: var(--secondary); }
-    .device-status.offline { background: #ffebee; color: var(--danger); }
-    .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; width: 100%; margin-top: 8px; cursor: pointer; }
-    .btn:active { background: var(--primary-dark); }
-    .btn-secondary { background: var(--light); color: var(--dark); }
-    .btn-danger { background: var(--danger); }
-    .btn-small { padding: 6px 12px; font-size: 12px; width: auto; }
-    .nav { display: flex; background: white; border-top: 1px solid #eee; position: fixed; bottom: 0; width: 100%; max-width: 480px; flex-wrap: wrap; }
-    .nav-item { flex: 1; text-align: center; padding: 12px 8px; color: #999; font-size: 11px; cursor: pointer; min-width: 25%; }
-    .nav-item.active { color: var(--primary); }
-    .empty-state { text-align: center; padding: 40px; color: #999; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .card-title { font-size: 14px; color: #666; font-weight: 500; }
+    .add-btn { background: var(--primary); color: white; border: none; width: 28px; height: 28px; border-radius: 50%; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .card-value { font-size: 28px; font-weight: 700; color: var(--dark); }
+    .card-unit { font-size: 14px; color: #999; font-weight: 400; }
+    .metric-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .metric { text-align: center; padding: 14px 10px; background: var(--light); border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+    .metric:active { transform: scale(0.96); }
+    .metric-value { font-size: 22px; font-weight: 700; color: var(--primary); }
+    .metric-label { font-size: 11px; color: #666; margin-top: 4px; }
+    .data-list { max-height: 300px; overflow-y: auto; }
+    .data-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+    .data-item:last-child { border-bottom: none; }
+    .item-info { flex: 1; }
+    .item-name { font-weight: 500; font-size: 14px; }
+    .item-detail { font-size: 12px; color: #666; margin-top: 2px; }
+    .item-status { font-size: 11px; padding: 3px 8px; border-radius: 4px; }
+    .item-status.online { background: #e8f5e9; color: var(--secondary); }
+    .item-status.offline { background: #ffebee; color: var(--danger); }
+    .item-status.active { background: #e3f2fd; color: var(--info); }
+    .nav { display: flex; background: white; border-top: 1px solid #eee; padding: 8px 4px; flex-wrap: wrap; }
+    .nav-item { flex: 1; text-align: center; padding: 8px 4px; color: #999; font-size: 10px; cursor: pointer; min-width: 25%; border-radius: 8px; transition: all 0.2s; }
+    .nav-item:active { background: var(--light); }
+    .nav-item.active { color: var(--primary); background: #e8f5e9; }
+    .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+    .empty-state { text-align: center; padding: 30px; color: #999; }
+    .empty-state-icon { font-size: 40px; margin-bottom: 10px; opacity: 0.5; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
-    .crop-card { border: 1px solid #eee; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-    .crop-name { font-weight: 600; font-size: 16px; }
-    .crop-info { font-size: 12px; color: #666; margin-top: 4px; }
-    .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
-    .setting-label { font-size: 14px; }
-    .setting-value { font-size: 14px; color: #666; }
-    .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .menu-item { background: var(--light); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; }
-    .menu-icon { font-size: 24px; display: block; margin-bottom: 4px; }
-    .menu-label { font-size: 12px; color: var(--dark); }
-    .form-group { margin-bottom: 12px; }
-    .form-label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
-    .form-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
-    .form-select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white; }
-    .form-textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; min-height: 80px; }
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
-    .modal.active { display: block; }
-    .modal-content { background: white; max-width: 480px; margin: 50px auto; border-radius: 12px; padding: 16px; max-height: 80vh; overflow-y: auto; }
+    .form-group { margin-bottom: 14px; }
+    .form-label { display: block; font-size: 12px; color: #666; margin-bottom: 6px; font-weight: 500; }
+    .form-input, .form-select, .form-textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white; }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--primary); }
+    .form-textarea { min-height: 80px; resize: vertical; }
+    .btn { background: var(--primary); color: white; border: none; padding: 14px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; width: 100%; cursor: pointer; }
+    .btn:active { background: var(--primary-dark); transform: scale(0.98); }
+    .btn-secondary { background: var(--light); color: var(--dark); }
+    .btn-danger { background: var(--danger); }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; width: 90%; max-width: 400px; max-height: 85%; border-radius: 16px; padding: 20px; overflow-y: auto; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .modal-title { font-size: 18px; font-weight: 600; }
-    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; }
-    .action-row { display: flex; gap: 8px; margin-top: 8px; }
-    .alert-badge { background: var(--danger); color: white; border-radius: 10px; padding: 2px 6px; font-size: 10px; position: absolute; }
-    .alert-item { border-left: 3px solid var(--danger); padding-left: 12px; margin-bottom: 8px; }
-    .alert-title { font-weight: 500; }
-    .alert-time { font-size: 11px; color: #999; }
-    .table-list { width: 100%; border-collapse: collapse; }
-    .table-list th, .table-list td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
-    .table-list th { color: #666; font-weight: 500; }
-    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
-    .stat-label { color: #666; }
-    .stat-value { font-weight: 600; }
-    .toast { display: none; position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--dark); color: white; padding: 12px 24px; border-radius: 8px; z-index: 2000; }
-    .toast.show { display: block; }
+    .modal-close { background: none; border: none; font-size: 24px; color: #999; cursor: pointer; }
+    .toast { display: none; position: fixed; top: 16px; left: 50%; transform: translateX(-50%); background: var(--dark); color: white; padding: 12px 20px; border-radius: 8px; z-index: 2000; font-size: 13px; }
+    .toast.show { display: block; animation: slideDown 0.3s; }
     .toast.success { background: var(--secondary); }
     .toast.error { background: var(--danger); }
+    @keyframes slideDown { from { transform: translateX(-50%) translateY(-20px); opacity: 0; } to { transform: translateX(-50%) translateY(0); opacity: 1; } }
+    .loading { display: flex; align-items: center; justify-content: center; padding: 40px; }
+    .spinner { width: 30px; height: 30px; border: 3px solid #eee; border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: #666; }
+    .stat-value { font-weight: 600; }
+    .stat-value.positive { color: var(--secondary); }
+    .stat-value.negative { color: var(--danger); }
+    .empty-action { text-align: center; padding: 30px; }
+    .empty-action .btn { width: auto; display: inline-block; }
+    .section-title { font-size: 13px; color: #999; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
   </style>
 </head>
 <body>
-  <div class="app-container">
+  <div class="app-wrapper">
     <div class="header">
       <h1>EcoSynTech</h1>
-      <div class="status-indicator" id="connectionStatus"></div>
+      <div class="header-right">
+        <span class="sync-badge" id="syncStatus">Offline</span>
+      </div>
     </div>
     
     <!-- DASHBOARD -->
     <div id="tab-dashboard" class="tab-content active">
       <div class="content">
         <div class="card">
-          <div class="card-title">Nhiet do</div>
-          <div class="card-value" id="tempValue">--<span class="card-unit">C</span></div>
+          <div class="section-title">Cam bien</div>
+          <div class="card-value" id="tempValue">25<span class="card-unit">°C</span></div>
         </div>
         <div class="card">
-          <div class="card-title">Do am dat</div>
-          <div class="card-value" id="humidityValue">--<span class="card-unit">%</span></div>
+          <div class="card-value" id="humidityValue">68<span class="card-unit">%</span></div>
         </div>
         <div class="metric-grid">
-          <div class="metric" onclick="navTo('devices')">
-            <div class="metric-value" id="deviceCount">0</div>
-            <div class="metric-label">Thiet bi</div>
-          </div>
-          <div class="metric" onclick="navTo('alerts')">
-            <div class="metric-value" id="alertCount">0</div>
-            <div class="metric-label">Canh bao</div>
-          </div>
+          <div class="metric" data-nav="devices"><div class="metric-value" id="deviceCount">0</div><div class="metric-label">Thiet bi</div></div>
+          <div class="metric" data-nav="alerts"><div class="metric-value" id="alertCount">0</div><div class="metric-label">Canh bao</div></div>
+          <div class="metric" data-nav="crops"><div class="metric-value" id="cropCount">0</div><div class="metric-label">Cay trong</div></div>
         </div>
-        <div class="card" style="margin-top: 16px;">
-          <div class="card-title">Thiet bi</div>
-          <ul class="device-list" id="deviceList"><li class="empty-state">Dang tai...</li></ul>
+        <div class="card" style="margin-top: 12px;">
+          <div class="card-header"><span class="card-title">Thiet bi</span></div>
+          <div class="data-list" id="deviceList"><div class="empty-state">Chua co du lieu</div></div>
         </div>
-        <div class="card">
-          <div class="card-title">Dieu khien</div>
-          <button class="btn" id="refreshBtn">Lam moi du lieu</button>
-        </div>
+        <button class="btn" id="refreshBtn" style="margin-top: 12px;">Cap nhat</button>
       </div>
     </div>
 
@@ -125,8 +120,8 @@
     <div id="tab-crops" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="card-title">Danh sach cay trong <button class="btn-small" onclick="openModal('cropModal')">+ Them</button></div>
-          <div id="cropList"><div class="empty-state">Nhan de tai...</div></div>
+          <div class="card-header"><span class="card-title">Cay trong</span><button class="add-btn" onclick="openModal('cropModal')">+</button></div>
+          <div class="data-list" id="cropList"><div class="loading"><div class="spinner"></div></div></div>
         </div>
       </div>
     </div>
@@ -135,8 +130,8 @@
     <div id="tab-devices" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="card-title">Quan ly thiet bi <button class="btn-small" onclick="openModal('deviceModal')">+ Them</button></div>
-          <ul class="device-list" id="deviceListFull"><li class="empty-state">Nhan de tai...</li></ul>
+          <div class="card-header"><span class="card-title">Thiet bi</span><button class="add-btn" onclick="openModal('deviceModal')">+</button></div>
+          <div class="data-list" id="deviceListFull"><div class="loading"><div class="spinner"></div></div></div>
         </div>
       </div>
     </div>
@@ -145,8 +140,8 @@
     <div id="tab-sensors" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="card-title">Du lieu cam bien</div>
-          <div id="sensorData"><div class="empty-state">Nhan de tai...</div></div>
+          <div class="card-header"><span class="card-title">Du lieu cam bien</span></div>
+          <div id="sensorData"><div class="loading"><div class="spinner"></div></div></div>
         </div>
       </div>
     </div>
@@ -155,23 +150,9 @@
     <div id="tab-alerts" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="card-title">Canh bao & Su kien</div>
-          <div id="alertList"><div class="empty-state">Nhan de tai...</div></div>
+          <div class="card-header"><span class="card-title">Canh bao</span></div>
+          <div id="alertList"><div class="loading"><div class="spinner"></div></div></div>
         </div>
-      </div>
-    </div>
-
-    <!-- AUTOMATION -->
-    <div id="tab-automation" class="tab-content">
-      <div class="content">
-        <div class="card">
-          <div class="card-title">Dieu tuyen</div>
-          <div class="menu-grid">
-            <div class="menu-item" onclick="loadTabData('rules')"><span class="menu-icon">⚙️</span><span class="menu-label">Luat</span></div>
-            <div class="menu-item" onclick="loadTabData('schedules')"><span class="menu-icon">📅</span><span class="menu-label">Lich trinh</span></div>
-          </div>
-        </div>
-        <div id="automationList"><div class="empty-state">Chon menu tren</div></div>
       </div>
     </div>
 
@@ -179,18 +160,12 @@
     <div id="tab-rules" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="card-title">Luat dieu tuyen <button class="btn-small" onclick="openModal('ruleModal')">+ Them</button></div>
-          <div id="ruleList"><div class="empty-state">Nhan de tai...</div></div>
+          <div class="card-header"><span class="card-title">Luat dieu tuyen</span><button class="add-btn" onclick="openModal('ruleModal')">+</button></div>
+          <div class="data-list" id="ruleList"><div class="loading"><div class="spinner"></div></div></div>
         </div>
-      </div>
-    </div>
-
-    <!-- SCHEDULES -->
-    <div id="tab-schedules" class="tab-content">
-      <div class="content">
         <div class="card">
-          <div class="card-title">Lich trinh <button class="btn-small" onclick="openModal('scheduleModal')">+ Them</button></div>
-          <div id="scheduleList"><div class="empty-state">Nhan de tai...</div></div>
+          <div class="card-header"><span class="card-title">Lich trinh</span><button class="add-btn" onclick="openModal('scheduleModal')">+</button></div>
+          <div class="data-list" id="scheduleList"><div class="loading"><div class="spinner"></div></div></div>
         </div>
       </div>
     </div>
@@ -199,8 +174,8 @@
     <div id="tab-inventory" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="card-title">Kho hang <button class="btn-small" onclick="openModal('inventoryModal')">+ Them</button></div>
-          <div id="inventoryList"><div class="empty-state">Nhan de tai...</div></div>
+          <div class="card-header"><span class="card-title">Kho hang</span><button class="add-btn" onclick="openModal('inventoryModal')">+</button></div>
+          <div id="inventoryList"><div class="loading"><div class="spinner"></div></div></div>
         </div>
       </div>
     </div>
@@ -209,16 +184,13 @@
     <div id="tab-finance" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="card-title">Tai chinh</div>
-          <button class="btn btn-secondary" onclick="openModal('incomeModal')">+ Thu</button>
-          <button class="btn btn-secondary" onclick="openModal('expenseModal')">+ Chi</button>
-          <table class="table-list" style="margin-top:12px">
-            <tr><th>Khoan</th><th>So tien</th></tr>
-            <tr><td>Doanh thu</td><td id="revenue">--</td></tr>
-            <tr><td>Chi phi</td><td id="expense">--</td></tr>
-            <tr><td>Loi nhuan</td><td id="profit">--</td></tr>
-          </table>
+          <div class="section-title">Tong quan</div>
+          <div class="stat-row"><span class="stat-label">Doanh thu</span><span class="stat-value positive" id="revenue">0 ₫</span></div>
+          <div class="stat-row"><span class="stat-label">Chi phi</span><span class="stat-value negative" id="expense">0 ₫</span></div>
+          <div class="stat-row"><span class="stat-label">Loi nhuan</span><span class="stat-value" id="profit">0 ₫</span></div>
         </div>
+        <button class="btn" onclick="openModal('incomeModal')">+ Thu</button>
+        <button class="btn btn-secondary" onclick="openModal('expenseModal')">+ Chi</button>
       </div>
     </div>
 
@@ -226,8 +198,8 @@
     <div id="tab-journal" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="card-title">Nhat ky trong cay <button class="btn-small" onclick="openModal('journalModal')">+ Them</button></div>
-          <div id="journalList"><div class="empty-state">Nhan de tai...</div></div>
+          <div class="card-header"><span class="card-title">Nhat ky</span><button class="add-btn" onclick="openModal('journalModal')">+</button></div>
+          <div id="journalList"><div class="loading"><div class="spinner"></div></div></div>
         </div>
       </div>
     </div>
@@ -236,348 +208,340 @@
     <div id="tab-settings" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="setting-item"><span class="setting-label">May chu</span><span class="setting-value" id="serverUrl">--</span></div>
-          <div class="setting-item"><span class="setting-label">Cap nhat</span><span class="setting-value" id="lastUpdate">--</span></div>
-          <div class="setting-item"><span class="setting-label">Phien ban</span><span class="setting-value">1.0.1</span></div>
+          <div class="section-title">Thong tin</div>
+          <div class="stat-row"><span class="stat-label">May chu</span><span class="stat-value" id="serverUrl">--</span></div>
+          <div class="stat-row"><span class="stat-label">Cap nhat cuoi</span><span class="stat-value" id="lastUpdate">--</span></div>
+          <div class="stat-row"><span class="stat-label">Phien ban</span><span class="stat-value">1.0.2</span></div>
         </div>
-        <button class="btn btn-secondary" id="clearCacheBtn">Xoa cache</button>
+        <button class="btn" id="syncBtn">Dong bo</button>
+        <button class="btn btn-danger" id="clearCacheBtn">Xoa du lieu</button>
       </div>
     </div>
     
-    <!-- NAVIGATION -->
+    <!-- NAV -->
     <nav class="nav">
-      <div class="nav-item active" data-tab="dashboard">📊</div>
-      <div class="nav-item" data-tab="crops">🌱</div>
-      <div class="nav-item" data-tab="devices">📱</div>
-      <div class="nav-item" data-tab="sensors">🌡️</div>
-      <div class="nav-item" data-tab="alerts">🔔</div>
-      <div class="nav-item" data-tab="automation">⚡</div>
-      <div class="nav-item" data-tab="inventory">📦</div>
-      <div class="nav-item" data-tab="finance">💰</div>
+      <div class="nav-item active" data-tab="dashboard"><span class="nav-icon">📊</span>Dashboard</div>
+      <div class="nav-item" data-tab="crops"><span class="nav-icon">🌱</span>Crops</div>
+      <div class="nav-item" data-tab="devices"><span class="nav-icon">📱</span>Devices</div>
+      <div class="nav-item" data-tab="sensors"><span class="nav-icon">🌡️</span>Sensors</div>
+      <div class="nav-item" data-tab="alerts"><span class="nav-icon">🔔</span>Alerts</div>
+      <div class="nav-item" data-tab="rules"><span class="nav-icon">⚡</span>Auto</div>
+      <div class="nav-item" data-tab="inventory"><span class="nav-icon">📦</span>Invent</div>
+      <div class="nav-item" data-tab="finance"><span class="nav-icon">💰</span>Finance</div>
     </nav>
   </div>
 
   <!-- MODALS -->
-  <div id="cropModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header"><span class="modal-title">Them cay trong</span><button class="modal-close" onclick="closeModal('cropModal')">&times;</button></div>
-      <div class="form-group"><label class="form-label">Ten cay</label><input type="text" class="form-input" id="cropName" placeholder="VD: Lua, Dong lot..."></div>
-      <div class="form-group"><label class="form-label">Giai doan</label><select class="form-select" id="cropStage"><option value="gieo">Gieo hat</option><option value="noc">Noc</option><option value="sinh">Sinh truong</option><option value="ra_hoa">Ra hoa</option><option value="dinh_qua">Dinh qua</option></select></div>
-      <div class="form-group"><label class="form-label">Ngay trong</label><input type="date" class="form-input" id="cropPlantedDate"></div>
-      <button class="btn" onclick="saveCrop()">Luu</button>
-    </div>
-  </div>
+  <div id="cropModal" class="modal"><div class="modal-content">
+    <div class="modal-header"><span class="modal-title">Them cay trong</span><button class="modal-close" onclick="closeModal('cropModal')">&times;</button></div>
+    <div class="form-group"><label class="form-label">Ten cay</label><input type="text" class="form-input" id="cropName" placeholder="VD: Lua, Dong lot..."></div>
+    <div class="form-group"><label class="form-label">Giai doan</label><select class="form-select" id="cropStage"><option value="gieo">Gieo hat</option><option value="noc">Noc</option><option value="sinh">Sinh truong</option><option value="ra_hoa">Ra hoa</option><option value="dinh_qua">Dinh qua</option></select></div>
+    <div class="form-group"><label class="form-label">Ngay trong</label><input type="date" class="form-input" id="cropPlantedDate"></div>
+    <button class="btn" onclick="saveData('crops')">Luu</button>
+  </div></div>
 
-  <div id="deviceModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header"><span class="modal-title">Them thiet bi</span><button class="modal-close" onclick="closeModal('deviceModal')">&times;</button></div>
-      <div class="form-group"><label class="form-label">Ten thiet bi</label><input type="text" class="form-input" id="deviceName" placeholder="VD: Cam bien nhiet do 1"></div>
-      <div class="form-group"><label class="form-label">Loai</label><select class="form-select" id="deviceType"><option value="sensor">Cam bien</option><option value="relay">Relay</option><option value="pump">Bom</option><option value="camera">Camera</option></select></div>
-      <div class="form-group"><label class="form-label">Vi tri</label><input type="text" class="form-input" id="deviceLocation" placeholder="VD: Vuon 1"></div>
-      <button class="btn" onclick="saveDevice()">Luu</button>
-    </div>
-  </div>
+  <div id="deviceModal" class="modal"><div class="modal-content">
+    <div class="modal-header"><span class="modal-title">Them thiet bi</span><button class="modal-close" onclick="closeModal('deviceModal')">&times;</button></div>
+    <div class="form-group"><label class="form-label">Ten thiet bi</label><input type="text" class="form-input" id="deviceName"></div>
+    <div class="form-group"><label class="form-label">Loai</label><select class="form-select" id="deviceType"><option value="sensor">Cam bien</option><option value="relay">Relay</option><option value="pump">Bom</option><option value="camera">Camera</option></select></div>
+    <div class="form-group"><label class="form-label">Vi tri</label><input type="text" class="form-input" id="deviceLocation"></div>
+    <button class="btn" onclick="saveData('devices')">Luu</button>
+  </div></div>
 
-  <div id="ruleModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header"><span class="modal-title">Them luat</span><button class="modal-close" onclick="closeModal('ruleModal')">&times;</button></div>
-      <div class="form-group"><label class="form-label">Ten luat</label><input type="text" class="form-input" id="ruleName" placeholder="VD: Bom nuoc khi han"></div>
-      <div class="form-group"><label class="form-label">Dieu kien</label><select class="form-select" id="ruleCondition"><option value="temperature > 30">Nhiet > 30C</option><option value="humidity < 40">Do am < 40%</option><option value="temperature < 15">Nhiet < 15C</option></select></div>
-      <div class="form-group"><label class="form-label">Hanh dong</label><select class="form-select" id="ruleAction"><option value="turn_on">Bat bom</option><option value="turn_off">Tat bom</option><option value="send_alert">Gui canh bao</option></select></div>
-      <button class="btn" onclick="saveRule()">Luu</button>
-    </div>
-  </div>
+  <div id="ruleModal" class="modal"><div class="modal-content">
+    <div class="modal-header"><span class="modal-title">Them luat</span><button class="modal-close" onclick="closeModal('ruleModal')">&times;</button></div>
+    <div class="form-group"><label class="form-label">Ten luat</label><input type="text" class="form-input" id="ruleName"></div>
+    <div class="form-group"><label class="form-label">Dieu kien</label><select class="form-select" id="ruleCondition"><option value="temperature > 30">Nhiet > 30°C</option><option value="humidity < 40">Do am < 40%</option><option value="temperature < 15">Nhiet < 15°C</option></select></div>
+    <div class="form-group"><label class="form-label">Hanh dong</label><select class="form-select" id="ruleAction"><option value="turn_on">Bat bom</option><option value="turn_off">Tat bom</option><option value="send_alert">Gui canh bao</option></select></div>
+    <button class="btn" onclick="saveData('rules')">Luu</button>
+  </div></div>
 
-  <div id="scheduleModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header"><span class="modal-title">Them lich trinh</span><button class="modal-close" onclick="closeModal('scheduleModal')">&times;</button></div>
-      <div class="form-group"><label class="form-label">Ten lich</label><input type="text" class="form-input" id="scheduleName" placeholder="VD: Tuoi nuoc sang"></div>
-      <div class="form-group"><label class="form-label">Thoi gian</label><input type="time" class="form-input" id="scheduleTime"></div>
-      <div class="form-group"><label class="form-label">Lap lai</label><select class="form-select" id="scheduleRepeat"><option value="daily">Hang ngay</option><option value="weekly">Hang tuan</option><option value="monthly">Hang thang</option></select></div>
-      <button class="btn" onclick="saveSchedule()">Luu</button>
-    </div>
-  </div>
+  <div id="scheduleModal" class="modal"><div class="modal-content">
+    <div class="modal-header"><span class="modal-title">Them lich trinh</span><button class="modal-close" onclick="closeModal('scheduleModal')">&times;</button></div>
+    <div class="form-group"><label class="form-label">Ten lich</label><input type="text" class="form-input" id="scheduleName"></div>
+    <div class="form-group"><label class="form-label">Thoi gian</label><input type="time" class="form-input" id="scheduleTime"></div>
+    <div class="form-group"><label class="form-label">Lap lai</label><select class="form-select" id="scheduleRepeat"><option value="daily">Hang ngay</option><option value="weekly">Hang tuan</option><option value="monthly">Hang thang</option></select></div>
+    <button class="btn" onclick="saveData('schedules')">Luu</button>
+  </div></div>
 
-  <div id="inventoryModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header"><span class="modal-title">Them mat hang</span><button class="modal-close" onclick="closeModal('inventoryModal')">&times;</button></div>
-      <div class="form-group"><label class="form-label">Ten mat hang</label><input type="text" class="form-input" id="itemName" placeholder="VD: Phan bon"></div>
-      <div class="form-group"><label class="form-label">So luong</label><input type="number" class="form-input" id="itemQuantity" placeholder="0"></div>
-      <div class="form-group"><label class="form-label">Don vi</label><select class="form-select" id="itemUnit"><option value="kg">kg</option><option value="bao">Bao</option><option value="chai">Chai</option><option value="cuon">Cuon</option></select></div>
-      <button class="btn" onclick="saveInventory()">Luu</button>
-    </div>
-  </div>
+  <div id="inventoryModal" class="modal"><div class="modal-content">
+    <div class="modal-header"><span class="modal-title">Them mat hang</span><button class="modal-close" onclick="closeModal('inventoryModal')">&times;</button></div>
+    <div class="form-group"><label class="form-label">Ten mat hang</label><input type="text" class="form-input" id="itemName"></div>
+    <div class="form-group"><label class="form-label">So luong</label><input type="number" class="form-input" id="itemQuantity"></div>
+    <div class="form-group"><label class="form-label">Don vi</label><select class="form-select" id="itemUnit"><option value="kg">kg</option><option value="bao">Bao</option><option value="chai">Chai</option><option value="cuon">Cuon</option></select></div>
+    <button class="btn" onclick="saveData('inventory')">Luu</button>
+  </div></div>
 
-  <div id="incomeModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header"><span class="modal-title">Thu tien</span><button class="modal-close" onclick="closeModal('incomeModal')">&times;</button></div>
-      <div class="form-group"><label class="form-label">Khoan thu</label><input type="text" class="form-input" id="incomeDesc" placeholder="VD: Ban rau"></div>
-      <div class="form-group"><label class="form-label">So tien</label><input type="number" class="form-input" id="incomeAmount" placeholder="0"></div>
-      <button class="btn" onclick="saveFinance('income')">Luu</button>
-    </div>
-  </div>
+  <div id="incomeModal" class="modal"><div class="modal-content">
+    <div class="modal-header"><span class="modal-title">Thu tien</span><button class="modal-close" onclick="closeModal('incomeModal')">&times;</button></div>
+    <div class="form-group"><label class="form-label">Mo ta</label><input type="text" class="form-input" id="incomeDesc"></div>
+    <div class="form-group"><label class="form-label">So tien</label><input type="number" class="form-input" id="incomeAmount"></div>
+    <button class="btn" onclick="saveData('income')">Luu</button>
+  </div></div>
 
-  <div id="expenseModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header"><span class="modal-title">Chi tien</span><button class="modal-close" onclick="closeModal('expenseModal')">&times;</button></div>
-      <div class="form-group"><label class="form-label">Khoan chi</label><input type="text" class="form-input" id="expenseDesc" placeholder="VD: Mua phan bon"></div>
-      <div class="form-group"><label class="form-label">So tien</label><input type="number" class="form-input" id="expenseAmount" placeholder="0"></div>
-      <button class="btn" onclick="saveFinance('expense')">Luu</button>
-    </div>
-  </div>
+  <div id="expenseModal" class="modal"><div class="modal-content">
+    <div class="modal-header"><span class="modal-title">Chi tien</span><button class="modal-close" onclick="closeModal('expenseModal')">&times;</button></div>
+    <div class="form-group"><label class="form-label">Mo ta</label><input type="text" class="form-input" id="expenseDesc"></div>
+    <div class="form-group"><label class="form-label">So tien</label><input type="number" class="form-input" id="expenseAmount"></div>
+    <button class="btn" onclick="saveData('expense')">Luu</button>
+  </div></div>
 
-  <div id="journalModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header"><span class="modal-title">Them nhat ky</span><button class="modal-close" onclick="closeModal('journalModal')">&times;</button></div>
-      <div class="form-group"><label class="form-label">Tieu de</label><input type="text" class="form-input" id="journalTitle" placeholder="VD: Tuoi nuoc"></div>
-      <div class="form-group"><label class="form-label">Noi dung</label><textarea class="form-textarea" id="journalContent" placeholder="Mo ta chi tiet..."></textarea></div>
-      <div class="form-group"><label class="form-label">Loai</label><select class="form-select" id="journalType"><option value="irrigation">Tuoi nuoc</option><option value="fertilizer">Bon phan</option><option value="pest">Phong tru</option><option value="harvest">Thu hoach</option><option value="other">Khac</option></select></div>
-      <button class="btn" onclick="saveJournal()">Luu</button>
-    </div>
-  </div>
+  <div id="journalModal" class="modal"><div class="modal-content">
+    <div class="modal-header"><span class="modal-title">Them nhat ky</span><button class="mobile-close" onclick="closeModal('journalModal')">&times;</button></div>
+    <div class="form-group"><label class="form-label">Tieu de</label><input type="text" class="form-input" id="journalTitle"></div>
+    <div class="form-group"><label class="form-label">Noi dung</label><textarea class="form-textarea" id="journalContent"></textarea></div>
+    <div class="form-group"><label class="form-label">Loai</label><select class="form-select" id="journalType"><option value="irrigation">Tuoi nuoc</option><option value="fertilizer">Bon phan</option><option value="pest">Phong tru</option><option value="harvest">Thu hoach</option><option value="other">Khac</option></select></div>
+    <button class="btn" onclick="saveData('journal')">Luu</button>
+  </div></div>
 
   <div id="toast" class="toast"></div>
 
   <script>
-    const API_BASE = (window.Capacitor && window.Capacitor.isNativePlatform) ? 'http://10.0.2.2:3000' : (window.location.origin || 'http://localhost:3000');
-    const AUTH_HEADER = { 'Content-Type': 'application/json' };
+    // CONFIG
+    const API_BASE = 'http://10.0.2.2:3000';
+    const USE_LOCAL = true; // offline-first mode
     
-    let ws = null;
-    let reconnectTimer = null;
+    // LOCAL STORAGE KEYS
+    const STORAGE = { crops: 'est_crops', devices: 'est_devices', rules: 'est_rules', schedules: 'est_schedules', inventory: 'est_inventory', finance: 'est_finance', journal: 'est_journal', alerts: 'est_alerts', sensors: 'est_sensors' };
+    
+    // APP STATE
+    let appData = { crops: [], devices: [], rules: [], schedules: [], inventory: [], finance: { income: 0, expense: 0, transactions: [] }, journal: [], alerts: [], sensors: {} };
     let currentTab = 'dashboard';
     
-    function showToast(msg, type='info') {
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.className = 'toast show ' + type;
-      setTimeout(() => t.classList.remove('show'), 3000);
+    // INIT
+    (function init() {
+      loadFromStorage();
+      initNavigation();
+      refreshAll();
+      updateSyncStatus();
+      document.getElementById('serverUrl').textContent = API_BASE;
+      document.getElementById('lastUpdate').textContent = new Date().toLocaleString('vi-VN');
+    })();
+    
+    function loadFromStorage() {
+      Object.keys(STORAGE).forEach(key => {
+        try {
+          const data = localStorage.getItem(STORAGE[key]);
+          if (data) appData[key] = JSON.parse(data);
+        } catch(e) { appData[key] = []; }
+      });
+      if (!appData.sensors.temperature) appData.sensors = { temperature: 25, humidity: 68 };
     }
     
-    function openModal(id) { document.getElementById(id).classList.add('active'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function saveToStorage() {
+      Object.keys(STORAGE).forEach(key => {
+        try { localStorage.setItem(STORAGE[key], JSON.stringify(appData[key])); } catch(e) {}
+      });
+    }
     
+    function updateSyncStatus() {
+      const badge = document.getElementById('syncStatus');
+      if (navigator.onLine) { badge.textContent = 'Online'; badge.classList.add('synced'); }
+      else { badge.textContent = 'Offline'; badge.classList.remove('synced'); }
+    }
+    
+    // NAVIGATION
     function initNavigation() {
-      document.querySelectorAll('.nav-item').forEach(item => {
-        item.addEventListener('click', function() {
-          const tabName = this.getAttribute('data-tab');
-          currentTab = tabName;
-          document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-          this.classList.add('active');
-          document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-          document.getElementById('tab-' + tabName).classList.add('active');
-          loadTabData(tabName);
+      document.querySelectorAll('.nav-item, .metric').forEach(el => {
+        el.addEventListener('click', function() {
+          const tab = this.getAttribute('data-tab') || this.getAttribute('data-nav');
+          if (tab) showTab(tab);
         });
       });
     }
     
-    function navTo(tabName) {
+    function showTab(tabName) {
       currentTab = tabName;
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       document.querySelector('.nav-item[data-tab="' + tabName + '"]').classList.add('active');
       document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
       document.getElementById('tab-' + tabName).classList.add('active');
-      loadTabData(tabName);
+      renderTab(tabName);
     }
     
-    function loadTabData(tabName) {
-      switch(tabName) {
-        case 'crops': loadCrops(); break;
-        case 'devices': loadDevices(); break;
-        case 'sensors': loadSensors(); break;
-        case 'alerts': loadAlerts(); break;
-        case 'rules': loadRules(); break;
-        case 'schedules': loadSchedules(); break;
-        case 'automation': loadAutomation(); break;
-        case 'inventory': loadInventory(); break;
-        case 'finance': loadFinance(); break;
-        case 'journal': loadJournal(); break;
-        case 'settings': 
-          document.getElementById('serverUrl').textContent = API_BASE;
-          document.getElementById('lastUpdate').textContent = new Date().toLocaleString('vi-VN');
+    // RENDER
+    function renderTab(tab) {
+      switch(tab) {
+        case 'dashboard': renderDashboard(); break;
+        case 'crops': renderList('cropList', appData.crops, 'Ten cay', 'Giai doan'); break;
+        case 'devices': renderDeviceList(); break;
+        case 'sensors': renderSensors(); break;
+        case 'alerts': renderList('alertList', appData.alerts, 'Noi dung', 'Thoi gian'); break;
+        case 'rules': renderRules(); break;
+        case 'inventory': renderInventory(); break;
+        case 'finance': renderFinance(); break;
+        case 'journal': renderList('journalList', appData.journal, 'Tieu de', 'Ngay'); break;
+      }
+    }
+    
+    function renderDashboard() {
+      document.getElementById('tempValue').innerHTML = (appData.sensors.temperature || '--') + '<span class="card-unit">°C</span>';
+      document.getElementById('humidityValue').innerHTML = (appData.sensors.humidity || '--') + '<span class="card-unit">%</span>';
+      document.getElementById('deviceCount').textContent = appData.devices.length;
+      document.getElementById('alertCount').textContent = appData.alerts.length;
+      document.getElementById('cropCount').textContent = appData.crops.length;
+      renderDeviceList('deviceList');
+    }
+    
+    function renderDeviceList(targetId) {
+      const id = targetId || 'deviceListFull';
+      const list = document.getElementById(id);
+      if (!list) return;
+      if (appData.devices.length === 0) { list.innerHTML = '<div class="empty-state">Chua co thiet bi</div>'; return; }
+      list.innerHTML = appData.devices.map(d => 
+        '<div class="data-item"><div class="item-info"><div class="item-name">' + (d.name||'-') + '</div><div class="item-detail">' + (d.type||'-') + ' | ' + (d.location||'-') + '</div></div><span class="item-status ' + (d.status||'offline') + '">' + (d.status||'offline') + '</span></div>'
+      ).join('');
+    }
+    
+    function renderList(targetId, data, nameKey, detailKey) {
+      const list = document.getElementById(targetId);
+      if (!list) return;
+      if (!data || data.length === 0) { list.innerHTML = '<div class="empty-state">Chua co du lieu</div>'; return; }
+      list.innerHTML = data.map(item => 
+        '<div class="data-item"><div class="item-info"><div class="item-name">' + (item[nameKey.toLowerCase()]||item[nameKey]||'-') + '</div><div class="item-detail">' + (item[detailKey.toLowerCase()]||item[detailKey]||'-') + '</div></div></div>'
+      ).join('');
+    }
+    
+    function renderSensors() {
+      const s = appData.sensors;
+      const html = Object.keys(s).map(k => '<div class="stat-row"><span class="stat-label">' + k + '</span><span class="stat-value">' + s[k] + '</span></div>').join('');
+      document.getElementById('sensorData').innerHTML = html || '<div class="empty-state">Chua co du lieu</div>';
+    }
+    
+    function renderRules() {
+      const list = document.getElementById('ruleList');
+      if (appData.rules.length === 0) list.innerHTML = '<div class="empty-state">Chua co luat</div>';
+      else list.innerHTML = appData.rules.map(r => '<div class="data-item"><div class="item-info"><div class="item-name">' + (r.name||'-') + '</div><div class="item-detail">' + (r.condition||'-') + '</div></div></div>').join('');
+      
+      const list2 = document.getElementById('scheduleList');
+      if (appData.schedules.length === 0) list2.innerHTML = '<div class="empty-state">Chua co lich trinh</div>';
+      else list2.innerHTML = appData.schedules.map(s => '<div class="data-item"><div class="item-info"><div class="item-name">' + (s.name||'-') + '</div><div class="item-detail">' + (s.time||'-') + '</div></div></div>').join('');
+    }
+    
+    function renderInventory() {
+      const list = document.getElementById('inventoryList');
+      if (appData.inventory.length === 0) { list.innerHTML = '<div class="empty-state">Chua co hang</div>'; return; }
+      list.innerHTML = appData.inventory.map(i => 
+        '<div class="stat-row"><span class="stat-label">' + (i.name||'-') + '</span><span class="stat-value">' + (i.quantity||0) + ' ' + (i.unit||'') + '</span></div>'
+      ).join('');
+    }
+    
+    function renderFinance() {
+      const f = appData.finance;
+      const rev = f.income || 0;
+      const exp = f.expense || 0;
+      document.getElementById('revenue').textContent = rev.toLocaleString('vi-VN') + ' ₫';
+      document.getElementById('expense').textContent = exp.toLocaleString('vi-VN') + ' ₫';
+      document.getElementById('profit').textContent = (rev - exp).toLocaleString('vi-VN') + ' ₫';
+    }
+    
+    // SAVE DATA
+    function saveData(type) {
+      const id = type + 'Modal';
+      let item = {};
+      
+      switch(type) {
+        case 'crops':
+          item = { name: document.getElementById('cropName').value, stage: document.getElementById('cropStage').value, plantedDate: document.getElementById('cropPlantedDate').value };
+          if (!item.name) return showToast('Nhap ten cay', 'error');
+          appData.crops.push({ ...item, id: Date.now() });
+          break;
+        case 'devices':
+          item = { name: document.getElementById('deviceName').value, type: document.getElementById('deviceType').value, location: document.getElementById('deviceLocation').value, status: 'online' };
+          if (!item.name) return showToast('Nhap ten thiet bi', 'error');
+          appData.devices.push({ ...item, id: Date.now() });
+          break;
+        case 'rules':
+          item = { name: document.getElementById('ruleName').value, condition: document.getElementById('ruleCondition').value, action: document.getElementById('ruleAction').value };
+          if (!item.name) return showToast('Nhap ten luat', 'error');
+          appData.rules.push({ ...item, id: Date.now(), active: true });
+          break;
+        case 'schedules':
+          item = { name: document.getElementById('scheduleName').value, time: document.getElementById('scheduleTime').value, repeat: document.getElementById('scheduleRepeat').value };
+          if (!item.name) return showToast('Nhap ten lich', 'error');
+          appData.schedules.push({ ...item, id: Date.now(), active: true });
+          break;
+        case 'inventory':
+          item = { name: document.getElementById('itemName').value, quantity: parseInt(document.getElementById('itemQuantity').value)||0, unit: document.getElementById('itemUnit').value };
+          if (!item.name) return showToast('Nhap ten mat hang', 'error');
+          appData.inventory.push({ ...item, id: Date.now() });
+          break;
+        case 'income':
+          const incAmt = parseInt(document.getElementById('incomeAmount').value)||0;
+          const incDesc = document.getElementById('incomeDesc').value;
+          if (!incDesc || !incAmt) return showToast('Nhap day du', 'error');
+          appData.finance.income += incAmt;
+          appData.finance.transactions.push({ type: 'income', desc: incDesc, amount: incAmt, date: new Date().toISOString() });
+          break;
+        case 'expense':
+          const expAmt = parseInt(document.getElementById('expenseAmount').value)||0;
+          const expDesc = document.getElementById('expenseDesc').value;
+          if (!expDesc || !expAmt) return showToast('Nhap day du', 'error');
+          appData.finance.expense += expAmt;
+          appData.finance.transactions.push({ type: 'expense', desc: expDesc, amount: expAmt, date: new Date().toISOString() });
+          break;
+        case 'journal':
+          item = { title: document.getElementById('journalTitle').value, content: document.getElementById('journalContent').value, type: document.getElementById('journalType').value };
+          if (!item.title) return showToast('Nhap tieu de', 'error');
+          appData.journal.push({ ...item, id: Date.now(), date: new Date().toISOString() });
           break;
       }
+      
+      saveToStorage();
+      closeModal(id);
+      showToast('Da luu!', 'success');
+      showTab(currentTab);
     }
     
-    async function apiCall(endpoint, method='GET', body=null) {
+    // API SYNC
+    async function refreshAll() {
+      showToast('Dang tai...', 'info');
+      
+      // Fetch from local network if available
       try {
-        const opts = { method, headers: AUTH_HEADER };
-        if (body) opts.body = JSON.stringify(body);
-        const res = await fetch(API_BASE + endpoint, opts);
-        if (!res.ok) throw new Error('API error');
-        return await res.json();
-      } catch (err) {
-        console.error(err);
-        showToast('Loi: ' + err.message, 'error');
-        return null;
+        const res = await fetch(API_BASE + '/api/sensors/latest', { method: 'GET', headers: { 'Content-Type': 'application/json' } });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.temperature) appData.sensors = { temperature: data.temperature, humidity: data.humidity };
+          if (data.devices) appData.devices = data.devices;
+          document.getElementById('syncStatus').textContent = 'Da sync';
+          document.getElementById('syncStatus').classList.add('synced');
+        }
+      } catch(e) {
+        // Use local data
+        document.getElementById('syncStatus').textContent = 'Offline';
+        document.getElementById('syncStatus').classList.remove('synced');
       }
+      
+      saveToStorage();
+      renderDashboard();
+      showToast('Hoan tat', 'success');
     }
     
-    // CROPS
-    async function loadCrops() {
-      const crops = await apiCall('/api/crops');
-      const list = document.getElementById('cropList');
-      if (crops && crops.length > 0) {
-        list.innerHTML = crops.map(c => '<div class="crop-card"><div class="crop-name">' + (c.name||'-') + '</div><div class="crop-info">' + (c.stage||'-') + ' | ' + (c.plantedDate||'-') + '</div></div>').join('');
-      } else { list.innerHTML = '<div class="empty-state">Chua co cay trong</div>'; }
+    // UTILS
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function showToast(msg, type='info') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + type;
+      setTimeout(() => t.classList.remove('show'), 2500);
     }
     
-    async function saveCrop() {
-      const body = { name: document.getElementById('cropName').value, stage: document.getElementById('cropStage').value, plantedDate: document.getElementById('cropPlantedDate').value };
-      if (!body.name) return showToast('Nhap ten cay', 'error');
-      const result = await apiCall('/api/crops', 'POST', body);
-      if (result) { showToast('Da luu', 'success'); closeModal('cropModal'); loadCrops(); }
-    }
+    // EVENT LISTENERS
+    document.getElementById('refreshBtn').addEventListener('click', refreshAll);
+    document.getElementById('syncBtn').addEventListener('click', refreshAll);
+    document.getElementById('clearCacheBtn').addEventListener('click', function() {
+      if (confirm('Xoa tat ca du lieu?')) {
+        localStorage.clear();
+        appData = { crops: [], devices: [], rules: [], schedules: [], inventory: [], finance: { income: 0, expense: 0, transactions: [] }, journal: [], alerts: [], sensors: {} };
+        showTab('dashboard');
+        showToast('Da xoa', 'success');
+      }
+    });
     
-    // DEVICES
-    async function loadDevices() {
-      const devices = await apiCall('/api/devices');
-      document.getElementById('deviceCount').textContent = devices?.length || 0;
-      const list = document.getElementById('deviceListFull');
-      if (devices && devices.length > 0) {
-        list.innerHTML = devices.map(d => '<li class="device-item"><span class="device-name">' + (d.name||'-') + '</span><span class="device-status ' + (d.status||'offline') + '">' + (d.status||'offline') + '</span></li>').join('');
-      } else { list.innerHTML = '<div class="empty-state">Chua co thiet bi</div>'; }
-    }
-    
-    async function saveDevice() {
-      const body = { name: document.getElementById('deviceName').value, type: document.getElementById('deviceType').value, location: document.getElementById('deviceLocation').value };
-      if (!body.name) return showToast('Nhap ten thiet bi', 'error');
-      const result = await apiCall('/api/devices', 'POST', body);
-      if (result) { showToast('Da luu', 'success'); closeModal('deviceModal'); loadDevices(); }
-    }
-    
-    // SENSORS
-    async function loadSensors() {
-      const data = await apiCall('/api/sensors/latest');
-      let html = '';
-      for (const [k, v] of Object.entries(data||{})) html += '<div class="stat-row"><span class="stat-label">' + k + '</span><span class="stat-value">' + v + '</span></div>';
-      document.getElementById('sensorData').innerHTML = html || '<div class="empty-state">Khong co du lieu</div>';
-    }
-    
-    // ALERTS
-    async function loadAlerts() {
-      const alerts = await apiCall('/api/alerts?limit=10');
-      document.getElementById('alertCount').textContent = alerts?.length || 0;
-      const list = document.getElementById('alertList');
-      if (alerts && alerts.length > 0) {
-        list.innerHTML = alerts.slice(0,5).map(a => '<div class="alert-item"><div class="alert-title">' + (a.message||'Canh bao') + '</div><div class="alert-time">' + (a.timestamp||'') + '</div></div>').join('');
-      } else { list.innerHTML = '<div class="empty-state">Khong co canh bao</div>'; }
-    }
-    
-    // RULES
-    async function loadRules() {
-      const rules = await apiCall('/api/rules');
-      const list = document.getElementById('ruleList');
-      if (rules && rules.length > 0) {
-        list.innerHTML = rules.map(r => '<div class="crop-card"><div class="crop-name">' + (r.name||'-') + '</div><div class="crop-info">' + (r.condition||'-') + ' -> ' + (r.action||'-') + '</div></div>').join('');
-      } else { list.innerHTML = '<div class="empty-state">Chua co luat</div>'; }
-    }
-    
-    async function saveRule() {
-      const body = { name: document.getElementById('ruleName').value, condition: document.getElementById('ruleCondition').value, action: document.getElementById('ruleAction').value };
-      if (!body.name) return showToast('Nhap ten luat', 'error');
-      const result = await apiCall('/api/rules', 'POST', body);
-      if (result) { showToast('Da luu', 'success'); closeModal('ruleModal'); loadRules(); }
-    }
-    
-    // SCHEDULES
-    async function loadSchedules() {
-      const scheds = await apiCall('/api/schedules');
-      const list = document.getElementById('scheduleList');
-      if (scheds && scheds.length > 0) {
-        list.innerHTML = scheds.map(s => '<div class="crop-card"><div class="crop-name">' + (s.name||'-') + '</div><div class="crop-info">' + (s.time||'-') + ' | ' + (s.repeat||'-') + '</div></div>').join('');
-      } else { list.innerHTML = '<div class="empty-state">Chua co lich trinh</div>'; }
-    }
-    
-    async function saveSchedule() {
-      const body = { name: document.getElementById('scheduleName').value, time: document.getElementById('scheduleTime').value, repeat: document.getElementById('scheduleRepeat').value };
-      if (!body.name) return showToast('Nhap ten lich', 'error');
-      const result = await apiCall('/api/schedules', 'POST', body);
-      if (result) { showToast('Da luu', 'success'); closeModal('scheduleModal'); loadSchedules(); }
-    }
-    
-    // INVENTORY
-    async function loadInventory() {
-      const items = await apiCall('/api/inventory');
-      const list = document.getElementById('inventoryList');
-      if (items && items.length > 0) {
-        list.innerHTML = '<table class="table-list"><tr><th>Mat hang</th><th>SL</th></tr>' + items.slice(0,10).map(i => '<tr><td>'+(i.name||'-')+'</td><td>'+(i.quantity||0)+'</td></tr>').join('') + '</table>';
-      } else { list.innerHTML = '<div class="empty-state">Chua co hang</div>'; }
-    }
-    
-    async function saveInventory() {
-      const body = { name: document.getElementById('itemName').value, quantity: parseInt(document.getElementById('itemQuantity').value)||0, unit: document.getElementById('itemUnit').value };
-      if (!body.name) return showToast('Nhap ten mat hang', 'error');
-      const result = await apiCall('/api/inventory', 'POST', body);
-      if (result) { showToast('Da luu', 'success'); closeModal('inventoryModal'); loadInventory(); }
-    }
-    
-    // FINANCE
-    async function loadFinance() {
-      const data = await apiCall('/api/finance/summary');
-      document.getElementById('revenue').textContent = data?.revenue || data?.totalIncome || 0;
-      document.getElementById('expense').textContent = data?.expense || data?.totalExpense || 0;
-      document.getElementById('profit').textContent = data?.profit || 0;
-    }
-    
-    async function saveFinance(type) {
-      const amount = parseInt(type === 'income' ? document.getElementById('incomeAmount').value : document.getElementById('expenseAmount').value);
-      const desc = type === 'income' ? document.getElementById('incomeDesc').value : document.getElementById('expenseDesc').value;
-      if (!desc || !amount) return showToast('Nhap day du thong tin', 'error');
-      const body = { type, description: desc, amount };
-      const result = await apiCall('/api/finance/transaction', 'POST', body);
-      if (result) { showToast('Da luu', 'success'); closeModal(type + 'Modal'); loadFinance(); }
-    }
-    
-    // JOURNAL
-    async function loadJournal() {
-      const entries = await apiCall('/api/journal?limit=10');
-      const list = document.getElementById('journalList');
-      if (entries && entries.length > 0) {
-        list.innerHTML = entries.map(e => '<div class="crop-card"><div class="crop-name">' + (e.title||'-') + '</div><div class="crop-info">' + (e.date||'') + '</div></div>').join('');
-      } else { list.innerHTML = '<div class="empty-state">Chua co ban ghi</div>'; }
-    }
-    
-    async function saveJournal() {
-      const body = { title: document.getElementById('journalTitle').value, content: document.getElementById('journalContent').value, type: document.getElementById('journalType').value };
-      if (!body.title) return showToast('Nhap tieu de', 'error');
-      const result = await apiCall('/api/journal/manual', 'POST', body);
-      if (result) { showToast('Da luu', 'success'); closeModal('journalModal'); loadJournal(); }
-    }
-    
-    // AUTOMATION
-    async function loadAutomation() {
-      const [rules, scheds] = await Promise.all([apiCall('/api/rules'), apiCall('/api/schedules')]);
-      document.getElementById('automationList').innerHTML = '<div class="crop-card"><strong>Luat: ' + (rules?.length||0) + '</strong></div><div class="crop-card"><strong>Lich: ' + (scheds?.length||0) + '</strong></div>';
-    }
-    
-    // WEBSOCKET
-    function connect() {
-      try {
-        const WS_URL = (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + (window.location.hostname || 'localhost') + ':3000/ws';
-        ws = new WebSocket(WS_URL);
-        ws.onopen = () => { document.getElementById('connectionStatus').classList.remove('offline'); };
-        ws.onclose = () => { document.getElementById('connectionStatus').classList.add('offline'); };
-        ws.onmessage = (e) => { try { const d = JSON.parse(e.data); if (d.temperature) updateDashboard(d); } catch(e){} };
-      } catch (err) { console.error(err); }
-    }
-    
-    function updateDashboard(data) {
-      if (data.temperature) document.getElementById('tempValue').innerHTML = data.temperature + '<span class="card-unit">C</span>';
-      if (data.humidity) document.getElementById('humidityValue').innerHTML = data.humidity + '<span class="card-unit">%</span>';
-    }
-    
-    async function fetchData() {
-      const data = await apiCall('/api/sensors/latest');
-      if (data) { updateDashboard(data); localStorage.setItem('dashboardData', JSON.stringify(data)); }
-    }
-    
-    // INIT
-    document.getElementById('refreshBtn').addEventListener('click', fetchData);
-    document.getElementById('clearCacheBtn').addEventListener('click', () => { localStorage.clear(); showToast('Da xoa cache'); });
-    
-    initNavigation();
-    connect();
-    fetchData();
+    window.addEventListener('online', updateSyncStatus);
+    window.addEventListener('offline', updateSyncStatus);
   </script>
 </body>
 </html>

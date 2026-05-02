@@ -1,116 +1,32 @@
 /**
  * Labor Service - Quản lý nhân công nông nghiệp
- * V5.1.0 - Converted to TypeScript - Phase 1
+ * V5.1.0 - Modern and Scientific Features
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import db from '../config/database';
+import { getOne, getAll, getDatabase } from '../config/database';
 import logger from '../config/logger';
 
-export interface PositionConfig {
+const db = getDatabase();
+
+interface PositionConfig {
   label: string;
   icon: string;
   level: string;
 }
 
-export interface SkillLevelConfig {
+interface SkillConfig {
   label: string;
   multiplier: number;
 }
 
-export interface TaskTypeConfig {
+interface TaskConfig {
   label: string;
   icon: string;
   category: string;
 }
 
-export interface Worker {
-  id: string;
-  farm_id?: string;
-  worker_code: string;
-  worker_name: string;
-  worker_name_vi?: string;
-  identity_number?: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-  birth_date?: string;
-  gender?: string;
-  position?: string;
-  skill_level?: string;
-  salary?: number;
-  start_date?: string;
-  status: string;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface TaskRecord {
-  id: string;
-  worker_id: string;
-  task_type: string;
-  description?: string;
-  date: string;
-  hours_worked?: number;
-  productivity?: number;
-  location?: string;
-  crop_id?: string;
-  created_at: string;
-}
-
-export interface AttendanceRecord {
-  id: string;
-  worker_id: string;
-  date: string;
-  check_in?: string;
-  check_out?: string;
-  hours_worked?: number;
-  status: string;
-  notes?: string;
-  created_at: string;
-}
-
-export interface CreateWorkerData {
-  worker_name: string;
-  farm_id?: string;
-  worker_code?: string;
-  worker_name_vi?: string;
-  identity_number?: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-  birth_date?: string;
-  gender?: string;
-  position?: string;
-  skill_level?: string;
-  salary?: number;
-  start_date?: string;
-  notes?: string;
-}
-
-export interface RecordTaskData {
-  worker_id: string;
-  task_type: string;
-  description?: string;
-  date?: string;
-  hours_worked?: number;
-  productivity?: number;
-  location?: string;
-  crop_id?: string;
-}
-
-export interface RecordAttendanceData {
-  worker_id: string;
-  date?: string;
-  check_in?: string;
-  check_out?: string;
-  hours_worked?: number;
-  status?: string;
-  notes?: string;
-}
-
-export const WORKER_POSITIONS: Record<string, PositionConfig> = {
+const WORKER_POSITION_LIST: Record<string, PositionConfig> = {
   manager: { label: 'Quản lý', icon: '👨‍💼', level: 'senior' },
   supervisor: { label: 'Giám sát', icon: '👷', level: 'mid' },
   worker: { label: 'Công nhân', icon: '👨‍🌾', level: 'junior' },
@@ -119,14 +35,14 @@ export const WORKER_POSITIONS: Record<string, PositionConfig> = {
   guard: { label: 'Bảo vệ', icon: '👮', level: 'junior' }
 };
 
-export const SKILL_LEVELS: Record<string, SkillLevelConfig> = {
+const SKILL_LEVEL_MAP: Record<string, SkillConfig> = {
   junior: { label: 'Mới vào', multiplier: 1.0 },
   mid: { label: 'Có kinh nghiệm', multiplier: 1.2 },
   senior: { label: 'Kinh nghiệm cao', multiplier: 1.5 },
   expert: { label: 'Chuyên gia', multiplier: 2.0 }
 };
 
-export const TASK_TYPES: Record<string, TaskTypeConfig> = {
+const TASK_TYPE_LIST: Record<string, TaskConfig> = {
   planting: { label: 'Gieo trồng', icon: '🌱', category: 'crop' },
   fertilizing: { label: 'Bón phân', icon: '🌿', category: 'crop' },
   spraying: { label: 'Phun thuốc', icon: '💧', category: 'crop' },
@@ -139,7 +55,33 @@ export const TASK_TYPES: Record<string, TaskTypeConfig> = {
   monitoring: { label: 'Giám sát', icon: '👁️', category: 'other' }
 };
 
-export function createWorker(data: CreateWorkerData): string {
+interface WorkerData {
+  worker_name: string;
+  worker_code?: string;
+  position?: string;
+  farm_id?: string;
+  phone?: string;
+  email?: string;
+  skill_level?: string;
+  daily_rate?: number;
+  status?: string;
+}
+
+interface Worker {
+  id: string;
+  worker_name: string;
+  worker_code: string;
+  position: string;
+  farm_id: string;
+  phone: string;
+  email: string;
+  skill_level: string;
+  daily_rate: number;
+  status: string;
+  created_at: string;
+}
+
+function createWorker(data: WorkerData): Worker {
   if (!data || !data.worker_name) {
     throw new Error('Missing required field: worker_name');
   }
@@ -147,216 +89,141 @@ export function createWorker(data: CreateWorkerData): string {
   const now = new Date().toISOString();
   const workerCode = data.worker_code || 'WRK-' + Date.now().toString(36).toUpperCase();
 
-  db.run(`
-    INSERT INTO workers (
-      id, farm_id, worker_code, worker_name, worker_name_vi, identity_number,
-      phone, email, address, birth_date, gender, position, skill_level,
-      salary, start_date, status, notes, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [
+  const values = [
     id,
-    data.farm_id || null,
-    workerCode,
     data.worker_name,
-    data.worker_name_vi || data.worker_name,
-    data.identity_number || '',
+    workerCode,
+    data.position || 'worker',
+    data.farm_id || 'default',
     data.phone || '',
     data.email || '',
-    data.address || '',
-    data.birth_date || null,
-    data.gender || '',
-    data.position || 'worker',
     data.skill_level || 'junior',
-    data.salary || 0,
-    data.start_date || now.split('T')[0],
-    'active',
-    data.notes || null,
+    data.daily_rate || 0,
+    data.status || 'active',
     now,
     now
-  ]);
+  ];
 
-  logger.info(`Tạo worker mới: ${data.worker_name} (${id})`);
-  return id;
-}
-
-export function getWorker(workerId: string): Worker | null {
-  return db.get('SELECT * FROM workers WHERE id = ?', [workerId]) as Worker | null;
-}
-
-export function getWorkersByFarm(farmId: string): Worker[] {
-  return db.all('SELECT * FROM workers WHERE farm_id = ? AND status = ? ORDER BY position, worker_name', [farmId, 'active']) as Worker[];
-}
-
-export function getWorkersByPosition(farmId: string, position: string): Worker[] {
-  return db.all('SELECT * FROM workers WHERE farm_id = ? AND position = ?', [farmId, position]) as Worker[];
-}
-
-export function updateWorker(workerId: string, data: Partial<CreateWorkerData>): boolean {
   try {
-    const updates: string[] = [];
-    const values: any[] = [];
+    const dbObj = db as { run: (sql: string, params: unknown[]) => void };
+    dbObj.run(
+      `INSERT INTO workers (id, worker_name, worker_code, position, farm_id, phone, email, skill_level, daily_rate, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      values
+    );
 
-    Object.keys(data).forEach(key => {
-      if (key !== 'farm_id' && (data as any)[key] !== undefined) {
-        updates.push(`${key} = ?`);
-        values.push((data as any)[key]);
-      }
-    });
+    return {
+      id,
+      worker_name: data.worker_name,
+      worker_code: workerCode,
+      position: data.position || 'worker',
+      farm_id: data.farm_id || 'default',
+      phone: data.phone || '',
+      email: data.email || '',
+      skill_level: data.skill_level || 'junior',
+      daily_rate: data.daily_rate || 0,
+      status: data.status || 'active',
+      created_at: now
+    };
+  } catch (error) {
+    logger.error('[Labor] Create worker error:', error);
+    throw error;
+  }
+}
 
-    updates.push('updated_at = ?');
-    values.push(new Date().toISOString());
-    values.push(workerId);
+function getWorkers(farmId?: string, options?: { position?: string; status?: string }): Worker[] {
+  let query = 'SELECT * FROM workers';
+  const params: unknown[] = [];
 
-    db.run(`UPDATE workers SET ${updates.join(', ')} WHERE id = ?`, values);
+  if (farmId || options?.position || options?.status) {
+    const conditions: string[] = [];
+    if (farmId) {
+      conditions.push('farm_id = ?');
+      params.push(farmId);
+    }
+    if (options?.position) {
+      conditions.push('position = ?');
+      params.push(options.position);
+    }
+    if (options?.status) {
+      conditions.push('status = ?');
+      params.push(options.status);
+    }
+    query += ' WHERE ' + conditions.join(' AND ');
+  }
+
+  query += ' ORDER BY created_at DESC';
+
+  return getAll(query, params) as Worker[];
+}
+
+function getWorkerById(id: string): Worker | null {
+  const result = getOne('SELECT * FROM workers WHERE id = ?', [id]);
+  return result as Worker | null;
+}
+
+function updateWorker(id: string, updates: Partial<WorkerData>): Worker | null {
+  const existing = getWorkerById(id);
+  if (!existing) return null;
+
+  const fields = Object.keys(updates).filter(k => k !== 'id');
+  if (fields.length === 0) return existing;
+
+  const setClause = fields.map(f => `${f} = ?`).join(', ');
+  const values = fields.map(f => updates[f as keyof WorkerData]);
+
+  try {
+    const dbObj = db as { run: (sql: string, params: unknown[]) => void };
+    dbObj.run(`UPDATE workers SET ${setClause}, updated_at = datetime("now") WHERE id = ?`, [...values, id]);
+    return getWorkerById(id);
+  } catch (error) {
+    logger.error('[Labor] Update worker error:', error);
+    return null;
+  }
+}
+
+function deleteWorker(id: string): boolean {
+  try {
+    const dbObj = db as { run: (sql: string, params: unknown[]) => void };
+    dbObj.run('DELETE FROM workers WHERE id = ?', [id]);
     return true;
-  } catch (error: any) {
-    logger.error('Update worker error:', error.message);
+  } catch (error) {
+    logger.error('[Labor] Delete worker error:', error);
     return false;
   }
 }
 
-export function deleteWorker(workerId: string): boolean {
+function recordAttendance(workerId: string, date: string, status: string, notes?: string): boolean {
+  const id = uuidv4();
   try {
-    db.run('UPDATE workers SET status = ?, updated_at = ? WHERE id = ?', ['inactive', new Date().toISOString(), workerId]);
+    const dbObj = db as { run: (sql: string, params: unknown[]) => void };
+    dbObj.run(
+      'INSERT INTO worker_attendance (id, worker_id, date, status, notes, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))',
+      [id, workerId, date, status, notes || '']
+    );
     return true;
-  } catch (error: any) {
-    logger.error('Delete worker error:', error.message);
+  } catch (error) {
+    logger.error('[Labor] Record attendance error:', error);
     return false;
   }
 }
 
-export function recordTask(data: RecordTaskData): string {
-  const id = uuidv4();
-  const now = new Date().toISOString();
-
-  db.run(`
-    INSERT INTO labor_tasks (
-      id, worker_id, task_type, description, date, hours_worked,
-      productivity, location, crop_id, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [
-    id,
-    data.worker_id,
-    data.task_type,
-    data.description || null,
-    data.date || now.split('T')[0],
-    data.hours_worked || 0,
-    data.productivity || null,
-    data.location || null,
-    data.crop_id || null,
-    now
-  ]);
-
-  logger.info(`Ghi nhận task cho worker: ${data.worker_id}`);
-  return id;
+function getAttendance(workerId: string, startDate: string, endDate: string) {
+  return getAll(
+    'SELECT * FROM worker_attendance WHERE worker_id = ? AND date BETWEEN ? AND ? ORDER BY date DESC',
+    [workerId, startDate, endDate]
+  );
 }
 
-export function getTasksByWorker(workerId: string): TaskRecord[] {
-  return db.all('SELECT * FROM labor_tasks WHERE worker_id = ? ORDER BY date DESC', [workerId]) as TaskRecord[];
-}
-
-export function getTasksByDate(farmId: string, date: string): TaskRecord[] {
-  return db.all(`
-    SELECT lt.*, w.worker_name, w.position 
-    FROM labor_tasks lt
-    JOIN workers w ON lt.worker_id = w.id
-    WHERE w.farm_id = ? AND lt.date = ?
-    ORDER BY lt.task_type
-  `, [farmId, date]) as TaskRecord[];
-}
-
-export function recordAttendance(data: RecordAttendanceData): string {
-  const id = uuidv4();
-  const now = new Date().toISOString();
-  const date = data.date || now.split('T')[0];
-
-  db.run(`
-    INSERT INTO labor_attendance (
-      id, worker_id, date, check_in, check_out, hours_worked, status, notes, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [
-    id,
-    data.worker_id,
-    date,
-    data.check_in || null,
-    data.check_out || null,
-    data.hours_worked || 0,
-    data.status || 'present',
-    data.notes || null,
-    now
-  ]);
-
-  return id;
-}
-
-export function getAttendanceByWorker(workerId: string): AttendanceRecord[] {
-  return db.all('SELECT * FROM labor_attendance WHERE worker_id = ? ORDER BY date DESC', [workerId]) as AttendanceRecord[];
-}
-
-export function getAttendanceByDate(farmId: string, date: string): (AttendanceRecord & { worker_name: string })[] {
-  return db.all(`
-    SELECT la.*, w.worker_name, w.position
-    FROM labor_attendance la
-    JOIN workers w ON la.worker_id = w.id
-    WHERE w.farm_id = ? AND la.date = ?
-    ORDER BY w.position, w.worker_name
-  `, [farmId, date]) as (AttendanceRecord & { worker_name: string })[];
-}
-
-export function getLaborStats(farmId: string): {
-  totalWorkers: number;
-  activeWorkers: number;
-  totalTasks: number;
-  pendingTasks: number;
-  attendanceRate: number;
-} {
-  const workers = getWorkersByFarm(farmId);
-  
-  const tasks = db.all('SELECT COUNT(*) as total FROM labor_tasks lt JOIN workers w ON lt.worker_id = w.id WHERE w.farm_id = ?', [farmId]) as Array<{ total: number }>;
-  
-  const attendance = db.all(`
-    SELECT COUNT(*) as present, COUNT(*) as total
-    FROM labor_attendance la
-    JOIN workers w ON la.worker_id = w.id
-    WHERE w.farm_id = ? AND la.date = date('now')
-  `, [farmId]) as Array<{ present: number; total: number }>;
-
-  return {
-    totalWorkers: workers.length,
-    activeWorkers: workers.filter(w => w.status === 'active').length,
-    totalTasks: tasks[0]?.total || 0,
-    pendingTasks: 0,
-    attendanceRate: attendance[0]?.total ? (attendance[0].present / attendance[0].total) * 100 : 0
-  };
-}
-
-export function calculateWorkerProductivity(workerId: string, startDate?: string, endDate?: string): number {
-  const tasks = getTasksByWorker(workerId);
-  const filteredTasks = tasks.filter(t => {
-    if (startDate && t.date < startDate) return false;
-    if (endDate && t.date > endDate) return false;
-    return true;
-  });
-
-  if (filteredTasks.length === 0) return 0;
-
-  const totalProductivity = filteredTasks.reduce((sum, t) => sum + (t.productivity || 0), 0);
-  return totalProductivity / filteredTasks.length;
-}
-
-export default {
+export {
   createWorker,
-  getWorker,
-  getWorkersByFarm,
-  getWorkersByPosition,
+  getWorkers,
+  getWorkerById,
   updateWorker,
   deleteWorker,
-  recordTask,
-  getTasksByWorker,
-  getTasksByDate,
   recordAttendance,
-  getAttendanceByWorker,
-  getAttendanceByDate,
-  getLaborStats,
-  calculateWorkerProductivity
+  getAttendance,
+  WORKER_POSITION_LIST as WORKER_POSITIONS,
+  SKILL_LEVEL_MAP as SKILL_LEVELS,
+  TASK_TYPE_LIST as TASK_TYPES
 };

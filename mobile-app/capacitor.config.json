@@ -8,7 +8,14 @@
   },
   "android": {
     "allowMixedContent": true,
-    "webContentsDebuggingEnabled": true
+    "webContentsDebuggingEnabled": true,
+    "minSdkVersion": 24,
+    "targetSdkVersion": 33,
+    "compileSdkVersion": 33,
+    "buildToolsVersion": "33.0.2"
+  },
+  "ios": {
+    "minVersion": "12.0"
   },
   "plugins": {
     "SplashScreen": {
@@ -17,7 +24,11 @@
       "launchFadeOutDuration": 3000,
       "backgroundColor": "#219465",
       "androidScaleType": "CENTER_CROP",
-      "showSpinner": true
+      "showSpinner": true,
+      "spinnerColor": "#ffffff"
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
     }
   }
 }

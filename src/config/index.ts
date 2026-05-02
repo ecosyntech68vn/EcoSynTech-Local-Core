@@ -1,6 +1,79 @@
-require('dotenv').config();
+import 'dotenv';
 
-module.exports = {
+export interface DatabaseConfig {
+  path: string;
+}
+
+export interface JwtConfig {
+  secret: string;
+  expiresIn: string;
+}
+
+export interface MqttConfig {
+  brokerUrl: string;
+  username: string;
+  password: string;
+}
+
+export interface CorsConfig {
+  origin: string;
+  allowedOrigins: string[];
+}
+
+export interface RateLimitConfig {
+  windowMs: number;
+  maxRequests: number;
+}
+
+export interface WebhookConfig {
+  secret: string;
+}
+
+export interface BlockchainConfig {
+  enabled: boolean;
+  type: string;
+  network: string;
+  moduleAddress: string;
+  privateKey: string;
+}
+
+export interface QrCodeConfig {
+  enabled: boolean;
+  baseUrl: string;
+}
+
+export interface GasHybridConfig {
+  url: string;
+  webId: string;
+  hybridSecret: string;
+  timeoutMs: number;
+}
+
+export interface WebLocalConfig {
+  webId: string;
+  tsWindowSec: number;
+}
+
+export interface AppConfig {
+  port: number;
+  nodeEnv: string;
+  logLevel: string;
+  database: DatabaseConfig;
+  jwt: JwtConfig;
+  mqtt: MqttConfig;
+  cors: CorsConfig;
+  rateLimit: RateLimitConfig;
+  opsSchedulerDisabled: boolean;
+  opsHotReloadEnabled: boolean;
+  opsSchedulerInterval: number;
+  webhook: WebhookConfig;
+  blockchain: BlockchainConfig;
+  qrcode: QrCodeConfig;
+  gasHybrid: GasHybridConfig;
+  weblocal: WebLocalConfig;
+}
+
+const config: AppConfig = {
   port: parseInt(process.env.PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
   logLevel: process.env.LOG_LEVEL || 'info',
@@ -66,3 +139,5 @@ module.exports = {
     tsWindowSec: parseInt(process.env.DEVICE_TS_WINDOW_SEC || '300', 10)
   }
 };
+
+export default config;

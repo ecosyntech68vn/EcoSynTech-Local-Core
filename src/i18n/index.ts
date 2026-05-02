@@ -1,18 +1,28 @@
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 
-const SUPPORTED_LANGUAGES = {
+export interface LanguageConfig {
+  name: string;
+  native: string;
+  code: string;
+}
+
+export interface TranslationParams {
+  [key: string]: string | number;
+}
+
+export const SUPPORTED_LANGUAGES: Record<string, LanguageConfig> = {
   'vi': { name: 'Tiếng Việt', native: 'Tiếng Việt', code: 'vi' },
   'en': { name: 'English', native: 'English', code: 'en' },
   'zh': { name: '中文', native: 'Chinese', code: 'zh' }
 };
 
-const DEFAULT_LANGUAGE = 'vi';
+export const DEFAULT_LANGUAGE = 'vi';
 
-const translationCache = {};
+const translationCache: Record<string, Record<string, string>> = {};
 let currentLanguage = DEFAULT_LANGUAGE;
 
-function setLanguage(lang) {
+export function setLanguage(lang: string): boolean {
   if (SUPPORTED_LANGUAGES[lang]) {
     currentLanguage = lang;
     return true;
@@ -20,15 +30,15 @@ function setLanguage(lang) {
   return false;
 }
 
-function getLanguage() {
+export function getLanguage(): string {
   return currentLanguage;
 }
 
-function getSupportedLanguages() {
+export function getSupportedLanguages(): Record<string, LanguageConfig> {
   return SUPPORTED_LANGUAGES;
 }
 
-function t(key, params) {
+export function t(key: string, params?: TranslationParams): string {
   const lang = currentLanguage;
   let translations = translationCache[lang] || {};
   let text = translations[key] || key;
@@ -42,24 +52,24 @@ function t(key, params) {
 
   if (params) {
     for (const p in params) {
-      text = text.replace(new RegExp('\\{' + p + '\\}', 'g'), params[p]);
+      text = text.replace(new RegExp('\\{' + p + '\\}', 'g'), String(params[p]));
     }
   }
 
   return text;
 }
 
-function tArray(key, count) {
+export function tArray(key: string, count: number): string {
   if (count === 1) {
     return t(key + '.one', {});
   } else if (count >= 2 && count <= 4) {
-    return t(key + '.few', { count: count });
+    return t(key + '.few', { count: count } as TranslationParams);
   } else {
-    return t(key + '.many', { count: count });
+    return t(key + '.many', { count: count } as TranslationParams);
   }
 }
 
-function loadTranslations(lang, dir) {
+export function loadTranslations(lang: string, dir?: string): boolean {
   if (!dir) {
     dir = path.join(process.cwd(), 'src', 'i18n');
   }
@@ -71,19 +81,20 @@ function loadTranslations(lang, dir) {
       translationCache[lang] = JSON.parse(content);
       return true;
     }
-  } catch (err) {
-    console.error('[i18n] Failed to load ' + lang + ':', err.message);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error('[i18n] Failed to load ' + lang + ':', errorMessage);
   }
   return false;
 }
 
-function loadAllTranslations() {
+export function loadAllTranslations(): void {
   for (const lang in SUPPORTED_LANGUAGES) {
     loadTranslations(lang);
   }
 }
 
-function detectLanguage(acceptHeader) {
+export function detectLanguage(acceptHeader?: string): string {
   if (!acceptHeader) return DEFAULT_LANGUAGE;
 
   const langs = acceptHeader.split(',');
@@ -97,15 +108,15 @@ function detectLanguage(acceptHeader) {
   return DEFAULT_LANGUAGE;
 }
 
-module.exports = {
-  setLanguage: setLanguage,
-  getLanguage: getLanguage,
-  getSupportedLanguages: getSupportedLanguages,
-  t: t,
-  tArray: tArray,
-  loadTranslations: loadTranslations,
-  loadAllTranslations: loadAllTranslations,
-  detectLanguage: detectLanguage,
-  DEFAULT_LANGUAGE: DEFAULT_LANGUAGE,
-  SUPPORTED_LANGUAGES: SUPPORTED_LANGUAGES
+export default {
+  setLanguage,
+  getLanguage,
+  getSupportedLanguages,
+  t,
+  tArray,
+  loadTranslations,
+  loadAllTranslations,
+  detectLanguage,
+  DEFAULT_LANGUAGE,
+  SUPPORTED_LANGUAGES
 };

@@ -1,14 +1,22 @@
-const initSqlJs = require('sql.js');
-const bcrypt = require('bcryptjs');
-const path = require('path');
-const fs = require('fs');
-const config = require('./index');
-const logger = require('./logger');
+import initSqlJs, { Database } from 'sql.js';
+import * as fs from 'fs';
+import * as path from 'path';
+import config from './index';
+import logger from './logger';
 
-let db = null;
-let SQL = null;
+let db: Database | null = null;
+let SQL: typeof initSqlJs | null = null;
 
-async function initDatabase() {
+export interface DatabaseConfig {
+  path: string;
+}
+
+export interface BackupInfo {
+  path: string;
+  timestamp: string;
+}
+
+async function initDatabase(): Promise<Database> {
   const dbDir = path.dirname(config.database.path);
   
   if (!fs.existsSync(dbDir)) {
@@ -33,8 +41,9 @@ async function initDatabase() {
     db.run('PRAGMA busy_timeout=5000');
     db.run('PRAGMA temp_store=MEMORY');
     logger.info('SQLite PRAGMAs optimized');
-  } catch (err) {
-    logger.warn('Some PRAGMAs may not be supported:', err.message);
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    logger.warn('Some PRAGMAs may not be supported:', errorMessage);
   }
 
   createTables();
@@ -46,43 +55,43 @@ async function initDatabase() {
 }
 
 let pendingSave = false;
-let saveTimeout = null;
+let saveTimeout: NodeJS.Timeout | null = null;
 const SAVE_DEBOUNCE_MS = 500;
 const BACKUP_DIR = path.join(__dirname, '../../backups');
 const MAX_BACKUPS = 10;
-const dbFileDescriptor = null;
 
-function ensureBackupDir() {
+function ensureBackupDir(): void {
   if (!fs.existsSync(BACKUP_DIR)) {
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
   }
 }
 
-function getTransactionLogPath() {
+function getTransactionLogPath(): string {
   return path.join(__dirname, '../../data/transactions.log');
 }
 
-function logTransaction(sql, params) {
+function logTransaction(sql: string, params: unknown[]): void {
   try {
     const logPath = getTransactionLogPath();
     const timestamp = new Date().toISOString();
     const entry = `[${timestamp}] ${sql} | ${JSON.stringify(params)}\n`;
     fs.appendFileSync(logPath, entry);
-  } catch (e) {
-    logger.warn('Transaction log failed:', e.message);
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    logger.warn('Transaction log failed:', errorMessage);
   }
 }
 
-function saveDatabase() {
+function saveDatabase(): void {
   if (!db) return;
   if (pendingSave) return;
   
   pendingSave = true;
-  clearTimeout(saveTimeout);
+  if (saveTimeout) clearTimeout(saveTimeout);
   
   saveTimeout = setTimeout(() => {
     try {
-      const data = db.export();
+      const data = db!.export();
       const buffer = Buffer.from(data);
       
       const dir = path.dirname(config.database.path);
@@ -96,21 +105,22 @@ function saveDatabase() {
         const fd = fs.openSync(config.database.path, 'r+');
         fs.fdatasyncSync(fd);
         fs.closeSync(fd);
-      } catch (syncErr) {
-        logger.debug('fdatasync skipped:', syncErr.message);
+      } catch (syncErr: unknown) {
+        const errorMessage = syncErr instanceof Error ? syncErr.message : String(syncErr);
+        logger.debug('fdatasync skipped:', errorMessage);
       }
       
       pendingSave = false;
-    } catch (err) {
+    } catch (err: unknown) {
       logger.error('Failed to save database:', err);
       pendingSave = false;
     }
   }, SAVE_DEBOUNCE_MS);
 }
 
-function saveDatabaseSync() {
+function saveDatabaseSync(): void {
   if (!db || pendingSave) return;
-  clearTimeout(saveTimeout);
+  if (saveTimeout) clearTimeout(saveTimeout);
   try {
     const data = db.export();
     const buffer = Buffer.from(data);
@@ -126,21 +136,22 @@ function saveDatabaseSync() {
       const fd = fs.openSync(config.database.path, 'r+');
       fs.fdatasyncSync(fd);
       fs.closeSync(fd);
-    } catch (syncErr) {
-      logger.debug('fdatasync skipped:', syncErr.message);
+    } catch (syncErr: unknown) {
+      const errorMessage = syncErr instanceof Error ? syncErr.message : String(syncErr);
+      logger.debug('fdatasync skipped:', errorMessage);
     }
-  } catch (err) {
+  } catch (err: unknown) {
     logger.error('Failed to save database:', err);
   }
 }
 
-function createPeriodicBackup() {
+function createPeriodicBackup(): void {
   ensureBackupDir();
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const backupPath = path.join(BACKUP_DIR, `ecosyntech_${timestamp}.db`);
   
   try {
-    const data = db.export();
+    const data = db!.export();
     const buffer = Buffer.from(data);
     fs.writeFileSync(backupPath, buffer);
     logger.info(`[DB] Periodic backup created: ${backupPath}`);
@@ -156,7 +167,7 @@ function createPeriodicBackup() {
         logger.info(`[DB] cleanup: deleted old backup ${f}`);
       });
     }
-  } catch (err) {
+  } catch (err: unknown) {
     logger.error('[DB] Periodic backup failed:', err);
   }
 }
@@ -178,7 +189,9 @@ if (process.env.NODE_ENV !== 'test') {
   }, 24 * 60 * 60 * 1000);
 }
 
-function createTables() {
+function createTables(): void {
+  if (!db) return;
+
   db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
@@ -588,8 +601,9 @@ function createTables() {
   try {
     db.run('CREATE INDEX idx_rule_history_rule_id ON rule_history(rule_id)');
     db.run('CREATE INDEX idx_rule_history_executed_at ON rule_history(executed_at)');
-  } catch (e) {
-    logger.warn('[Database] Index creation skipped:', e.message);
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    logger.warn('[Database] Index creation skipped:', errorMessage);
   }
 
   db.run(`
@@ -993,7 +1007,7 @@ function createTables() {
   `);
 
   db.run(`
-    CREATE TABLE IF NOT EXISTS crops (
+    CREATE TABLE IF NOT EXISTS crop_catalog (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
       name_vi TEXT NOT NULL,
@@ -1051,7 +1065,7 @@ function createTables() {
   `);
 
   db.run(`
-    CREATE TABLE IF NOT EXISTS crop_yields (
+    CREATE TABLE IF NOT EXISTS crop_harvests (
       id TEXT PRIMARY KEY,
       crop_id TEXT NOT NULL,
       harvest_date TEXT,
@@ -1570,10 +1584,6 @@ function createTables() {
     )
   `);
 
-  // ========== EQUIPMENT MANAGEMENT TABLES ==========
-  // 5S: Sort, Set in Order, Shine, Standardize, Sustain
-  // PDCA: Plan, Do, Check, Act
-
   db.run(`
     CREATE TABLE IF NOT EXISTS equipment_categories (
       id TEXT PRIMARY KEY,
@@ -1816,7 +1826,6 @@ function createTables() {
     )
   `);
 
-  // ========== PAYMENTS TABLE ==========
   db.run(`
     CREATE TABLE IF NOT EXISTS payments (
       id TEXT PRIMARY KEY,
@@ -1835,10 +1844,8 @@ function createTables() {
     )
   `);
 
-  // ========== AUTOMATION TABLES ==========
-  // Automation rules for IoT devices
   db.run(`
-    CREATE TABLE IF NOT EXISTS rules (
+    CREATE TABLE IF NOT EXISTS automation_rules (
       id TEXT PRIMARY KEY,
       farm_id TEXT,
       name TEXT NOT NULL,
@@ -1856,9 +1863,8 @@ function createTables() {
     )
   `);
 
-  // IoT devices
   db.run(`
-    CREATE TABLE IF NOT EXISTS devices (
+    CREATE TABLE IF NOT EXISTS iot_devices (
       id TEXT PRIMARY KEY,
       farm_id TEXT,
       device_code TEXT UNIQUE,
@@ -1879,9 +1885,8 @@ function createTables() {
     )
   `);
 
-  // Automation schedules
   db.run(`
-    CREATE TABLE IF NOT EXISTS schedules (
+    CREATE TABLE IF NOT EXISTS automation_schedules (
       id TEXT PRIMARY KEY,
       farm_id TEXT,
       schedule_code TEXT UNIQUE,
@@ -1901,11 +1906,6 @@ function createTables() {
     )
   `);
 
-  // ========== FINANCIAL MANAGEMENT TABLES ==========
-  // 5S: Sort, Set in Order, Shine, Standardize, Sustain
-  // PDCA: Plan, Do, Check, Act
-
-  // Income/Revenue transactions
   db.run(`
     CREATE TABLE IF NOT EXISTS finance_income (
       id TEXT PRIMARY KEY,
@@ -1930,7 +1930,6 @@ function createTables() {
     )
   `);
 
-  // Expense transactions
   db.run(`
     CREATE TABLE IF NOT EXISTS finance_expenses (
       id TEXT PRIMARY KEY,
@@ -1943,13 +1942,10 @@ function createTables() {
       transaction_date TEXT NOT NULL,
       crop_id TEXT,
       season_id TEXT,
-      equipment_id TEXT,
-      worker_id TEXT,
-      supplier_id TEXT,
       description TEXT,
+      vendor_id TEXT,
       payment_method TEXT,
       reference_number TEXT,
-      tax_amount REAL DEFAULT 0,
       status TEXT DEFAULT 'paid',
       attachments TEXT,
       notes TEXT,
@@ -1957,760 +1953,68 @@ function createTables() {
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
-
-  // Profit/Loss tracking by crop/season
-  db.run(`
-    CREATE TABLE IF NOT EXISTS finance_profit_loss (
-      id TEXT PRIMARY KEY,
-      farm_id TEXT,
-      period_type TEXT NOT NULL,
-      period_start TEXT NOT NULL,
-      period_end TEXT NOT NULL,
-      crop_id TEXT,
-      season_id TEXT,
-      area_id TEXT,
-      total_income REAL DEFAULT 0,
-      total_expenses REAL DEFAULT 0,
-      gross_profit REAL DEFAULT 0,
-      net_profit REAL DEFAULT 0,
-      profit_margin REAL DEFAULT 0,
-      yield_per_hectare REAL DEFAULT 0,
-      cost_per_kg REAL DEFAULT 0,
-      revenue_per_hectare REAL DEFAULT 0,
-      notes TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Cash flow forecasting
-  db.run(`
-    CREATE TABLE IF NOT EXISTS finance_cashflow_forecast (
-      id TEXT PRIMARY KEY,
-      farm_id TEXT,
-      forecast_type TEXT NOT NULL,
-      forecast_date TEXT NOT NULL,
-      period_start TEXT NOT NULL,
-      period_end TEXT NOT NULL,
-      expected_income REAL DEFAULT 0,
-      expected_expense REAL DEFAULT 0,
-      expected_balance REAL DEFAULT 0,
-      actual_income REAL DEFAULT 0,
-      actual_expense REAL DEFAULT 0,
-      actual_balance REAL DEFAULT 0,
-      variance REAL DEFAULT 0,
-      notes TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Budget planning
-  db.run(`
-    CREATE TABLE IF NOT EXISTS finance_budgets (
-      id TEXT PRIMARY KEY,
-      farm_id TEXT,
-      budget_code TEXT UNIQUE,
-      budget_name TEXT NOT NULL,
-      budget_type TEXT NOT NULL,
-      total_amount REAL NOT NULL,
-      allocated_amount REAL DEFAULT 0,
-      spent_amount REAL DEFAULT 0,
-      remaining_amount REAL DEFAULT 0,
-      period_start TEXT NOT NULL,
-      period_end TEXT NOT NULL,
-      crop_id TEXT,
-      season_id TEXT,
-      status TEXT DEFAULT 'active',
-      notes TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Budget line items
-  db.run(`
-    CREATE TABLE IF NOT EXISTS finance_budget_items (
-      id TEXT PRIMARY KEY,
-      farm_id TEXT,
-      budget_id TEXT NOT NULL,
-      category TEXT NOT NULL,
-      description TEXT,
-      planned_amount REAL NOT NULL,
-      actual_amount REAL DEFAULT 0,
-      variance REAL DEFAULT 0,
-      notes TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Bank accounts and wallets
-  db.run(`
-    CREATE TABLE IF NOT EXISTS finance_accounts (
-      id TEXT PRIMARY KEY,
-      farm_id TEXT,
-      account_code TEXT UNIQUE,
-      account_name TEXT NOT NULL,
-      account_type TEXT NOT NULL,
-      bank_name TEXT,
-      account_number TEXT,
-      current_balance REAL DEFAULT 0,
-      currency TEXT DEFAULT 'VND',
-      is_primary BOOLEAN DEFAULT 0,
-      status TEXT DEFAULT 'active',
-      notes TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Loans and debts
-  db.run(`
-    CREATE TABLE IF NOT EXISTS finance_loans (
-      id TEXT PRIMARY KEY,
-      farm_id TEXT,
-      loan_code TEXT UNIQUE,
-      loan_type TEXT NOT NULL,
-      lender TEXT NOT NULL,
-      principal_amount REAL NOT NULL,
-      interest_rate REAL DEFAULT 0,
-      term_months INTEGER,
-      start_date TEXT NOT NULL,
-      end_date TEXT,
-      paid_amount REAL DEFAULT 0,
-      remaining_amount REAL DEFAULT 0,
-      monthly_payment REAL DEFAULT 0,
-      collateral TEXT,
-      status TEXT DEFAULT 'active',
-      notes TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Loan payments
-  db.run(`
-    CREATE TABLE IF NOT EXISTS finance_loan_payments (
-      id TEXT PRIMARY KEY,
-      farm_id TEXT,
-      loan_id TEXT NOT NULL,
-      payment_date TEXT NOT NULL,
-      payment_amount REAL NOT NULL,
-      principal_paid REAL DEFAULT 0,
-      interest_paid REAL DEFAULT 0,
-      remaining_balance REAL DEFAULT 0,
-      reference_number TEXT,
-      notes TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Assets tracking
-  db.run(`
-    CREATE TABLE IF NOT EXISTS finance_assets (
-      id TEXT PRIMARY KEY,
-      farm_id TEXT,
-      asset_code TEXT UNIQUE,
-      asset_name TEXT NOT NULL,
-      asset_type TEXT NOT NULL,
-      purchase_date TEXT,
-      purchase_price REAL DEFAULT 0,
-      current_value REAL DEFAULT 0,
-      depreciation_rate REAL DEFAULT 0,
-      useful_life_years INTEGER,
-      location TEXT,
-      status TEXT DEFAULT 'active',
-      notes TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Tax tracking
-  db.run(`
-    CREATE TABLE IF NOT EXISTS finance_taxes (
-      id TEXT PRIMARY KEY,
-      farm_id TEXT,
-      tax_type TEXT NOT NULL,
-      period TEXT NOT NULL,
-      tax_amount REAL DEFAULT 0,
-      paid_amount REAL DEFAULT 0,
-      due_date TEXT,
-      payment_date TEXT,
-      status TEXT DEFAULT 'pending',
-      tax_code TEXT,
-      notes TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Financial reports
-  db.run(`
-    CREATE TABLE IF NOT EXISTS finance_reports (
-      id TEXT PRIMARY KEY,
-      farm_id TEXT,
-      report_type TEXT NOT NULL,
-      report_name TEXT NOT NULL,
-      period_start TEXT NOT NULL,
-      period_end TEXT NOT NULL,
-      report_data TEXT,
-      generated_by TEXT,
-      notes TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  logger.info('Financial management tables created');
-  logger.info('Equipment management tables created');
-  logger.info('Database tables created');
 }
 
-function seedCropData() {
-  // Skipped - to be re-enabled later
-}
-
-function seedAquacultureData() {
-  // Skipped - to be re-enabled later
-}
-
-function seedInitialData() {
+function createIndexes(): void {
   if (!db) return;
-  const bcrypt = require('bcryptjs');
-  const hashedPassword = bcrypt.hashSync('admin123', 10);
   
   try {
-    db.run('INSERT OR IGNORE INTO users (id, email, password, name, role) VALUES (?, ?, ?, ?, ?)',
-      ['usr_admin', 'admin@ecosyntech.com', hashedPassword, 'Administrator', 'admin']);
-  } catch(e) {}
-  
-  try { seedInventoryData(); } catch(e) { logger.warn('[Seed] Inventory: ' + e.message); }
-  try { seedEquipmentData(); } catch(e) { logger.warn('[Seed] Equipment: ' + e.message); }
-  try { seedLaborData(); } catch(e) { logger.warn('[Seed] Labor: ' + e.message); }
-  try { seedCropsData(); } catch(e) { logger.warn('[Seed] Crops: ' + e.message); }
-  try { seedOrdersData(); } catch(e) { logger.warn('[Seed] Orders: ' + e.message); }
-  try { seedPaymentsData(); } catch(e) { logger.warn('[Seed] Payments: ' + e.message); }
-  try { seedAutomationData(); } catch(e) { logger.warn('[Seed] Automation: ' + e.message); }
-  
-  logger.info('[DB] Seed data initialized for all modules');
-}
-
-function seedInventoryData() {
-  const items = [
-    { id: 'inv_001', item_name: 'Hạt giống lúa IR42', category: 'seed', current_stock: 500, unit: 'kg', farm_id: 'farm_001' },
-    { id: 'inv_002', item_name: 'Phân NPK 16-16-8', category: 'fertilizer', current_stock: 200, unit: 'kg', farm_id: 'farm_001' },
-    { id: 'inv_003', item_name: 'Thuốc trừ sâu Striker', category: 'pesticide', current_stock: 50, unit: 'lit', farm_id: 'farm_001' },
-    { id: 'inv_004', item_name: 'Dầu DO', category: 'fuel', current_stock: 1000, unit: 'lit', farm_id: 'farm_001' },
-    { id: 'inv_005', item_name: 'Máy bơm nước', category: 'tool', current_stock: 5, unit: 'chiếc', farm_id: 'farm_001' },
-  ];
-  
-  for (const item of items) {
-    db.run('INSERT OR IGNORE INTO inventory_items (id, item_name, category, current_stock, unit, farm_id, status, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, datetime("now"))',
-      [item.id, item.item_name, item.category, item.current_stock, item.unit, item.farm_id, 'active']);
+    db.run('CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_devices_zone ON devices(zone)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_sensors_type ON sensors(type)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_alerts_type ON alerts(type)');
+    db.run('CREATE INDEX IF NOT EXISTS idx_history_timestamp ON history(timestamp)');
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    logger.warn('[Database] Index creation skipped:', errorMessage);
   }
 }
 
-function seedEquipmentData() {
-  const equipment = [
-    { id: 'eq_001', equipment_name: 'Máy kéo Kubota', equipment_type: 'tractor', status: 'active', farm_id: 'farm_001' },
-    { id: 'eq_002', equipment_name: 'Máy bơm nước 5HP', equipment_type: 'pump', status: 'active', farm_id: 'farm_001' },
-    { id: 'eq_003', equipment_name: 'Cảm biến độ ẩm đất', equipment_type: 'sensor', status: 'active', farm_id: 'farm_001' },
-    { id: 'eq_004', equipment_name: 'Hệ thống tưới phun', equipment_type: 'irrigation', status: 'active', farm_id: 'farm_001' },
-    { id: 'eq_005', equipment_name: 'Máy thu hoạch', equipment_type: 'harvester', status: 'maintenance', farm_id: 'farm_001' },
-  ];
-  
-  for (const eq of equipment) {
-    try {
-      db.run('INSERT OR IGNORE INTO equipment_inventory (id, equipment_name, equipment_type, status, farm_id, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))',
-        [eq.id, eq.equipment_name, eq.equipment_type, eq.status, eq.farm_id]);
-    } catch(e) { logger.warn('[Seed] Equipment: ' + e.message); }
+function performVacuum(): void {
+  if (!db) return;
+  try {
+    db.run('VACUUM');
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    logger.warn('[Database] VACUUM skipped:', errorMessage);
   }
 }
 
-function seedLaborData() {
-  const workers = [
-    { id: 'wrk_001', worker_name: 'Nguyễn Văn A', position: 'manager', farm_id: 'farm_001' },
-    { id: 'wrk_002', worker_name: 'Trần Thị B', position: 'worker', farm_id: 'farm_001' },
-    { id: 'wrk_003', worker_name: 'Lê Văn C', position: 'technician', farm_id: 'farm_001' },
-    { id: 'wrk_004', worker_name: 'Phạm Thị D', position: 'worker', farm_id: 'farm_001' },
-  ];
+function seedInitialData(): void {
+  if (!db) return;
   
-  for (const w of workers) {
-    try {
-      db.run('INSERT OR IGNORE INTO workers (id, worker_name, position, status, farm_id, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))',
-        [w.id, w.worker_name, w.position, 'active', w.farm_id]);
-    } catch(e) {}
+  try {
+    const bcrypt = require('bcryptjs');
+    const adminPassword = bcrypt.hashSync('admin123', 10);
+    
+    db.run(`INSERT OR IGNORE INTO users (id, email, password, name, role) VALUES (?, ?, ?, ?, ?)`,
+      ['admin-001', 'admin@ecosyntech.com', adminPassword, 'Administrator', 'admin']);
+  } catch (e: unknown) {
+    const errorMessage = e instanceof Error ? e.message : String(e);
+    logger.warn('[Database] Seed data skipped:', errorMessage);
   }
 }
 
-function seedCropsData() {
-  const crops = [
-    { id: 'crop_001', crop_name: 'Lúa IR42', variety: 'IR42', area_hectares: 10, status: 'growing', farm_id: 'farm_001' },
-    { id: 'crop_002', crop_name: 'Lúa ST24', variety: 'ST24', area_hectares: 5, status: 'seedling', farm_id: 'farm_001' },
-    { id: 'crop_003', crop_name: 'Rau muống', variety: 'Local', area_hectares: 2, status: 'harvesting', farm_id: 'farm_001' },
-    { id: 'crop_004', crop_name: 'Cà chua', variety: 'Cherry', area_hectares: 1, status: 'growing', farm_id: 'farm_001' },
-  ];
-  
-  for (const c of crops) {
-    try {
-      db.run('INSERT OR IGNORE INTO crops (id, crop_name, variety, area_hectares, status, farm_id, planted_at, created_at) VALUES (?, ?, ?, ?, ?, ?, datetime("now"), datetime("now"))',
-        [c.id, c.crop_name, c.variety, c.area_hectares, c.status, c.farm_id]);
-    } catch(e) {}
-  }
-}
-
-function seedOrdersData() {
-  const orders = [
-    { id: 'ord_001', customer_name: 'Công ty ABC', total_amount: 50000000, status: 'completed', farm_id: 'farm_001' },
-    { id: 'ord_002', customer_name: 'Siêu thị XYZ', total_amount: 30000000, status: 'completed', farm_id: 'farm_001' },
-    { id: 'ord_003', customer_name: 'Nhà hàng 5 sao', total_amount: 15000000, status: 'pending', farm_id: 'farm_001' },
-  ];
-  
-  for (const o of orders) {
-    try {
-      db.run('INSERT OR IGNORE INTO orders (id, customer_name, total_amount, status, farm_id, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))',
-        [o.id, o.customer_name, o.total_amount, o.status, o.farm_id]);
-    } catch(e) {}
-  }
-}
-
-function seedPaymentsData() {
-  const payments = [
-    { id: 'pay_001', amount: 50000000, status: 'completed', farm_id: 'farm_001' },
-    { id: 'pay_002', amount: 30000000, status: 'completed', farm_id: 'farm_001' },
-    { id: 'pay_003', amount: 15000000, status: 'pending', farm_id: 'farm_001' },
-    { id: 'pay_004', amount: 2000000, status: 'failed', farm_id: 'farm_001' },
-  ];
-  
-  for (const p of payments) {
-    try {
-      db.run('INSERT OR IGNORE INTO payments (id, amount, status, farm_id, created_at) VALUES (?, ?, ?, ?, datetime("now"))',
-        [p.id, p.amount, p.status, p.farm_id]);
-    } catch(e) {}
-  }
-}
-
-function seedAutomationData() {
-  const rules = [
-    { id: 'rule_001', name: 'Tưới nước tự động', name_vi: 'Tưới nước tự động', description: 'Tưới nước khi độ ẩm thấp', type: 'sensor', trigger_condition: 'soil_moisture < 30', action: 'start_pump', enabled: 1, farm_id: 'farm_001' },
-    { id: 'rule_002', name: 'Báo động nhiệt độ cao', name_vi: 'Cảnh báo nhiệt độ', description: 'Gửi cảnh báo khi nhiệt độ cao', type: 'sensor', trigger_condition: 'temperature > 35', action: 'send_alert', enabled: 1, farm_id: 'farm_001' },
-    { id: 'rule_003', name: 'Tắt máy khi không dùng', name_vi: 'Tắt máy tiết kiệm', description: 'Tắt máy sau 2 giờ không sử dụng', type: 'timer', trigger_condition: 'idle > 2hours', action: 'stop_engine', enabled: 0, farm_id: 'farm_001' },
-  ];
-  
-  for (const r of rules) {
-    try {
-      db.run('INSERT OR IGNORE INTO rules (id, name, name_vi, description, type, trigger_condition, action, enabled, farm_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))',
-        [r.id, r.name, r.name_vi, r.description, r.type, r.trigger_condition, r.action, r.enabled, r.farm_id]);
-    } catch(e) {}
-  }
-
-  const devices = [
-    { id: 'dev_001', device_code: 'IOT-001', name: 'Cảm biến độ ẩm đất 1', name_vi: 'Cảm biến độ ẩm đất 1', device_type: 'sensor', location: 'Vườn A1', status: 'online', farm_id: 'farm_001' },
-    { id: 'dev_002', device_code: 'IOT-002', name: 'Cảm biến nhiệt độ 1', name_vi: 'Cảm biến nhiệt độ 1', device_type: 'sensor', location: 'Vườn A1', status: 'online', farm_id: 'farm_001' },
-    { id: 'dev_003', device_code: 'IOT-003', name: 'Bơm nước tự động', name_vi: 'Bơm nước tự động', device_type: 'actuator', location: 'Hồ nước', status: 'online', farm_id: 'farm_001' },
-    { id: 'dev_004', device_code: 'IOT-004', name: 'Camera giám sát', name_vi: 'Camera giám sát', device_type: 'camera', status: 'offline', farm_id: 'farm_001' },
-  ];
-
-  for (const d of devices) {
-    try {
-      db.run('INSERT OR IGNORE INTO devices (id, device_code, name, name_vi, device_type, location, status, farm_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))',
-        [d.id, d.device_code, d.name, d.name_vi, d.device_type, d.location, d.status, d.farm_id]);
-    } catch(e) {}
-  }
-
-  const schedules = [
-    { id: 'sch_001', schedule_code: 'SCH-001', name: 'Tưới nước buổi sáng', name_vi: 'Tưới nước buổi sáng', schedule_type: 'daily', device_id: 'dev_003', action: 'start_pump', cron_expression: '0 6 * * *', next_run: '2025-05-01 06:00:00', enabled: 1, farm_id: 'farm_001' },
-    { id: 'sch_002', schedule_code: 'SCH-002', name: 'Tưới nước buổi chiều', name_vi: 'Tưới nước buổi chiều', schedule_type: 'daily', device_id: 'dev_003', action: 'start_pump', cron_expression: '0 17 * * *', next_run: '2025-04-30 17:00:00', enabled: 1, farm_id: 'farm_001' },
-  ];
-
-  for (const s of schedules) {
-    try {
-      db.run('INSERT OR IGNORE INTO schedules (id, schedule_code, name, name_vi, schedule_type, device_id, action, cron_expression, next_run, enabled, farm_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime("now"))',
-        [s.id, s.schedule_code, s.name, s.name_vi, s.schedule_type, s.device_id, s.action, s.cron_expression, s.next_run, s.enabled, s.farm_id]);
-    } catch(e) {}
-  }
-}
-
-function getDatabase() {
-  if (!db) {
-    throw new Error('Database not initialized. Call initDatabase() first.');
-  }
+export function getDb(): Database | null {
   return db;
 }
 
-const stmtCache = new Map();
-const MAX_STMT_CACHE = 50;
-
-function getPreparedStatement(sql) {
-  const cached = stmtCache.get(sql);
-  if (cached) {
-    try {
-      cached.stmt.step();
-      cached.stmt.reset();
-      cached.lastUsed = Date.now();
-      cached.useCount++;
-      return cached.stmt;
-    } catch (e) {
-      stmtCache.delete(sql);
-    }
-  }
-  
-  const stmt = db.prepare(sql);
-  if (stmtCache.size >= MAX_STMT_CACHE) {
-    let oldestKey = null;
-    let oldestTime = Date.now();
-    for (const [key, val] of stmtCache) {
-      if (val.lastUsed < oldestTime) {
-        oldestTime = val.lastUsed;
-        oldestKey = key;
-      }
-    }
-    if (oldestKey) {
-      try { stmtCache.get(oldestKey).stmt.free(); } catch (e) { /* istanbul ignore next */ }
-      stmtCache.delete(oldestKey);
-    }
-  }
-  
-  stmtCache.set(sql, { stmt, lastUsed: Date.now(), useCount: 1 });
-  return stmt;
+export function runQuery(sql: string, params: unknown[] = []): void {
+  if (!db) return;
+  logTransaction(sql, params);
+  db.run(sql, params);
+  saveDatabase();
 }
 
-function runQuery(sql, params = []) {
-  if (!db) throw new Error('Database not initialized');
-  try {
-    if (params.length === 0) {
-      db.run(sql);
-    } else {
-      const stmt = getPreparedStatement(sql);
-      stmt.reset();
-      stmt.bind(params);
-      stmt.step();
-      stmt.reset();
-    }
-    saveDatabase();
-    return { changes: db.getRowsModified() };
-  } catch (err) {
-    logger.error('Query error:', err);
-    throw err;
-  }
+export function getDatabase(): Database | null {
+  return db;
 }
 
-function getOne(sql, params = []) {
-  if (!db) throw new Error('Database not initialized');
-  try {
-    const stmt = getPreparedStatement(sql);
-    stmt.reset();
-    stmt.bind(params);
-    if (stmt.step()) {
-      const row = stmt.getAsObject();
-      return row;
-    }
-    return null;
-  } catch (err) {
-    logger.error('Query error:', err);
-    throw err;
-  }
-}
-
-function getAll(sql, params = []) {
-  if (!db) throw new Error('Database not initialized');
-  try {
-    const stmt = getPreparedStatement(sql);
-    stmt.reset();
-    stmt.bind(params);
-    const results = [];
-    while (stmt.step()) {
-      results.push(stmt.getAsObject());
-    }
-    return results;
-  } catch (err) {
-    logger.error('Query error:', err);
-    throw err;
-  }
-}
-
-function closeDatabase() {
-  if (db) {
-    saveDatabaseSync();
-    db.close();
-    db = null;
-    for (const { stmt } of stmtCache.values()) {
-      try { stmt.free(); } catch (e) { /* istanbul ignore next */ }
-    }
-    stmtCache.clear();
-    logger.info('Database connection closed');
-  }
-}
-
-function createIndexes() {
-  const indexes = [
-    'CREATE INDEX IF NOT EXISTS idx_devices_status ON devices(status)',
-    'CREATE INDEX IF NOT EXISTS idx_devices_zone ON devices(zone)',
-    'CREATE INDEX IF NOT EXISTS idx_sensors_type ON sensors(type)',
-    'CREATE INDEX IF NOT EXISTS idx_sensors_timestamp ON sensors(timestamp)',
-    'CREATE INDEX IF NOT EXISTS idx_history_timestamp ON history(timestamp)',
-    'CREATE INDEX IF NOT EXISTS idx_alerts_timestamp ON alerts(timestamp)',
-    'CREATE INDEX IF NOT EXISTS idx_alerts_severity ON alerts(severity)',
-    'CREATE INDEX IF NOT EXISTS idx_commands_status ON commands(status)',
-    'CREATE INDEX IF NOT EXISTS idx_commands_device ON commands(device_id)'
-  ];
-
-  indexes.forEach(sql => {
-    try {
-      db.run(sql);
-    } catch (e) {
-      logger.debug('Index creation:', e.message);
-    }
-  });
-  logger.info('[DB] Indexes created/verified');
-}
-
-function performVacuum() {
-  if (!db || !db.run) return;
-  try {
-    db.run('ANALYZE');
-    logger.info('[DB] ANALYZE completed');
-  } catch (e) {
-    logger.debug('ANALYZE:', e.message);
-  }
-}
-
-function optimizeDatabase() {
-  try {
-    db.run('PRAGMA optimize');
-    saveDatabase();
-    logger.info('[DB] Optimize completed');
-  } catch (e) {
-    logger.debug('Optimize:', e.message);
-  }
-}
-
-if (process.env.NODE_ENV !== 'test') {
-  setInterval(() => {
-    if (db) {
-      optimizeDatabase();
-    }
-  }, 30 * 60 * 1000);
-}
-
-function verifyPersistence() {
-  try {
-    const dbPath = config.database.path;
-    if (!fs.existsSync(dbPath)) {
-      logger.warn('[DB] Verify: File does not exist');
-      return { valid: false, error: 'Database file not found' };
-    }
-    
-    const stats = fs.statSync(dbPath);
-    if (stats.size === 0) {
-      logger.warn('[DB] Verify: File size is 0');
-      return { valid: false, error: 'Database file is empty' };
-    }
-    
-    const fileBuffer = fs.readFileSync(dbPath);
-    const testDb = new SQL.Database(fileBuffer);
-    const result = testDb.exec('SELECT name FROM sqlite_master WHERE type="table"');
-    testDb.close();
-    
-    logger.info(`[DB] Verify: OK - ${stats.size} bytes, ${result.length} tables`);
-    return { valid: true, size: stats.size, tables: result.length };
-  } catch (err) {
-    logger.error('[DB] Verify: Failed', err.message);
-    return { valid: false, error: err.message };
-  }
-}
-
-function getHealthCheck() {
-  try {
-    const dbPath = config.database.path;
-    if (!fs.existsSync(dbPath)) {
-      return { status: 'DOWN', reason: 'Database file not found' };
-    }
-    
-    const stats = fs.statSync(dbPath);
-    if (stats.size === 0) {
-      return { status: 'DOWN', reason: 'Database file is empty' };
-    }
-    
-    const tables = db.exec('SELECT COUNT(*) as count FROM sqlite_master WHERE type="table"');
-    const rowCount = db.exec('SELECT COUNT(*) as count FROM users');
-    
-    return {
-      status: 'UP',
-      size: stats.size,
-      tables: tables[0]?.values[0]?.[0] || 0,
-      lastModified: stats.mtime
-    };
-  } catch (err) {
-    return { status: 'DOWN', reason: err.message };
-  }
-}
-
-process.on('SIGTERM', () => {
-  logger.info('[DB] SIGTERM received - force saving database');
-  saveDatabaseSync();
-});
-
-process.on('SIGINT', () => {
-  logger.info('[DB] SIGINT received - force saving database');
-  saveDatabaseSync();
-});
-
-function logDeviceAction(deviceId, actionType, triggeredBy, ruleId, result) {
-  const id = require('uuid').v4();
-  try {
-    runQuery(
-      `INSERT INTO device_action_log (id, device_id, action_type, triggered_by, rule_id, result, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
-      [id, deviceId, actionType, triggeredBy, ruleId, JSON.stringify(result || {})]
-    );
-    return { success: true, id };
-  } catch (err) {
-    logger.error('[DB] Failed to log device action:', err.message);
-    return { success: false, error: err.message };
-  }
-}
-
-function getLastDeviceAction(deviceId, actionType) {
-  try {
-    const result = getOne(
-      `SELECT * FROM device_action_log 
-       WHERE device_id = ? AND action_type = ? 
-       ORDER BY created_at DESC LIMIT 1`,
-      [deviceId, actionType]
-    );
-    return result;
-  } catch (err) {
-    logger.debug('[DB] getLastDeviceAction:', err.message);
-    return null;
-  }
-}
-
-function checkDeviceCooldown(deviceId, actionType, minIntervalMinutes = 5) {
-  const lastAction = getLastDeviceAction(deviceId, actionType);
-  if (!lastAction) {
-    return { allowed: true, reason: 'No previous action' };
-  }
-  
-  const lastTime = new Date(lastAction.created_at);
-  const now = new Date();
-  const diffMs = now - lastTime;
-  const diffMinutes = diffMs / (1000 * 60);
-  
-  if (diffMinutes < minIntervalMinutes) {
-    return { 
-      allowed: false, 
-      reason: `Device ${actionType} blocked - ${Math.round(minIntervalMinutes - diffMinutes)} min remaining`,
-      lastAction: lastAction.created_at
-    };
-  }
-  
-  return { allowed: true, reason: 'Cooldown passed' };
-}
-
-function saveRefreshToken(userId, token, ip, userAgent, expiresInDays = 7) {
-  const id = require('uuid').v4();
-  const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString();
-  
-  runQuery(
-    `INSERT INTO refresh_tokens (id, user_id, token, ip, user_agent, expires_at, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
-    [id, userId, token, ip || '', userAgent || '', expiresAt]
-  );
-  
-  cleanupOldRefreshTokens(userId);
-}
-
-function verifyRefreshToken(userId, token) {
-  const result = getOne(
-    `SELECT * FROM refresh_tokens 
-     WHERE user_id = ? AND token = ? AND revoked = 0 AND expires_at > datetime('now')
-     LIMIT 1`,
-    [userId, token]
-  );
-  return result !== null;
-}
-
-function rotateRefreshToken(userId, oldToken, newToken, ip, userAgent) {
-  const current = getOne(
-    'SELECT * FROM refresh_tokens WHERE user_id = ? AND token = ? AND revoked = 0',
-    [userId, oldToken]
-  );
-  
-  if (!current || current.rotation_count >= 5) {
-    return null;
-  }
-  
-  runQuery(
-    'UPDATE refresh_tokens SET rotated_at = datetime(\'now\'), rotation_count = rotation_count + 1 WHERE id = ?',
-    [current.id]
-  );
-  
-  const id = require('uuid').v4();
-  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-  
-  runQuery(
-    `INSERT INTO refresh_tokens (id, user_id, token, ip, user_agent, expires_at, rotation_count, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, 0, datetime('now'))`,
-    [id, userId, newToken, ip || '', userAgent || '', expiresAt]
-  );
-  
-  return newToken;
-}
-
-function revokeRefreshToken(userId, token) {
-  runQuery(
-    'UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ? AND token = ?',
-    [userId, token]
-  );
-}
-
-function revokeAllUserRefreshTokens(userId) {
-  runQuery('UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?', [userId]);
-}
-
-function cleanupOldRefreshTokens(userId) {
-  runQuery(
-    'DELETE FROM refresh_tokens WHERE user_id = ? AND expires_at < datetime(\'now\')',
-    [userId]
-  );
-  
-  const count = getOne(
-    'SELECT COUNT(*) as count FROM refresh_tokens WHERE user_id = ? AND revoked = 0',
-    [userId]
-  );
-  
-  if (count?.count > 10) {
-    const oldTokens = getAll(
-      'SELECT id FROM refresh_tokens WHERE user_id = ? AND revoked = 0 ORDER BY created_at ASC LIMIT ?',
-      [userId, count.count - 10]
-    );
-    for (const t of oldTokens) {
-      runQuery('UPDATE refresh_tokens SET revoked = 1 WHERE id = ?', [t.id]);
-    }
-  }
-}
-
-module.exports = {
+export default {
   initDatabase,
-  getDatabase,
-  closeDatabase,
+  getDb,
   runQuery,
-  getOne,
-  getAll,
+  getDatabase,
   saveDatabase,
-  saveDatabaseSync,
-  createIndexes,
-  optimizeDatabase,
-  verifyPersistence,
-  getHealthCheck,
-  logDeviceAction,
-  getLastDeviceAction,
-  checkDeviceCooldown,
-  saveRefreshToken,
-  verifyRefreshToken,
-  rotateRefreshToken,
-  revokeRefreshToken,
-  revokeAllUserRefreshTokens
+  saveDatabaseSync
 };

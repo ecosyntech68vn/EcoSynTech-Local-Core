@@ -1,11 +1,11 @@
-const winston = require('winston');
-const path = require('path');
-const config = require('./index');
+import winston from 'winston';
+import * as path from 'path';
+import config from './index';
 
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
-  winston.format.printf(({ level, message, timestamp, stack }) => {
+  winston.format.printf(({ level, message, timestamp, stack }): string => {
     return `${timestamp} [${level.toUpperCase()}]: ${stack || message}`;
   })
 );
@@ -43,4 +43,4 @@ if (config.nodeEnv === 'development') {
   }));
 }
 
-module.exports = logger;
+export default logger;

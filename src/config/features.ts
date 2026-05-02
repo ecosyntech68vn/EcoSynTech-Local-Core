@@ -14,24 +14,42 @@
  *   - Some features require restart, some are hot-swap
  */
 
-const fs = require('fs');
-const path = require('path');
+export interface FeatureConfig {
+  enabled: boolean;
+  required: boolean;
+  memoryMB: number;
+  description: string;
+  dependencies: string[];
+  envVar?: string;
+  note?: string;
+}
 
-/**
- * @typedef {Object} FeatureConfig
- * @property {boolean} enabled - Enable/disable feature
- * @property {boolean} required - Feature is required (cannot disable)
- * @property {number} memoryMB - Estimated memory usage in MB
- * @property {string} description - Feature description
- * @property {string[]} dependencies - Other features required
- */
+export interface MemoryEstimate {
+  total: number;
+  active: string[];
+}
+
+export interface FeatureResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
+export interface ConfigSummary {
+  current: {
+    memory: number;
+    active: number;
+    features: string[];
+  };
+  profiles: Record<string, string[]>;
+  estimated: Record<string, number>;
+}
 
 /**
  * Feature flags configuration
  * Set enabled: true/false to control memory usage
  */
-const FEATURES = {
-  // ==================== CORE (Required) ====================
+export const FEATURES: Record<string, FeatureConfig> = {
   api: {
     enabled: true,
     required: true,
@@ -48,7 +66,6 @@ const FEATURES = {
     dependencies: []
   },
 
-  // ==================== IoT LAYER ====================
   mqtt: {
     enabled: process.env.ENABLE_MQTT !== 'false',
     required: false,
@@ -67,7 +84,6 @@ const FEATURES = {
     envVar: 'ENABLE_WEBSOCKET'
   },
 
-  // ==================== AI/ML LAYER ====================
   aiInference: {
     enabled: process.env.ENABLE_AI === 'true',
     required: false,
@@ -86,7 +102,6 @@ const FEATURES = {
     envVar: 'ENABLE_AI'
   },
 
-  // ==================== CACHE LAYER ====================
   redisCache: {
     enabled: process.env.ENABLE_REDIS === 'true',
     required: false,
@@ -106,7 +121,6 @@ const FEATURES = {
     envVar: 'ENABLE_MEMORY_CACHE'
   },
 
-  // ==================== DATA LAYER ====================
   ingestQueue: {
     enabled: process.env.ENABLE_INGEST_QUEUE !== 'false',
     required: false,
@@ -116,7 +130,6 @@ const FEATURES = {
     envVar: 'ENABLE_INGEST_QUEUE'
   },
 
-  // ==================== AUTH LAYER ====================
   jwtAuth: {
     enabled: process.env.ENABLE_JWT_AUTH !== 'false',
     required: false,
@@ -144,7 +157,6 @@ const FEATURES = {
     envVar: 'ENABLE_LOCKOUT'
   },
 
-  // ==================== MONITORING ====================
   telemetry: {
     enabled: process.env.ENABLE_TELEMETRY !== 'false',
     required: false,
@@ -163,7 +175,6 @@ const FEATURES = {
     envVar: 'ENABLE_AUDIT'
   },
 
-  // ==================== INTEGRATIONS ====================
   telegramBot: {
     enabled: process.env.ENABLE_TELEGRAM === 'true',
     required: false,
@@ -187,9 +198,9 @@ const FEATURES = {
  * Get memory estimate based on enabled features
  * @returns {number} Total memory in MB
  */
-function getMemoryEstimate() {
+export function getMemoryEstimate(): MemoryEstimate {
   let total = 0;
-  const active = [];
+  const active: string[] = [];
   
   for (const [name, config] of Object.entries(FEATURES)) {
     if (config.enabled) {
@@ -206,11 +217,10 @@ function getMemoryEstimate() {
  * @param {string} featureName - Feature to check
  * @returns {boolean}
  */
-function isFeatureEnabled(featureName) {
+export function isFeatureEnabled(featureName: string): boolean {
   const feature = FEATURES[featureName];
   if (!feature) return false;
   
-  // Check dependencies
   if (feature.dependencies && feature.dependencies.length > 0) {
     for (const dep of feature.dependencies) {
       if (!FEATURES[dep] || !FEATURES[dep].enabled) {
@@ -227,13 +237,12 @@ function isFeatureEnabled(featureName) {
  * @param {string} featureName - Feature to enable
  * @returns {Object} Result with success status
  */
-function enableFeature(featureName) {
+export function enableFeature(featureName: string): FeatureResult {
   const feature = FEATURES[featureName];
   if (!feature) {
     return { success: false, error: 'Feature not found' };
   }
   
-  // Check dependencies can be met
   if (feature.dependencies) {
     const missingDeps = feature.dependencies.filter(dep => !FEATURES[dep] || !FEATURES[dep].enabled);
     if (missingDeps.length > 0) {
@@ -253,7 +262,7 @@ function enableFeature(featureName) {
  * @param {string} featureName - Feature to disable
  * @returns {Object} Result with success status
  */
-function disableFeature(featureName) {
+export function disableFeature(featureName: string): FeatureResult {
   const feature = FEATURES[featureName];
   if (!feature) {
     return { success: false, error: 'Feature not found' };
@@ -263,7 +272,6 @@ function disableFeature(featureName) {
     return { success: false, error: 'Cannot disable required feature' };
   }
   
-  // Check if other features depend on this
   const dependents = Object.entries(FEATURES)
     .filter(([_, config]) => config.dependencies?.includes(featureName))
     .map(([name]) => name);
@@ -283,7 +291,7 @@ function disableFeature(featureName) {
  * Get system configuration for current setup
  * @returns {Object} Configuration summary
  */
-function getConfig() {
+export function getConfig(): ConfigSummary {
   const memory = getMemoryEstimate();
   const profiles = {
     minimal: ['api', 'database', 'jwtAuth', 'accountLockout'],
@@ -314,8 +322,8 @@ function getConfig() {
  * Apply profile
  * @param {string} profileName - Profile to apply
  */
-function applyProfile(profileName) {
-  const profiles = {
+export function applyProfile(profileName: string): FeatureResult & { profile?: string; memory?: number } {
+  const profiles: Record<string, string[]> = {
     minimal: ['api', 'database', 'jwtAuth', 'accountLockout'],
     basic: ['api', 'database', 'websocket', 'mqtt', 'jwtAuth', 'accountLockout', 'ingestQueue', 'memoryCache', 'telemetry'],
     standard: ['api', 'database', 'websocket', 'mqtt', 'jwtAuth', 'accountLockout', 'ingestQueue', 'memoryCache', 'telemetry', 'auditLogging'],
@@ -328,14 +336,12 @@ function applyProfile(profileName) {
     return { success: false, error: 'Profile not found' };
   }
   
-  // Reset all to false
   for (const name of Object.keys(FEATURES)) {
     if (!FEATURES[name].required) {
       FEATURES[name].enabled = false;
     }
   }
   
-  // Enable profile features
   for (const name of enabled) {
     if (FEATURES[name]) {
       FEATURES[name].enabled = true;
@@ -349,7 +355,7 @@ function applyProfile(profileName) {
   };
 }
 
-module.exports = {
+export default {
   FEATURES,
   getMemoryEstimate,
   isFeatureEnabled,

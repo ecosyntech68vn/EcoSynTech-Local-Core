@@ -1,17 +1,18 @@
 {
   "name": "@ecosyntech/mobile-app",
   "version": "1.0.0",
-  "description": "EcoSynTech Smart Farming Mobile App",
+  "description": "EcoSynTech Smart Farming Mobile App - Build for Distribution",
   "main": "index.js",
   "scripts": {
     "start": "npx capacitor run android",
-    "build": "npx capacitor build android",
+    "build": "npx capacitor build android --release",
+    "build:debug": "npx capacitor build android",
     "copy": "npx capacitor copy",
     "open": "npx capacitor open",
     "sync": "npx capacitor sync",
-    "init": "npx cap init",
     "add:android": "npx cap add android",
-    "add:ios": "npx cap add ios"
+    "add:ios": "npx cap add ios",
+    "list": "npx capacitor list"
   },
   "dependencies": {
     "@capacitor/android": "^5.7.0",
@@ -21,7 +22,12 @@
     "@capacitor/preferences": "^5.0.0",
     "@capacitor/push-notifications": "^5.0.0",
     "@capacitor/splash-screen": "^5.0.0",
-    "@capacitor/status-bar": "^5.0.0"
+    "@capacitor/status-bar": "^5.0.0",
+    "@capacitor/clipboard": "^5.0.0",
+    "@capacitor/ local-notifications": "^5.0.0",
+    "@capacitor/geolocation": "^5.0.0",
+    "@capacitor/camera": "^5.0.0",
+    "@capacitor/barcode-scanner": "^5.0.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^5.7.0"
@@ -30,7 +36,8 @@
     "ecosyntech",
     "smart-farm",
     "iot",
-    "agriculture"
+    "agriculture",
+    "mobile"
   ],
   "author": "EcoSynTech",
   "license": "MIT"

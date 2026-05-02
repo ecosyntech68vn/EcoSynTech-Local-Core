@@ -8,10 +8,22 @@
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 [![ISO 27001](https://img.shields.io/badge/ISO-27001-2022-Compliant-green)](https://iso.org)
 [![Test Coverage](https://img.shields.io/badge/Coverage-70%25+-brightgreen)](#testing)
+[![Mobile App](https://img.shields.io/badge/Mobile-APK-Ready-green)](#mobile-app)
 
 ---
 
 ## What's New in V5.1
+
+### 📱 Mobile App (NEW!)
+- **Full-native mobile app** build with Capacitor
+- **Login/Register** with JWT authentication
+- **Dashboard** with real-time sensors and weather
+- **Traceability** - QR code scanning and lookup
+- **Inventory** management
+- **Finance** tracking (income/expense)
+- **Labor** attendance
+- **Crops** management
+- **APK Ready** - Build with `npm run build` in mobile-app/
 
 ### 🚀 TypeScript Support (NEW!)
 - **tsconfig.json** - Full TypeScript configuration với strict mode
@@ -123,18 +135,39 @@ docker-compose up -d
 | Middleware | 85%+ | 80%+ |
 | **Overall** | **70%+** | **65%+** |
 
-### Run Tests
+---
+
+## Mobile App
+
+### Build APK
 
 ```bash
-# All tests with coverage
-npm run test:coverage
+cd mobile-app
 
-# Redis-specific tests
-npm run test:redis
+# Install dependencies
+npm install
 
-# CI mode (silent)
-npm run test:ci
+# Build debug APK
+npm run build:debug
+
+# Build release APK
+npm run build
 ```
+
+### Features
+
+- Login/Register with JWT
+- Real-time Dashboard with sensors
+- Weather integration
+- QR Code traceability scanning
+- Inventory management
+- Finance tracking
+- Labor attendance
+- Crop management
+
+### APK Location
+
+After build: `mobile-app/android/app/build/outputs/apk/debug/` or `release/`
 
 ---
 

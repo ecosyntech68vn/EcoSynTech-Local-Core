@@ -69,6 +69,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f8}
 .tag{display:inline-block;padding:2px 6px;background:#e3f2fd;color:#1565c0;border-radius:3px;font-size:9px;margin:2px}
 .tag.exp{background:#ffebee;color:#c62828}
 .tag.inc{background:#e8f5e9;color:#2e7d32}
+.accordion{margin-bottom:8px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden}
+.acc-h{background:#f5f5f5;padding:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:500}
+.acc-h:after{content:'▼';font-size:8px;color:#888;transition:transform 0.2s}
+.acc-h.open:after{transform:rotate(180deg)}
+.acc-c{display:none;padding:10px;background:white}
+.acc-c.open{display:block}
+.acc-c .r{border-bottom:1px solid #f0f0f0;padding:6px 0}
+.cond-row{display:flex;gap:4px;margin-bottom:6px;align-items:center}
+.cond-row select,.cond-row input{flex:1}
+.rm-cond{background:#ff5252;color:white;border:none;width:20px;height:20px;border-radius:50%;font-size:12px;cursor:pointer}
+.add-cond{background:#219465;color:white;border:none;padding:6px 12px;border-radius:4px;font-size:11px;cursor:pointer;margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -112,7 +123,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f8}
 <!-- TRACE -->
 <div id="t5" class="tb">
 <div class="c"><div class="tt"><span>Lot san pham</span><button class="btn" onclick="openF('trace')">+</button></div><div class="lst" id="tlst"><div class="emp">Chua co</div></div></div>
-<div class="c"><div class="tt"><span>Su kien (Bon, Phun...)</span><button class="btn" onclick="openF('event')">+</button></div><div class="lst" id="evlst"><div class="emp">Chua co</div></div></div>
+<div class="c"><div class="tt"><span>Su kien Truy xuat (an/hien)</span></div>
+<div id="evaccordion"></div>
+<button class="bt" style="background:#757575;margin-top:8px" onclick="openF('event')">+ Them su kien</button>
+</div>
 <div class="c"><div class="tt"><span>QR Code</span></div>
 <input class="in" id="qr" placeholder="Nhap ma QR...">
 <button class="bt" onclick="chkQR()">Tra cuu</button>
@@ -141,7 +155,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f8}
 <div class="c">
 <div class="st"><label>Server</label><span id="srv">--</span></div>
 <div class="st"><label>Cap nhat</label><span id="last">--</span></div>
-<div class="st"><label>Version</label><span>PRO v1.0.9</span></div>
+<div class="st"><label>Version</label><span>PRO v1.1.0</span></div>
 </div>
 <button class="bt" onclick="sync()">Dong bo API</button>
 <button class="bt" style="background:#757575" onclick="clearAll()">Xoa data</button>
@@ -187,11 +201,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f8}
 
 <!-- RULE -->
 <div id="ruleF" class="modal"><div class="box">
-<div class="h"><span>Luat</span><button class="cl" onclick="closeF()">&times;</button></div>
+<div class="h"><span>Luat Auto</span><button class="cl" onclick="closeF()">&times;</button></div>
 <input type="hidden" id="rid">
 <div class="gp"><label class="lb">Ten (*)</label><input class="in" id="rname"></div>
-<div class="gp"><label class="lb">Dieu kien</label><select class="sel" id="rsen"><option value="temperature">Nhiet do</option><option value="humidity">Do am</option></select><select class="sel" id="rop" style="margin-top:4px"><option value=">">&gt;</option><option value="<">&lt;</option></select><input type="number" class="in" id="rval" placeholder="Gia tri" style="margin-top:4px"></div>
+<div class="gp"><label class="lb">Dieu kien (AND/OR)</label>
+<select class="sel" id="rlogic" style="margin-bottom:6px"><option value="AND">Tat ca (AND)</option><option value="OR">Bat ky (OR)</option></select>
+<div id="conds"></div>
+<button type="button" class="add-cond" onclick="addCond()">+ Them dieu kien</button>
+</div>
 <div class="gp"><label class="lb">Hanh dong</label><select class="sel" id="ract"><option value="on">Bat</option><option value="off">Tat</option><option value="alert">Canh bao</option></select></div>
+<div class="gp"><label class="lb">Thoi gian chay (phut)</label><input type="number" class="in" id="rdur" placeholder="0 = cho den khi dk thay doi"></div>
+<div class="gp"><label class="lb">Cooldown (phut)</label><input type="number" class="in" id="rcool" placeholder="Loi giua 2 lan chay"></div>
+<div class="gp"><label class="lb">Hysteresis</label><input type="number" class="in" id="rhys" placeholder="Nguong on/off (vd: 2)"></div>
+<div class="gp"><label class="lb">Thoi gian ap dung</label>
+<select class="sel" id="rtime"><option value="always">Luon luon</option><option value="day">Chi ban ngay</option><option value="night">Chi ban dem</option></select>
+</div>
 <button class="bt" onclick="saveRule()">Luu</button>
 </div></div>
 
@@ -219,19 +243,33 @@ body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f8}
 <div class="h"><span>Lot san pham</span><button class="cl" onclick="closeF()">&times;</button></div>
 <input type="hidden" id="tid">
 <div class="gp"><label class="lb">Ma lot (*)</label><input class="in" id="tcode"></div>
+<div class="gp"><label class="lb">San pham</label><input class="in" id="tname"></div>
 <div class="gp"><label class="lb">Cay trong</label><input class="in" id="tcrop"></div>
 <div class="gp"><label class="lb">Khoi luong (kg)</label><input type="number" class="in" id="twgt"></div>
-<div class="gp"><label class="lb">Ngay thu</label><input type="date" class="in" id="thv"></div>
+<div class="gp"><label class="lb">Don vi</label><select class="sel" id="tunit"><option value="kg">kg</option><option value="bao">Bao</option><option value="thung">Thung</option></select></div>
+<div class="gp"><label class="lb">Ngay thu hoach</label><input type="date" class="in" id="thv"></div>
+<div class="gp"><label class="lb">Nguon goc</label><input class="in" id="tsrc" placeholder="Trang trai, dia diem..."></div>
+<div class="gp"><label class="lb">Nha cung cap</label><input class="in" id="tsup"></div>
+<div class="gp"><label class="lb">Ngay san xuat</label><input type="date" class="in" id="tmf"></div>
+<div class="gp"><label class="lb">Han su dung</label><input type="date" class="in" id="texp"></div>
+<div class="gp"><label class="lb">Gia ban (VND)</label><input type="number" class="in" id="tprice"></div>
+<div class="gp"><label class="lb">Ghi chu</label><textarea class="tx" id="tnote"></textarea></div>
 <button class="bt" onclick="saveTrace()">Luu</button>
 </div></div>
 
 <!-- EVENT -->
 <div id="eventF" class="modal"><div class="box">
-<div class="h"><span>Su kien</span><button class="cl" onclick="closeF()">&times;</button></div>
+<div class="h"><span>Su kien Truy xuat</span><button class="cl" onclick="closeF()">&times;</button></div>
 <input type="hidden" id="eid">
-<div class="gp"><label class="lb">Loai su kien</label><select class="sel" id="evtype"><option value="fertilizer">Bon phan</option><option value="pest">Phun thuoc</option><option value="water">Tuoi nuoc</option><option value="harvest">Thu hoach</option><option value="plant">Trong cay</option></select></div>
+<div class="gp"><label class="lb">Loai su kien</label><select class="sel" id="evtype"><option value="fertilizer">Bon phan</option><option value="pest">Phun thuoc BVTV</option><option value="water">Tuoi nuoc</option><option value="harvest">Thu hoach</option><option value="plant">Trong cay</option><option value="move">Chuyen lot</option><option value="quality">Kiem tra chat luong</option><option value="pack">Dong go</option><option value="sell">Ban hang</option></select></div>
 <div class="gp"><label class="lb">Ma lot</label><input class="in" id="evcode"></div>
-<div class="gp"><label class="lb">Ngay</label><input type="date" class="in" id="evdate"></div>
+<div class="gp"><label class="lb">Ngay thuc hien</label><input type="date" class="in" id="evdate"></div>
+<div class="gp"><label class="lb">San pham/Thuoc su dung</label><input class="in" id="evprod" placeholder="Ten san phm, ten thuoc..."></div>
+<div class="gp"><label class="lb">So luong/Lieu</label><input class="in" id="evqty"></div>
+<div class="gp"><label class="lb">Don vi</label><select class="sel" id="evunit"><option value="kg">kg</option><option value="l">Lit</option><option value="ml">ml</option><option value="g">gam</option><option value="bao">Bao</option><option value="chai">Chai</option></select></div>
+<div class="gp"><label class="lb">Nha cung cap</label><input class="in" id="evsup"></div>
+<div class="gp"><label class="lb">Nguoi thuc hien</label><input class="in" id="evuser"></div>
+<div class="gp"><label class="lb">Thoi gian chay (phut)</label><input type="number" class="in" id="evdur" placeholder="Cho may bom, he thong tuoi"></div>
 <div class="gp"><label class="lb">Ghi chu</label><textarea class="tx" id="evnote"></textarea></div>
 <button class="bt" onclick="saveEvent()">Luu</button>
 </div></div>
@@ -271,6 +309,7 @@ var API = 'http://10.0.2.2:3000';
 var STK = 'est_v9';
 
 var dt = {crops:[], devices:[], rules:[], scheds:[], zones:[], traces:[], events:[], inv:[], finance:{inc:0,exp:0,tx:[]}, sensors:{}};
+var condCount = 0;
 
 (function(){
   try{var x=localStorage.getItem(STK);if(x)dt=JSON.parse(x);}catch(e){}
@@ -288,8 +327,8 @@ function go(n){
   render();
 }
 
-function closeF(){document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('on');});}
-function openF(id){closeF();document.getElementById(id+'F').classList.add('on');document.getElementById(id+'id').value='';}
+function closeF(){document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('on');});document.getElementById('conds').innerHTML='';condCount=0;}
+function openF(id){closeF();document.getElementById(id+'F').classList.add('on');document.getElementById(id+'id').value='';if(id==='rule')addCond();}
 
 function init(){
   render();
@@ -341,7 +380,14 @@ function render(){
   
   // Rules
   h = dt.rules.length?'':'<div class="emp">Chua co</div>';
-  dt.rules.forEach(function(r,i){h += '<div class="r"><div class="l"><div class="nm">'+r.name+'</div><div class="ds">'+r.sen+' '+r.op+' '+r.val+'</div></div><button class="bx" onclick="dl('+i+',\'rule\')">X</button></div>';});
+  dt.rules.forEach(function(r,i){
+    var conds = r.conds && r.conds.length ? r.conds.map(function(c){return c.sen+' '+c.op+' '+c.val;}).join(r.logic||' AND ') : (r.sen+' '+r.op+' '+r.val);
+    var extra = [];
+    if(r.duration) extra.push(r.duration+'p');
+    if(r.cooldown) extra.push('CD:'+r.cooldown+'p');
+    if(r.hysteresis) extra.push('Hys:'+r.hysteresis);
+    h += '<div class="r"><div class="l"><div class="nm">'+r.name+'</div><div class="ds">'+conds+(extra.length?' ('+extra.join(', ')+')':'')+'</div></div><div><button class="be" onclick="edRule('+i+')">E</button><button class="bx" onclick="dl('+i+',\'rule\')">X</button></div></div>';
+  });
   document.getElementById('rlst').innerHTML = h;
   
   // Scheds
@@ -356,13 +402,27 @@ function render(){
   
   // Traces
   h = dt.traces.length?'':'<div class="emp">Chua co</div>';
-  dt.traces.forEach(function(t,i){h += '<div class="r"><div class="l"><div class="nm">'+t.code+'</div><div class="ds">'+t.crop+' | '+t.weight+'kg</div></div><button class="bx" onclick="dl('+i+',\'trace\')">X</button></div>';});
+  dt.traces.forEach(function(t,i){h += '<div class="r"><div class="l"><div class="nm">'+(t.name||t.code)+'</div><div class="ds">'+(t.crop||'')+' | '+(t.weight||0)+'kg</div></div><div><button class="be" onclick="edTrace('+i+')">E</button><button class="bx" onclick="dl('+i+',\'trace\')">X</button></div></div>';});
   document.getElementById('tlst').innerHTML = h;
   
-  // Events
-  h = dt.events.length?'':'<div class="emp">Chua co</div>';
-  dt.events.forEach(function(e,i){h += '<div class="r"><div class="l"><div class="nm">'+e.type+'</div><div class="ds">'+e.code+' | '+(e.date||'')+'</div></div><button class="bx" onclick="dl('+i+',\'event\')">X</button></div>';});
-  document.getElementById('evlst').innerHTML = h;
+  // Events accordion
+  var ac = '';
+  var codes = [...new Set(dt.events.map(function(e){return e.code;}))];
+  if(codes.length === 0){
+    ac = '<div class="emp">Chua co su kien</div>';
+  }else{
+    codes.forEach(function(code){
+      var evs = dt.events.filter(function(e){return e.code === code;});
+      var evHtml = '';
+      evs.forEach(function(e,i){
+        var idx = dt.events.indexOf(e);
+        var prod = e.prod ? ' | '+e.prod : '';
+        evHtml += '<div class="r"><div class="l"><div class="nm">'+e.type+'</div><div class="ds">'+(e.date||'')+prod+'</div></div><div><button class="be" onclick="edEvent('+idx+')">E</button><button class="bx" onclick="dl('+idx+',\'event\')">X</button></div></div>';
+      });
+      ac += '<div class="accordion"><div class="acc-h" onclick="toggleAcc(this)">'+code+' ('+evs.length+' su kien)</div><div class="acc-c">'+evHtml+'</div></div>';
+    });
+  }
+  document.getElementById('evaccordion').innerHTML = ac;
   
   // Inventory
   h = dt.inv.length?'':'<div class="emp">Chua co</div>';
@@ -378,6 +438,85 @@ function edDev(i){
   document.getElementById('dmac').value = d.mac||'';
   document.getElementById('dzone').value = d.zone||'';
   openF('device');
+}
+
+function addCond(){
+  var c = document.getElementById('conds');
+  var id = condCount++;
+  c.innerHTML += '<div class="cond-row" id="cond'+id+'"><select class="sel" style="width:40%"><option value="temperature">Nhiet do</option><option value="humidity">Do am</option><option value="soil">Do am dat</option><option value="light">Anh sang</option></select><select class="sel" style="width:20%"><option value=">">&gt;</option><option value="<">&lt;</option><option value="=">=</option></select><input type="number" class="in" placeholder="Gtri"><button type="button" class="rm-cond" onclick="this.parentElement.remove()">×</button></div>';
+}
+
+function edRule(i){
+  var r = dt.rules[i];
+  document.getElementById('rid').value = i;
+  document.getElementById('rname').value = r.name;
+  document.getElementById('rlogic').value = r.logic||'AND';
+  document.getElementById('ract').value = r.action;
+  document.getElementById('rdur').value = r.duration||'';
+  document.getElementById('rcool').value = r.cooldown||'';
+  document.getElementById('rhys').value = r.hysteresis||'';
+  document.getElementById('rtime').value = r.timeapply||'always';
+  var c = document.getElementById('conds');
+  c.innerHTML = '';
+  condCount = 0;
+  if(r.conds && r.conds.length){
+    r.conds.forEach(function(cond){
+      var id = condCount++;
+      c.innerHTML += '<div class="cond-row" id="cond'+id+'"><select class="sel" style="width:40%"><option value="temperature">Nhiet do</option><option value="humidity">Do am</option><option value="soil">Do am dat</option><option value="light">Anh sang</option></select><select class="sel" style="width:20%"><option value=">">&gt;</option><option value="<">&lt;</option><option value="=">=</option></select><input type="number" class="in" placeholder="Gtri"><button type="button" class="rm-cond" onclick="this.parentElement.remove()">×</button></div>';
+      var row = c.lastElementChild;
+      row.querySelector('select').value = cond.sen;
+      row.querySelectorAll('select')[1].value = cond.op;
+      row.querySelector('input').value = cond.val;
+    });
+  }else if(r.sen){
+    addCond();
+    var row = document.getElementById('conds').lastElementChild;
+    row.querySelector('select').value = r.sen;
+    row.querySelectorAll('select')[1].value = r.op;
+    row.querySelector('input').value = r.val;
+  }else{
+    addCond();
+  }
+  openF('rule');
+}
+
+function edTrace(i){
+  var t = dt.traces[i];
+  document.getElementById('tid').value = i;
+  document.getElementById('tcode').value = t.code;
+  document.getElementById('tname').value = t.name||'';
+  document.getElementById('tcrop').value = t.crop||'';
+  document.getElementById('twgt').value = t.weight||'';
+  document.getElementById('tunit').value = t.unit||'kg';
+  document.getElementById('thv').value = t.harvest||'';
+  document.getElementById('tsrc').value = t.source||'';
+  document.getElementById('tsup').value = t.supplier||'';
+  document.getElementById('tmf').value = t.mfg||'';
+  document.getElementById('texp').value = t.exp||'';
+  document.getElementById('tprice').value = t.price||'';
+  document.getElementById('tnote').value = t.note||'';
+  openF('trace');
+}
+
+function edEvent(i){
+  var e = dt.events[i];
+  document.getElementById('eid').value = i;
+  document.getElementById('evtype').value = e.type;
+  document.getElementById('evcode').value = e.code||'';
+  document.getElementById('evdate').value = e.date||'';
+  document.getElementById('evprod').value = e.prod||'';
+  document.getElementById('evqty').value = e.qty||'';
+  document.getElementById('evunit').value = e.unit||'kg';
+  document.getElementById('evsup').value = e.supplier||'';
+  document.getElementById('evuser').value = e.user||'';
+  document.getElementById('evdur').value = e.duration||'';
+  document.getElementById('evnote').value = e.note||'';
+  openF('event');
+}
+
+function toggleAcc(el){
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
 }
 
 function dl(i,typ){
@@ -410,7 +549,11 @@ function saveDevice(){
 function saveRule(){
   var nm = document.getElementById('rname').value;
   if(!nm) return msg('Nhap ten','err');
-  var it = {name:nm, sen:document.getElementById('rsen').value, op:document.getElementById('rop').value, val:document.getElementById('rval').value, action:document.getElementById('ract').value};
+  var conds = [];
+  document.querySelectorAll('#conds .cond-row').forEach(function(row){
+    conds.push({sen:row.querySelectorAll('select')[0].value,op:row.querySelectorAll('select')[1].value,val:row.querySelector('input').value});
+  });
+  var it = {name:nm, logic:document.getElementById('rlogic').value, conds:conds, action:document.getElementById('ract').value, duration:parseInt(document.getElementById('rdur').value)||0, cooldown:parseInt(document.getElementById('rcool').value)||0, hysteresis:parseFloat(document.getElementById('rhys').value)||0, timeapply:document.getElementById('rtime').value};
   var id = document.getElementById('rid').value;
   if(id!==''){dt.rules[id]=it;}else{dt.rules.push(it);}
   sv(); closeF(); render(); msg('Da luu!');
@@ -437,16 +580,17 @@ function saveZone(){
 function saveTrace(){
   var cd = document.getElementById('tcode').value;
   if(!cd) return msg('Nhap ma','err');
-  var it = {code:cd, crop:document.getElementById('tcrop').value, weight:document.getElementById('twgt').value, harvest:document.getElementById('thv').value};
+  var it = {code:cd, name:document.getElementById('tname').value, crop:document.getElementById('tcrop').value, weight:document.getElementById('twgt').value, unit:document.getElementById('tunit').value, harvest:document.getElementById('thv').value, source:document.getElementById('tsrc').value, supplier:document.getElementById('tsup').value, mfg:document.getElementById('tmf').value, exp:document.getElementById('texp').value, price:document.getElementById('tprice').value, note:document.getElementById('tnote').value};
   var id = document.getElementById('tid').value;
   if(id!==''){dt.traces[id]=it;}else{dt.traces.push(it);}
   sv(); closeF(); render(); msg('Da luu!');
 }
 
 function saveEvent(){
-  var it = {type:document.getElementById('evtype').value, code:document.getElementById('evcode').value, date:document.getElementById('evdate').value, note:document.getElementById('evnote').value};
+  var it = {type:document.getElementById('evtype').value, code:document.getElementById('evcode').value, date:document.getElementById('evdate').value, prod:document.getElementById('evprod').value, qty:document.getElementById('evqty').value, unit:document.getElementById('evunit').value, supplier:document.getElementById('evsup').value, user:document.getElementById('evuser').value, duration:document.getElementById('evdur').value, note:document.getElementById('evnote').value};
   if(!it.type) return msg('Chon loai','err');
-  dt.events.push(it);
+  var id = document.getElementById('eid').value;
+  if(id!==''){dt.events[id]=it;}else{dt.events.push(it);}
   sv(); closeF(); render(); msg('Da luu!');
 }
 

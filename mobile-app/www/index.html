@@ -27,7 +27,7 @@
     .header h1 { font-size: 18px; font-weight: 600; }
     .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: var(--secondary); }
     .status-indicator.offline { background: var(--danger); }
-    .content { padding: 16px; }
+    .content { padding: 16px 16px 80px; }
     .card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
     .card-title { font-size: 14px; color: #666; margin-bottom: 8px; }
     .card-value { font-size: 24px; font-weight: 600; color: var(--dark); }
@@ -45,58 +45,98 @@
     .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; width: 100%; }
     .btn:active { background: var(--primary-dark); }
     .nav { display: flex; background: white; border-top: 1px solid #eee; position: fixed; bottom: 0; width: 100%; max-width: 480px; }
-    .nav-item { flex: 1; text-align: center; padding: 12px; color: #999; font-size: 12px; }
+    .nav-item { flex: 1; text-align: center; padding: 12px; color: #999; font-size: 12px; cursor: pointer; }
     .nav-item.active { color: var(--primary); }
-    .content { padding: 16px 16px 80px; }
     .empty-state { text-align: center; padding: 40px; color: #999; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .crop-card { border: 1px solid #eee; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+    .crop-name { font-weight: 600; font-size: 16px; }
+    .crop-info { font-size: 12px; color: #666; margin-top: 4px; }
+    .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+    .setting-label { font-size: 14px; }
+    .setting-value { font-size: 14px; color: #666; }
   </style>
 </head>
 <body>
   <div class="app-container">
     <div class="header">
-      <h1>🌾 EcoSynTech</h1>
+      <h1>EcoSynTech</h1>
       <div class="status-indicator" id="connectionStatus"></div>
     </div>
     
-    <div class="content">
-      <div class="card">
-        <div class="card-title">Nhiệt độ</div>
-        <div class="card-value" id="tempValue">--<span class="card-unit">°C</span></div>
-      </div>
-      
-      <div class="card">
-        <div class="card-title">Độ ẩm đất</div>
-        <div class="card-value" id="humidityValue">--<span class="card-unit">%</span></div>
-      </div>
-      
-      <div class="metric-grid">
-        <div class="metric">
-          <div class="metric-value" id="deviceCount">0</div>
-          <div class="metric-label">Thiết bị</div>
+    <div id="tab-dashboard" class="tab-content active">
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Nhiệt độ</div>
+          <div class="card-value" id="tempValue">--<span class="card-unit">°C</span></div>
         </div>
-        <div class="metric">
-          <div class="metric-value" id="alertCount">0</div>
-          <div class="metric-label">Cảnh báo</div>
+        
+        <div class="card">
+          <div class="card-title">Độ ẩm đất</div>
+          <div class="card-value" id="humidityValue">--<span class="card-unit">%</span></div>
+        </div>
+        
+        <div class="metric-grid">
+          <div class="metric">
+            <div class="metric-value" id="deviceCount">0</div>
+            <div class="metric-label">Thiết bị</div>
+          </div>
+          <div class="metric">
+            <div class="metric-value" id="alertCount">0</div>
+            <div class="metric-label">Cảnh báo</div>
+          </div>
+        </div>
+        
+        <div class="card" style="margin-top: 16px;">
+          <div class="card-title">Thiết bị</div>
+          <ul class="device-list" id="deviceList">
+            <li class="empty-state">Đang tải...</li>
+          </ul>
+        </div>
+        
+        <div class="card">
+          <div class="card-title">Điều khiển</div>
+          <button class="btn" id="refreshBtn">Làm mới dữ liệu</button>
         </div>
       </div>
-      
-      <div class="card" style="margin-top: 16px;">
-        <div class="card-title">Thiết bị</div>
-        <ul class="device-list" id="deviceList">
-          <li class="empty-state">Đang tải...</li>
-        </ul>
+    </div>
+
+    <div id="tab-crops" class="tab-content">
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Danh sách cây trồng</div>
+          <div id="cropList">
+            <div class="empty-state">Nhấn để tải dữ liệu...</div>
+          </div>
+        </div>
       </div>
-      
-      <div class="card">
-        <div class="card-title">Điều khiển</div>
-        <button class="btn" id="refreshBtn">Làm mới dữ liệu</button>
+    </div>
+
+    <div id="tab-settings" class="tab-content">
+      <div class="content">
+        <div class="card">
+          <div class="setting-item">
+            <span class="setting-label">Máy chủ</span>
+            <span class="setting-value" id="serverUrl">--</span>
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">Cập nhật</span>
+            <span class="setting-value" id="lastUpdate">--</span>
+          </div>
+          <div class="setting-item">
+            <span class="setting-label">Phiên bản</span>
+            <span class="setting-value">1.0.0</span>
+          </div>
+        </div>
+        <button class="btn" id="clearCacheBtn">Xóa cache</button>
       </div>
     </div>
     
     <nav class="nav">
-      <div class="nav-item active">📊 Dashboard</div>
-      <div class="nav-item">🌱 Crops</div>
-      <div class="nav-item">⚙️ Settings</div>
+      <div class="nav-item active" data-tab="dashboard">Dashboard</div>
+      <div class="nav-item" data-tab="crops">Crops</div>
+      <div class="nav-item" data-tab="settings">Settings</div>
     </nav>
   </div>
 
@@ -109,12 +149,55 @@
     let ws = null;
     let reconnectTimer = null;
     let isOffline = false;
+    let cropsLoaded = false;
     
     function showError(msg) {
       console.error(msg);
       document.getElementById('tempValue').innerHTML = '--<span class="card-unit">°C</span>';
       document.getElementById('humidityValue').innerHTML = '--<span class="card-unit">%</span>';
-      document.getElementById('deviceList').innerHTML = '<li class="empty-state">⚠️ ' + msg + '</li>';
+      document.getElementById('deviceList').innerHTML = '<li class="empty-state">' + msg + '</li>';
+    }
+    
+    function initNavigation() {
+      const navItems = document.querySelectorAll('.nav-item');
+      navItems.forEach(item => {
+        item.addEventListener('click', function() {
+          const tabName = this.getAttribute('data-tab');
+          document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+          this.classList.add('active');
+          document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+          document.getElementById('tab-' + tabName).classList.add('active');
+          loadTabData(tabName);
+        });
+      });
+    }
+    
+    function loadTabData(tabName) {
+      if (tabName === 'crops') {
+        loadCrops();
+      } else if (tabName === 'settings') {
+        document.getElementById('serverUrl').textContent = API_BASE;
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleString('vi-VN');
+      }
+    }
+    
+    async function loadCrops() {
+      try {
+        const res = await fetch(API_BASE + '/api/crops', { headers: { 'Content-Type': 'application/json' } });
+        if (!res.ok) throw new Error('API error');
+        const crops = await res.json();
+        const list = document.getElementById('cropList');
+        if (crops && crops.length > 0) {
+          list.innerHTML = crops.map(c => 
+            '<div class="crop-card"><div class="crop-name">' + (c.name || 'Cay trong') + '</div>' +
+            '<div class="crop-info">Giai doan: ' + (c.stage || '--') + ' | Ngay trong: ' + (c.plantedDate || '--') + '</div></div>'
+          ).join('');
+        } else {
+          list.innerHTML = '<div class="empty-state">Chua co cay trong</div>';
+        }
+      } catch (err) {
+        document.getElementById('cropList').innerHTML = '<div class="empty-state">Khong the tai du lieu</div>';
+      }
     }
     
     function loadCachedData() {
@@ -181,8 +264,8 @@
         document.getElementById('deviceCount').textContent = data.devices.length;
         const list = document.getElementById('deviceList');
         list.innerHTML = data.devices.map(d => 
-          '<li class="device-item"><span class="device-name">' + (d.name || 'Thiết bị') + '</span><span class="device-status ' + (d.status || 'offline') + '">' + (d.status || 'offline') + '</span></li>'
-        ).join('') || '<li class="empty-state">Không có thiết bị</li>';
+          '<li class="device-item"><span class="device-name">' + (d.name || 'Thiet bi') + '</span><span class="device-status ' + (d.status || 'offline') + '">' + (d.status || 'offline') + '</span></li>'
+        ).join('') || '<li class="empty-state">Khong co thiet bi</li>';
       }
     }
     
@@ -207,17 +290,26 @@
         console.error('Fetch Error:', err.message);
         document.getElementById('connectionStatus').classList.add('offline');
         loadCachedData();
-        showError('Không thể kết nối máy chủ');
+        showError('Khong the ket noi may chu');
       }
     }
     
     document.getElementById('refreshBtn').addEventListener('click', function() {
-      this.textContent = '⏳ Đang tải...';
+      this.textContent = 'Dang tai...';
       fetchData().finally(() => {
-        setTimeout(() => { this.textContent = 'Làm mới dữ liệu'; }, 1000);
+        setTimeout(() => { this.textContent = 'Lam moi du lieu'; }, 1000);
       });
     });
     
+    document.getElementById('clearCacheBtn').addEventListener('click', function() {
+      localStorage.clear();
+      alert('Da xoa cache');
+      document.getElementById('lastUpdate').textContent = new Date().toLocaleString('vi-VN');
+    });
+    
+    document.getElementById('cropList').addEventListener('click', loadCrops);
+    
+    initNavigation();
     loadCachedData();
     connect();
     fetchData();

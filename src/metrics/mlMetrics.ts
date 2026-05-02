@@ -3,19 +3,40 @@
 
 const SNAPSHOT_TTL_MS = 5 * 60 * 1000; // 5 minutes heatmap-ish freshness (not strictly used here)
 
-const store = {
-  // modelName -> { calls, totalMs, events: { eventName -> { count, totalMs } } }
+export interface ModelEventStats {
+  count: number;
+  totalMs: number;
+}
+
+export interface ModelStats {
+  calls: number;
+  totalMs: number;
+  events: Record<string, ModelEventStats>;
+}
+
+export interface ModelSnapshot {
+  calls: number;
+  avgLatencyMs: number;
+  events: Record<string, { count: number; avgMs: number }>;
+}
+
+export interface MetricsSnapshot {
+  timestamp: string;
+  models: Record<string, ModelSnapshot>;
+}
+
+const store: { models: Record<string, ModelStats> } = {
   models: {}
 };
 
-function _ensureModel(model) {
+function _ensureModel(model: string): ModelStats {
   if (!store.models[model]) {
     store.models[model] = { calls: 0, totalMs: 0, events: {} };
   }
   return store.models[model];
 }
 
-function record(model, event, durationMs) {
+export function record(model: string, event: string, durationMs: number): void {
   const m = _ensureModel(model);
   m.calls += 1;
   m.totalMs += durationMs;
@@ -24,11 +45,11 @@ function record(model, event, durationMs) {
   m.events[event].totalMs += durationMs;
 }
 
-function getSnapshot() {
-  const out = {};
+export function getSnapshot(): MetricsSnapshot {
+  const out: Record<string, ModelSnapshot> = {};
   for (const [model, stats] of Object.entries(store.models)) {
     const avg = stats.calls > 0 ? stats.totalMs / stats.calls : 0;
-    const events = {};
+    const events: Record<string, { count: number; avgMs: number }> = {};
     for (const [ev, evStats] of Object.entries(stats.events)) {
       events[ev] = {
         count: evStats.count,
@@ -47,7 +68,12 @@ function getSnapshot() {
   };
 }
 
-module.exports = {
+export function reset(): void {
+  store.models = {};
+}
+
+export default {
   record,
-  getSnapshot
+  getSnapshot,
+  reset
 };

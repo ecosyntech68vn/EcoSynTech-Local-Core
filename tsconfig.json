@@ -28,7 +28,7 @@
     "incremental": true,
     "skipLibCheck": true,
     "typeRoots": ["./node_modules/@types", "./src/types"],
-    "types": ["node", "jest"],
+    "types": ["node", "jest", "express"],
     "baseUrl": ".",
     "paths": {
       "@services/*": ["src/services/*"],

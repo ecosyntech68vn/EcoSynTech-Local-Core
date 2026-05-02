@@ -52,7 +52,11 @@ jobs:
         run: |
           cd mobile-app
           npm install
-          ls -la
+
+      - name: Add Android platform
+        run: |
+          cd mobile-app
+          npx cap add android
 
       - name: Sync Android
         run: |

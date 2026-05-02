@@ -1,11 +1,12 @@
-const express = require('express');
-const router = express.Router();
-const { auth } = require('../middleware/auth');
-const { getSecurityStatus } = require('../middleware/security-audit');
+import { Router, Request, Response } from 'express';
+import { auth } from '../middleware/auth';
+import { getSecurityStatus } from '../middleware/security-audit';
 
-router.get('/status', auth, (req, res) => {
+const router = Router();
+
+router.get('/status', auth, (req: Request, res: Response) => {
   const status = getSecurityStatus();
-  const issues = [];
+  const issues: string[] = [];
   
   if (status.nodeEnv === 'production' && !status.jwtConfigured) {
     issues.push('JWT_SECRET is not configured - cannot run in production');
@@ -23,4 +24,4 @@ router.get('/status', auth, (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;

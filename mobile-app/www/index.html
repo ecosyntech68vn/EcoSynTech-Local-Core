@@ -33,19 +33,20 @@
     .card-value { font-size: 24px; font-weight: 600; color: var(--dark); }
     .card-unit { font-size: 14px; color: #999; font-weight: normal; }
     .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .metric { text-align: center; padding: 12px; background: var(--light); border-radius: 8px; }
+    .metric { text-align: center; padding: 12px; background: var(--light); border-radius: 8px; cursor: pointer; }
     .metric-value { font-size: 20px; font-weight: 600; color: var(--primary); }
     .metric-label { font-size: 12px; color: #666; }
     .device-list { list-style: none; }
-    .device-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+    .device-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; cursor: pointer; }
     .device-name { font-weight: 500; }
     .device-status { font-size: 12px; padding: 4px 8px; border-radius: 4px; }
     .device-status.online { background: #e8f5e9; color: var(--secondary); }
     .device-status.offline { background: #ffebee; color: var(--danger); }
-    .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; width: 100%; }
+    .btn { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500; width: 100%; margin-top: 8px; }
     .btn:active { background: var(--primary-dark); }
-    .nav { display: flex; background: white; border-top: 1px solid #eee; position: fixed; bottom: 0; width: 100%; max-width: 480px; }
-    .nav-item { flex: 1; text-align: center; padding: 12px; color: #999; font-size: 12px; cursor: pointer; }
+    .btn-secondary { background: var(--light); color: var(--dark); }
+    .nav { display: flex; background: white; border-top: 1px solid #eee; position: fixed; bottom: 0; width: 100%; max-width: 480px; flex-wrap: wrap; }
+    .nav-item { flex: 1; text-align: center; padding: 12px 8px; color: #999; font-size: 11px; cursor: pointer; min-width: 25%; }
     .nav-item.active { color: var(--primary); }
     .empty-state { text-align: center; padding: 40px; color: #999; }
     .tab-content { display: none; }
@@ -56,6 +57,23 @@
     .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
     .setting-label { font-size: 14px; }
     .setting-value { font-size: 14px; color: #666; }
+    .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .menu-item { background: var(--light); border-radius: 12px; padding: 16px; text-align: center; cursor: pointer; }
+    .menu-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+    .menu-label { font-size: 12px; color: var(--dark); }
+    .alert-badge { background: var(--danger); color: white; border-radius: 10px; padding: 2px 6px; font-size: 10px; position: absolute; }
+    .alert-item { border-left: 3px solid var(--danger); padding-left: 12px; margin-bottom: 8px; }
+    .alert-title { font-weight: 500; }
+    .alert-time { font-size: 11px; color: #999; }
+    .stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; }
+    .stat-label { color: #666; }
+    .stat-value { font-weight: 600; }
+    .table-list { width: 100%; border-collapse: collapse; }
+    .table-list th, .table-list td { padding: 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 13px; }
+    .table-list th { color: #666; font-weight: 500; }
+    .form-group { margin-bottom: 12px; }
+    .form-label { display: block; font-size: 12px; color: #666; margin-bottom: 4px; }
+    .form-input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -65,78 +83,200 @@
       <div class="status-indicator" id="connectionStatus"></div>
     </div>
     
+    <!-- DASHBOARD -->
     <div id="tab-dashboard" class="tab-content active">
       <div class="content">
         <div class="card">
-          <div class="card-title">Nhiệt độ</div>
-          <div class="card-value" id="tempValue">--<span class="card-unit">°C</span></div>
+          <div class="card-title">Nhiet do</div>
+          <div class="card-value" id="tempValue">--<span class="card-unit">C</span></div>
         </div>
         
         <div class="card">
-          <div class="card-title">Độ ẩm đất</div>
+          <div class="card-title">Do am dat</div>
           <div class="card-value" id="humidityValue">--<span class="card-unit">%</span></div>
         </div>
         
         <div class="metric-grid">
-          <div class="metric">
+          <div class="metric" onclick="navTo('devices')">
             <div class="metric-value" id="deviceCount">0</div>
-            <div class="metric-label">Thiết bị</div>
+            <div class="metric-label">Thiet bi</div>
           </div>
-          <div class="metric">
+          <div class="metric" onclick="navTo('alerts')">
             <div class="metric-value" id="alertCount">0</div>
-            <div class="metric-label">Cảnh báo</div>
+            <div class="metric-label">Canh bao</div>
           </div>
         </div>
         
         <div class="card" style="margin-top: 16px;">
-          <div class="card-title">Thiết bị</div>
+          <div class="card-title">Thiet bi</div>
           <ul class="device-list" id="deviceList">
-            <li class="empty-state">Đang tải...</li>
+            <li class="empty-state">Dang tai...</li>
           </ul>
         </div>
         
         <div class="card">
-          <div class="card-title">Điều khiển</div>
-          <button class="btn" id="refreshBtn">Làm mới dữ liệu</button>
+          <div class="card-title">Dieu khien</div>
+          <button class="btn" id="refreshBtn">Lam moi du lieu</button>
         </div>
       </div>
     </div>
 
+    <!-- CROPS -->
     <div id="tab-crops" class="tab-content">
       <div class="content">
         <div class="card">
-          <div class="card-title">Danh sách cây trồng</div>
+          <div class="card-title">Danh sach cay trong</div>
           <div id="cropList">
-            <div class="empty-state">Nhấn để tải dữ liệu...</div>
+            <div class="empty-state">Nhan de tai du lieu...</div>
+          </div>
+        </div>
+        <button class="btn" id="addCropBtn">Them cay trong moi</button>
+      </div>
+    </div>
+
+    <!-- DEVICES -->
+    <div id="tab-devices" class="tab-content">
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Quan ly thiet bi</div>
+          <ul class="device-list" id="deviceListFull">
+            <li class="empty-state">Nhan de tai...</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SENSORS -->
+    <div id="tab-sensors" class="tab-content">
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Du lieu cam bien</div>
+          <div id="sensorData">
+            <div class="empty-state">Nhan de tai...</div>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- ALERTS -->
+    <div id="tab-alerts" class="tab-content">
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Canh bao & Su kien</div>
+          <div id="alertList">
+            <div class="empty-state">Nhan de tai...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUTOMATION -->
+    <div id="tab-automation" class="tab-content">
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Dieu tuyen</div>
+          <div class="menu-grid">
+            <div class="menu-item" onclick="loadData('rules')">
+              <span class="menu-icon">⚙️</span>
+              <span class="menu-label">Luat</span>
+            </div>
+            <div class="menu-item" onclick="loadData('schedules')">
+              <span class="menu-icon">📅</span>
+              <span class="menu-label">Lich trinh</span>
+            </div>
+          </div>
+        </div>
+        <div id="automationList">
+          <div class="empty-state">Nhan de tai...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div id="tab-inventory" class="tab-content">
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Kho hang</div>
+          <div id="inventoryList">
+            <div class="empty-state">Nhan de tai...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCE -->
+    <div id="tab-finance" class="tab-content">
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Tai chinh</div>
+          <table class="table-list">
+            <tr><th>Khoan thu/chi</th><th>So tien</th></tr>
+            <tr><td>Doanh thu</td><td id="revenue">--</td></tr>
+            <tr><td>Chi phi</td><td id="expense">--</td></tr>
+            <tr><td>Loi nhuan</td><td id="profit">--</td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOURNAL -->
+    <div id="tab-journal" class="tab-content">
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Nhat ky trong cay</div>
+          <div id="journalList">
+            <div class="empty-state">Nhan de tai...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRACEABILITY -->
+    <div id="tab-traceability" class="tab-content">
+      <div class="content">
+        <div class="card">
+          <div class="card-title">Truy xuat nguon goc</div>
+          <div class="form-group">
+            <label class="form-label">Ma QR</label>
+            <input type="text" class="form-input" id="qrCode" placeholder="Nhap ma...">
+          </div>
+          <button class="btn" onclick="checkTraceability()">Kiem tra</button>
+          <div id="traceResult" style="margin-top: 12px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
     <div id="tab-settings" class="tab-content">
       <div class="content">
         <div class="card">
           <div class="setting-item">
-            <span class="setting-label">Máy chủ</span>
+            <span class="setting-label">May chu</span>
             <span class="setting-value" id="serverUrl">--</span>
           </div>
           <div class="setting-item">
-            <span class="setting-label">Cập nhật</span>
+            <span class="setting-label">Cap nhat</span>
             <span class="setting-value" id="lastUpdate">--</span>
           </div>
           <div class="setting-item">
-            <span class="setting-label">Phiên bản</span>
+            <span class="setting-label">Phien ban</span>
             <span class="setting-value">1.0.0</span>
           </div>
         </div>
-        <button class="btn" id="clearCacheBtn">Xóa cache</button>
+        <button class="btn btn-secondary" id="clearCacheBtn">Xoa cache</button>
       </div>
     </div>
     
+    <!-- NAVIGATION -->
     <nav class="nav">
-      <div class="nav-item active" data-tab="dashboard">Dashboard</div>
-      <div class="nav-item" data-tab="crops">Crops</div>
-      <div class="nav-item" data-tab="settings">Settings</div>
+      <div class="nav-item active" data-tab="dashboard">📊 Dashboard</div>
+      <div class="nav-item" data-tab="crops">🌱 Crops</div>
+      <div class="nav-item" data-tab="devices">📱 Devices</div>
+      <div class="nav-item" data-tab="sensors">🌡️ Sensors</div>
+      <div class="nav-item" data-tab="alerts">🔔 Alerts</div>
+      <div class="nav-item" data-tab="automation">⚡ Auto</div>
+      <div class="nav-item" data-tab="inventory">📦 Invent</div>
+      <div class="nav-item" data-tab="finance">💰 Finance</div>
     </nav>
   </div>
 
@@ -149,11 +289,10 @@
     let ws = null;
     let reconnectTimer = null;
     let isOffline = false;
-    let cropsLoaded = false;
     
     function showError(msg) {
       console.error(msg);
-      document.getElementById('tempValue').innerHTML = '--<span class="card-unit">°C</span>';
+      document.getElementById('tempValue').innerHTML = '--<span class="card-unit">C</span>';
       document.getElementById('humidityValue').innerHTML = '--<span class="card-unit">%</span>';
       document.getElementById('deviceList').innerHTML = '<li class="empty-state">' + msg + '</li>';
     }
@@ -172,12 +311,28 @@
       });
     }
     
+    function navTo(tabName) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelector('.nav-item[data-tab="' + tabName + '"]').classList.add('active');
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab-' + tabName).classList.add('active');
+      loadTabData(tabName);
+    }
+    
     function loadTabData(tabName) {
-      if (tabName === 'crops') {
-        loadCrops();
-      } else if (tabName === 'settings') {
-        document.getElementById('serverUrl').textContent = API_BASE;
-        document.getElementById('lastUpdate').textContent = new Date().toLocaleString('vi-VN');
+      switch(tabName) {
+        case 'crops': loadCrops(); break;
+        case 'devices': loadDevices(); break;
+        case 'sensors': loadSensors(); break;
+        case 'alerts': loadAlerts(); break;
+        case 'automation': loadAutomation(); break;
+        case 'inventory': loadInventory(); break;
+        case 'finance': loadFinance(); break;
+        case 'journal': loadJournal(); break;
+        case 'settings': 
+          document.getElementById('serverUrl').textContent = API_BASE;
+          document.getElementById('lastUpdate').textContent = new Date().toLocaleString('vi-VN');
+          break;
       }
     }
     
@@ -198,6 +353,144 @@
       } catch (err) {
         document.getElementById('cropList').innerHTML = '<div class="empty-state">Khong the tai du lieu</div>';
       }
+    }
+    
+    async function loadDevices() {
+      try {
+        const res = await fetch(API_BASE + '/api/devices', { headers: { 'Content-Type': 'application/json' } });
+        if (!res.ok) throw new Error('API error');
+        const devices = await res.json();
+        const list = document.getElementById('deviceListFull');
+        if (devices && devices.length > 0) {
+          document.getElementById('deviceCount').textContent = devices.length;
+          list.innerHTML = devices.map(d => 
+            '<li class="device-item"><span class="device-name">' + (d.name || 'Thiet bi') + '</span><span class="device-status ' + (d.status || 'offline') + '">' + (d.status || 'offline') + '</span></li>'
+          ).join('');
+        } else {
+          list.innerHTML = '<div class="empty-state">Khong co thiet bi</div>';
+        }
+      } catch (err) {
+        document.getElementById('deviceListFull').innerHTML = '<div class="empty-state">Khong the tai</div>';
+      }
+    }
+    
+    async function loadSensors() {
+      try {
+        const res = await fetch(API_BASE + '/api/sensors/latest', { headers: { 'Content-Type': 'application/json' } });
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        const container = document.getElementById('sensorData');
+        let html = '';
+        for (const [key, value] of Object.entries(data)) {
+          html += '<div class="stat-row"><span class="stat-label">' + key + '</span><span class="stat-value">' + value + '</span></div>';
+        }
+        container.innerHTML = html || '<div class="empty-state">Khong co du lieu</div>';
+      } catch (err) {
+        document.getElementById('sensorData').innerHTML = '<div class="empty-state">Khong the tai</div>';
+      }
+    }
+    
+    async function loadAlerts() {
+      try {
+        const res = await fetch(API_BASE + '/api/alerts?limit=10', { headers: { 'Content-Type': 'application/json' } });
+        if (!res.ok) throw new Error('API error');
+        const alerts = await res.json();
+        const list = document.getElementById('alertList');
+        document.getElementById('alertCount').textContent = alerts.length || 0;
+        if (alerts && alerts.length > 0) {
+          list.innerHTML = alerts.slice(0,5).map(a => 
+            '<div class="alert-item"><div class="alert-title">' + (a.message || 'Canh bao') + '</div><div class="alert-time">' + (a.timestamp || '') + '</div></div>'
+          ).join('');
+        } else {
+          list.innerHTML = '<div class="empty-state">Khong co canh bao</div>';
+        }
+      } catch (err) {
+        document.getElementById('alertList').innerHTML = '<div class="empty-state">Khong the tai</div>';
+      }
+    }
+    
+    async function loadAutomation() {
+      try {
+        const [rulesRes, schedRes] = await Promise.all([
+          fetch(API_BASE + '/api/rules', { headers: { 'Content-Type': 'application/json' } }),
+          fetch(API_BASE + '/api/schedules', { headers: { 'Content-Type': 'application/json' } })
+        ]);
+        const rules = await rulesRes.json();
+        const scheds = await schedRes.json();
+        const list = document.getElementById('automationList');
+        let html = '<div class="crop-card"><strong>Luat (' + (rules.length||0) + ')</strong></div>';
+        html += '<div class="crop-card"><strong>Lich trinh (' + (scheds.length||0) + ')</strong></div>';
+        list.innerHTML = html;
+      } catch (err) {
+        document.getElementById('automationList').innerHTML = '<div class="empty-state">Khong the tai</div>';
+      }
+    }
+    
+    async function loadInventory() {
+      try {
+        const res = await fetch(API_BASE + '/api/inventory', { headers: { 'Content-Type': 'application/json' } });
+        if (!res.ok) throw new Error('API error');
+        const items = await res.json();
+        const list = document.getElementById('inventoryList');
+        if (items && items.length > 0) {
+          list.innerHTML = '<table class="table-list"><tr><th>Mat hang</th><th>So luong</th></tr>' + 
+            items.slice(0,10).map(i => '<tr><td>' + (i.name||'-') + '</td><td>' + (i.quantity||0) + '</td></tr>').join('') + '</table>';
+        } else {
+          list.innerHTML = '<div class="empty-state">Khong co hang</div>';
+        }
+      } catch (err) {
+        document.getElementById('inventoryList').innerHTML = '<div class="empty-state">Khong the tai</div>';
+      }
+    }
+    
+    async function loadFinance() {
+      try {
+        const res = await fetch(API_BASE + '/api/finance/summary', { headers: { 'Content-Type': 'application/json' } });
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        document.getElementById('revenue').textContent = data.revenue || data.totalIncome || 0;
+        document.getElementById('expense').textContent = data.expense || data.totalExpense || 0;
+        document.getElementById('profit').textContent = data.profit || (data.revenue - data.expense) || 0;
+      } catch (err) {
+        document.getElementById('revenue').textContent = '--';
+        document.getElementById('expense').textContent = '--';
+        document.getElementById('profit').textContent = '--';
+      }
+    }
+    
+    async function loadJournal() {
+      try {
+        const res = await fetch(API_BASE + '/api/journal?limit=10', { headers: { 'Content-Type': 'application/json' } });
+        if (!res.ok) throw new Error('API error');
+        const entries = await res.json();
+        const list = document.getElementById('journalList');
+        if (entries && entries.length > 0) {
+          list.innerHTML = entries.map(e => 
+            '<div class="crop-card"><div class="crop-name">' + (e.title || 'Bai viet') + '</div>' +
+            '<div class="crop-info">' + (e.date || '') + '</div></div>'
+          ).join('');
+        } else {
+          list.innerHTML = '<div class="empty-state">Chua co ban ghi</div>';
+        }
+      } catch (err) {
+        document.getElementById('journalList').innerHTML = '<div class="empty-state">Khong the tai</div>';
+      }
+    }
+    
+    async function checkTraceability() {
+      const qr = document.getElementById('qrCode').value;
+      if (!qr) return;
+      try {
+        const res = await fetch(API_BASE + '/api/traceability/' + qr, { headers: { 'Content-Type': 'application/json' } });
+        const data = await res.json();
+        document.getElementById('traceResult').innerHTML = '<div class="crop-card">' + JSON.stringify(data, null, 2) + '</div>';
+      } catch (err) {
+        document.getElementById('traceResult').innerHTML = '<div class="empty-state">Khong tim thay</div>';
+      }
+    }
+    
+    function loadData(endpoint) {
+      loadTabData(endpoint);
     }
     
     function loadCachedData() {
@@ -255,7 +548,7 @@
     
     function updateDashboard(data) {
       if (data.temperature !== undefined && data.temperature !== null) {
-        document.getElementById('tempValue').innerHTML = data.temperature + '<span class="card-unit">°C</span>';
+        document.getElementById('tempValue').innerHTML = data.temperature + '<span class="card-unit">C</span>';
       }
       if (data.humidity !== undefined && data.humidity !== null) {
         document.getElementById('humidityValue').innerHTML = data.humidity + '<span class="card-unit">%</span>';
@@ -308,6 +601,7 @@
     });
     
     document.getElementById('cropList').addEventListener('click', loadCrops);
+    document.getElementById('deviceListFull') && document.getElementById('deviceListFull').addEventListener('click', loadDevices);
     
     initNavigation();
     loadCachedData();

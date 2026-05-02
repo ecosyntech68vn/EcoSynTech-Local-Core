@@ -33,6 +33,32 @@ router.get('/', asyncHandler(async (req, res) => {
   res.json(result);
 }));
 
+router.get('/latest', asyncHandler(async (req, res) => {
+  if (!cache) cache = await telemetryCache.getCache();
+  const cacheKey = 'sensors:latest';
+  const cachedData = await cache.get(cacheKey);
+  if (cachedData) {
+    return res.json(cachedData);
+  }
+
+  const sensors = getAll('SELECT * FROM sensors ORDER BY type');
+  const devices = getAll('SELECT * FROM devices');
+
+  const result = {
+    temperature: null,
+    humidity: null,
+    devices: devices.map(d => ({ name: d.name, status: d.status }))
+  };
+
+  sensors.forEach(sensor => {
+    if (sensor.type === 'temperature') result.temperature = sensor.value;
+    if (sensor.type === 'humidity') result.humidity = sensor.value;
+  });
+
+  await cache.set(cacheKey, result, 10000);
+  res.json(result);
+}));
+
 router.get('/:type', asyncHandler(async (req, res) => {
   const sensor = getOne('SELECT * FROM sensors WHERE type = ?', [req.params.type]);
   

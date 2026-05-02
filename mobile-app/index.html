@@ -101,11 +101,36 @@
   </div>
 
   <script>
-    const API_BASE = window.location.origin || 'http://localhost:3000';
-    const WS_URL = (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/ws';
+    const API_BASE = (window.Capacitor && window.Capacitor.isNativePlatform) 
+      ? 'http://10.0.2.2:3000' 
+      : (window.location.origin || 'http://localhost:3000');
+    const WS_URL = (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + (window.location.hostname || 'localhost') + ':3000/ws';
     
     let ws = null;
     let reconnectTimer = null;
+    let isOffline = false;
+    
+    function showError(msg) {
+      console.error(msg);
+      document.getElementById('tempValue').innerHTML = '--<span class="card-unit">°C</span>';
+      document.getElementById('humidityValue').innerHTML = '--<span class="card-unit">%</span>';
+      document.getElementById('deviceList').innerHTML = '<li class="empty-state">⚠️ ' + msg + '</li>';
+    }
+    
+    function loadCachedData() {
+      const cached = localStorage.getItem('dashboardData');
+      if (cached) {
+        try {
+          const data = JSON.parse(cached);
+          updateDashboard(data);
+          console.log('Loaded cached data');
+        } catch (e) {}
+      }
+    }
+    
+    function cacheData(data) {
+      localStorage.setItem('dashboardData', JSON.stringify({ ...data, timestamp: Date.now() }));
+    }
     
     function connect() {
       try {
@@ -113,49 +138,87 @@
         ws.onopen = () => {
           console.log('WS Connected');
           document.getElementById('connectionStatus').classList.remove('offline');
+          isOffline = false;
         };
         ws.onclose = () => {
           console.log('WS Disconnected');
           document.getElementById('connectionStatus').classList.add('offline');
-          reconnectTimer = setTimeout(connect, 3000);
+          isOffline = true;
+          if (reconnectTimer) clearTimeout(reconnectTimer);
+          reconnectTimer = setTimeout(connect, 5000);
+        };
+        ws.onerror = (err) => {
+          console.error('WS Error:', err);
+          isOffline = true;
+          loadCachedData();
         };
         ws.onmessage = (e) => {
-          const data = JSON.parse(e.data);
-          updateDashboard(data);
+          try {
+            const data = JSON.parse(e.data);
+            if (data.type === 'sensor-data' || data.temperature !== undefined) {
+              updateDashboard(data);
+              cacheData(data);
+            }
+          } catch (err) {
+            console.error('Parse error:', err);
+          }
         };
       } catch (err) {
-        console.error('WS Error:', err);
+        console.error('WS Init Error:', err);
+        isOffline = true;
+        loadCachedData();
       }
     }
     
     function updateDashboard(data) {
-      if (data.temperature !== undefined) {
+      if (data.temperature !== undefined && data.temperature !== null) {
         document.getElementById('tempValue').innerHTML = data.temperature + '<span class="card-unit">°C</span>';
       }
-      if (data.humidity !== undefined) {
+      if (data.humidity !== undefined && data.humidity !== null) {
         document.getElementById('humidityValue').innerHTML = data.humidity + '<span class="card-unit">%</span>';
       }
       if (data.devices) {
         document.getElementById('deviceCount').textContent = data.devices.length;
         const list = document.getElementById('deviceList');
         list.innerHTML = data.devices.map(d => 
-          '<li class="device-item"><span class="device-name">' + d.name + '</span><span class="device-status ' + d.status + '">' + d.status + '</span></li>'
+          '<li class="device-item"><span class="device-name">' + (d.name || 'Thiết bị') + '</span><span class="device-status ' + (d.status || 'offline') + '">' + (d.status || 'offline') + '</span></li>'
         ).join('') || '<li class="empty-state">Không có thiết bị</li>';
       }
     }
     
     async function fetchData() {
       try {
-        const res = await fetch(API_BASE + '/api/sensors/latest');
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        
+        const res = await fetch(API_BASE + '/api/sensors/latest', { 
+          signal: controller.signal,
+          headers: { 'Content-Type': 'application/json' }
+        });
+        clearTimeout(timeout);
+        
+        if (!res.ok) throw new Error('API error: ' + res.status);
+        
         const data = await res.json();
         updateDashboard(data);
+        cacheData(data);
+        document.getElementById('connectionStatus').classList.remove('offline');
       } catch (err) {
-        console.error('Fetch Error:', err);
+        console.error('Fetch Error:', err.message);
+        document.getElementById('connectionStatus').classList.add('offline');
+        loadCachedData();
+        showError('Không thể kết nối máy chủ');
       }
     }
     
-    document.getElementById('refreshBtn').addEventListener('click', fetchData);
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+      this.textContent = '⏳ Đang tải...';
+      fetchData().finally(() => {
+        setTimeout(() => { this.textContent = 'Làm mới dữ liệu'; }, 1000);
+      });
+    });
     
+    loadCachedData();
     connect();
     fetchData();
     

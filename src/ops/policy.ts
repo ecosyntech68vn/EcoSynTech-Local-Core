@@ -1,5 +1,19 @@
-class Policy {
-  match(event, registry) {
+export interface Skill {
+  id: string;
+  triggers?: string[];
+  run: (ctx: unknown) => unknown;
+  [key: string]: unknown;
+}
+
+export interface Event {
+  type?: string;
+  route?: string;
+  topic?: string;
+  [key: string]: unknown;
+}
+
+export class Policy {
+  match(event: Event, registry: Map<string, Skill>): Skill[] {
     const list = [...registry.values()];
     return list.filter(skill => {
       if (!Array.isArray(skill.triggers)) return false;
@@ -13,4 +27,4 @@ class Policy {
   }
 }
 
-module.exports = { Policy };
+export default { Policy };

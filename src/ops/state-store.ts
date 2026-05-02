@@ -1,8 +1,20 @@
-const fs = require('fs');
-const path = require('path');
+import * as fs from 'fs';
+import * as path from 'path';
 
-class StateStore {
-  constructor(filePath = path.join(process.cwd(), 'data', 'ops-state.json')) {
+export interface StateData {
+  beats?: Record<string, number>;
+  alerts?: Array<{ id: string; signature: string; ts: number }>;
+  incidents?: unknown[];
+  builds?: unknown[];
+  approvals?: unknown[];
+  [key: string]: unknown;
+}
+
+export class StateStore {
+  filePath: string;
+  state: StateData;
+  
+  constructor(filePath: string = path.join(process.cwd(), 'data', 'ops-state.json')) {
     this.filePath = filePath;
     this.state = {
       beats: {},
@@ -14,7 +26,7 @@ class StateStore {
     this._load();
   }
 
-  _load() {
+  private _load(): void {
     try {
       if (fs.existsSync(this.filePath)) {
         const raw = fs.readFileSync(this.filePath, 'utf8');
@@ -23,28 +35,28 @@ class StateStore {
     } catch (_) { /* istanbul ignore next */ }
   }
 
-  _save() {
+  private _save(): void {
     try {
       fs.mkdirSync(path.dirname(this.filePath), { recursive: true });
       fs.writeFileSync(this.filePath, JSON.stringify(this.state, null, 2));
     } catch (_) { /* istanbul ignore next */ }
   }
 
-  get(key, fallback = null) {
+  get(key: string, fallback: unknown = null): unknown {
     return Object.prototype.hasOwnProperty.call(this.state, key) ? this.state[key] : fallback;
   }
 
-  set(key, value) {
+  set(key: string, value: unknown): void {
     this.state[key] = value;
     this._save();
   }
 
-  push(key, value, limit = 1000) {
+  push(key: string, value: unknown, limit: number = 1000): void {
     if (!Array.isArray(this.state[key])) this.state[key] = [];
-    this.state[key].unshift(value);
-    this.state[key] = this.state[key].slice(0, limit);
+    (this.state[key] as unknown[]).unshift(value);
+    this.state[key] = (this.state[key] as unknown[]).slice(0, limit);
     this._save();
   }
 }
 
-module.exports = { StateStore };
+export default { StateStore };

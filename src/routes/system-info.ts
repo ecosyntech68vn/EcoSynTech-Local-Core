@@ -1,6 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const pkg = require('../../package.json');
+import { Router, Request, Response } from 'express';
+import pkg from '../../package.json';
+
+const router = Router();
 
 const COMPANY_INFO = {
   name: 'CÔNG TY TNHH CÔNG NGHỆ ECOSYNTECH GLOBAL',
@@ -23,7 +24,7 @@ const COMPANY_INFO = {
   ]
 };
 
-router.get('/info', (req, res) => {
+router.get('/info', (req: Request, res: Response) => {
   res.json({
     ok: true,
     data: {
@@ -44,7 +45,7 @@ router.get('/info', (req, res) => {
   });
 });
 
-router.get('/status', (req, res) => {
+router.get('/status', (req: Request, res: Response) => {
   res.json({
     ok: true,
     data: {
@@ -56,4 +57,4 @@ router.get('/status', (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;

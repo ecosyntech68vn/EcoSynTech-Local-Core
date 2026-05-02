@@ -1,7 +1,6 @@
-const express = require('express');
-const router = express.Router();
-const swaggerJsdoc = require('swagger-jsdoc');
-const swaggerUi = require('swagger-ui-express');
+import { Router, Request, Response } from 'express';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 const options = {
   definition: {
@@ -25,13 +24,15 @@ const options = {
     },
     security: [{ bearerAuth: [] }]
   },
-  apis: ['./src/routes/*.js']
+  apis: ['./src/routes/*.ts']
 };
 
 const specs = swaggerJsdoc(options);
 
+const router = Router();
+
 router.use('/', swaggerUi.serve);
 router.get('/', swaggerUi.setup(specs, { explorer: true }));
-router.get('/json', (req, res) => res.json(specs));
+router.get('/json', (req: Request, res: Response) => res.json(specs));
 
-module.exports = router;
+export default router;

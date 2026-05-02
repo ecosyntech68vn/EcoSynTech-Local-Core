@@ -221,7 +221,7 @@ interface OrchestrationOptions {
   timeout?: number;
 }
 
-interface OrchestrationResult {
+export interface OrchestrationResult {
   agent: string;
   context?: unknown;
   executed?: number;

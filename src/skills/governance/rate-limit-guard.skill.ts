@@ -1,24 +1,11 @@
-interface SkillContext {
-  event?: {
-    rate?: { requestsPerMinute: number };
-  };
-}
-
-interface SkillResult {
-  ok: boolean;
-  rate: { requestsPerMinute: number } | null;
-  recommendation: string;
-  timestamp: string;
-}
-
-const skill = {
+module.exports = {
   id: 'rate-limit-guard',
   name: 'Rate Limit Guard',
   triggers: ['event:watchdog.tick', 'event:request.spike'],
   riskLevel: 'medium',
   canAutoFix: true,
-  async run(ctx: SkillContext): Promise<SkillResult> {
-    const rate = ctx.event?.rate || null;
+  async run(ctx) {
+    const rate = ctx.event.rate || null;
     const ok = !rate || rate.requestsPerMinute < 80;
 
     return {
@@ -29,5 +16,3 @@ const skill = {
     };
   }
 };
-
-export = skill;

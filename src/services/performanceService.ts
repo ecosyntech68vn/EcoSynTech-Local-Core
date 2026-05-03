@@ -1,13 +1,13 @@
 import { getAll, getOne, runQuery } from '../config/database';
 
-const CACHE_TTL = 30000;
+import CACHE_TTL = 30000;
 
 interface CacheEntry {
   data: unknown;
   timestamp: number;
 }
 
-const cache = new Map<string, CacheEntry>();
+import cache = new Map<string, CacheEntry>();
 
 function cacheGet(key: string): unknown {
   const entry = cache.get(key);
@@ -89,7 +89,7 @@ async function getSystemPerformance(): Promise<PerformanceMetrics> {
   const cached = cacheGet(cacheKey);
   if (cached) return cached as PerformanceMetrics;
 
-  const os = require('os');
+  const os from('os');
   
   const cpu = os.loadavg()[0];
   const totalMem = os.totalmem();

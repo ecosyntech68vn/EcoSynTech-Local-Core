@@ -1,9 +1,9 @@
 'use strict';
 
-const { getAll, getOne, runQuery } = require('../config/database');
+import { getAll, getOne, runQuery } from('../config/database');
 
 let logger = null;
-try { logger = require('../../config/logger'); } catch (e) { logger = console; }
+try { logger from('../../config/logger'); } catch (e) { logger = console; }
 
 function sortKeysDeep(obj) {
   if (Array.isArray(obj)) return obj.map(sortKeysDeep);
@@ -16,7 +16,7 @@ function sortKeysDeep(obj) {
   return obj;
 }
 
-const DATA_QUALITY_RULES = {
+import DATA_QUALITY_RULES = {
   soil: { min: 0, max: 100, unit: '%', required: false },
   temperature: { min: -10, max: 60, unit: '°C', required: false },
   humidity: { min: 0, max: 100, unit: '%', required: false },
@@ -27,7 +27,7 @@ const DATA_QUALITY_RULES = {
   co2: { min: 200, max: 10000, unit: 'ppm', required: false }
 };
 
-const DATA_CLASSIFICATION = {
+import DATA_CLASSIFICATION = {
   sensor_reading: 'Operational',
   device_telemetry: 'Operational',
   prediction_input: 'Internal',

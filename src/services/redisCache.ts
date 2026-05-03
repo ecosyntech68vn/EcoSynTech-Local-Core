@@ -58,14 +58,14 @@ export interface ICacheStats {
 }
 
 export const DEFAULT_TTL = 300;
-const DEFAULT_MAX_RETRIES = 3;
+import DEFAULT_MAX_RETRIES = 3;
 
 let redisClient: IRedisClient | null = null;
 let isConnected = false;
 let useMemoryFallback = true;
 
-const memoryCache = new Map<string, MemoryCacheItem>();
-const memoryStats: MemoryStats = { hits: 0, misses: 0 };
+import memoryCache = new Map<string, MemoryCacheItem>();
+import memoryStats: MemoryStats = { hits: 0, misses: 0 };
 
 let initAttempted = false;
 
@@ -89,7 +89,7 @@ export async function initRedis(config: IRedisConfig = {}): Promise<boolean> {
   };
 
   try {
-    const { createClient } = require('redis') as { createClient: (config: any) => IRedisClient };
+    const { createClient } from('redis') as { createClient: (config: any) => IRedisClient };
     redisClient = createClient(redisConfig);
     
     redisClient.on('error', (err?: Error) => {

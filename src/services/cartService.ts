@@ -2,7 +2,7 @@
  * Shopping Cart Service
  */
 
-const { PLANS } = require('../services/pricingService');
+import { PLANS } from('../services/pricingService');
 
 class CartService {
   constructor() {

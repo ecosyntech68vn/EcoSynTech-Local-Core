@@ -1,45 +1,16 @@
-/**
- * Ingest Queue - Sensor data ingestion with buffering
- * Converted to TypeScript - Phase 1
- */
+'use strict';
+import EventEmitter from('events');
+import { getValidator } from('./sensorValidator');
+import { getAlertService } from('./alertService');
 
-import EventEmitter from 'events';
-import logger from '../config/logger';
-import sensorValidator from './sensorValidator';
-import alertService from './alertService';
+import logger = {
+  info: console.log.bind(console),
+  warn: console.warn.bind(console),
+  error: console.error.bind(console)
+};
 
-export interface SensorReading {
-  deviceId: string;
-  sensor: string;
-  value: number;
-  timestamp?: number;
-  metadata?: Record<string, any>;
-}
-
-export interface IngestStats {
-  enqueued: number;
-  processed: number;
-  rejected: number;
-  errors: number;
-  queueSize: number;
-}
-
-export interface IngestQueueOptions {
-  maxSize?: number;
-  flushInterval?: number;
-  batchSize?: number;
-}
-
-export class IngestQueueClass extends EventEmitter {
-  private maxSize: number;
-  private flushInterval: number;
-  private batchSize: number;
-  private queue: SensorReading[];
-  private processing: boolean;
-  private timer: NodeJS.Timeout | null;
-  private stats: IngestStats;
-
-  constructor(options: IngestQueueOptions = {}) {
+class IngestQueue extends EventEmitter {
+  constructor(options = {}) {
     super();
     this.maxSize = options.maxSize || 10000;
     this.flushInterval = options.flushInterval || 5000;
@@ -51,18 +22,17 @@ export class IngestQueueClass extends EventEmitter {
       enqueued: 0,
       processed: 0,
       rejected: 0,
-      errors: 0,
-      queueSize: 0
+      errors: 0
     };
   }
 
-  start(): void {
+  start() {
     if (this.timer) return;
     this.timer = setInterval(() => this.flush(), this.flushInterval);
-    logger.info(`[IngestQueue] Started (maxSize=${this.maxSize}, flushInterval=${this.flushInterval}ms)`);
+    logger.info('[IngestQueue] Started (maxSize=' + this.maxSize + ', flushInterval=' + this.flushInterval + 'ms)');
   }
 
-  stop(): void {
+  stop() {
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
@@ -70,93 +40,166 @@ export class IngestQueueClass extends EventEmitter {
     logger.info('[IngestQueue] Stopped. Stats:', this.stats);
   }
 
-  enqueue(reading: SensorReading): boolean {
-    if (this.queue.length >= this.maxSize) {
-      logger.warn('[IngestQueue] Queue full, rejecting new reading');
+  enqueue(deviceId, readings) {
+    if (!readings || !Array.isArray(readings) || readings.length === 0) {
       this.stats.rejected++;
-      return false;
+      return { ok: false, code: 'INVALID_READINGS' };
     }
 
-    this.queue.push(reading);
-    this.stats.enqueued++;
-    this.stats.queueSize = this.queue.length;
-    return true;
-  }
-
-  enqueueBatch(readings: SensorReading[]): number {
-    let added = 0;
-    for (const reading of readings) {
-      if (this.enqueue(reading)) {
-        added++;
-      }
+    if (this.queue.length >= this.maxSize) {
+      this.stats.rejected++;
+      this.emit('overflow', { deviceId: deviceId, readings: readings, queueSize: this.queue.length });
+      return { ok: false, code: 'QUEUE_FULL', queueSize: this.queue.length };
     }
-    return added;
-  }
 
-  private async flush(): Promise<void> {
-    if (this.processing || this.queue.length === 0) return;
-    
-    this.processing = true;
-    
-    const batch = this.queue.splice(0, this.batchSize);
-    this.stats.queueSize = this.queue.length;
-    
-    try {
-      await this.processBatch(batch);
-      this.stats.processed += batch.length;
-    } catch (error: any) {
-      logger.error('[IngestQueue] Flush error:', error.message);
-      this.stats.errors += batch.length;
-    }
-    
-    this.processing = false;
-  }
+    const validator = getValidator();
+    const result = validator.processReadings(readings);
 
-  private async processBatch(readings: SensorReading[]): Promise<void> {
-    const validReadings: SensorReading[] = [];
-    
-    for (const reading of readings) {
-      const validation = sensorValidator.validateReading(reading.sensor, reading.value, reading.timestamp);
+    if (result.rejected.length > 0) {
+      this.stats.rejected += result.rejected.length;
+      this.emit('validationError', { rejected: result.rejected });
       
-      if (validation.valid) {
-        validReadings.push(reading);
-        
-        if (validation.warnings && validation.warnings.length > 0) {
-          alertService.sendAlert(
-            `Sensor ${reading.sensor} value ${reading.value} has warnings: ${validation.warnings.join(', ')}`,
-            { type: 'SENSOR_OUTLIER', severity: 'warning', deviceId: reading.deviceId }
-          );
-        }
-      } else {
-        this.stats.rejected++;
-        logger.warn(`[IngestQueue] Rejected reading: ${reading.sensor}=${reading.value}`);
+      const alertService = getAlertService();
+      result.rejected.forEach(r => {
+        alertService.sendSensorAlert(r.sensor, r.value, r.issues || []);
+      });
+    }
+
+    if (result.outliers.length > 0) {
+      this.emit('outlierDetected', { outliers: result.outliers });
+      
+      const alertService = getAlertService();
+      result.outliers.forEach(o => {
+        alertService.sendOutlierAlert(deviceId, o.sensor, o.value, o.zScore);
+      });
+    }
+
+    if (result.spikes.length > 0) {
+      this.emit('spikeDetected', { spikes: result.spikes });
+      
+      const alertService = getAlertService();
+      result.spikes.forEach(s => {
+        alertService.sendSpikeAlert(deviceId, s.sensor, s.value, s.deltaPercent);
+      });
+    }
+
+    if (result.validated.length === 0) {
+      return { ok: false, code: 'ALL_READINGS_INVALID', stats: result.stats };
+    }
+
+    const entry = {
+      deviceId: deviceId,
+      readings: result.validated,
+      timestamp: Date.now(),
+      retries: 0,
+      quality: result.stats
+    };
+
+    this.queue.push(entry);
+    this.stats.enqueued++;
+
+    if (this.queue.length >= this.batchSize && !this.processing) {
+      this.flush();
+    }
+
+    return { ok: true, queued: readings.length, queueSize: this.queue.length };
+  }
+
+  async flush() {
+    if (this.processing || this.queue.length === 0) return;
+
+    this.processing = true;
+    const batch = this.queue.splice(0, this.batchSize);
+    const deviceReadings = {};
+
+    for (let i = 0; i < batch.length; i++) {
+      const entry = batch[i];
+      if (!deviceReadings[entry.deviceId]) {
+        deviceReadings[entry.deviceId] = [];
+      }
+      for (let j = 0; j < entry.readings.length; j++) {
+        const reading = entry.readings[j];
+        deviceReadings[entry.deviceId].push({
+          sensor_type: reading.sensor_type,
+          value: reading.value,
+          unit: reading.unit,
+          timestamp: entry.timestamp
+        });
       }
     }
-    
-    if (validReadings.length > 0) {
-      this.emit('data', validReadings);
+
+    try {
+      await this.processBatch(deviceReadings);
+      this.stats.processed = this.stats.processed + batch.length;
+      this.emit('flushed', { count: batch.length });
+    } catch (err) {
+      logger.error('[IngestQueue] Flush error:', err.message);
+      this.stats.errors = this.stats.errors + 1;
+      for (let k = 0; k < batch.length; k++) {
+        const batchEntry = batch[k];
+        if (batchEntry.retries < 3) {
+          batchEntry.retries = batchEntry.retries + 1;
+          this.queue.unshift(batchEntry);
+        }
+      }
+      this.emit('error', err);
+    } finally {
+      this.processing = false;
     }
   }
 
-  getStats(): IngestStats {
-    return { ...this.stats };
+  async processBatch(deviceReadings) {
+    const keys = Object.keys(deviceReadings);
+    const db from('../config/database');
+
+    for (let i = 0; i < keys.length; i++) {
+      const deviceId = keys[i];
+      const readings = deviceReadings[deviceId];
+
+      for (let j = 0; j < readings.length; j++) {
+        const reading = readings[j];
+        try {
+          const id = deviceId + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+          db.runQuery(
+            'INSERT INTO sensor_readings (id, sensor_type, value, timestamp) VALUES (?, ?, ?, datetime(?, \'unixepoch\'))',
+            [id, reading.sensor_type, reading.value, Math.floor(Date.now() / 1000)]
+          );
+        } catch (err) {
+          logger.warn('[IngestQueue] Insert error:', err.message);
+        }
+      }
+    }
   }
 
-  getQueueSize(): number {
+  getStats() {
+    return {
+      enqueued: this.stats.enqueued,
+      processed: this.stats.processed,
+      rejected: this.stats.rejected,
+      errors: this.stats.errors,
+      queueSize: this.queue.length,
+      processing: this.processing
+    };
+  }
+
+  getQueueSize() {
     return this.queue.length;
   }
 
-  clear(): void {
-    this.queue = [];
-    this.stats.queueSize = 0;
-    logger.info('[IngestQueue] Cleared');
-  }
-
-  isRunning(): boolean {
-    return this.timer !== null;
+  isFull() {
+    return this.queue.length >= this.maxSize;
   }
 }
 
-export const IngestQueue = new IngestQueueClass();
+function getInstance(options) {
+  if (!global.ingestQueue) {
+    global.ingestQueue = new IngestQueue(options);
+  }
+  return global.ingestQueue;
+}
 
-export default IngestQueue;
+function getQueue() {
+  return global.ingestQueue;
+}
+
+module.exports = { IngestQueue: IngestQueue, getInstance: getInstance, getQueue: getQueue };

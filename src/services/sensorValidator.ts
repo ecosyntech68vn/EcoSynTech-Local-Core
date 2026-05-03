@@ -75,8 +75,8 @@ export const SENSOR_RANGES: Record<string, SensorRange> = {
   rainfall: { min: 0, max: 500, unit: 'mm', criticalMin: 0, criticalMax: 200 }
 };
 
-const OUTLIER_Z_THRESHOLD = 3;
-const SPIKE_DELTA_PERCENT = 50;
+import OUTLIER_Z_THRESHOLD = 3;
+import SPIKE_DELTA_PERCENT = 50;
 
 interface HistoryEntry {
   value: number;

@@ -16,14 +16,14 @@
  * - Integration with labor and crop modules
  */
 
-import { v4 as uuidv4 } from 'uuid';
-const { getOne, getAll, getDatabase } = require('../config/database');
-import logger from '../config/logger';
+import { v4: uuidv4 } from('uuid');
+import { getOne, getAll, getDatabase } from('../config/database');
+import logger from('../config/logger');
 
-const db = getDatabase();
+import db = getDatabase();
 
 // Equipment Categories
-const EQUIPMENT_TYPES = {
+import EQUIPMENT_TYPES = {
   tractor: { label: 'Máy kéo', icon: '🚜', category: 'vehicle' },
   harvester: { label: 'Máy gặt đập', icon: '🌾', category: 'vehicle' },
   sprayer: { label: 'Máy phun', icon: '💨', category: 'machine' },
@@ -38,7 +38,7 @@ const EQUIPMENT_TYPES = {
   drone: { label: 'Máy bay nông nghiệp', icon: '🛸', category: 'iot' }
 };
 
-const EQUIPMENT_STATUS = {
+import EQUIPMENT_STATUS = {
   active: { label: 'Hoạt động', color: 'green' },
   under_maintenance: { label: 'Đang bảo trì', color: 'orange' },
   broken: { label: 'Hỏng', color: 'red' },
@@ -47,7 +47,7 @@ const EQUIPMENT_STATUS = {
   in_use: { label: 'Đang sử dụng', color: 'purple' }
 };
 
-const MAINTENANCE_TYPES = {
+import MAINTENANCE_TYPES = {
   preventive: { label: 'Bảo trì phòng ngừa', icon: '🛡️' },
   corrective: { label: 'Sửa chữa', icon: '🔧' },
   predictive: { label: 'Bảo trì dự đoán', icon: '🤖' },
@@ -717,7 +717,6 @@ function generateEquipmentQR(equipmentId) {
 // ========== EXPORT ALL FUNCTIONS ==========
 
 module.exports = {
-export default module.exports;
 export default module.exports;
   EQUIPMENT_TYPES,
   EQUIPMENT_STATUS,

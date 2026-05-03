@@ -1,12 +1,12 @@
-const { getAll, getOne, runQuery } = require('../config/database');
-const logger = require('../config/logger');
-const aiTelemetry = require('./aiTelemetry');
-const { getBreaker } = require('./circuitBreaker');
-const { retry } = require('./retryService');
+import { getAll, getOne, runQuery } from('../config/database');
+import logger from('../config/logger');
+import aiTelemetry from('./aiTelemetry');
+import { getBreaker } from('./circuitBreaker');
+import { retry } from('./retryService');
 
-const MIN_DATA_QUALITY_SCORE = 40;
+import MIN_DATA_QUALITY_SCORE = 40;
 
-const BREAKER_CONFIGS = {
+import BREAKER_CONFIGS = {
   weather: { failureThreshold: 3, timeout: 30000 },
   model: { failureThreshold: 5, timeout: 60000 },
   database: { failureThreshold: 3, timeout: 15000 }
@@ -37,7 +37,7 @@ class AIEngine {
         return await retry(async () => {
           const lat = process.env.FARM_LAT || '10.7769';
           const lon = process.env.FARM_LON || '106.7009';
-          const axios = require('axios');
+          const axios from('axios');
           const res = await axios.get(
             `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation&forecast_days=2&timezone=auto`,
             { timeout: 5000 }

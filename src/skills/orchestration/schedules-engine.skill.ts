@@ -1,23 +1,10 @@
-interface SkillContext {
-  params?: Record<string, unknown>;
-  event?: string;
-  [key: string]: unknown;
-}
-
-interface SkillResult {
-  ok: boolean;
-  action: string;
-  note: string;
-  timestamp: string;
-}
-
-const skill = {
+module.exports = {
   id: 'schedules-engine',
   name: 'Schedules Engine',
   triggers: ['route:/api/schedules', 'event:schedule.changed', 'event:watchdog.tick'],
   riskLevel: 'medium',
   canAutoFix: true,
-  async run(ctx: SkillContext): Promise<SkillResult> {
+  async run(ctx) {
     return {
       ok: true,
       action: 'evaluate-schedules',
@@ -26,5 +13,3 @@ const skill = {
     };
   }
 };
-
-export = skill;

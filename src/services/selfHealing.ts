@@ -31,7 +31,7 @@ export interface RecoveryAction {
   (): Promise<void>;
 }
 
-const METRICS: SelfHealMetrics = {
+import METRICS: SelfHealMetrics = {
   restarts: 0,
   errors: [],
   lastError: null,
@@ -39,7 +39,7 @@ const METRICS: SelfHealMetrics = {
   checks: {}
 };
 
-const SELF_HEAL_ENABLED = process.env.SELF_HEAL_ENABLED !== 'false';
+import SELF_HEAL_ENABLED = process.env.SELF_HEAL_ENABLED !== 'false';
 
 export function healthCheck(name: string, fn: () => Promise<any>): () => Promise<HealthCheckResult> {
   METRICS.checks[name] = {
@@ -81,7 +81,7 @@ async function triggerRecovery(name: string): Promise<void> {
   const recoveryActions: Record<string, RecoveryAction> = {
     database: async () => {
       logger.info('[SelfHeal] Attempting database recovery...');
-      const db = require('../config/database');
+      const db from('../config/database');
       try {
         db.saveDatabase();
         logger.info('[SelfHeal] Database saved');
@@ -91,14 +91,14 @@ async function triggerRecovery(name: string): Promise<void> {
     },
     cache: async () => {
       logger.info('[SelfHeal] Clearing cache...');
-      const cache = require('../services/cacheService');
+      const cache from('../services/cacheService');
       cache.stopCache?.();
       logger.info('[SelfHeal] Cache stopped');
     },
     scheduler: async () => {
       logger.info('[SelfHeal] Restarting scheduler...');
       try {
-        const serverModule = require('../../server');
+        const serverModule from('../../server');
         const ops = serverModule.getOps?.();
         if (ops?.getScheduler) {
           const scheduler = ops.getScheduler();
@@ -114,7 +114,7 @@ async function triggerRecovery(name: string): Promise<void> {
     },
     redis: async () => {
       logger.info('[SelfHeal] Reconnecting Redis...');
-      const redis = require('./redisCache');
+      const redis from('./redisCache');
       try {
         await redis.close?.();
         await redis.initRedis?.();

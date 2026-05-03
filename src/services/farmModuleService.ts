@@ -17,13 +17,13 @@
  * - Easy to add new modules
  */
 
-import { v4 as uuidv4 } from 'uuid'
-import { getOne, getAll, db } from '../config/database'
-import logger from '../config/logger'
-const batchService = require('./batchService');
-const farmActivityService = require('./farmActivityService');
+import { v4: uuidv4 } from('uuid');
+import { getOne, getAll, db } from('../config/database');
+import logger from('../config/logger');
+import batchService from('./batchService');
+import farmActivityService from('./farmActivityService');
 
-const FARM_MODULES = {
+import FARM_MODULES = {
   crops: {
     id: 'crops',
     name: 'Cây trồng',
@@ -464,7 +464,6 @@ function getTraceabilityWithModuleData(batchCode) {
 }
 
 module.exports = {
-export default module.exports;
 export default module.exports;
   getModules,
   getModule,

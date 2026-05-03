@@ -52,7 +52,7 @@ export interface PaymentCallback {
   vnp_SecureHash?: string;
 }
 
-const config: VNPayConfig = {
+import config: VNPayConfig = {
   vnp_TmnCode: process.env.VNPAY_TmnCode || 'ECOSYN02',
   vnp_HashSecret: process.env.VNP_HASH_SECRET || '',
   vnp_Url: process.env.VNPAY_URL || 'https://sandbox.vnpayment.vn/payv2/vpcpay.html',

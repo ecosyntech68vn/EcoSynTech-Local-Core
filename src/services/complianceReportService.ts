@@ -1,10 +1,10 @@
 'use strict';
 
-const os = require('os');
-const { getAll, getOne } = require('../config/database');
-const logger = require('../config/logger');
-const { getKeyService } = require('./keyRotationService');
-const { getBaselineService } = require('../config/esp32Baseline');
+import os from('os');
+import { getAll, getOne } from('../config/database');
+import logger from('../config/logger');
+import { getKeyService } from('./keyRotationService');
+import { getBaselineService } from('../config/esp32Baseline');
 
 class ComplianceReportService {
   constructor() {

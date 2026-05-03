@@ -1,6 +1,6 @@
 'use strict';
 
-const logger = require('../config/logger');
+import logger from('../config/logger');
 
 class SkillRegistry {
   constructor() {
@@ -202,7 +202,7 @@ class SkillOrchestrator {
 
     skillLoaders.forEach(({ name, file, optional }) => {
       try {
-        const skillModule = require(file);
+        const skillModule from(file);
         const handler = skillModule.execute || skillModule.handler || skillModule;
         this.registry.registerSkill(name, handler, { category: name.split('-')[0] });
       } catch (e) {

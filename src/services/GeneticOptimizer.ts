@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+import fs from('fs');
+import path from('path');
 
 class GeneticOptimizer {
   constructor() {
@@ -100,7 +100,7 @@ class GeneticOptimizer {
     if (!dataLogs || dataLogs.length === 0) return 0;
 
     let totalFitness = 0;
-    const fuzzy = require('./IrrigationFuzzyController');
+    const fuzzy from('./IrrigationFuzzyController');
 
     for (const log of dataLogs) {
       const predictedDuration = this.simulateFuzzy(
@@ -134,7 +134,7 @@ class GeneticOptimizer {
   }
 
   simulateFuzzy(error, rainProb, hour, genes) {
-    const fuzzy = require('./IrrigationFuzzyController');
+    const fuzzy from('./IrrigationFuzzyController');
     const mf = fuzzy.membershipFunctions;
     const rules = fuzzy.rules;
     const outputSingletons = {
@@ -252,7 +252,7 @@ class GeneticOptimizer {
   }
 
   updateFuzzyController() {
-    const fuzzy = require('./IrrigationFuzzyController');
+    const fuzzy from('./IrrigationFuzzyController');
     const newSingletons = {
       zero: this.bestSolution[0],
       veryShort: this.bestSolution[1],

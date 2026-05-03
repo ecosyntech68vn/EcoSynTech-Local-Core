@@ -1,67 +1,15 @@
-/**
- * Incident Service - Security incident management
- * Converted to TypeScript - Phase 1
- * ISO 27001 A.16 compliance
- */
+import logger from('../config/logger');
+import { getAll, getOne, runQuery } from('../config/database');
+import { v4: uuidv4 } from('uuid');
 
-import { v4 as uuidv4 } from 'uuid';
-import db from '../config/database';
-import logger from '../config/logger';
-
-export type IncidentSeverity = 'critical' | 'high' | 'medium' | 'low';
-export type IncidentStatus = 'detected' | 'contained' | 'eradicated' | 'recovered' | 'closed';
-
-export interface Incident {
-  id: string;
-  title: string;
-  description: string;
-  severity: IncidentSeverity;
-  category: string;
-  source: string;
-  status: IncidentStatus;
-  evidence: string;
-  affectedSystems: string;
-  reportedBy: string;
-  reportedAt: string;
-  assignedTo?: string;
-  resolvedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateIncidentData {
-  title: string;
-  description: string;
-  severity?: IncidentSeverity;
-  category?: string;
-  source?: string;
-  affectedSystems?: string[];
-  initialEvidence?: {
-    ip?: string;
-    timestamp?: string;
-    logs?: string[];
-    screenshots?: string[];
-    reportedBy?: string;
-  };
-}
-
-export interface UpdateIncidentData {
-  title?: string;
-  description?: string;
-  severity?: IncidentSeverity;
-  category?: string;
-  status?: IncidentStatus;
-  assignedTo?: string;
-}
-
-export const INCIDENT_SEVERITY: Record<string, IncidentSeverity> = {
+import INCIDENT_SEVERITY = {
   CRITICAL: 'critical',
   HIGH: 'high',
   MEDIUM: 'medium',
   LOW: 'low'
 };
 
-export const INCIDENT_STATUS: Record<string, IncidentStatus> = {
+import INCIDENT_STATUS = {
   DETECTED: 'detected',
   CONTAINED: 'contained',
   ERADICATED: 'eradicated',
@@ -69,139 +17,172 @@ export const INCIDENT_STATUS: Record<string, IncidentStatus> = {
   CLOSED: 'closed'
 };
 
-export async function createIncident(data: CreateIncidentData): Promise<string> {
+async function createIncident(data) {
+  const {
+    title,
+    description,
+    severity = 'medium',
+    category,
+    source,
+    affectedSystems = [],
+    initialEvidence = {}
+  } = data;
+
   const id = uuidv4();
-  const now = new Date().toISOString();
-  
-  const evidence = {
-    ip: data.initialEvidence?.ip,
-    timestamp: data.initialEvidence?.timestamp,
-    logs: data.initialEvidence?.logs,
-    screenshots: data.initialEvidence?.screenshots
+  const incident = {
+    id,
+    title,
+    description,
+    severity,
+    category: category || 'security',
+    source: source || 'system',
+    status: INCIDENT_STATUS.DETECTED,
+    evidence: JSON.stringify({
+      ip: initialEvidence.ip,
+      timestamp: initialEvidence.timestamp,
+      logs: initialEvidence.logs,
+      screenshots: initialEvidence.screenshots
+    }),
+    affectedSystems: JSON.stringify(affectedSystems),
+    reportedBy: initialEvidence.reportedBy || 'system',
+    reportedAt: new Date().toISOString(),
+    assignedTo: null,
+    resolvedAt: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
   };
 
-  db.run(`
-    INSERT INTO incidents (
-      id, title, description, severity, category, source, status,
-      evidence, affected_systems, reported_by, reported_at,
-      created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [
-    id,
-    data.title,
-    data.description,
-    data.severity || 'medium',
-    data.category || 'security',
-    data.source || 'system',
-    INCIDENT_STATUS.DETECTED,
-    JSON.stringify(evidence),
-    JSON.stringify(data.affectedSystems || []),
-    data.initialEvidence?.reportedBy || 'system',
-    now,
-    now,
-    now
-  ]);
+  await runQuery(
+    `INSERT INTO security_incidents 
+     (id, title, description, severity, category, source, status, evidence, affected_systems, reported_by, assigned_to, resolved_at, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    Object.values(incident)
+  );
 
-  logger.warn(`[Incident] Created: ${id} - ${data.title} (${data.severity || 'medium'})`);
-  return id;
+  logger.warn(`[INCIDENT] ${severity.toUpperCase()}: ${title} - ID: ${id}`);
+
+  return incident;
 }
 
-export function getIncident(incidentId: string): Incident | null {
-  return db.get('SELECT * FROM incidents WHERE id = ?', [incidentId]) as Incident | null;
-}
+async function updateIncidentStatus(id, status, notes = '', assignedTo = null) {
+  const updateData = {
+    status,
+    assignedTo,
+    updatedAt: new Date().toISOString()
+  };
 
-export function getIncidentsByFarm(farmId: string): Incident[] {
-  return db.all('SELECT * FROM incidents ORDER BY reported_at DESC', []) as Incident[];
-}
-
-export function updateIncident(incidentId: string, data: UpdateIncidentData): boolean {
-  try {
-    const updates: string[] = [];
-    const values: any[] = [];
-
-    if (data.title) { updates.push('title = ?'); values.push(data.title); }
-    if (data.description) { updates.push('description = ?'); values.push(data.description); }
-    if (data.severity) { updates.push('severity = ?'); values.push(data.severity); }
-    if (data.category) { updates.push('category = ?'); values.push(data.category); }
-    if (data.status) { 
-      updates.push('status = ?'); 
-      values.push(data.status);
-      if (data.status === 'recovered' || data.status === 'closed') {
-        updates.push('resolved_at = ?');
-        values.push(new Date().toISOString());
-      }
-    }
-    if (data.assignedTo) { updates.push('assigned_to = ?'); values.push(data.assignedTo); }
-
-    updates.push('updated_at = ?');
-    values.push(new Date().toISOString());
-    values.push(incidentId);
-
-    db.run(`UPDATE incidents SET ${updates.join(', ')} WHERE id = ?`, values);
-    return true;
-  } catch (error: any) {
-    logger.error('[Incident] Update error:', error.message);
-    return false;
+  if (status === INCIDENT_STATUS.CLOSED) {
+    updateData.resolvedAt = new Date().toISOString();
   }
+
+  const sets = Object.keys(updateData).map(k => `${k} = ?`).join(', ');
+  const values = [...Object.values(updateData), id];
+
+  await runQuery(`UPDATE security_incidents SET ${sets} WHERE id = ?`, values);
+
+  await addIncidentNote(id, notes, 'status_update');
+
+  return { success: true, incidentId: id, status };
 }
 
-export function containIncident(incidentId: string): boolean {
-  return updateIncident(incidentId, { status: 'contained' });
+async function addIncidentNote(id, note, noteType = 'general') {
+  await runQuery(
+    `INSERT INTO security_incident_notes (id, incident_id, note_type, note, created_at)
+     VALUES (?, ?, ?, ?, ?)`,
+    [uuidv4(), id, noteType, note, new Date().toISOString()]
+  );
 }
 
-export function eradicateIncident(incidentId: string): boolean {
-  return updateIncident(incidentId, { status: 'eradicated' });
+async function getIncidents(filters = {}) {
+  let sql = 'SELECT * FROM security_incidents WHERE 1=1';
+  const params = [];
+
+  if (filters.severity) {
+    sql += ' AND severity = ?';
+    params.push(filters.severity);
+  }
+
+  if (filters.status) {
+    sql += ' AND status = ?';
+    params.push(filters.status);
+  }
+
+  if (filters.fromDate) {
+    sql += ' AND created_at >= ?';
+    params.push(filters.fromDate);
+  }
+
+  if (filters.toDate) {
+    sql += ' AND created_at <= ?';
+    params.push(filters.toDate);
+  }
+
+  sql += ' ORDER BY created_at DESC';
+
+  if (filters.limit) {
+    sql += ' LIMIT ?';
+    params.push(filters.limit);
+  }
+
+  return getAll(sql, params);
 }
 
-export function recoverIncident(incidentId: string): boolean {
-  return updateIncident(incidentId, { status: 'recovered' });
+async function getIncidentById(id) {
+  const incident = getOne('SELECT * FROM security_incidents WHERE id = ?', [id]);
+  
+  if (incident) {
+    const notes = getAll(
+      'SELECT * FROM security_incident_notes WHERE incident_id = ? ORDER BY created_at',
+      [id]
+    );
+    incident.notes = notes;
+  }
+
+  return incident;
 }
 
-export function closeIncident(incidentId: string): boolean {
-  return updateIncident(incidentId, { status: 'closed' });
-}
-
-export function getActiveIncidents(): Incident[] {
-  return db.all(`
-    SELECT * FROM incidents 
-    WHERE status NOT IN ('closed')
-    ORDER BY 
-      CASE severity 
-        WHEN 'critical' THEN 1 
-        WHEN 'high' THEN 2 
-        WHEN 'medium' THEN 3 
-        ELSE 4 
-      END,
-      reported_at DESC
-  `, []) as Incident[];
-}
-
-export function getIncidentStats(): {
-  total: number;
-  critical: number;
-  active: number;
-  closed: number;
-} {
-  const incidents = getActiveIncidents();
-  const allIncidents = db.all('SELECT * FROM incidents', []) as Incident[];
+async function getIncidentStats() {
+  const bySeverity = getAll(
+    'SELECT severity, COUNT(*) as count FROM security_incidents GROUP BY severity'
+  );
+  
+  const byStatus = getAll(
+    'SELECT status, COUNT(*) as count FROM security_incidents GROUP BY status'
+  );
+  
+  const last30Days = getOne(
+    'SELECT COUNT(*) as count FROM security_incidents WHERE created_at >= datetime(\'now\', \'-30 days\')'
+  );
   
   return {
-    total: allIncidents.length,
-    critical: incidents.filter(i => i.severity === 'critical').length,
-    active: incidents.length,
-    closed: allIncidents.filter(i => i.status === 'closed').length
+    bySeverity: bySeverity.reduce((acc, s) => ({ ...acc, [s.severity]: s.count }), {}),
+    byStatus: byStatus.reduce((acc, s) => ({ ...acc, [s.status]: s.count }), {}),
+    last30Days: last30Days?.count || 0
   };
 }
 
-export default {
+function getIncidentSeverityFromAlert(alert) {
+  if (alert.type === 'intrusion' || alert.type === 'malware') {
+    return INCIDENT_SEVERITY.CRITICAL;
+  }
+  if (alert.type === 'unauthorized_access') {
+    return INCIDENT_SEVERITY.HIGH;
+  }
+  if (alert.type === 'suspicious_activity') {
+    return INCIDENT_SEVERITY.MEDIUM;
+  }
+  return INCIDENT_SEVERITY.LOW;
+}
+
+module.exports = {
+export default module.exports;
   createIncident,
-  getIncident,
-  getIncidentsByFarm,
-  updateIncident,
-  containIncident,
-  eradicateIncident,
-  recoverIncident,
-  closeIncident,
-  getActiveIncidents,
-  getIncidentStats
+  updateIncidentStatus,
+  addIncidentNote,
+  getIncidents,
+  getIncidentById,
+  getIncidentStats,
+  getIncidentSeverityFromAlert,
+  INCIDENT_SEVERITY,
+  INCIDENT_STATUS
 };

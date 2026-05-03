@@ -1,27 +1,15 @@
-import logger from '../config/logger';
-import { sendMessage as telegramSendMessage } from './telegramService';
+import logger from('../config/logger');
+import telegramService from('./telegramService');
 
-const ALERT_LEVELS: Record<string, string> = {
+import ALERT_LEVELS = {
   CRITICAL: 'critical',
   ERROR: 'error',
   WARNING: 'warning',
   INFO: 'info'
 };
 
-type AlertLevel = 'critical' | 'error' | 'warning' | 'info';
-
-interface AlertResult {
-  success: boolean;
-  error?: string;
-}
-
-interface NotifyOptions {
-  context?: Record<string, unknown>;
-  farmId?: string;
-}
-
-function formatAlertMessage(level: AlertLevel, title: string, details?: unknown): string {
-  const icons: Record<AlertLevel, string> = {
+function formatAlertMessage(level, title, details) {
+  const icons = {
     critical: '🔴',
     error: '❌',
     warning: '⚠️',
@@ -40,78 +28,85 @@ function formatAlertMessage(level: AlertLevel, title: string, details?: unknown)
   return message;
 }
 
-async function alert(level: AlertLevel, title: string, details?: unknown): Promise<AlertResult> {
+async function alert(level, title, details) {
   if (level === ALERT_LEVELS.INFO) {
     logger.info(title, details);
-    return { success: true };
+    return;
   }
 
   const message = formatAlertMessage(level, title, details);
   logger.warn(`${title}: ${JSON.stringify(details)}`);
 
   if (level === ALERT_LEVELS.CRITICAL || level === ALERT_LEVELS.ERROR) {
-    const success = await telegramSendMessage(message);
-    return { success };
+    return await telegramService.sendTelegramMessage(message);
   }
   
   return { success: false, error: 'Below threshold' };
 }
 
-async function notifyError(error: Error, context: Record<string, unknown> = {}): Promise<AlertResult> {
+async function notifyError(error, context = {}) {
   const isCritical = error.message?.includes('database') ||
     error.message?.includes('connection') ||
     error.message?.includes('MQTT');
 
-  const level: AlertLevel = isCritical ? 'critical' : 'error';
-  const title = `Error: ${error.message || 'Unknown error'}`;
+  const level = isCritical ? ALERT_LEVELS.CRITICAL : ALERT_LEVELS.ERROR;
   const details = {
-    error: error.message,
+    message: error.message,
     stack: error.stack,
     ...context
   };
 
-  return alert(level, title, details);
+  return alert(level, error.name || 'Error', details);
 }
 
-async function notifyDeviceOffline(deviceId: string, farmId: string): Promise<AlertResult> {
+async function notifySecurity(event) {
   return alert(
-    'warning' as AlertLevel,
-    'Thiết bị offline',
-    { deviceId, farmId, timestamp: new Date().toISOString() }
+    ALERT_LEVELS.CRITICAL,
+    'Security Event',
+    event
   );
 }
 
-async function notifySensorAnomaly(sensorType: string, value: number, threshold: number): Promise<AlertResult> {
+async function notifyDeviceOffline(deviceId, lastSeen) {
   return alert(
-    'warning' as AlertLevel,
-    'Cảm biến bất thường',
-    { sensorType, value, threshold, timestamp: new Date().toISOString() }
+    ALERT_LEVELS.WARNING,
+    'Device Offline',
+    { deviceId, lastSeen }
   );
 }
 
-async function notifyIrrigationComplete(farmId: string, duration: number): Promise<AlertResult> {
+async function notifySensorThreshold(sensorType, value, threshold, deviceId) {
   return alert(
-    'info' as AlertLevel,
-    'Tưới tiêu hoàn tất',
-    { farmId, duration, timestamp: new Date().toISOString() }
+    ALERT_LEVELS.WARNING,
+    'Sensor Threshold Exceeded',
+    { sensorType, value, threshold, deviceId }
   );
 }
 
-async function notifySecurityAlert(alertType: string, details: Record<string, unknown>): Promise<AlertResult> {
+async function notifyIrrigationComplete(farmId, duration, waterUsed) {
   return alert(
-    'critical' as AlertLevel,
-    `Cảnh báo bảo mật: ${alertType}`,
-    details
+    ALERT_LEVELS.INFO,
+    'Irrigation Complete',
+    { farmId, duration, waterUsed }
   );
 }
 
-export {
-  ALERT_LEVELS,
+async function notifySystemStartup() {
+  return alert(
+    ALERT_LEVELS.INFO,
+    'System Started',
+    { timestamp: new Date().toISOString(), version: require('../../package.json').version }
+  );
+}
+
+module.exports = {
+export default module.exports;
   alert,
   notifyError,
+  notifySecurity,
   notifyDeviceOffline,
-  notifySensorAnomaly,
+  notifySensorThreshold,
   notifyIrrigationComplete,
-  notifySecurityAlert,
-  formatAlertMessage
+  notifySystemStartup,
+  ALERT_LEVELS
 };

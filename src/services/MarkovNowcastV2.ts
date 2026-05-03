@@ -1,17 +1,17 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
-const KalmanFilter = require('./KalmanFilter');
-const AdaptiveThresholds = require('./AdaptiveThresholds');
+import fs from('fs');
+import path from('path');
+import KalmanFilter from('./KalmanFilter');
+import AdaptiveThresholds from('./AdaptiveThresholds');
 
-const WeatherState = Object.freeze({
+import WeatherState = Object.freeze({
   SUNNY: 'SUNNY',
   CLOUDY: 'CLOUDY',
   RAINY: 'RAINY'
 });
 
-const DEFAULT_CONFIG = {
+import DEFAULT_CONFIG = {
   pressureLow: 1005,
   luxCloudy: 15000,
   confirmMinutes: 10,

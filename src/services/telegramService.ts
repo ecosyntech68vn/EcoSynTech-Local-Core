@@ -9,10 +9,10 @@ import path from 'path';
 import logger from '../config/logger';
 import { getBreaker } from './circuitBreaker';
 
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+import TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+import TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
-const MESSAGE_QUEUE_PATH = path.join(__dirname, '..', '..', 'data', 'telegram_queue.json');
+import MESSAGE_QUEUE_PATH = path.join(__dirname, '..', '..', 'data', 'telegram_queue.json');
 
 export interface AlertTemplate {
   critical: string;
@@ -46,7 +46,7 @@ export const ALERT_TEMPLATE: AlertTemplate = {
   info: 'ℹ️ INFO'
 };
 
-const telegramBreaker = getBreaker('telegram', { 
+import telegramBreaker = getBreaker('telegram', { 
   failureThreshold: 5, 
   timeout: 60000 
 });

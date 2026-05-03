@@ -9,11 +9,11 @@
  * - Tạo QR code với dữ liệu đầy đủ từ chu kỳ nuôi trồng
  */
 
-const { v4: uuidv4 } = require('uuid');
-const { getOne, getAll, db, runQuery } = require('../config/database');
-const logger = require('../config/logger');
+import { v4: uuidv4 } from('uuid');
+import { getOne, getAll, db, runQuery } from('../config/database');
+import logger from('../config/logger');
 
-const PRODUCT_TYPES = {
+import PRODUCT_TYPES = {
   vegetable: { label: 'Rau củ', icon: '🥬' },
   fruit: { label: 'Trái cây', icon: '🍎' },
   herb: { label: 'Thảo dược', icon: '🌿' },
@@ -22,7 +22,7 @@ const PRODUCT_TYPES = {
   livestock: { label: 'Chăn nuôi', icon: '🐄' }
 };
 
-const STAGE_TYPES = {
+import STAGE_TYPES = {
   preparation: { label: 'Chuẩn bị', order: 1 },
   seeding: { label: 'Gieo hạt/Con giống', order: 2 },
   nursing: { label: 'Nuôi ươm/Cây con', order: 3 },

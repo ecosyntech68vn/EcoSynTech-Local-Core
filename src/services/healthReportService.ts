@@ -1,12 +1,12 @@
-const axios = require('axios');
-const https = require('https');
-const os = require('os');
-const si = require('systeminformation');
-const path = require('path');
-const fs = require('fs');
-const logger = require('../config/logger');
-const pkg = require('../../package.json');
-const { getBreaker } = require('./circuitBreaker');
+import axios from('axios');
+import https from('https');
+import os from('os');
+import si from('systeminformation');
+import path from('path');
+import fs from('fs');
+import logger from('../config/logger');
+import pkg from('../../package.json');
+import { getBreaker } from('./circuitBreaker');
 
 class HealthReportService {
   constructor() {
@@ -66,7 +66,7 @@ class HealthReportService {
 
   async sendAlert(message, severity = 'warning') {
     try {
-      const { runQuery } = require('../config/database');
+      const { runQuery } from('../config/database');
       const alertId = `HR-${Date.now()}`;
       runQuery(
         'INSERT INTO alerts (id, type, severity, message, timestamp) VALUES (?, ?, ?, ?, datetime("now"))',
@@ -222,7 +222,7 @@ class HealthReportService {
 
   async getActiveDeviceCount() {
     try {
-      const { getOne } = require('../config/database');
+      const { getOne } from('../config/database');
       const row = getOne('SELECT COUNT(*) as count FROM devices WHERE status = \'online\'');
       return row?.count || 0;
     } catch (e) { return 0; }
@@ -230,7 +230,7 @@ class HealthReportService {
 
   async getLastCriticalError() {
     try {
-      const { getOne } = require('../config/database');
+      const { getOne } from('../config/database');
       const row = getOne('SELECT message FROM alerts WHERE severity IN (\'danger\',\'critical\') ORDER BY timestamp DESC LIMIT 1');
       return row?.message || null;
     } catch (e) { return null; }
@@ -238,7 +238,7 @@ class HealthReportService {
 
   async checkDocker() {
     try {
-      const { execSync } = require('child_process');
+      const { execSync } from('child_process');
       execSync('docker info', { stdio: 'ignore' });
       return true;
     } catch (e) { return false; }

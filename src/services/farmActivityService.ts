@@ -9,11 +9,11 @@
  * - Tái sử dụng dữ liệu cho báo cáo và phân tích
  */
 
-import { v4 as uuidv4 } from 'uuid'
-import { getOne, getAll, db } from '../config/database'
-import logger from '../config/logger'
+import { v4: uuidv4 } from('uuid');
+import { getOne, getAll, db } from('../config/database');
+import logger from('../config/logger');
 
-const ACTIVITY_TYPES = {
+import ACTIVITY_TYPES = {
   spray: { label: 'Phun thuốc', icon: '💧', category: 'protection', stageType: 'plant_protection' },
   fertilizer: { label: 'Bón phân', icon: '🌱', category: 'nutrition', stageType: 'fertilizing' },
   pruning: { label: 'Cắt tỉa', icon: '✂️', category: 'maintenance', stageType: 'pruning' },
@@ -31,7 +31,7 @@ const ACTIVITY_TYPES = {
   other: { label: 'Khác', icon: '📝', category: 'other', stageType: 'other' }
 };
 
-const FERTILIZER_TYPES = {
+import FERTILIZER_TYPES = {
   npk: { label: 'NPK', unit: 'kg' },
   urea: { label: 'Urea', unit: 'kg' },
   dap: { label: 'DAP', unit: 'kg' },
@@ -44,7 +44,7 @@ const FERTILIZER_TYPES = {
   bio: { label: 'Phân sinh học', unit: 'kg' }
 };
 
-const PESTICIDE_TYPES = {
+import PESTICIDE_TYPES = {
   insecticide: { label: 'Thuốc trừ sâu', unit: 'lit' },
   fungicide: { label: 'Thuốc trừ nấm', unit: 'lit' },
   herbicide: { label: 'Thuốc cỏ', unit: 'lit' },
@@ -275,7 +275,6 @@ function getActivitiesTimeline(sourceType, sourceId) {
 }
 
 module.exports = {
-export default module.exports;
 export default module.exports;
   createActivity,
   getActivitiesBySource,

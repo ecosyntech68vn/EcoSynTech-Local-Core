@@ -1,13 +1,13 @@
-const backupService = require('./backupRestoreService');
-const logger = require('../config/logger');
-const fs = require('fs');
-const path = require('path');
+import backupService from('./backupRestoreService');
+import logger from('../config/logger');
+import fs from('fs');
+import path from('path');
 
-const BACKUP_ENABLED = process.env.AUTO_BACKUP_ENABLED === 'true';
-const BACKUP_CRON = process.env.AUTO_BACKUP_CRON || '0 2 * * *';
-const BACKUP_RETENTION_DAYS = parseInt(process.env.BACKUP_RETENTION_DAYS || '7', 10);
-const BACKUP_MAX_COUNT = parseInt(process.env.BACKUP_MAX_COUNT || '7', 10);
-const MIN_DISK_SPACE_MB = 100;
+import BACKUP_ENABLED = process.env.AUTO_BACKUP_ENABLED === 'true';
+import BACKUP_CRON = process.env.AUTO_BACKUP_CRON || '0 2 * * *';
+import BACKUP_RETENTION_DAYS = parseInt(process.env.BACKUP_RETENTION_DAYS || '7', 10);
+import BACKUP_MAX_COUNT = parseInt(process.env.BACKUP_MAX_COUNT || '7', 10);
+import MIN_DISK_SPACE_MB = 100;
 
 let intervalHandle = null;
 
@@ -72,7 +72,7 @@ async function runScheduledBackup() {
 }
 
 async function cleanupOldBackups() {
-  const backupService = require('./backupRestoreService');
+  const backupService from('./backupRestoreService');
   const backups = await backupService.listBackups();
   
   if (backups.length <= BACKUP_MAX_COUNT) {

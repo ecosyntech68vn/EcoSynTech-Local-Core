@@ -17,14 +17,14 @@
  * - Integration with labor, equipment, and crop modules
  */
 
-import { v4 as uuidv4 } from 'uuid';
-const { getOne, getAll, getDatabase } = require('../config/database');
-import logger from '../config/logger';
+import { v4: uuidv4 } from('uuid');
+import { getOne, getAll, getDatabase } from('../config/database');
+import logger from('../config/logger');
 
-const db = getDatabase();
+import db = getDatabase();
 
 // Income Types
-const INCOME_TYPES = {
+import INCOME_TYPES = {
   crop_sale: { label: 'Bán nông sản', icon: '🌾', category: 'revenue' },
   product_sale: { label: 'Bán sản phẩm', icon: '📦', category: 'revenue' },
   service_income: { label: 'Thu dịch vụ', icon: '🔧', category: 'revenue' },
@@ -33,7 +33,7 @@ const INCOME_TYPES = {
 };
 
 // Expense Types
-const EXPENSE_TYPES = {
+import EXPENSE_TYPES = {
   seeds: { label: 'Hạt giống', icon: '🌱', category: 'production' },
   fertilizers: { label: 'Phân bón', icon: '🧪', category: 'production' },
   pesticides: { label: 'Thuốc bảo vệ', icon: '💊', category: 'production' },
@@ -52,7 +52,7 @@ const EXPENSE_TYPES = {
 };
 
 // Budget Types
-const BUDGET_TYPES = {
+import BUDGET_TYPES = {
   annual: { label: 'Ngân sách năm', icon: '📅' },
   seasonal: { label: 'Ngân sách mùa vụ', icon: '🌦️' },
   project: { label: 'Ngân sách dự án', icon: '📁' }
@@ -609,7 +609,6 @@ function getFinancialSummary(farmId, startDate, endDate) {
 // ========== EXPORT ALL FUNCTIONS ==========
 
 module.exports = {
-export default module.exports;
 export default module.exports;
   INCOME_TYPES,
   EXPENSE_TYPES,

@@ -10,12 +10,12 @@
  * - Tưới tiêu theo giai đoạn
  */
 
-import { v4 as uuidv4 } from 'uuid'
-import { getOne, getAll, db } from '../config/database'
-import logger from '../config/logger'
-import batchService from './batchService'
+import { v4: uuidv4 } from('uuid');
+import { getOne, getAll, db } from('../config/database');
+import logger from('../config/logger');
+import batchService from('./batchService');
 
-const CROP_STAGES = {
+import CROP_STAGES = {
   GIEO_HAT: { name: 'Gieo hạt', code: 'gieo_hat', kcMin: 0.3, kcMax: 0.4, days: 20 },
   CAY_CON: { name: 'Cây con', code: 'cay_con', kcMin: 0.4, kcMax: 0.8, days: 25 },
   SINH_TRUONG: { name: 'Sinh trưởng', code: 'sinh_truong', kcMin: 0.8, kcMax: 1.1, days: 30 },
@@ -23,7 +23,7 @@ const CROP_STAGES = {
   THU_HOACH: { name: 'Chín - Thu hoạch', code: 'thu_hoach', kcMin: 1.0, kcMax: 0.7, days: 15 }
 };
 
-const CROP_KC_VALUES = {
+import CROP_KC_VALUES = {
   gieo_hat: { kc: 0.35, waterNeed: 'low' },
   cay_con: { kc: 0.5, waterNeed: 'medium' },
   sinh_truong: { kc: 1.0, waterNeed: 'high' },

@@ -63,7 +63,7 @@ export interface AlertOptions {
   metadata?: Record<string, any>;
 }
 
-const CONFIG: AlertConfig = {
+import CONFIG: AlertConfig = {
   telegram: {
     enabled: process.env.TELEGRAM_ENABLED === 'true',
     botToken: process.env.TELEGRAM_BOT_TOKEN || '',

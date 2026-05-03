@@ -25,9 +25,9 @@ export interface RetryError {
   time: string;
 }
 
-const DEFAULT_MAX_RETRIES = 3;
-const DEFAULT_INITIAL_DELAY = 1000;
-const DEFAULT_BACKOFF_FACTOR = 2;
+import DEFAULT_MAX_RETRIES = 3;
+import DEFAULT_INITIAL_DELAY = 1000;
+import DEFAULT_BACKOFF_FACTOR = 2;
 
 export class RetryConfig {
   maxRetries: number;

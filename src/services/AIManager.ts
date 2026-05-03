@@ -1,8 +1,8 @@
 'use strict';
 
-const os = require('os');
+import os from('os');
 
-const AGRICULTURE_THRESHOLDS = {
+import AGRICULTURE_THRESHOLDS = {
   irrigation: { critical: 20, warning: 40, optimal: 60 },
   climate: { critical: 34, warning: 30 },
   soil_health: { critical: 15, warning: 30, optimal: 50 },
@@ -10,7 +10,7 @@ const AGRICULTURE_THRESHOLDS = {
   pest_control: { critical: 70, warning: 50, optimal: 25 }
 };
 
-const SYSTEM_THRESHOLDS = {
+import SYSTEM_THRESHOLDS = {
   system_health: { cpu: 90, ram: 90, disk: 95 },
   security_monitor: { failedLogins: 5 },
   performance_tuner: { responseTime: 2000, errorRate: 5 },

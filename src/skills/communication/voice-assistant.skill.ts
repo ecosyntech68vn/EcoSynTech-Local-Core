@@ -1,5 +1,4 @@
 module.exports = {
-export default module.exports;
   id: 'voice-assistant',
   name: 'Voice Assistant',
   description: 'AI-powered voice assistant nâng cao với dialog tự nhiên tiếng Việt cho nông dân - marketing, presentations, guides, troubleshooting',

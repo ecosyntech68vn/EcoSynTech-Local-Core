@@ -13,7 +13,7 @@ class RainSensor {
 
   read() {
     try {
-      const ADC = require('adc');
+      const ADC from('adc');
       const adc = new ADC(this.pin);
       const rawValue = adc.read();
       

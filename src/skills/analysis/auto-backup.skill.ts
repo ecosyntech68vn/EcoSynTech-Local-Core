@@ -1,31 +1,13 @@
-/**
- * Auto Backup Skill
- * Scheduled automatic data backup
- */
-
-import * as fs from 'fs';
-import * as path from 'path';
-
-interface SkillContext {
-  packageVersion?: string;
-  config?: Record<string, unknown>;
-}
-
-interface SkillResult {
-  ok: boolean;
-  backupCreated: boolean;
-  backupPath?: string;
-  error?: string;
-  timestamp: string;
-}
-
-const skill = {
+module.exports = {
   id: 'auto-backup',
   name: 'Auto Backup',
   triggers: ['cron:*/1h', 'event:backup.request', 'event:watchdog.tick'],
   riskLevel: 'low',
   canAutoFix: false,
-  run: function(ctx: SkillContext): SkillResult {
+  run: function(ctx) {
+    const fs = require('fs');
+    const path = require('path');
+    
     const backupDir = path.join(process.cwd(), 'data', 'backups');
     try {
       fs.mkdirSync(backupDir, { recursive: true });
@@ -41,18 +23,16 @@ const skill = {
       return {
         ok: true,
         backupCreated: true,
-        backupPath: file,
+        file: file,
+        totalBackups: 1,
         timestamp: new Date().toISOString()
       };
-    } catch (e) {
+    } catch (err) {
       return {
         ok: false,
-        backupCreated: false,
-        error: e instanceof Error ? e.message : String(e),
+        error: err.message,
         timestamp: new Date().toISOString()
       };
     }
   }
 };
-
-export = skill;

@@ -1,11 +1,11 @@
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
-const logger = require('../config/logger');
-const { getAll, runQuery, getOne } = require('../config/database');
+import fs from('fs');
+import path from('path');
+import { execSync } from('child_process');
+import logger from('../config/logger');
+import { getAll, runQuery, getOne } from('../config/database');
 
-const BACKUP_DIR = process.env.BACKUP_DIR || './backups';
-const RETENTION_DAYS = parseInt(process.env.BACKUP_RETENTION_DAYS || '30', 10);
+import BACKUP_DIR = process.env.BACKUP_DIR || './backups';
+import RETENTION_DAYS = parseInt(process.env.BACKUP_RETENTION_DAYS || '30', 10);
 
 function ensureBackupDir() {
   if (!fs.existsSync(BACKUP_DIR)) {
@@ -114,7 +114,7 @@ async function verifyBackup(backupPath) {
   const dbPath = process.env.DB_PATH || './data/ecosyntech.db';
 
   try {
-    const SQL = require('sql.js');
+    const SQL from('sql.js');
     const SQL_MODIFIED_PATH = dbPath + '.verify.temp';
     let data;
 

@@ -1,9 +1,9 @@
 'use strict';
 
-const os = require('os');
-const { AIManager } = require('./AIManager');
-const { getOrchestrator } = require('./skillOrchestrator');
-const logger = require('../config/logger');
+import os from('os');
+import { AIManager } from('./AIManager');
+import { getOrchestrator } from('./skillOrchestrator');
+import logger from('../config/logger');
 
 class ContextualLearning {
   constructor(options = {}) {

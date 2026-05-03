@@ -1,8 +1,8 @@
-const { getAll, getOne, runQuery } = require('../config/database');
-import logger from '../config/logger'
-const { getBreaker } = require('./circuitBreaker');
-const { retry } = require('./retryService');
-const fuzzyController = require('./IrrigationFuzzyController');
+import { getAll, getOne, runQuery } from('../config/database');
+import logger from('../config/logger');
+import { getBreaker } from('./circuitBreaker');
+import { retry } from('./retryService');
+import fuzzyController from('./IrrigationFuzzyController');
 
 class WaterOptimizationService {
   constructor() {
@@ -184,7 +184,7 @@ class WaterOptimizationService {
           const lat = process.env.FARM_LAT || '10.7769';
           const lon = process.env.FARM_LON || '106.7009';
           
-          const axios = require('axios');
+          const axios from('axios');
           const res = await axios.get(
             `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&forecast_days=2&timezone=auto`,
             { timeout: 5000 }

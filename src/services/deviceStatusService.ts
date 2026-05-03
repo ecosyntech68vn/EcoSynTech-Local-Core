@@ -1,46 +1,17 @@
 /**
  * Device Status Service - Tính toán trạng thái online/offline
- * V5.1.0 - Converted to TypeScript - Phase 1
- * Smart device status calculation with timeout detection
+ * V5.1.0 - Smart device status calculation with timeout detection
  */
 
-export const DEFAULT_TIMEOUT_MS = 300000; // 5 minutes default timeout
-
-export type DeviceStatus = 'online' | 'offline' | 'unknown';
-
-export interface DeviceStatusInfo {
-  status: DeviceStatus;
-  lastSeen: string | null;
-  timeSinceLastSeen: number | null;
-  isTimeout: boolean;
-  isStale: boolean;
-  timeoutMs: number;
-}
-
-export interface Device {
-  id: string;
-  name?: string;
-  type?: string;
-  status?: string;
-  farm_id?: string;
-  last_seen?: string;
-  api_key?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface DeviceStats {
-  total: number;
-  online: number;
-  offline: number;
-  unknown: number;
-  stale: number;
-}
+import DEFAULT_TIMEOUT_MS = 300000; // 5 minutes default timeout
 
 /**
  * Calculate device status based on last_seen timestamp
+ * @param {string|null} lastSeen - ISO timestamp of last device message
+ * @param {number} timeoutMs - Timeout in milliseconds
+ * @returns {string} 'online' | 'offline' | 'unknown'
  */
-export function calculateDeviceStatus(lastSeen: string | null | undefined, timeoutMs: number = DEFAULT_TIMEOUT_MS): DeviceStatus {
+function calculateDeviceStatus(lastSeen, timeoutMs = DEFAULT_TIMEOUT_MS) {
   if (!lastSeen) {
     return 'unknown';
   }
@@ -58,11 +29,14 @@ export function calculateDeviceStatus(lastSeen: string | null | undefined, timeo
 
 /**
  * Get device status with detailed info
+ * @param {Object} device - Device object with last_seen
+ * @param {number} timeoutMs - Timeout in milliseconds
+ * @returns {Object} Status info
  */
-export function getDeviceStatusInfo(device: Device, timeoutMs: number = DEFAULT_TIMEOUT_MS): DeviceStatusInfo {
+function getDeviceStatusInfo(device, timeoutMs = DEFAULT_TIMEOUT_MS) {
   const status = calculateDeviceStatus(device.last_seen, timeoutMs);
   
-  let timeSinceLastSeen: number | null = null;
+  let timeSinceLastSeen = null;
   if (device.last_seen) {
     timeSinceLastSeen = Date.now() - new Date(device.last_seen).getTime();
   }
@@ -72,7 +46,7 @@ export function getDeviceStatusInfo(device: Device, timeoutMs: number = DEFAULT_
   
   return {
     status,
-    lastSeen: device.last_seen || null,
+    lastSeen: device.last_seen,
     timeSinceLastSeen,
     isTimeout,
     isStale,
@@ -81,112 +55,100 @@ export function getDeviceStatusInfo(device: Device, timeoutMs: number = DEFAULT_
 }
 
 /**
- * Get device status with custom timeout per device type
+ * Calculate timeout based on device type
+ * @param {string} deviceType - Type of device
+ * @returns {number} Timeout in milliseconds
  */
-export function getDeviceStatusByType(device: Device): DeviceStatusInfo {
-  const timeoutMap: Record<string, number> = {
-    esp32: 300000,      // 5 minutes
-    sensor: 600000,    // 10 minutes
-    gateway: 180000,   // 3 minutes
-    actuator: 300000,  // 5 minutes
-    camera: 60000      // 1 minute
+function getTimeoutByDeviceType(deviceType) {
+  const timeouts = {
+    'ESP32': 300000,      // 5 minutes - battery powered
+    'ESP8266': 180000,   // 3 minutes
+    'Arduino': 600000,   // 10 minutes - low power
+    'Raspberry Pi': 60000, // 1 minute - always on
+    'Sensor': 300000,    // 5 minutes
+    'Gateway': 60000,    // 1 minute
+    'default': 300000    // 5 minutes default
   };
   
-  const deviceType = device.type || 'sensor';
-  const timeoutMs = timeoutMap[deviceType] || DEFAULT_TIMEOUT_MS;
-  
-  return getDeviceStatusInfo(device, timeoutMs);
+  return timeouts[deviceType] || timeouts.default;
 }
 
 /**
- * Calculate uptime percentage
+ * Batch calculate status for multiple devices
+ * @param {Array} devices - Array of devices
+ * @returns {Array} Devices with status added
  */
-export function calculateUptime(lastSeen: string | null | undefined, totalUptimeMs: number): number {
-  if (!lastSeen) return 0;
-  
-  const lastSeenTime = new Date(lastSeen).getTime();
-  const timeSinceLastSeen = Date.now() - lastSeenTime;
-  
-  if (timeSinceLastSeen > totalUptimeMs) return 0;
-  
-  const uptimeMs = totalUptimeMs - timeSinceLastSeen;
-  return (uptimeMs / totalUptimeMs) * 100;
+function calculateBatchStatus(devices) {
+  return devices.map(device => {
+    const timeout = getTimeoutByDeviceType(device.type);
+    const statusInfo = getDeviceStatusInfo(device, timeout);
+    return {
+      ...device,
+      status: statusInfo.status,
+      last_seen: statusInfo.lastSeen,
+      time_since_last_seen: statusInfo.timeSinceLastSeen,
+      is_stale: statusInfo.isStale,
+      is_timeout: statusInfo.isTimeout
+    };
+  });
 }
 
 /**
- * Get device statistics from array
+ * Get system-wide device statistics
+ * @param {Array} devices - Array of devices with status
+ * @returns {Object} Statistics
  */
-export function getDeviceStats(devices: Device[]): DeviceStats {
-  const stats: DeviceStats = {
+function getDeviceStatistics(devices) {
+  const stats = {
     total: devices.length,
     online: 0,
     offline: 0,
     unknown: 0,
-    stale: 0
+    stale: 0,
+    timeout: 0
   };
   
-  for (const device of devices) {
-    const statusInfo = getDeviceStatusByType(device);
+  devices.forEach(device => {
+    if (device.status === 'online') stats.online++;
+    else if (device.status === 'offline') stats.offline++;
+    else stats.unknown++;
     
-    switch (statusInfo.status) {
-      case 'online':
-        stats.online++;
-        break;
-      case 'offline':
-        stats.offline++;
-        break;
-      case 'unknown':
-        stats.unknown++;
-        break;
-    }
-    
-    if (statusInfo.isStale) {
-      stats.stale++;
-    }
-  }
+    if (device.is_stale) stats.stale++;
+    if (device.is_timeout) stats.timeout++;
+  });
+  
+  stats.onlineRate = stats.total > 0 ? Math.round((stats.online / stats.total) * 100) : 0;
+  stats.offlineRate = stats.total > 0 ? Math.round((stats.offline / stats.total) * 100) : 0;
   
   return stats;
 }
 
 /**
- * Check if device needs attention
+ * Check if device needs attention (offline or stale)
+ * @param {Object} device - Device with status info
+ * @returns {boolean}
  */
-export function needsAttention(device: Device): boolean {
-  const statusInfo = getDeviceStatusByType(device);
-  return statusInfo.status === 'offline' || statusInfo.isStale;
+function needsAttention(device) {
+  return device.status === 'offline' || device.is_stale === true;
 }
 
 /**
  * Get devices that need attention
+ * @param {Array} devices - Array of devices with status
+ * @returns {Array} Devices needing attention
  */
-export function getDevicesNeedingAttention(devices: Device[]): Device[] {
+function getDevicesNeedingAttention(devices) {
   return devices.filter(needsAttention);
 }
 
-/**
- * Format time since last seen for display
- */
-export function formatTimeSinceLastSeen(lastSeen: string | null | undefined): string {
-  if (!lastSeen) return 'Never';
-  
-  const diffMs = Date.now() - new Date(lastSeen).getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-  
-  if (diffDays > 0) return `${diffDays}d ago`;
-  if (diffHours > 0) return `${diffHours}h ago`;
-  if (diffMins > 0) return `${diffMins}m ago`;
-  return 'Just now';
-}
-
-export default {
+module.exports = {
+export default module.exports;
   calculateDeviceStatus,
   getDeviceStatusInfo,
-  getDeviceStatusByType,
-  calculateUptime,
-  getDeviceStats,
+  getTimeoutByDeviceType,
+  calculateBatchStatus,
+  getDeviceStatistics,
   needsAttention,
   getDevicesNeedingAttention,
-  formatTimeSinceLastSeen
+  DEFAULT_TIMEOUT_MS
 };

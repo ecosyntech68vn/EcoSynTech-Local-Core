@@ -1,7 +1,7 @@
-const swaggerJsdoc = require('swagger-jsdoc');
-const path = require('path');
+import swaggerJsdoc from('swagger-jsdoc');
+import path from('path');
 
-const options = {
+import options = {
   definition: {
     openapi: '3.0.0',
     info: {
@@ -30,7 +30,7 @@ const options = {
   apis: [path.join(__dirname, '../routes/*.js')]
 };
 
-const swaggerSpec = swaggerJsdoc(options);
+import swaggerSpec = swaggerJsdoc(options);
 
 function addApiDoc(router, path, method, options) {
   const endpoint = options.tags ? `/${options.tags[0].toLowerCase()}` : '/';
@@ -50,7 +50,7 @@ function addApiDoc(router, path, method, options) {
 }
 
 function setupSwagger(app) {
-  const swaggerUi = require('swagger-ui-express');
+  const swaggerUi from('swagger-ui-express');
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
   app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
   return swaggerSpec;

@@ -1,98 +1,48 @@
 /**
  * SePay (SEP Vietnam) Payment Integration
+ * 
+ * SePay: https://sepay.vn
+ * API Docs: https://docs.sepay.vn
+ * 
+ * Supported banks: Vietcombank, Techcombank, ACB, BIDV, VietinBank, MB, SHB, LPBank
  */
 
-import crypto from 'crypto';
-import https from 'https';
-import logger from '../config/logger';
+import crypto from('crypto');
+import https from('https');
 
-interface SePayConfig {
-  partnerId: string;
-  partnerKey: string;
-  apiUrl: string;
-  checksumKey: string;
-}
-
-interface PaymentData {
-  partner_id: string;
-  partner_key: string;
-  receiver_account: string;
-  request_id: string;
-  amount: number;
-  content: string;
-  return_url: string;
-  cancel_url: string;
-  notify_url: string;
-  request_time: string;
-  expire_time: string;
-  checksum?: string;
-}
-
-interface SePayResponse {
-  status?: number;
-  message?: string;
-  data?: Record<string, unknown>;
-  error?: string;
-}
-
-const sepayConfig: SePayConfig = {
+import sepayConfig = {
   partnerId: process.env.SEPAY_PARTNER_ID || 'YOUR_PARTNER_ID',
   partnerKey: process.env.SEPAY_PARTNER_KEY || 'YOUR_PARTNER_KEY',
   apiUrl: process.env.SEPAY_API_URL || 'https://api.sepay.vn',
   checksumKey: process.env.SEPAY_CHECKSUM_KEY || 'YOUR_CHECKSUM_KEY'
 };
 
-async function sendToSePay(endpoint: string, data: string): Promise<SePayResponse> {
-  return new Promise((resolve, reject) => {
-    const options = {
-      hostname: sepayConfig.apiUrl.replace('https://', ''),
-      port: 443,
-      path: endpoint,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Content-Length': data.length
-      }
-    };
-
-    const req = https.request(options, (res) => {
-      let body = '';
-      res.on('data', (chunk: string) => body += chunk);
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(body));
-        } catch (e) {
-          reject(new Error('Invalid JSON response'));
-        }
-      });
-    });
-
-    req.on('error', reject);
-    req.write(data);
-    req.end();
-  });
-}
-
-async function createSepayPayment(orderId: string, amount: number, content: string, bankId = 'VCB'): Promise<SePayResponse> {
+/**
+ * Generate payment link from SePay
+ */
+async function createSepayPayment(orderId, amount, content, bankId = 'VCB') {
   const timestamp = Date.now().toString();
+  const randomStr = Math.random().toString(36).substring(2, 10);
   
-  const paymentData: PaymentData = {
+  // Build payment data
+  const paymentData = {
     partner_id: sepayConfig.partnerId,
     partner_key: sepayConfig.partnerKey,
-    receiver_account: bankId,
+    receiver_account: bankId,  // Bank code: VCB, TCB, ACB, BIDV, CTG, MB, SHB, LPB
     request_id: orderId,
-    amount,
+    amount: amount,
     content: content || `EcoSynTech_${orderId}`,
     return_url: process.env.SEPAY_RETURN_URL || 'http://localhost:3000/api/payment/sepay-return',
     cancel_url: process.env.SEPAY_CANCEL_URL || 'http://localhost:3000/api/payment/cancel',
     notify_url: process.env.SEPAY_NOTIFY_URL || 'http://localhost:3000/api/payment/sepay-ipn',
     request_time: timestamp,
-    expire_time: (Date.now() + 15 * 60 * 1000).toString()
+    expire_time: (Date.now() + 15 * 60 * 1000).toString()  // 15 minutes
   };
   
+  // Generate checksum
   const checksumData = Object.keys(paymentData)
     .sort()
-    .map(key => key + '=' + paymentData[key as keyof PaymentData])
+    .map(key => key + '=' + paymentData[key])
     .join('&');
   
   paymentData.checksum = crypto
@@ -100,63 +50,186 @@ async function createSepayPayment(orderId: string, amount: number, content: stri
     .update(checksumData)
     .digest('hex');
 
-  try {
-    const data = JSON.stringify(paymentData);
-    return await sendToSePay('/payment/create', data);
-  } catch (error) {
-    const errMsg = error instanceof Error ? error.message : 'Unknown';
-    logger.error('[SePay] Payment creation failed:', errMsg);
-    return { status: -1, error: errMsg };
-  }
+  // Make request to SePay API
+  return new Promise((resolve, reject) => {
+    const postData = JSON.stringify(paymentData);
+    
+    const options = {
+      hostname: sepayConfig.apiUrl.replace('https://', ''),
+      port: 443,
+      path: '/payment/create',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const result = JSON.parse(data);
+          resolve(result);
+        } catch (e) {
+          resolve({ error: 'PARSE_ERROR', message: data });
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(postData);
+    req.end();
+  });
 }
 
-async function querySepayTransaction(requestId: string): Promise<SePayResponse> {
+/**
+ * Verify SePay callbacksignature
+ */
+function verifySepayCallback(params) {
+  const { checksum, ...data } = params;
+  
+  const checksumData = Object.keys(data)
+    .sort()
+    .map(key => key + '=' + data[key])
+    .join('&');
+  
+  const expectedChecksum = crypto
+    .createHmac('sha256', sepayConfig.checksumKey)
+    .update(checksumData)
+    .digest('hex');
+
+  return checksum === expectedChecksum;
+}
+
+/**
+ * Check payment status from SePay
+ */
+async function checkSepayStatus(requestId) {
   const timestamp = Date.now().toString();
   
-  const queryData = {
+  const checkData = {
     partner_id: sepayConfig.partnerId,
     partner_key: sepayConfig.partnerKey,
     request_id: requestId,
     request_time: timestamp
   };
   
-  const checksumData = Object.keys(queryData)
+  const checksumData = Object.keys(checkData)
     .sort()
-    .map(key => key + '=' + queryData[key as keyof typeof queryData])
+    .map(key => key + '=' + checkData[key])
     .join('&');
   
-  const checksum = crypto
+  checkData.checksum = crypto
     .createHmac('sha256', sepayConfig.checksumKey)
     .update(checksumData)
     .digest('hex');
 
-  try {
-    const data = JSON.stringify({ ...queryData, checksum });
-    return await sendToSePay('/payment/query', data);
-  } catch (error) {
-    const errMsg = error instanceof Error ? error.message : 'Unknown';
-    logger.error('[SePay] Query failed:', errMsg);
-    return { status: -1, error: errMsg };
+  return new Promise((resolve, reject) => {
+    const postData = JSON.stringify(checkData);
+    
+    const options = {
+      hostname: sepayConfig.apiUrl.replace('https://', ''),
+      port: 443,
+      path: '/payment/check',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(postData)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const result = JSON.parse(data);
+          resolve(result);
+        } catch (e) {
+          resolve({ error: 'PARSE_ERROR', message: data });
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.write(postData);
+    req.end();
+  });
+}
+
+/**
+ * Get list of supported banks
+ */
+function getSupportedBanks() {
+  return [
+    { code: 'VCB', name: 'Vietcombank', logo: 'vcb.png' },
+    { code: 'TCB', name: 'Techcombank', logo: 'tcb.png' },
+    { code: 'ACB', name: 'ACB', logo: 'acb.png' },
+    { code: 'BIDV', name: 'BIDV', logo: 'bidv.png' },
+    { code: 'CTG', name: 'VietinBank', logo: 'ctg.png' },
+    { code: 'MB', name: 'MB Bank', logo: 'mb.png' },
+    { code: 'SHB', name: 'SHB', logo: 'shb.png' },
+    { code: 'LPB', name: 'LienViet Post Bank', logo: 'lpb.png' }
+  ];
+}
+
+class SepayService {
+  async createPayment(orderId, plan) {
+    const planPricing = {
+      BASE: 0,
+      PRO: 99000,
+      PRO_MAX: 199000,
+      PREMIUM: 299000
+    };
+    
+    const amount = planPricing[plan] || 99000;
+    const content = `EcoSynTech ${plan}`;
+    
+    // Default to Vietcombank
+    const bankId = process.env.SEPAY_DEFAULT_BANK || 'VCB';
+    
+    return createSepayPayment(orderId, amount, content, bankId);
+  }
+
+  async checkStatus(orderId) {
+    return checkSepayStatus(orderId);
+  }
+
+  handleCallback(params) {
+    if (!verifySepayCallback(params)) {
+      return { ok: false, error: 'INVALID_CHECKSUM' };
+    }
+
+    if (params.status === 'success') {
+      return {
+        ok: true,
+        orderId: params.request_id,
+        amount: params.amount,
+        bankTransactionId: params.trans_id,
+        message: 'Thanh toán thành công'
+      };
+    }
+
+    return {
+      ok: false,
+      error: 'PAYMENT_PENDING',
+      message: 'Chờ thanh toán'
+    };
+  }
+
+  getBanks() {
+    return getSupportedBanks();
   }
 }
 
-function verifySePayCallback(data: Record<string, unknown>, checksum: string): boolean {
-  const checksumData = Object.keys(data)
-    .filter(k => k !== 'checksum')
-    .sort()
-    .map(k => `${k}=${data[k]}`)
-    .join('&');
-  
-  const expectedChecksum = crypto.createHmac('sha256', sepayConfig.checksumKey)
-    .update(checksumData)
-    .digest('hex');
-  
-  return checksum === expectedChecksum;
-}
-
-export {
+module.exports = {
+export default module.exports;
+  sepayConfig,
   createSepayPayment,
-  querySepayTransaction,
-  verifySePayCallback,
-  sepayConfig
+  verifySepayCallback,
+  checkSepayStatus,
+  getSupportedBanks,
+  SepayService
 };

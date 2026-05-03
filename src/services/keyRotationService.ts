@@ -1,59 +1,34 @@
-/**
- * Key Rotation Service - Key management and rotation
- * Converted to TypeScript - Phase 1
- * ISO 27001 A.8.24 compliance
- */
+'use strict';
 
-import crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
-import logger from '../config/logger';
+import crypto from('crypto');
+import fs from('fs');
+import path from('path');
 
-const DEFAULT_ROTATION_DAYS = 90;
-const KEY_DIR = path.join(__dirname, '..', '..', 'keys');
+import config from('../config');
+import logger from('../config/logger');
 
-export interface KeyInfo {
-  id: string;
-  key: string;
-  createdAt: string;
-  expiresAt: string;
-  rotated: boolean;
-  version: number;
-}
+import DEFAULT_ROTATION_DAYS = 90;
+import KEY_DIR = path.join(__dirname, '../../keys');
 
-export interface KeyPair {
-  publicKey: string;
-  privateKey: string;
-}
-
-export class KeyRotationServiceClass {
-  private rotationDays: number;
-  private keys: Map<string, KeyInfo>;
-  private lastRotation: Date | null;
-  private autoRotate: boolean;
-
-  constructor(options: { rotationDays?: number; autoRotate?: boolean } = {}) {
+class KeyRotationService {
+  constructor(options = {}) {
     this.rotationDays = options.rotationDays || DEFAULT_ROTATION_DAYS;
     this.keys = new Map();
     this.lastRotation = null;
     this.autoRotate = options.autoRotate !== false;
   }
 
-  private ensureKeyDir(): void {
+  ensureKeyDir() {
     if (!fs.existsSync(KEY_DIR)) {
       fs.mkdirSync(KEY_DIR, { recursive: true });
     }
   }
 
-  generateKey(): string {
+  generateKey() {
     return crypto.randomBytes(32).toString('hex');
   }
 
-  generateApiKey(): string {
-    return crypto.randomBytes(32).toString('base64url');
-  }
-
-  createKeyPair(): KeyPair {
+  createKeyPair() {
     const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 2048,
       publicKeyEncoding: { type: 'spki', format: 'pem' },
@@ -62,158 +37,167 @@ export class KeyRotationServiceClass {
     return { publicKey, privateKey };
   }
 
-  saveKey(keyId: string, keyData: string): boolean {
+  generateApiKey() {
+    return crypto.randomBytes(32).toString('base64url');
+  }
+
+  saveKey(keyId, keyData) {
     this.ensureKeyDir();
     const keyPath = path.join(KEY_DIR, `${keyId}.json`);
     
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + this.rotationDays);
-    
-    const keyInfo: KeyInfo = {
+    const keyInfo = {
       id: keyId,
       key: keyData,
-      createdAt: new Date().toISOString(),
-      expiresAt: expiresAt.toISOString(),
-      rotated: false,
-      version: 1
+      created: new Date().toISOString(),
+      expires: new Date(Date.now() + this.rotationDays * 24 * 60 * 60 * 1000).toISOString(),
+      rotated: 0
     };
-
-    try {
-      fs.writeFileSync(keyPath, JSON.stringify(keyInfo, null, 2));
-      this.keys.set(keyId, keyInfo);
-      logger.info(`[KeyRotation] Key saved: ${keyId}`);
-      return true;
-    } catch (error: any) {
-      logger.error(`[KeyRotation] Save failed: ${error.message}`);
-      return false;
-    }
+    
+    fs.writeFileSync(keyPath, JSON.stringify(keyInfo, null, 2));
+    this.keys.set(keyId, keyInfo);
+    logger.info(`[KeyRotation] Key created: ${keyId}`);
+    return keyInfo;
   }
 
-  loadKey(keyId: string): KeyInfo | null {
-    const cached = this.keys.get(keyId);
-    if (cached) return cached;
-
+  getKey(keyId) {
+    if (this.keys.has(keyId)) {
+      return this.keys.get(keyId);
+    }
+    
     const keyPath = path.join(KEY_DIR, `${keyId}.json`);
-    if (!fs.existsSync(keyPath)) return null;
+    if (fs.existsSync(keyPath)) {
+      const keyData = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
+      this.keys.set(keyId, keyData);
+      return keyData;
+    }
+    return null;
+  }
 
-    try {
-      const data = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
-      this.keys.set(keyId, data);
-      return data;
-    } catch (error: any) {
-      logger.error(`[KeyRotation] Load failed: ${error.message}`);
+  rotateKey(keyId) {
+    const currentKey = this.getKey(keyId);
+    if (!currentKey) {
+      logger.warn(`[KeyRotation] Key not found: ${keyId}`);
       return null;
     }
+    
+    const newKeyId = `${keyId}_${Date.now()}`;
+    const newKey = this.generateApiKey();
+    const rotated = this.saveKey(newKeyId, newKey);
+    
+    rotated.previousKeyId = keyId;
+    rotated.previousExpiry = currentKey.expires;
+    rotated.rotated = currentKey.rotated + 1;
+    
+    logger.info(`[KeyRotation] Key rotated: ${keyId} -> ${newKeyId} (rotation #${rotated.rotated})`);
+    return rotated;
   }
 
-  rotateKey(keyId: string): boolean {
-    const oldKey = this.loadKey(keyId);
-    if (!oldKey) return false;
-
-    const newKey = this.generateKey();
-    const newExpiresAt = new Date();
-    newExpiresAt.setDate(newExpiresAt.getDate() + this.rotationDays);
-
-    const newKeyInfo: KeyInfo = {
-      id: keyId,
-      key: newKey,
-      createdAt: new Date().toISOString(),
-      expiresAt: newExpiresAt.toISOString(),
-      rotated: true,
-      version: oldKey.version + 1
-    };
-
-    try {
-      const keyPath = path.join(KEY_DIR, `${keyId}.json`);
-      fs.writeFileSync(keyPath, JSON.stringify(newKeyInfo, null, 2));
-      this.keys.set(keyId, newKeyInfo);
-      this.lastRotation = new Date();
-      logger.info(`[KeyRotation] Key rotated: ${keyId} v${newKeyInfo.version}`);
-      return true;
-    } catch (error: any) {
-      logger.error(`[KeyRotation] Rotate failed: ${error.message}`);
-      return false;
-    }
-  }
-
-  isKeyExpired(keyId: string): boolean {
-    const key = this.loadKey(keyId);
+  shouldRotate(keyId) {
+    const key = this.getKey(keyId);
     if (!key) return true;
     
-    return new Date(key.expiresAt) < new Date();
-  }
-
-  getKeyAge(keyId: string): number {
-    const key = this.loadKey(keyId);
-    if (!key) return -1;
-    
-    const created = new Date(key.createdAt);
+    const expires = new Date(key.expires);
     const now = new Date();
-    return Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-  }
-
-  shouldRotate(keyId: string): boolean {
-    const key = this.loadKey(keyId);
-    if (!key) return false;
-    
-    const daysUntilExpiry = Math.floor(
-      (new Date(key.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-    );
+    const daysUntilExpiry = (expires - now) / (24 * 60 * 60 * 1000);
     
     return daysUntilExpiry <= 7;
   }
 
-  autoRotateKeys(): number {
-    if (!this.autoRotate) return 0;
+  isExpired(keyId) {
+    const key = this.getKey(keyId);
+    if (!key) return true;
     
-    let rotated = 0;
-    const files = fs.readdirSync(KEY_DIR).filter(f => f.endsWith('.json'));
-    
-    for (const file of files) {
-      const keyId = file.replace('.json', '');
-      if (this.shouldRotate(keyId)) {
-        if (this.rotateKey(keyId)) rotated++;
-      }
-    }
-    
-    return rotated;
+    return new Date(key.expires) < new Date();
   }
 
-  deleteKey(keyId: string): boolean {
+  listKeys() {
+    const keys = [];
+    if (fs.existsSync(KEY_DIR)) {
+      const files = fs.readdirSync(KEY_DIR).filter(f => f.endsWith('.json'));
+      files.forEach(file => {
+        const keyId = file.replace('.json', '');
+        const key = this.getKey(keyId);
+        if (key) keys.push(key);
+      });
+    }
+    return keys;
+  }
+
+  deleteKey(keyId) {
     const keyPath = path.join(KEY_DIR, `${keyId}.json`);
-    try {
-      if (fs.existsSync(keyPath)) {
-        fs.unlinkSync(keyPath);
-      }
+    if (fs.existsSync(keyPath)) {
+      fs.unlinkSync(keyPath);
       this.keys.delete(keyId);
       logger.info(`[KeyRotation] Key deleted: ${keyId}`);
       return true;
-    } catch (error: any) {
-      logger.error(`[KeyRotation] Delete failed: ${error.message}`);
-      return false;
     }
+    return false;
   }
 
-  listKeys(): string[] {
-    this.ensureKeyDir();
-    return fs.readdirSync(KEY_DIR)
-      .filter(f => f.endsWith('.json'))
-      .map(f => f.replace('.json', ''));
+  startAutoRotation() {
+    if (!this.autoRotate) return;
+    
+    setInterval(() => {
+      const keys = this.listKeys();
+      keys.forEach(key => {
+        if (this.shouldRotate(key.id)) {
+          this.rotateKey(key.id);
+        }
+      });
+    }, 24 * 60 * 60 * 1000);
+    
+    logger.info('[KeyRotation] Auto-rotation started (daily check)');
   }
 
-  getRotationStatus(): {
-    lastRotation: string | null;
-    autoRotate: boolean;
-    rotationDays: number;
-  } {
+  getStatus() {
+    const keys = this.listKeys();
+    const now = new Date();
+    let active = 0, expiring = 0, expired = 0;
+    
+    keys.forEach(key => {
+      if (this.isExpired(key.id)) expired++;
+      else if (this.shouldRotate(key.id)) expiring++;
+      else active++;
+    });
+    
     return {
-      lastRotation: this.lastRotation?.toISOString() || null,
-      autoRotate: this.autoRotate,
+      total: keys.length,
+      active,
+      expiring,
+      expired,
+      nextRotation: this.lastRotation,
       rotationDays: this.rotationDays
     };
   }
 }
 
-export const KeyRotationService = new KeyRotationServiceClass();
+let keyService = null;
 
-export default KeyRotationService;
+function getKeyService() {
+  if (!keyService) {
+    keyService = new KeyRotationService();
+    keyService.ensureKeyDir();
+  }
+  return keyService;
+}
+
+function generateApiKey() {
+  return getKeyService().generateApiKey();
+}
+
+function rotateKey(keyId) {
+  return getKeyService().rotateKey(keyId);
+}
+
+function shouldRotate(keyId) {
+  return getKeyService().shouldRotate(keyId);
+}
+
+module.exports = {
+export default module.exports;
+  KeyRotationService,
+  getKeyService,
+  generateApiKey,
+  rotateKey,
+  shouldRotate
+};

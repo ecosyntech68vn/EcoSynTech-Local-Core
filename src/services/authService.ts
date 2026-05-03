@@ -1,12 +1,12 @@
 'use strict';
 
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const axios = require('axios');
-const { v4: uuidv4 } = require('uuid');
-const { getOne, runQuery, getAll } = require('../config/database');
-const config = require('../config');
-const logger = require('../config/logger');
+import bcrypt from('bcryptjs');
+import jwt from('jsonwebtoken');
+import axios from('axios');
+import { v4: uuidv4 } from('uuid');
+import { getOne, runQuery, getAll } from('../config/database');
+import config from('../config');
+import logger from('../config/logger');
 
 class AuthService {
   generateToken(user) {
@@ -157,7 +157,7 @@ class AuthService {
 
     try {
       if (config.sms.twilio.accountSid) {
-        const twilio = require('twilio')(config.sms.twilio.accountSid, config.sms.twilio.authToken);
+        const twilio from('twilio')(config.sms.twilio.accountSid, config.sms.twilio.authToken);
         await twilio.messages.create({
           body: `EcoSynTech: Your verification code is ${otp}`,
           from: config.sms.twilio.phoneNumber,

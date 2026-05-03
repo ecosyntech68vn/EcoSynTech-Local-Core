@@ -11,12 +11,12 @@
  * - Traceability vật tư: dùng lô nào cho vụ nào
  */
 
-import { v4 as uuidv4 } from 'uuid';
-import { getOne, getAll, db } from '../config/database';
-import logger from '../config/logger';
-import alertService from './alertService';
+import { v4: uuidv4 } from('uuid');
+import { getOne, getAll, db } from('../config/database');
+import logger from('../config/logger');
+import alertService from('./alertService');
 
-const INVENTORY_CATEGORIES = {
+import INVENTORY_CATEGORIES = {
   seeds: { label: 'Hạt giống', icon: '🌱', unit: 'kg' },
   fertilizer: { label: 'Phân bón', icon: '🌿', unit: 'kg' },
   pesticide: { label: 'Thuốc BVTV', icon: '💧', unit: 'lit' },
@@ -27,7 +27,7 @@ const INVENTORY_CATEGORIES = {
   other: { label: 'Vật tư khác', icon: '📦', unit: 'pcs' }
 };
 
-const TRANSACTION_TYPES = {
+import TRANSACTION_TYPES = {
   import: { label: 'Nhập kho', icon: '📥' },
   export: { label: 'Xuất kho', icon: '📤' },
   adjustment: { label: 'Điều chỉnh', icon: '🔄' },
@@ -269,7 +269,7 @@ function logUsageInActivity(itemId, sourceType, sourceId, quantity, notes) {
     category: item.category
   }];
 
-  const { getOne: getOneDB, runQuery } = require('../config/database');
+  const { getOne: getOneDB, runQuery } from('../config/database');
 
   const activityType = item.category === 'seeds' ? 'seeding' :
     item.category === 'fertilizer' ? 'fertilizer' :
@@ -279,7 +279,7 @@ function logUsageInActivity(itemId, sourceType, sourceId, quantity, notes) {
   const activityName = `${INVENTORY_CATEGORIES[item.category]?.label || 'Vật tư'}: ${item.item_name}`;
 
   try {
-    const { farmActivityService } = require('./farmActivityService');
+    const { farmActivityService } from('./farmActivityService');
     farmActivityService.createActivity({
       source_type: sourceType,
       source_id: sourceId,
@@ -877,4 +877,3 @@ export default module.exports;
   INVENTORY_CATEGORIES,
   TRANSACTION_TYPES
 };
-export default module.exports;

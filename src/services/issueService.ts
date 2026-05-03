@@ -1,69 +1,15 @@
-/**
- * Issue Service - Bug/Issue tracking system
- * Converted to TypeScript - Phase 1
- */
+import logger from('../config/logger');
+import { getAll, getOne, runQuery } from('../config/database');
+import { v4: uuidv4 } from('uuid');
 
-import { v4 as uuidv4 } from 'uuid';
-import db from '../config/database';
-import logger from '../config/logger';
-
-export type IssueSeverity = 'critical' | 'high' | 'medium' | 'low';
-export type IssueStatus = 'new' | 'acknowledged' | 'in_progress' | 'diagnosed' | 'fixed' | 'verified' | 'closed' | 'wont_fix';
-export type IssueCategory = 'hardware' | 'software' | 'network' | 'sensor' | 'configuration' | 'performance' | 'security' | 'other';
-
-export interface Issue {
-  id: string;
-  title: string;
-  description: string;
-  severity: IssueSeverity;
-  category: IssueCategory;
-  status: IssueStatus;
-  affectedFarm?: string;
-  affectedDevice?: string;
-  affectedSensor?: string;
-  stepsToReproduce?: string;
-  expectedBehavior?: string;
-  actualBehavior?: string;
-  reportedBy?: string;
-  assignedTo?: string;
-  resolution?: string;
-  resolvedAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateIssueData {
-  title: string;
-  description: string;
-  severity?: IssueSeverity;
-  category?: IssueCategory;
-  affectedFarm?: string;
-  affectedDevice?: string;
-  affectedSensor?: string;
-  stepsToReproduce?: string;
-  expectedBehavior?: string;
-  actualBehavior?: string;
-  reportedBy?: string;
-}
-
-export interface UpdateIssueData {
-  title?: string;
-  description?: string;
-  severity?: IssueSeverity;
-  category?: IssueCategory;
-  status?: IssueStatus;
-  assignedTo?: string;
-  resolution?: string;
-}
-
-export const ISSUE_SEVERITY: Record<string, IssueSeverity> = {
+import ISSUE_SEVERITY = {
   CRITICAL: 'critical',
   HIGH: 'high', 
   MEDIUM: 'medium',
   LOW: 'low'
 };
 
-export const ISSUE_STATUS: Record<string, IssueStatus> = {
+import ISSUE_STATUS = {
   NEW: 'new',
   ACKNOWLEDGED: 'acknowledged',
   IN_PROGRESS: 'in_progress',
@@ -74,7 +20,7 @@ export const ISSUE_STATUS: Record<string, IssueStatus> = {
   WONT_FIX: 'wont_fix'
 };
 
-export const ISSUE_CATEGORY: Record<string, IssueCategory> = {
+import ISSUE_CATEGORY = {
   HARDWARE: 'hardware',
   SOFTWARE: 'software',
   NETWORK: 'network',
@@ -85,146 +31,243 @@ export const ISSUE_CATEGORY: Record<string, IssueCategory> = {
   OTHER: 'other'
 };
 
-export async function createIssue(data: CreateIssueData): Promise<string> {
+async function createIssue(data) {
+  const {
+    title,
+    description,
+    severity = 'medium',
+    category = 'other',
+    affectedFarm,
+    affectedDevice,
+    affectedSensor,
+    stepsToReproduce,
+    expectedBehavior,
+    actualBehavior,
+    reportedBy
+  } = data;
+
   const id = uuidv4();
-  const now = new Date().toISOString();
-  
-  const issue: Issue = {
+  const issue = {
     id,
-    title: data.title,
-    description: data.description,
-    severity: data.severity || 'medium',
-    category: data.category || 'other',
-    status: 'new',
-    affectedFarm: data.affectedFarm,
-    affectedDevice: data.affectedDevice,
-    affectedSensor: data.affectedSensor,
-    stepsToReproduce: data.stepsToReproduce,
-    expectedBehavior: data.expectedBehavior,
-    actualBehavior: data.actualBehavior,
-    reportedBy: data.reportedBy,
-    createdAt: now,
-    updatedAt: now
+    title,
+    description,
+    severity,
+    category,
+    status: ISSUE_STATUS.NEW,
+    affected_farm: affectedFarm,
+    affected_device: affectedDevice,
+    affected_sensor: affectedSensor,
+    steps_to_reproduce: stepsToReproduce,
+    expected_behavior: expectedBehavior,
+    actual_behavior: actualBehavior,
+    root_cause: null,
+    fix_applied: null,
+    reported_by: reportedBy,
+    assigned_to: null,
+    acknowledged_at: null,
+    diagnosed_at: null,
+    fixed_at: null,
+    verified_at: null,
+    closed_at: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   };
 
-  db.run(`
-    INSERT INTO issues (
-      id, title, description, severity, category, status,
-      affected_farm, affected_device, affected_sensor,
-      steps_to_reproduce, expected_behavior, actual_behavior,
-      reported_by, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [
-    issue.id, issue.title, issue.description, issue.severity, issue.category, issue.status,
-    issue.affectedFarm || null, issue.affectedDevice || null, issue.affectedSensor || null,
-    issue.stepsToReproduce || null, issue.expectedBehavior || null, issue.actualBehavior || null,
-    issue.reportedBy || null, issue.createdAt, issue.updatedAt
-  ]);
+  await runQuery(
+    `INSERT INTO service_issues 
+     (id, title, description, severity, category, status, affected_farm, affected_device, affected_sensor, steps_to_reproduce, expected_behavior, actual_behavior, root_cause, fix_applied, reported_by, assigned_to, acknowledged_at, diagnosed_at, fixed_at, verified_at, closed_at, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    Object.values(issue)
+  );
 
-  logger.info(`[Issue] Created: ${id} - ${data.title}`);
-  return id;
+  logger.warn(`[ISSUE] Created: ${id} - ${title}`);
+
+  return issue;
 }
 
-export function getIssue(issueId: string): Issue | null {
-  return db.get('SELECT * FROM issues WHERE id = ?', [issueId]) as Issue | null;
-}
-
-export function getIssuesByFarm(farmId: string, status?: IssueStatus): Issue[] {
-  if (status) {
-    return db.all('SELECT * FROM issues WHERE affected_farm = ? AND status = ? ORDER BY created_at DESC', [farmId, status]) as Issue[];
-  }
-  return db.all('SELECT * FROM issues WHERE affected_farm = ? ORDER BY created_at DESC', [farmId]) as Issue[];
-}
-
-export function updateIssue(issueId: string, data: UpdateIssueData): boolean {
-  try {
-    const updates: string[] = [];
-    const values: any[] = [];
-
-    if (data.title) { updates.push('title = ?'); values.push(data.title); }
-    if (data.description) { updates.push('description = ?'); values.push(data.description); }
-    if (data.severity) { updates.push('severity = ?'); values.push(data.severity); }
-    if (data.category) { updates.push('category = ?'); values.push(data.category); }
-    if (data.status) { 
-      updates.push('status = ?'); 
-      values.push(data.status);
-      if (data.status === 'fixed' || data.status === 'closed') {
-        updates.push('resolved_at = ?');
-        values.push(new Date().toISOString());
-      }
-    }
-    if (data.assignedTo) { updates.push('assigned_to = ?'); values.push(data.assignedTo); }
-    if (data.resolution) { updates.push('resolution = ?'); values.push(data.resolution); }
-
-    updates.push('updated_at = ?');
-    values.push(new Date().toISOString());
-    values.push(issueId);
-
-    db.run(`UPDATE issues SET ${updates.join(', ')} WHERE id = ?`, values);
-    return true;
-  } catch (error: any) {
-    logger.error('[Issue] Update error:', error.message);
-    return false;
-  }
-}
-
-export function resolveIssue(issueId: string, resolution: string): boolean {
-  try {
-    db.run('UPDATE issues SET status = ?, resolution = ?, resolved_at = ?, updated_at = ? WHERE id = ?',
-      ['fixed', resolution, new Date().toISOString(), new Date().toISOString(), issueId]);
-    return true;
-  } catch (error: any) {
-    logger.error('[Issue] Resolve error:', error.message);
-    return false;
-  }
-}
-
-export function closeIssue(issueId: string): boolean {
-  return updateIssue(issueId, { status: 'closed' });
-}
-
-export function assignIssue(issueId: string, assignedTo: string): boolean {
-  return updateIssue(issueId, { 
-    assignedTo,
-    status: 'acknowledged'
-  });
-}
-
-export function getIssueStats(farmId: string): {
-  total: number;
-  critical: number;
-  open: number;
-  fixed: number;
-  closed: number;
-} {
-  const issues = getIssuesByFarm(farmId);
+async function acknowledgeIssue(id, assignedTo) {
+  await runQuery(
+    'UPDATE service_issues SET status = ?, assigned_to = ?, acknowledged_at = ?, updated_at = ? WHERE id = ?',
+    [ISSUE_STATUS.ACKNOWLEDGED, assignedTo, new Date().toISOString(), new Date().toISOString(), id]
+  );
   
+  return { success: true, status: ISSUE_STATUS.ACKNOWLEDGED };
+}
+
+async function diagnoseIssue(id, rootCause) {
+  await runQuery(
+    'UPDATE service_issues SET status = ?, root_cause = ?, diagnosed_at = ?, updated_at = ? WHERE id = ?',
+    [ISSUE_STATUS.DIAGNOSED, rootCause, new Date().toISOString(), new Date().toISOString(), id]
+  );
+  
+  return { success: true, status: ISSUE_STATUS.DIAGNOSED };
+}
+
+async function applyFix(id, fixDescription) {
+  await runQuery(
+    'UPDATE service_issues SET status = ?, fix_applied = ?, fixed_at = ?, updated_at = ? WHERE id = ?',
+    [ISSUE_STATUS.FIXED, fixDescription, new Date().toISOString(), new Date().toISOString(), id]
+  );
+  
+  return { success: true, status: ISSUE_STATUS.FIXED };
+}
+
+async function verifyFix(id) {
+  await runQuery(
+    'UPDATE service_issues SET status = ?, verified_at = ?, updated_at = ? WHERE id = ?',
+    [ISSUE_STATUS.VERIFIED, new Date().toISOString(), new Date().toISOString(), id]
+  );
+  
+  return { success: true, status: ISSUE_STATUS.VERIFIED };
+}
+
+async function closeIssue(id, wontFix = false) {
+  await runQuery(
+    'UPDATE service_issues SET status = ?, closed_at = ?, updated_at = ? WHERE id = ?',
+    [wontFix ? ISSUE_STATUS.WONT_FIX : ISSUE_STATUS.CLOSED, new Date().toISOString(), new Date().toISOString(), id]
+  );
+  
+  return { success: true };
+}
+
+async function getIssues(filters = {}) {
+  let sql = 'SELECT * FROM service_issues WHERE 1=1';
+  const params = [];
+
+  if (filters.status) {
+    sql += ' AND status = ?';
+    params.push(filters.status);
+  }
+
+  if (filters.severity) {
+    sql += ' AND severity = ?';
+    params.push(filters.severity);
+  }
+
+  if (filters.category) {
+    sql += ' AND category = ?';
+    params.push(filters.category);
+  }
+
+  if (filters.assignedTo) {
+    sql += ' AND assigned_to = ?';
+    params.push(filters.assignedTo);
+  }
+
+  if (filters.fromDate) {
+    sql += ' AND created_at >= ?';
+    params.push(filters.fromDate);
+  }
+
+  if (filters.toDate) {
+    sql += ' AND created_at <= ?';
+    params.push(filters.toDate);
+  }
+
+  sql += ' ORDER BY CASE severity WHEN "critical" THEN 1 WHEN "high" THEN 2 WHEN "medium" THEN 3 ELSE 4 END, created_at DESC';
+
+  if (filters.limit) {
+    sql += ' LIMIT ?';
+    params.push(filters.limit);
+  }
+
+  return getAll(sql, params);
+}
+
+async function getIssueById(id) {
+  return getOne('SELECT * FROM service_issues WHERE id = ?', [id]);
+}
+
+async function getIssueStats() {
+  const byStatus = getAll(
+    'SELECT status, COUNT(*) as count FROM service_issues GROUP BY status'
+  );
+  
+  const bySeverity = getAll(
+    'SELECT severity, COUNT(*) as count FROM service_issues GROUP BY severity'
+  );
+  
+  const byCategory = getAll(
+    'SELECT category, COUNT(*) as count FROM service_issues GROUP BY category'
+  );
+  
+  const avgTimeToAck = getOne(
+    'SELECT AVG((julianday(acknowledged_at) - julianday(created_at)) * 86400) as seconds FROM service_issues WHERE acknowledged_at IS NOT NULL'
+  );
+  
+  const avgTimeToFix = getOne(
+    'SELECT AVG((julianday(fixed_at) - julianday(created_at)) * 86400) as seconds FROM service_issues WHERE fixed_at IS NOT NULL'
+  );
+
   return {
-    total: issues.length,
-    critical: issues.filter(i => i.severity === 'critical').length,
-    open: issues.filter(i => ['new', 'acknowledged', 'in_progress'].includes(i.status)).length,
-    fixed: issues.filter(i => i.status === 'fixed').length,
-    closed: issues.filter(i => i.status === 'closed').length
+    byStatus: byStatus.reduce((acc, s) => ({ ...acc, [s.status]: s.count }), {}),
+    bySeverity: bySeverity.reduce((acc, s) => ({ ...acc, [s.severity]: s.count }), {}),
+    byCategory: byCategory.reduce((acc, s) => ({ ...acc, [s.category]: s.count }), {}),
+    avgTimeToAck: avgTimeToAck?.seconds || 0,
+    avgTimeToFix: avgTimeToFix?.seconds || 0
   };
 }
 
-export function getCriticalIssues(farmId: string): Issue[] {
-  return db.all(`
-    SELECT * FROM issues 
-    WHERE affected_farm = ? AND severity = 'critical' 
-    AND status NOT IN ('fixed', 'closed')
-    ORDER BY created_at DESC
-  `, [farmId]) as Issue[];
+async function getDiagnosticData(issueId) {
+  const issue = await getIssueById(issueId);
+  if (!issue) return null;
+
+  const diagnostic = {
+    issue,
+    relatedDevices: [],
+    relatedSensors: [],
+    logs: [],
+    timeline: []
+  };
+
+  if (issue.affected_device) {
+    const logs = getAll(
+      'SELECT * FROM audit_logs WHERE entity_id = ? ORDER BY timestamp DESC LIMIT 20',
+      [issue.affected_device]
+    );
+    diagnostic.relatedDevices = logs;
+  }
+
+  if (issue.affected_sensor) {
+    const readings = getAll(
+      'SELECT * FROM sensors WHERE sensor_id = ? ORDER BY timestamp DESC LIMIT 20',
+      [issue.affected_sensor]
+    );
+    diagnostic.relatedSensors = readings;
+  }
+
+  if (issue.acknowledged_at) {
+    diagnostic.timeline.push({ time: issue.acknowledged_at, event: 'Issue acknowledged' });
+  }
+  if (issue.diagnosed_at) {
+    diagnostic.timeline.push({ time: issue.diagnosed_at, event: `Root cause: ${issue.root_cause}` });
+  }
+  if (issue.fixed_at) {
+    diagnostic.timeline.push({ time: issue.fixed_at, event: `Fix applied: ${issue.fix_applied}` });
+  }
+  if (issue.verified_at) {
+    diagnostic.timeline.push({ time: issue.verified_at, event: 'Fix verified' });
+  }
+  if (issue.closed_at) {
+    diagnostic.timeline.push({ time: issue.closed_at, event: 'Issue closed' });
+  }
+
+  return diagnostic;
 }
 
-export default {
+module.exports = {
+export default module.exports;
   createIssue,
-  getIssue,
-  getIssuesByFarm,
-  updateIssue,
-  resolveIssue,
+  acknowledgeIssue,
+  diagnoseIssue,
+  applyFix,
+  verifyFix,
   closeIssue,
-  assignIssue,
+  getIssues,
+  getIssueById,
   getIssueStats,
-  getCriticalIssues
+  getDiagnosticData,
+  ISSUE_SEVERITY,
+  ISSUE_STATUS,
+  ISSUE_CATEGORY
 };

@@ -3,13 +3,13 @@
  * V5.1.0 - Modern and Scientific Features
  */
 
-import { v4 as uuidv4 } from 'uuid';
-const { getOne, getAll, getDatabase } = require('../config/database');
-import logger from '../config/logger';
+import { v4: uuidv4 } from('uuid');
+import { getOne, getAll, getDatabase } from('../config/database');
+import logger from('../config/logger');
 
-const db = getDatabase();
+import db = getDatabase();
 
-const WORKER_POSITIONS = {
+import WORKER_POSITIONS = {
   manager: { label: 'Quản lý', icon: '👨‍💼', level: 'senior' },
   supervisor: { label: 'Giám sát', icon: '👷', level: 'mid' },
   worker: { label: 'Công nhân', icon: '👨‍🌾', level: 'junior' },
@@ -18,14 +18,14 @@ const WORKER_POSITIONS = {
   guard: { label: 'Bảo vệ', icon: '👮', level: 'junior' }
 };
 
-const SKILL_LEVELS = {
+import SKILL_LEVELS = {
   junior: { label: 'Mới vào', multiplier: 1.0 },
   mid: { label: 'Có kinh nghiệm', multiplier: 1.2 },
   senior: { label: 'Kinh nghiệm cao', multiplier: 1.5 },
   expert: { label: 'Chuyên gia', multiplier: 2.0 }
 };
 
-const TASK_TYPES = {
+import TASK_TYPES = {
   planting: { label: 'Gieo trồng', icon: '🌱', category: 'crop' },
   fertilizing: { label: 'Bón phân', icon: '🌿', category: 'crop' },
   spraying: { label: 'Phun thuốc', icon: '💧', category: 'crop' },
@@ -369,7 +369,6 @@ function predictLaborDemand(cropId, days) {
 }
 
 module.exports = {
-export default module.exports;
 export default module.exports;
   createWorker: createWorker,
   getWorkers: getWorkers,

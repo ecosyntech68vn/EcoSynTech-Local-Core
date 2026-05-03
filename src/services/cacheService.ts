@@ -1,7 +1,7 @@
-const logger = require('../config/logger');
+import logger from('../config/logger');
 
-const DEFAULT_TTL = 60 * 1000;
-const DEFAULT_MAX_SIZE = 100;
+import DEFAULT_TTL = 60 * 1000;
+import DEFAULT_MAX_SIZE = 100;
 
 class MemoryCache {
   constructor(options = {}) {

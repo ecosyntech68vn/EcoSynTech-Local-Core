@@ -1,9 +1,9 @@
-const GeneticOptimizer = require('./GeneticOptimizer');
-const logger = require('../config/logger');
+import GeneticOptimizer from('./GeneticOptimizer');
+import logger from('../config/logger');
 
 async function collectHistoricalData() {
   try {
-    const { getAll } = require('../config/database');
+    const { getAll } from('../config/database');
     
     const query = `
       SELECT 
@@ -89,7 +89,7 @@ function startAutoTuning(schedule = '0 3 * * *') {
   logger.info(`[AutoTuning] Đăng ký lịch chạy: ${schedule}`);
   
   try {
-    const cron = require('node-cron');
+    const cron from('node-cron');
     cronJob = cron.schedule(schedule, runDailyOptimization);
     logger.info('[AutoTuning] Đã kích hoạt tự động tối ưu');
   } catch (err) {

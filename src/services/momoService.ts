@@ -1,47 +1,14 @@
 /**
  * MoMo Payment Integration
+ * 
+ * MoMo API: https://momo.vn
+ * Reference: https://developers.momo.vn
  */
 
-import crypto from 'crypto';
-import https from 'https';
-import logger from '../config/logger';
+import crypto from('crypto');
+import https from('https');
 
-interface MoMoConfig {
-  partnerCode: string;
-  secretKey: string;
-  accessKey: string;
-  endpoint: string;
-  redirectUrl: string;
-  ipnUrl: string;
-}
-
-interface MoMoPaymentRequest {
-  partnerCode: string;
-  partnerName: string;
-  storeId: string;
-  requestId: string;
-  amount: string;
-  orderId: string;
-  orderInfo: string;
-  redirectUrl: string;
-  ipnUrl: string;
-  requestType: string;
-  signature: string;
-  extraData?: string;
-}
-
-interface MoMoPaymentResponse {
-  partnerCode?: string;
-  orderId?: string;
-  requestId?: string;
-  amount?: string;
-  transId?: string;
-  resultCode?: number;
-  message?: string;
-  signature?: string;
-}
-
-const momoConfig: MoMoConfig = {
+import momoConfig = {
   partnerCode: process.env.MOMO_PARTNER_CODE || 'MOMO1234567890',
   secretKey: process.env.MOMO_SECRET_KEY || '',
   accessKey: process.env.MOMO_ACCESS_KEY || 'MOMO_ACCESS_KEY',
@@ -50,7 +17,7 @@ const momoConfig: MoMoConfig = {
   ipnUrl: process.env.MOMO_IPN_URL || 'http://localhost:3000/api/payment/momo-ipn'
 };
 
-async function sendToMoMo(endpoint: string, data: string): Promise<MoMoPaymentResponse> {
+async function sendToMoMo(endpoint, data) {
   return new Promise((resolve, reject) => {
     const options = {
       hostname: momoConfig.endpoint.replace('https://', ''),
@@ -65,14 +32,8 @@ async function sendToMoMo(endpoint: string, data: string): Promise<MoMoPaymentRe
 
     const req = https.request(options, (res) => {
       let body = '';
-      res.on('data', (chunk: string) => body += chunk);
-      res.on('end', () => {
-        try {
-          resolve(JSON.parse(body));
-        } catch (e) {
-          reject(new Error('Invalid JSON response'));
-        }
-      });
+      res.on('data', chunk => body += chunk);
+      res.on('end', resolve(JSON.parse(body)));
     });
 
     req.on('error', reject);
@@ -81,7 +42,7 @@ async function sendToMoMo(endpoint: string, data: string): Promise<MoMoPaymentRe
   });
 }
 
-async function createMoMoPayment(orderId: string, amount: number, orderInfo: string): Promise<MoMoPaymentResponse> {
+async function createMoMoPayment(orderId, amount, orderInfo) {
   const requestId = orderId + '_' + Date.now();
   const requestType = 'captureWallet';
   
@@ -99,63 +60,52 @@ async function createMoMoPayment(orderId: string, amount: number, orderInfo: str
     amount: amount.toString(),
     orderId,
     orderInfo,
+    orderExpireTime: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
     redirectUrl: momoConfig.redirectUrl,
     ipnUrl: momoConfig.ipnUrl,
     requestType,
     signature,
-    extraData: ''
-  } as MoMoPaymentRequest);
-
-  try {
-    return await sendToMoMo('/gwpayment/command', data);
-  } catch (error) {
-    const errMsg = error instanceof Error ? error.message : 'Unknown';
-    logger.error('[MoMo] Payment creation failed:', errMsg);
-    return { resultCode: -1, message: errMsg };
-  }
-}
-
-async function queryMoMoTransaction(orderId: string, requestId: string): Promise<MoMoPaymentResponse> {
-  const rawSignature = `accessKey=${momoConfig.accessKey}&orderId=${orderId}&partnerCode=${momoConfig.partnerCode}&requestId=${requestId}`;
-  
-  const signature = crypto.createHmac('sha256', momoConfig.secretKey)
-    .update(rawSignature)
-    .digest('hex');
-
-  const data = JSON.stringify({
-    partnerCode: momoConfig.partnerCode,
-    orderId,
-    requestId,
-    requestType: 'transactionStatus',
-    signature
+    lang: 'vi',
+    autoCapture: true
   });
 
-  try {
-    return await sendToMoMo('/gwpayment/command', data);
-  } catch (error) {
-    const errMsg = error instanceof Error ? error.message : 'Unknown';
-    logger.error('[MoMo] Query failed:', errMsg);
-    return { resultCode: -1, message: errMsg };
-  }
+  return sendToMoMo('/v2/gateway/api/create', data);
 }
 
-function verifyMoMoCallback(data: Record<string, unknown>, signature: string): boolean {
-  const rawSignature = Object.keys(data)
-    .filter(k => k !== 'signature')
-    .sort()
-    .map(k => `${k}=${data[k]}`)
-    .join('&');
+async function verifyMoMoCallback(signature, params) {
+  const rawData = `accessKey=${momoConfig.accessKey}&amount=${params.amount}&message=${params.message}&orderId=${params.orderId}&partnerCode=${momoConfig.partnerCode}&requestId=${params.requestId}&resultCode=${params.resultCode}&transId=${params.transId}`;
   
   const expectedSignature = crypto.createHmac('sha256', momoConfig.secretKey)
-    .update(rawSignature)
+    .update(rawData)
     .digest('hex');
-  
+
   return signature === expectedSignature;
 }
 
-export {
+class MoMoService {
+  async createPayment(orderId, plan, amount) {
+    const planPricing = {
+      BASE: 0,
+      PRO: 99000,
+      PRO_MAX: 199000,
+      PREMIUM: 299000
+    };
+    
+    const price = planPricing[plan] || 99000;
+    const orderInfo = `EcoSynTech ${plan}`;
+    
+    return createMoMoPayment(orderId, price, orderInfo);
+  }
+
+  async verifyCallback(signature, params) {
+    return verifyMoMoCallback(signature, params);
+  }
+}
+
+module.exports = {
+export default module.exports;
+  momoConfig,
+  MoMoService,
   createMoMoPayment,
-  queryMoMoTransaction,
-  verifyMoMoCallback,
-  momoConfig
+  verifyMoMoCallback
 };

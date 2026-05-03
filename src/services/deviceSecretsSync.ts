@@ -1,38 +1,10 @@
 'use strict';
 
-interface SyncOptions {
-  gasClient: unknown;
-  syncIntervalMs?: number;
-  logger?: typeof console;
-}
-
-interface SyncResult {
-  ok: boolean;
-  code?: string;
-  total?: number;
-  added?: number;
-  updated?: number;
-  skipped?: number;
-}
-
-interface GasClientLike {
-  _call(action: string, payload: Record<string, unknown>): Promise<{ ok: boolean; code?: string; payload?: { device_secrets: Array<{ device_id: string; secret: string }> } }>;
-}
-
 class DeviceSecretsSync {
-  gasClient: GasClientLike;
-  syncInterval: number;
-  logger: typeof console;
-  secrets: Map<string, string>;
-  lastSyncAt: Date | null;
-  lastSyncCount: number;
-  private _timer: NodeJS.Timeout | null;
-  private _pendingSync: boolean;
-
-  constructor(opts: SyncOptions) {
+  constructor(opts) {
     if (!opts || !opts.gasClient) throw new Error('gasClient required');
 
-    this.gasClient = opts.gasClient as GasClientLike;
+    this.gasClient = opts.gasClient;
     this.syncInterval = opts.syncIntervalMs || 3600000;
     this.logger = opts.logger || console;
 
@@ -43,7 +15,7 @@ class DeviceSecretsSync {
     this._pendingSync = false;
   }
 
-  async syncNow(): Promise<SyncResult> {
+  async syncNow() {
     try {
       const r = await this.gasClient._call('admin_sync_device_secrets', {});
       if (!r.ok) {
@@ -76,64 +48,48 @@ class DeviceSecretsSync {
 
       return { ok: true, total: items.length, added, updated, skipped };
     } catch (e) {
-      const errMsg = e instanceof Error ? e.message : 'Unknown';
-      this.logger.error('DeviceSecretsSync', 'sync_error', { error: errMsg });
-      return { ok: false, code: 'SYNC_ERROR' };
+      this.logger.error('DeviceSecretsSync', 'sync_error', { error: String(e) });
+      return { ok: false, code: 'SYNC_ERROR', error: String(e) };
     }
   }
 
-  startAutoSync() {
-    if (this._timer) {
-      this.logger.warn('DeviceSecretsSync', 'already_running');
-      return;
-    }
-
-    this.logger.info('DeviceSecretsSync', 'auto_sync_started', { intervalMs: this.syncInterval });
-
+  start() {
+    if (this._timer) return;
+    this.syncNow().catch(e => { console.error(e); });
     this._timer = setInterval(() => {
-      if (!this._pendingSync) {
-        this._pendingSync = true;
-        this.syncNow().finally(() => {
-          this._pendingSync = false;
-        });
-      }
+      this.syncNow().catch(e => { console.error(e); });
     }, this.syncInterval);
+    this._timer.unref && this._timer.unref();
+    this.logger.info('DeviceSecretsSync', 'started', { interval_ms: this.syncInterval });
   }
 
-  stopAutoSync() {
+  stop() {
     if (this._timer) {
       clearInterval(this._timer);
       this._timer = null;
-      this.logger.info('DeviceSecretsSync', 'auto_sync_stopped');
     }
   }
 
-  getSecret(deviceId: string): string | undefined {
-    return this.secrets.get(deviceId);
-  }
-
-  setSecret(deviceId: string, secret: string): void {
-    this.secrets.set(deviceId, secret);
-  }
-
-  hasSecret(deviceId: string): boolean {
-    return this.secrets.has(deviceId);
+  async lookup(deviceId) {
+    const secret = this.secrets.get(deviceId);
+    if (!secret) {
+      if (!this.lastSyncAt) {
+        await this.syncNow();
+        const retry = this.secrets.get(deviceId);
+        if (retry) return { secret: retry };
+      }
+      return null;
+    }
+    return { secret };
   }
 
   getStats() {
     return {
-      totalSecrets: this.secrets.size,
-      lastSyncAt: this.lastSyncAt?.toISOString(),
-      lastSyncCount: this.lastSyncCount,
-      autoSyncEnabled: this._timer !== null,
-      syncIntervalMs: this.syncInterval
+      total_secrets: this.secrets.size,
+      last_sync_at: this.lastSyncAt,
+      last_sync_count: this.lastSyncCount
     };
-  }
-
-  clear() {
-    this.secrets.clear();
-    this.logger.info('DeviceSecretsSync', 'cleared');
   }
 }
 
-export default DeviceSecretsSync;
+module.exports = DeviceSecretsSync;

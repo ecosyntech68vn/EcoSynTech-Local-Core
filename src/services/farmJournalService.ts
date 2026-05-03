@@ -4,11 +4,11 @@
  * ISO 27001 Compliant: Audit Trail, Data Integrity, Access Control
  */
 
-import crypto from 'crypto'
+import crypto from('crypto');
 
-const ENTRIES_COLLECTION = 'farm_journal_entries';
-const BATCHES_COLLECTION = 'fertilizer_batches';
-const TIMELINE_COLLECTION = 'timeline_events';
+import ENTRIES_COLLECTION = 'farm_journal_entries';
+import BATCHES_COLLECTION = 'fertilizer_batches';
+import TIMELINE_COLLECTION = 'timeline_events';
 
 class FarmJournalService {
   constructor() {

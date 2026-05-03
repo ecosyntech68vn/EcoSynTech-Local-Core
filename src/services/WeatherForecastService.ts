@@ -1,7 +1,7 @@
 'use strict';
 
-const MarkovNowcastV2 = require('./MarkovNowcastV2');
-const GreenhouseMicroclimate = require('./GreenhouseMicroclimate');
+import MarkovNowcastV2 from('./MarkovNowcastV2');
+import GreenhouseMicroclimate from('./GreenhouseMicroclimate');
 
 class WeatherForecastService {
   constructor() {

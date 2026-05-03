@@ -3,12 +3,12 @@
 // Lightweight, dual backend cache: Redis (if available) or in-memory fallback.
 let redisClient = null;
 let useRedis = false;
-const memoryCache = new Map();
+import memoryCache = new Map();
 
 async function initRedis() {
   if (redisClient || useRedis) return;
   try {
-    const redis = require('redis');
+    const redis from('redis');
     redisClient = redis.createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' });
     await redisClient.connect();
     useRedis = true;

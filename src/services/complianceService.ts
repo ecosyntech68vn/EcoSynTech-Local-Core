@@ -10,15 +10,15 @@
 
 /* eslint-disable no-dupe-keys */
 
-const fs = require('fs');
-const path = require('path');
+import fs from('fs');
+import path from('path');
 
-const DOCS_DIR = path.join(__dirname, '../../docs');
-const POLICIES_DIR = path.join(DOCS_DIR, 'policies');
-const OPERATIONS_DIR = path.join(DOCS_DIR, 'operations');
-const GOVERNANCE_DIR = path.join(DOCS_DIR, 'governance');
+import DOCS_DIR = path.join(__dirname, '../../docs');
+import POLICIES_DIR = path.join(DOCS_DIR, 'policies');
+import OPERATIONS_DIR = path.join(DOCS_DIR, 'operations');
+import GOVERNANCE_DIR = path.join(DOCS_DIR, 'governance');
 
-const COMPLIANCE_STATUS = {
+import COMPLIANCE_STATUS = {
   COMPLIANT: 'compliant',
   NON_COMPLIANT: 'non_compliant',
   PARTIAL: 'partial',
@@ -26,7 +26,7 @@ const COMPLIANCE_STATUS = {
 };
 
 // Evidence document mapping
-const EVIDENCE_DOCS = {
+import EVIDENCE_DOCS = {
   // A.5 Information Security Policies
   'A.5.1': { 
     doc: 'ISMS_POLICY.md', 
@@ -349,7 +349,7 @@ const EVIDENCE_DOCS = {
 };
 
 // ISO 27001 Control Framework
-const CONTROLS = {
+import CONTROLS = {
   // A.5 Information Security Policies
   'A.5.1': { name: 'Information security policy', status: COMPLIANCE_STATUS.COMPLIANT },
   'A.5.2': { name: 'Review of policies', status: COMPLIANCE_STATUS.COMPLIANT },

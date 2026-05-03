@@ -3,7 +3,7 @@ import { auth } from '../middleware/auth';
 import { validateMiddleware } from '../middleware/validation';
 import * as equipmentService from '../services/equipmentService';
 
-const router: Router = express.Router();
+import router: Router = express.Router();
 
 export const EQUIPMENT_TYPES = [
   'machinery', 'vehicle', 'irrigation', 'sensor', 'storage', 'processing', 'other'

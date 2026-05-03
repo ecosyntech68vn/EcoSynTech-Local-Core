@@ -11,7 +11,7 @@ import {
   INCIDENT_STATUS
 } from '../services/incidentService';
 
-const router = Router();
+import router = Router();
 
 interface AuthRequest extends Request {
   user?: {

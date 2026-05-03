@@ -1,7 +1,15 @@
-import { Response, NextFunction } from 'express';
-import crypto from 'crypto';
+/**
+ * ============================================================================
+ * src/middleware/requestId.js - Request ID Middleware
+ * 
+ * Purpose: Add unique request ID for traceability
+ * ISO 27001: A.12.4 Logging and Monitoring
+ * ============================================================================
+ */
 
-export function requestId(req: any, res: Response, next: NextFunction): void {
+import crypto from('crypto');
+
+function requestId(req, res, next) {
   const requestId = req.headers['x-request-id'] || crypto.randomBytes(8).toString('hex');
   
   req.id = requestId;
@@ -10,4 +18,4 @@ export function requestId(req: any, res: Response, next: NextFunction): void {
   next();
 }
 
-export default { requestId };
+module.exports = { requestId };

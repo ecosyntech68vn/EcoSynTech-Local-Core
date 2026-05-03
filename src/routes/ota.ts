@@ -1,13 +1,13 @@
-import express, { Router, Request, Response } from 'express';
-const router = Router();
-const { v4: uuidv4 } = require('uuid');
-const { getAll, getOne, runQuery } = require('../config/database');
-const { asyncHandler } = require('../middleware/errorHandler');
-const { auth: authenticate } = require('../middleware/auth');
-const logger = require('../config/logger');
-const crypto = require('crypto');
+import express from('express');
+import router = express.Router();
+import { v4: uuidv4 } from('uuid');
+import { getAll, getOne, runQuery } from('../config/database');
+import { asyncHandler } from('../middleware/errorHandler');
+import { auth: authenticate } from('../middleware/auth');
+import logger from('../config/logger');
+import crypto from('crypto');
 
-const OTA_CONFIG = {
+import OTA_CONFIG = {
   checkInterval: 7 * 24 * 60 * 60 * 1000,
   downloadTimeout: 300000,
   maxRetry: 3,
@@ -398,4 +398,3 @@ router.get('/ota/stats', authenticate, asyncHandler(async (req, res) => {
 }));
 
 module.exports = router;
-export default router;

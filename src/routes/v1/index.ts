@@ -3,21 +3,24 @@
  * 
  * EcoSynTech V5.1 API Versioning
  * All v1 endpoints under /api/v1/*
+ * 
+ * Backward Compatible: Original /api/* routes still work
+ * New clients should use /api/v1/*
  */
 
-import express, { Router, Request, Response } from 'express';
+import express from('express');
+import router = express.Router();
 
-const router = Router();
+import dashboard from('../dashboard');
+import finance from('../finance');
+import inventory from('../inventory');
+import equipment from('../equipment');
+import labor from('../labor');
+import crops from('../crops');
+import sensors from('../sensors');
+import devices from('../devices');
 
-const dashboard = require('../dashboard');
-const finance = require('../finance');
-const inventory = require('../inventory');
-const equipment = require('../equipment');
-const labor = require('../labor');
-const crops = require('../crops');
-const sensors = require('../sensors');
-const devices = require('../devices');
-
+// Mount v1 routes
 router.use('/dashboard', dashboard);
 router.use('/finance', finance);
 router.use('/inventory', inventory);
@@ -27,7 +30,8 @@ router.use('/crops', crops);
 router.use('/sensors', sensors);
 router.use('/devices', devices);
 
-router.get('/health', (req: Request, res: Response) => {
+// Health check for v1
+router.get('/health', (req, res) => {
   res.json({ 
     ok: true, 
     version: 'v1',
@@ -36,12 +40,25 @@ router.get('/health', (req: Request, res: Response) => {
   });
 });
 
-router.get('/info', (req: Request, res: Response) => {
+// API Info endpoint
+router.get('/info', (req, res) => {
   res.json({
+    ok: true,
     version: 'v1',
-    endpoints: ['dashboard', 'finance', 'inventory', 'equipment', 'labor', 'crops', 'sensors', 'devices'],
-    timestamp: new Date().toISOString()
+    name: 'EcoSynTech API',
+    description: 'Smart Agriculture IoT Platform',
+    documentation: '/api/docs',
+    endpoints: {
+      dashboard: '/api/v1/dashboard',
+      finance: '/api/v1/finance',
+      inventory: '/api/v1/inventory',
+      equipment: '/api/v1/equipment',
+      labor: '/api/v1/labor',
+      crops: '/api/v1/crops',
+      sensors: '/api/v1/sensors',
+      devices: '/api/v1/devices'
+    }
   });
 });
 
-export = router;
+module.exports = router;

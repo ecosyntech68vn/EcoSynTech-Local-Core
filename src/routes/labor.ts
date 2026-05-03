@@ -3,7 +3,7 @@ import { auth } from '../middleware/auth';
 import { validateMiddleware } from '../middleware/validation';
 import * as laborService from '../services/laborService';
 
-const router: Router = express.Router();
+import router: Router = express.Router();
 
 export const WORKER_POSITIONS = [
   'Quản lý', 'Kỹ thuật viên', 'Công nhân nông nghiệp', 'Thợ máy', 'Bảo vệ', 'Tổng vệ sinh', 'Khác'

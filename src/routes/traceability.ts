@@ -1,20 +1,19 @@
-import express, { Router, Request, Response } from 'express';
-import QRCode from 'qrcode';
-import { v4 as uuidv4 } from 'uuid';
-import Joi from 'joi';
-import PDFDocument from 'pdfkit';
-import ExcelJS from 'exceljs';
-import { runQuery, getOne, getAll } from '../config/database';
-import logger from '../config/logger';
-import { auth } from '../middleware/auth';
-import blockchainHelper from '../modules/blockchain-helper';
+import express from('express');
+import router = express.Router();
+import QRCode from('qrcode');
+import { v4: uuidv4 } from('uuid');
+import Joi from('joi');
+import PDFDocument from('pdfkit');
+import ExcelJS from('exceljs');
+import { runQuery, getOne, getAll } from('../config/database');
+import logger from('../config/logger');
+import { auth } from('../middleware/auth');
+import blockchainHelper from('../modules/blockchain-helper');
 
-const router = Router();
-
-const BASE_URL = process.env.BASE_URL || 'https://ecosyntech.com';
+import BASE_URL = process.env.BASE_URL || 'https://ecosyntech.com';
 
 // Validation schemas
-const batchSchema = Joi.object({
+import batchSchema = Joi.object({
   batch_code: Joi.string().min(1).max(50).optional(),
   product_name: Joi.string().min(1).max(200).required(),
   product_type: Joi.string().valid('vegetable', 'fruit', 'herb', 'grain', 'other').required(),
@@ -28,7 +27,7 @@ const batchSchema = Joi.object({
   notes: Joi.string().max(500).optional()
 });
 
-const stageSchema = Joi.object({
+import stageSchema = Joi.object({
   stage_name: Joi.string().min(1).max(100).required(),
   stage_type: Joi.string().valid('preparation', 'planting', 'growing', 'harvesting', 'processing', 'packaging', 'storage', 'transport').required(),
   description: Joi.string().max(500).optional(),
@@ -551,7 +550,7 @@ router.get('/verify/:batchCode', async (req, res) => {
     const stages = getAll('SELECT * FROM traceability_stages WHERE batch_id = ? ORDER BY stage_order ASC', [batch.id]);
     const readings = getAll('SELECT * FROM traceability_readings WHERE batch_id = ? ORDER BY timestamp DESC LIMIT 10', [batch.id]);
     
-    const bcSkill = require('../skills/traceability/aptos-blockchain.skill');
+    const bcSkill from('../skills/traceability/aptos-blockchain.skill');
     const computedHash = bcSkill.computeBatchHash(batch, stages, readings);
 
     res.json({
@@ -605,7 +604,7 @@ router.post('/scan', async (req, res) => {
     const stages = getAll('SELECT * FROM traceability_stages WHERE batch_id = ? ORDER BY stage_order ASC', [batch.id]);
     const certifications = JSON.parse(batch.farm_certifications || '[]');
     
-    const bcSkill = require('../skills/traceability/aptos-blockchain.skill');
+    const bcSkill from('../skills/traceability/aptos-blockchain.skill');
     const computedHash = bcSkill.computeBatchHash(batch, stages, []);
     
     const origin = {
@@ -1095,7 +1094,7 @@ router.post('/tb/batches', auth, async (req, res) => {
     if (!product_name) return res.status(400).json({ ok: false, error: 'product_name is required' });
     const id = `tb-${uuidv4().slice(0, 8)}`;
     const code = batch_code || `TB-${Date.now().toString(36).toUpperCase()}`;
-    const { db } = require('../config/database');
+    const { db } from('../config/database');
     db.run(`INSERT INTO tb_batches (id, org_id, farm_id, area_id, season_id, asset_id, product_name, product_type, batch_code, harvest_date, produced_quantity, unit, quality_grade, status)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'created')`,
     [id, null, farm_id, area_id, season_id, asset_id, product_name, product_type, code, harvest_date, produced_quantity, unit || 'kg', quality_grade]
@@ -1114,7 +1113,7 @@ router.patch('/tb/batches/:id', auth, async (req, res) => {
     const { product_name, product_type, batch_code, harvest_date, produced_quantity, unit, quality_grade, status } = req.body;
     const existing = getOne('SELECT * FROM tb_batches WHERE id = ?', [req.params.id]);
     if (!existing) return res.status(404).json({ ok: false, error: 'Batch not found' });
-    const { db } = require('../config/database');
+    const { db } from('../config/database');
     db.run(`UPDATE tb_batches SET product_name = COALESCE(?, product_name), product_type = COALESCE(?, product_type), batch_code = COALESCE(?, batch_code),
            harvest_date = COALESCE(?, harvest_date), produced_quantity = COALESCE(?, produced_quantity), unit = COALESCE(?, unit),
            quality_grade = COALESCE(?, quality_grade), status = COALESCE(?, status), updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
@@ -1136,7 +1135,7 @@ router.post('/tb/batches/:id/events', auth, async (req, res) => {
     if (!batch) return res.status(404).json({ ok: false, error: 'Batch not found' });
     const id = `tbe-${uuidv4().slice(0, 8)}`;
     const locationJson = location ? JSON.stringify(location) : null;
-    const { db } = require('../config/database');
+    const { db } from('../config/database');
     db.run(`INSERT INTO tb_batch_events (id, batch_id, event_type, actor_type, actor_id, related_log_id, related_quantity_id, related_inventory_id, location_json, note)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [id, req.params.id, event_type, actor_type || 'user', actor_id, related_log_id, related_quantity_id, related_inventory_id, locationJson, note]
@@ -1168,7 +1167,7 @@ router.post('/tb/batches/:id/inputs', auth, async (req, res) => {
     const batch = getOne('SELECT * FROM tb_batches WHERE id = ?', [req.params.id]);
     if (!batch) return res.status(404).json({ ok: false, error: 'Batch not found' });
     const id = `tbi-${uuidv4().slice(0, 8)}`;
-    const { db } = require('../config/database');
+    const { db } from('../config/database');
     db.run('INSERT INTO tb_batch_inputs (id, batch_id, input_type, input_name, supplier_name, quantity, unit, used_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)',
       [id, req.params.id, input_type, input_name, supplier_name, quantity, unit]
     );
@@ -1187,7 +1186,7 @@ router.post('/tb/batches/:id/quality-checks', auth, async (req, res) => {
     if (!batch) return res.status(404).json({ ok: false, error: 'Batch not found' });
     const id = `tbqc-${uuidv4().slice(0, 8)}`;
     const detailsJson = details ? JSON.stringify(details) : null;
-    const { db } = require('../config/database');
+    const { db } from('../config/database');
     db.run('INSERT INTO tb_batch_quality_checks (id, batch_id, check_type, result, score, details_json, checked_by, checked_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)',
       [id, req.params.id, check_type, result, score, detailsJson, checked_by]
     );
@@ -1221,7 +1220,7 @@ router.post('/tb/packages', auth, async (req, res) => {
     if (!batch) return res.status(404).json({ ok: false, error: 'Batch not found' });
     const id = `pkg-${uuidv4().slice(0, 8)}`;
     const code = package_code || `PKG-${Date.now().toString(36).toUpperCase()}`;
-    const { db } = require('../config/database');
+    const { db } from('../config/database');
     db.run(`INSERT INTO tb_packages (id, batch_id, package_code, barcode, qr_code, net_weight, unit, packaging_type, status)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'created')`,
     [id, batch_id, code, barcode || code, qr_code || code, net_weight, unit || 'kg', packaging_type || 'carton']
@@ -1277,7 +1276,7 @@ router.post('/tb/shipments', auth, async (req, res) => {
     if (!items || !items.length) return res.status(400).json({ ok: false, error: 'items array is required' });
     const id = `ship-${uuidv4().slice(0, 8)}`;
     const code = `SHP-${Date.now().toString(36).toUpperCase()}`;
-    const { db } = require('../config/database');
+    const { db } from('../config/database');
     db.run('INSERT INTO tb_shipments (id, shipment_code, customer_name, destination, transport_type, status) VALUES (?, ?, ?, ?, ?, \'preparing\')',
       [id, code, customer_name, destination, transport_type]
     );
@@ -1299,7 +1298,7 @@ router.patch('/tb/shipments/:id/status', auth, async (req, res) => {
     const { status } = req.body;
     const shipment = getOne('SELECT * FROM tb_shipments WHERE id = ?', [req.params.id]);
     if (!shipment) return res.status(404).json({ ok: false, error: 'Shipment not found' });
-    const { db } = require('../config/database');
+    const { db } from('../config/database');
     const now = status === 'delivered' ? 'CURRENT_TIMESTAMP' : 'NULL';
     db.run(`UPDATE tb_shipments SET status = ?, delivered_at = ${status === 'delivered' ? 'CURRENT_TIMESTAMP' : 'NULL'}, shipped_at = ${status === 'shipped' ? 'CURRENT_TIMESTAMP' : 'shipped_at'} WHERE id = ?`,
       [status, req.params.id]
@@ -1335,7 +1334,7 @@ router.post('/tb/incidents', auth, async (req, res) => {
     const { batch_id, incident_type, severity, description } = req.body;
     if (!batch_id) return res.status(400).json({ ok: false, error: 'batch_id is required' });
     const id = `inc-${uuidv4().slice(0, 8)}`;
-    const { db } = require('../config/database');
+    const { db } from('../config/database');
     db.run('INSERT INTO tb_recall_incidents (id, batch_id, incident_type, severity, description, status, created_by) VALUES (?, ?, ?, ?, ?, \'open\', ?)',
       [id, batch_id, incident_type, severity, description, req.user?.id]
     );
@@ -1352,7 +1351,7 @@ router.patch('/tb/incidents/:id', auth, async (req, res) => {
     const { status } = req.body;
     const incident = getOne('SELECT * FROM tb_recall_incidents WHERE id = ?', [req.params.id]);
     if (!incident) return res.status(404).json({ ok: false, error: 'Incident not found' });
-    const { db } = require('../config/database');
+    const { db } from('../config/database');
     const resolvedAt = status === 'resolved' ? 'CURRENT_TIMESTAMP' : 'NULL';
     db.run(`UPDATE tb_recall_incidents SET status = ?, resolved_at = ${status === 'resolved' ? 'CURRENT_TIMESTAMP' : 'NULL'} WHERE id = ?`,
       [status, req.params.id]
@@ -1417,8 +1416,5 @@ router.get('/tb/stats', auth, async (req, res) => {
     res.status(500).json({ ok: false, error: error.message });
   }
 });
-
-module.exports = router;
-export default router;
 
 module.exports = router;

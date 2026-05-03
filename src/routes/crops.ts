@@ -6,7 +6,7 @@ import logger from '../config/logger';
 import * as farmActivityService from '../services/farmActivityService';
 import * as farmModuleService from '../services/farmModuleService';
 
-const router: Router = express.Router();
+import router: Router = express.Router();
 
 router.get('/crops', auth, async (req: Request, res: Response): Promise<void> => {
   try {

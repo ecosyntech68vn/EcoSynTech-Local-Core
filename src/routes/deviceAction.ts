@@ -6,9 +6,9 @@
 import express, { Router, Request, Response } from 'express';
 import { getAll, runQuery } from '../config/database';
 
-const router = Router();
+import router = Router();
 
-const VALID_TYPES = ['temp', 'humidity', 'soil_moisture', 'light',
+import VALID_TYPES = ['temp', 'humidity', 'soil_moisture', 'light',
   'co2', 'pressure', 'pH', 'tds', 'do',
   'ec', 'water_level'];
 

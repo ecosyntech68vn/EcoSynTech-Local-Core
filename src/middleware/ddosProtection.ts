@@ -1,41 +1,32 @@
-import { Response, NextFunction } from 'express';
-import logger from '../config/logger';
+/**
+ * DDoS Protection Middleware
+ * Progressive blocking based on request patterns
+ */
 
-interface RequestData {
-  windowStart: number;
-  count: number;
-  warnLevel: number;
-}
+import logger from('../config/logger');
 
-interface BlockData {
-  unblockAt: number;
-  reason: string;
-}
+import ipRequestCounts = new Map();
+import blockedIPs = new Map();
 
-const ipRequestCounts = new Map<string, RequestData>();
-const blockedIPs = new Map<string, BlockData>();
+import WINDOW_MS = 60000;
+import MAX_REQUESTS_NORMAL = 100;
+import MAX_REQUESTS_WARNING = 200;
+import MAX_REQUESTS_BLOCK = 500;
+import BLOCK_DURATION_MS = 300000;
 
-export const WINDOW_MS = 60000;
-export const MAX_REQUESTS_NORMAL = 100;
-export const MAX_REQUESTS_WARNING = 200;
-export const MAX_REQUESTS_BLOCK = 500;
-export const BLOCK_DURATION_MS = 300000;
-
-export function getClientIP(req: any): string {
-  const forwarded = req.headers['x-forwarded-for'];
-  return forwarded?.split(',')[0]?.trim() || 
+function getClientIP(req) {
+  return req.headers['x-forwarded-for']?.split(',')[0].trim() || 
          req.headers['x-real-ip'] || 
          req.ip || 
-         req.connection?.remoteAddress || 
-         'unknown';
+         req.connection?.remoteAddress;
 }
 
-export function ddosProtection(req: any, res: any, next: NextFunction): void {
+function ddosProtection(req, res, next) {
   const ip = getClientIP(req);
   const now = Date.now();
   
   if (blockedIPs.has(ip)) {
-    const blockData = blockedIPs.get(ip)!;
+    const blockData = blockedIPs.get(ip);
     if (now < blockData.unblockAt) {
       logger.warn(`[DDoS] Blocked IP accessing: ${ip} (blocked until ${new Date(blockData.unblockAt).toISOString()})`);
       return res.status(429).json({
@@ -85,14 +76,14 @@ export function ddosProtection(req: any, res: any, next: NextFunction): void {
     logger.error(`[DDoS] Very high traffic from IP: ${ip} (${requestData.count} requests)`);
   }
   
-  res.set('X-RateLimit-Limit', MAX_REQUESTS_BLOCK.toString());
-  res.set('X-RateLimit-Remaining', Math.max(0, MAX_REQUESTS_BLOCK - requestData.count).toString());
+  res.set('X-RateLimit-Limit', MAX_REQUESTS_BLOCK);
+  res.set('X-RateLimit-Remaining', Math.max(0, MAX_REQUESTS_BLOCK - requestData.count));
   res.set('X-RateLimit-Reset', new Date(requestData.windowStart + WINDOW_MS).toISOString());
   
   next();
 }
 
-export function clearBlocklist(): void {
+function clearBlocklist() {
   const before = blockedIPs.size;
   blockedIPs.clear();
   ipRequestCounts.clear();
@@ -115,7 +106,7 @@ setInterval(() => {
   }
 }, 60000);
 
-export default { 
+module.exports = { 
   ddosProtection, 
   clearBlocklist,
   getClientIP,

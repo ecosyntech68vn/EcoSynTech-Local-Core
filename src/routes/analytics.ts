@@ -1,5 +1,5 @@
 import express from 'express';
-const router = express.Router();
+import router = express.Router();
 import { getAll, getOne, runQuery } from '../config/database';
 import { asyncHandler } from '../middleware/errorHandler';
 import { authenticate } from '../middleware/auth';
@@ -132,7 +132,7 @@ router.get('/kpis', authenticate, asyncHandler(async (req: any, res: any) => {
 }));
 
 router.get('/export/pdf', authenticate, asyncHandler(async (req: any, res: any) => {
-  const PDFDocument = require('pdfkit');
+  const PDFDocument from('pdfkit');
   
   const sensors = getAll('SELECT * FROM sensors');
   const devices = getAll('SELECT * FROM devices');
@@ -167,7 +167,7 @@ router.get('/export/pdf', authenticate, asyncHandler(async (req: any, res: any) 
 }));
 
 router.get('/export/excel', authenticate, asyncHandler(async (req: any, res: any) => {
-  const Excel = require('exceljs');
+  const Excel from('exceljs');
   
   const workbook = new Excel.Workbook();
   workbook.creator = 'EcoSynTech';

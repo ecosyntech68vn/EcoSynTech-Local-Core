@@ -3,7 +3,7 @@ import { auth } from '../middleware/auth';
 import { getAll, getOne, runQuery } from '../config/database';
 import * as inventoryService from '../services/inventoryService';
 
-const router: Router = express.Router();
+import router: Router = express.Router();
 
 interface InventoryItem {
   id: string;

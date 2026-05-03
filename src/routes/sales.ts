@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { asyncHandler } from '../middleware/errorHandler';
 import * as salesModule from '../modules/sales-integration';
 
-const router = Router();
+import router = Router();
 
 interface LeadBody {
   message?: string;

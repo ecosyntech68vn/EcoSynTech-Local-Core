@@ -1,7 +1,7 @@
-import { Response, NextFunction } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import logger from('../config/logger');
+import { v4: uuidv4 } from('uuid');
 
-export const ERROR_CATEGORIES = {
+import ERROR_CATEGORIES = {
   VALIDATION: 'ValidationError',
   AUTH: 'UnauthorizedError',
   NOT_FOUND: 'NotFoundError',
@@ -10,17 +10,9 @@ export const ERROR_CATEGORIES = {
   EXTERNAL: 'ExternalServiceError',
   INTERNAL: 'InternalError',
   TIMEOUT: 'TimeoutError'
-} as const;
+};
 
-export type ErrorCategory = typeof ERROR_CATEGORIES[keyof typeof ERROR_CATEGORIES];
-
-export interface CustomError extends Error {
-  statusCode?: number;
-  code?: string;
-  details?: any;
-}
-
-export function errorHandler(err: CustomError, req: any, res: Response, _next: NextFunction): void {
+function errorHandler(err, req, res, _next) {
   const requestId = req.requestId || uuidv4();
   
   const errorInfo = {
@@ -34,13 +26,12 @@ export function errorHandler(err: CustomError, req: any, res: Response, _next: N
     timestamp: new Date().toISOString()
   };
 
-  const logger = require('../config/logger');
   logger.error('Error occurred:', {
     ...errorInfo,
     stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 
-  const statusCode = err.statusCode || (err as any).status || 500;
+  const statusCode = err.statusCode || err.status || 500;
   const message = getErrorMessage(err, statusCode);
 
   res.status(statusCode).json({
@@ -57,7 +48,7 @@ export function errorHandler(err: CustomError, req: any, res: Response, _next: N
   });
 }
 
-export function categorizeError(err: CustomError): string {
+function categorizeError(err) {
   if (err.name === 'ValidationError') return ERROR_CATEGORIES.VALIDATION;
   if (err.name === 'UnauthorizedError' || err.message?.includes('token')) {
     return ERROR_CATEGORIES.AUTH;
@@ -78,7 +69,7 @@ export function categorizeError(err: CustomError): string {
   return ERROR_CATEGORIES.INTERNAL;
 }
 
-export function getErrorMessage(err: CustomError, statusCode: number): string {
+function getErrorMessage(err, statusCode) {
   if (statusCode === 500) {
     return process.env.NODE_ENV === 'development' 
       ? err.message 
@@ -87,7 +78,7 @@ export function getErrorMessage(err: CustomError, statusCode: number): string {
   return err.message;
 }
 
-export function notFoundHandler(req: any, res: Response): void {
+function notFoundHandler(req, res) {
   res.status(404).json({
     success: false,
     error: {
@@ -98,30 +89,31 @@ export function notFoundHandler(req: any, res: Response): void {
   });
 }
 
-export function asyncHandler(fn: (req: any, res: Response, next: NextFunction) => Promise<any>) {
-  return (req: any, res: Response, next: NextFunction): void => {
+function asyncHandler(fn) {
+  return (req, res, next) => {
     req.requestId = req.requestId || uuidv4();
     Promise.resolve(fn(req, res, next)).catch(next);
   };
 }
 
-export function createError(category: string, message: string, statusCode: number = 500): CustomError {
-  const error = new Error(message) as CustomError;
+function createError(category, message, statusCode = 500) {
+  const error = new Error(message);
   error.name = category;
   error.statusCode = statusCode;
-  (error as any).timestamp = new Date().toISOString();
+  error.timestamp = new Date().toISOString();
   return error;
 }
 
-export function isRetryable(error: CustomError): boolean {
+function isRetryable(error) {
   const retryableCategories = [
     ERROR_CATEGORIES.EXTERNAL,
     ERROR_CATEGORIES.TIMEOUT
   ];
-  return retryableCategories.includes(categorizeError(error) as any);
+  return retryableCategories.includes(categorizeError(error));
 }
 
-export default {
+module.exports = {
+export default module.exports;
   errorHandler,
   notFoundHandler,
   asyncHandler,

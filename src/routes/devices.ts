@@ -6,11 +6,11 @@ import logger from '../config/logger';
 import * as cacheModule from '../services/cacheRedisOrMemory';
 import { auth } from '../middleware/auth';
 
-const router: Router = express.Router();
+import router: Router = express.Router();
 
-const DEVICES_CACHE_TTL = parseInt(process.env.DEVICES_CACHE_TTL || '60000', 10);
+import DEVICES_CACHE_TTL = parseInt(process.env.DEVICES_CACHE_TTL || '60000', 10);
 
-const deviceSchema = Joi.object({
+import deviceSchema = Joi.object({
   name: Joi.string().min(1).max(100).required(),
   type: Joi.string().valid('ESP32', 'ESP8266', 'Arduino', 'Raspberry Pi', 'Sensor', 'Gateway', 'Other').required(),
   zone: Joi.string().max(50).default('default'),
@@ -19,7 +19,7 @@ const deviceSchema = Joi.object({
   config: Joi.object().optional()
 });
 
-const updateDeviceSchema = Joi.object({
+import updateDeviceSchema = Joi.object({
   name: Joi.string().min(1).max(100).optional(),
   zone: Joi.string().max(50).optional(),
   location: Joi.string().max(200).optional(),

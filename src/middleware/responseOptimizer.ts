@@ -1,29 +1,29 @@
-const JSON_CACHE_SIZE = 100;
-const jsonCache = new Map<string, string>();
+import JSON_CACHE_SIZE = 100;
+import jsonCache = new Map();
 
-export function fastStringify(obj: any): string {
+function fastStringify(obj) {
   const cacheKey = typeof obj === 'object' ? JSON.stringify(obj).substring(0, 100) : String(obj);
   
   if (jsonCache.has(cacheKey)) {
-    return jsonCache.get(cacheKey)!;
+    return jsonCache.get(cacheKey);
   }
   
   const result = JSON.stringify(obj);
   
   if (jsonCache.size >= JSON_CACHE_SIZE) {
     const firstKey = jsonCache.keys().next().value;
-    if (firstKey) jsonCache.delete(firstKey);
+    jsonCache.delete(firstKey);
   }
   jsonCache.set(cacheKey, result);
   
   return result;
 }
 
-export function responseOptimizer(req: any, res: any, next: any): void {
+function responseOptimizer(req, res, next) {
   const originalJson = res.json.bind(res);
   const originalSend = res.send.bind(res);
   
-  res.json = function(obj: any) {
+  res.json = function(obj) {
     if (process.env.NODE_ENV === 'production' && obj && typeof obj === 'object') {
       const body = fastStringify(obj);
       res.setHeader('Content-Type', 'application/json');
@@ -35,4 +35,4 @@ export function responseOptimizer(req: any, res: any, next: any): void {
   next();
 }
 
-export default { responseOptimizer, fastStringify };
+module.exports = { responseOptimizer, fastStringify };

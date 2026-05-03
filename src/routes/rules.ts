@@ -6,9 +6,9 @@ import logger from '../config/logger';
 import { auth } from '../middleware/auth';
 import { SmartControlEngine, AdvisoryEngine } from '../modules/iot-engine';
 
-const router: Router = express.Router();
+import router: Router = express.Router();
 
-const ruleSchema = Joi.object({
+import ruleSchema = Joi.object({
   type: Joi.string().valid('STATIC','ADAPTIVE').optional(),
   name: Joi.string().min(1).max(100).required(),
   description: Joi.string().max(500).optional(),

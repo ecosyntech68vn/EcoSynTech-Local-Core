@@ -4,16 +4,16 @@ import { asyncHandler } from '../middleware/errorHandler';
 import { auth as authenticate } from '../middleware/auth';
 import { v4 as uuidv4 } from 'uuid';
 
-const router = Router();
+import router = Router();
 
-const ROLES: Record<string, string[]> = {
+import ROLES: Record<string, string[]> = {
   admin: ['all'],
   manager: ['read', 'write', 'devices', 'sensors', 'rules', 'schedules'],
   operator: ['read', 'devices', 'sensors'],
   viewer: ['read']
 };
 
-const PERMISSIONS: Record<string, string[]> = {
+import PERMISSIONS: Record<string, string[]> = {
   'all': ['*'],
   'read': ['GET'],
   'write': ['POST', 'PUT', 'DELETE'],
@@ -126,7 +126,7 @@ router.post('/users', authenticate, asyncHandler(async (req: AuthRequest, res: R
     return;
   }
   
-  const bcrypt = require('bcryptjs');
+  const bcrypt from('bcryptjs');
   const hashedPassword = bcrypt.hashSync(password, 10);
   const id = uuidv4();
   

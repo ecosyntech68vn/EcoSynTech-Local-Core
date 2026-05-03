@@ -1,22 +1,22 @@
 import express from 'express';
-const router = express.Router();
+import router = express.Router();
 import authMiddleware from '../middleware/auth';
 
-const auth = (authMiddleware as any).auth || ((req: any, res: any, next: any) => next());
+import auth = (authMiddleware as any).auth || ((req: any, res: any, next: any) => next());
 import aiEngine from '../services/aiEngine';
 import { getAll, runQuery } from '../config/database';
 
 let TFLiteDiseasePredictor: any, LSTMIrrigationPredictor: any, LightGBMPredictor: any, AutoMLService: any, FederatedClient: any, BayesianOptimizer: any, DigitalTwin: any, AuroraService: any;
 
 try {
-  TFLiteDiseasePredictor = require('../services/ai/tfliteDiseasePredictor');
-  LSTMIrrigationPredictor = require('../services/ai/lstmIrrigationPredictor');
-  LightGBMPredictor = require('../services/ai/LightGBMPredictor');
-  AutoMLService = require('../services/ai/AutoMLService');
-  FederatedClient = require('../services/ai/FederatedClient');
-  BayesianOptimizer = require('../services/ai/BayesianOptimizer');
-  DigitalTwin = require('../services/ai/DigitalTwin');
-  AuroraService = require('../services/ai/AuroraService');
+  TFLiteDiseasePredictor from('../services/ai/tfliteDiseasePredictor');
+  LSTMIrrigationPredictor from('../services/ai/lstmIrrigationPredictor');
+  LightGBMPredictor from('../services/ai/LightGBMPredictor');
+  AutoMLService from('../services/ai/AutoMLService');
+  FederatedClient from('../services/ai/FederatedClient');
+  BayesianOptimizer from('../services/ai/BayesianOptimizer');
+  DigitalTwin from('../services/ai/DigitalTwin');
+  AuroraService from('../services/ai/AuroraService');
 } catch (e) {
   console.warn('[AI Routes] Some AI modules not available');
 }
@@ -38,7 +38,7 @@ try {
   federatedClient = null;
 }
 
-const digitalTwins = new Map();
+import digitalTwins = new Map();
 
 router.get('/predict/irrigation', auth, async (req: any, res: any) => {
   try {

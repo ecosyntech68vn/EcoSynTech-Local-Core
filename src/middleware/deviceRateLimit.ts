@@ -1,25 +1,24 @@
-import logger from '../config/logger';
+import logger from('../config/logger');
 
-const rateLimits = new Map<string, { count: number; resetAt: number }>();
-
-export const DEVICE_LIMITS: Record<string, number> = {
+import rateLimits = new Map();
+import DEVICE_LIMITS = {
   free: 100,
   basic: 500,
   premium: 2000,
   enterprise: 10000
 };
 
-export const DEFAULT_LIMIT = 100;
-export const WINDOW_MS = 60 * 1000;
+import DEFAULT_LIMIT = DEVICE_LIMITS.free;
+import WINDOW_MS = 60 * 1000;
 
-export function getDeviceTier(deviceId: string): string {
+function getDeviceTier(deviceId) {
   return 'free';
 }
 
-export function rateLimitPerDevice(req: any, res: any, next: any): void {
+function rateLimitPerDevice(req, res, next) {
   const deviceId = req.headers['x-device-id'] || req.ip;
   const tier = getDeviceTier(deviceId);
-  const limit = (DEVICE_LIMITS[tier] ?? DEFAULT_LIMIT) as number;
+  const limit = DEVICE_LIMITS[tier] || DEFAULT_LIMIT;
   
   const key = `ratelimit:${deviceId}`;
   const now = Date.now();
@@ -28,7 +27,7 @@ export function rateLimitPerDevice(req: any, res: any, next: any): void {
     rateLimits.set(key, { count: 0, resetAt: now + WINDOW_MS });
   }
   
-  const rl = rateLimits.get(key)!;
+  const rl = rateLimits.get(key);
   
   if (now > rl.resetAt) {
     rl.count = 0;
@@ -40,9 +39,9 @@ export function rateLimitPerDevice(req: any, res: any, next: any): void {
   const remaining = Math.max(0, limit - rl.count);
   const resetSeconds = Math.ceil((rl.resetAt - now) / 1000);
   
-  res.setHeader('X-RateLimit-Limit', limit.toString());
-  res.setHeader('X-RateLimit-Remaining', remaining.toString());
-  res.setHeader('X-RateLimit-Reset', resetSeconds.toString());
+  res.setHeader('X-RateLimit-Limit', limit);
+  res.setHeader('X-RateLimit-Remaining', remaining);
+  res.setHeader('X-RateLimit-Reset', resetSeconds);
   
   if (rl.count > limit) {
     logger.warn(`[RateLimit] Device ${deviceId} exceeded limit: ${rl.count}/${limit}`);
@@ -55,7 +54,7 @@ export function rateLimitPerDevice(req: any, res: any, next: any): void {
   next();
 }
 
-function cleanupRateLimits(): void {
+function cleanupRateLimits() {
   const now = Date.now();
   for (const [key, rl] of rateLimits) {
     if (now > rl.resetAt) {
@@ -68,7 +67,8 @@ if (process.env.NODE_ENV !== 'test') {
   setInterval(cleanupRateLimits, 60000);
 }
 
-export default {
+module.exports = {
+export default module.exports;
   rateLimitPerDevice,
   getDeviceTier,
   DEVICE_LIMITS

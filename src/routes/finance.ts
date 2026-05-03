@@ -2,7 +2,7 @@ import express, { Router, Request, Response } from 'express';
 import { auth } from '../middleware/auth';
 import { getAll, getOne, runQuery } from '../config/database';
 
-const router: Router = express.Router();
+import router: Router = express.Router();
 
 interface FinanceRecord {
   id: string;

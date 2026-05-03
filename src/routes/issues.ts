@@ -17,7 +17,7 @@ import {
   ISSUE_CATEGORY
 } from '../services/issueService';
 
-const router = Router();
+import router = Router();
 
 interface AuthRequest extends Request {
   user?: {

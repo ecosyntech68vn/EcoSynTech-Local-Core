@@ -10,7 +10,7 @@ import {
   BACKUP_DIR
 } from '../services/backupRestoreService';
 
-const router = Router();
+import router = Router();
 
 interface CreateBackupBody {
   includeMedia?: boolean;

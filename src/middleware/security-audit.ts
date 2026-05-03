@@ -1,17 +1,11 @@
-import logger from '../config/logger';
+import logger from('../config/logger');
 
-const nodeEnv = process.env.NODE_ENV;
-const JWT_SECRET = process.env.JWT_SECRET;
-const HMAC_SECRET = process.env.HMAC_SECRET;
+import nodeEnv = process.env.NODE_ENV;
+import JWT_SECRET = process.env.JWT_SECRET;
+import HMAC_SECRET = process.env.HMAC_SECRET;
 
-export interface SecurityAuditResult {
-  passed: boolean;
-  issues: string[];
-  timestamp: string;
-}
-
-export function securityAudit(req: any, res: any, next: any): void {
-  const issues: string[] = [];
+function securityAudit(req, res, next) {
+  const issues = [];
   
   if (!JWT_SECRET && nodeEnv === 'production') {
     issues.push('JWT_SECRET not set in production');
@@ -36,9 +30,9 @@ export function securityAudit(req: any, res: any, next: any): void {
   next();
 }
 
-export function requireSecrets() {
-  return (req: any, res: any, next: any): void => {
-    const missing: string[] = [];
+function requireSecrets() {
+  return (req, res, next) => {
+    const missing = [];
     
     if (!JWT_SECRET) missing.push('JWT_SECRET');
     if (!HMAC_SECRET) missing.push('HMAC_SECRET');
@@ -55,7 +49,7 @@ export function requireSecrets() {
   };
 }
 
-export function getSecurityStatus() {
+function getSecurityStatus() {
   return {
     nodeEnv,
     jwtConfigured: !!JWT_SECRET,
@@ -64,7 +58,8 @@ export function getSecurityStatus() {
   };
 }
 
-export default {
+module.exports = {
+export default module.exports;
   securityAudit,
   requireSecrets,
   getSecurityStatus

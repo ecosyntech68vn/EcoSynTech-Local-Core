@@ -5,11 +5,11 @@ import { PaymentService as VNPayService } from '../services/paymentService';
 import { MoMoService } from '../services/momoService';
 import { SepayService } from '../services/sepayService';
 
-const router = Router();
+import router = Router();
 
-const vnPay = new VNPayService();
-const momo = new MoMoService();
-const sepay = new SepayService();
+import vnPay = new VNPayService();
+import momo = new MoMoService();
+import sepay = new SepayService();
 
 function generateOrderId(prefix = 'ECO'): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;

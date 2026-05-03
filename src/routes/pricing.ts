@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { auth } from '../middleware/auth';
 import { PLANS, PricingService } from '../services/pricingService';
 
-const router = Router();
+import router = Router();
 
 router.get('/plans', async (req: Request, res: Response) => {
   try {

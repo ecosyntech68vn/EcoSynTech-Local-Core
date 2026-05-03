@@ -4,10 +4,10 @@ import logger from '../config/logger';
 import * as telemetryCache from '../services/cacheRedisOrMemory';
 import { asyncHandler } from '../middleware/errorHandler';
 
-const router: Router = express.Router();
+import router: Router = express.Router();
 
 let cache: ReturnType<typeof telemetryCache.getCache> | null = null;
-const CACHE_TTL = parseInt(process.env.SENSORS_CACHE_TTL || '30000');
+import CACHE_TTL = parseInt(process.env.SENSORS_CACHE_TTL || '30000');
 
 interface Sensor {
   id: string;

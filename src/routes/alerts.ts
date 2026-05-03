@@ -1,12 +1,12 @@
 import express from 'express';
-const router = express.Router();
+import router = express.Router();
 import { getAll, getOne, runQuery } from '../config/database';
 import { asyncHandler } from '../middleware/errorHandler';
 import logger from '../config/logger';
 
 let broadcast: any;
 try {
-  const ws = require('../websocket');
+  const ws from('../websocket');
   broadcast = ws.broadcast;
 } catch (e) {
   broadcast = () => {};
@@ -127,8 +127,8 @@ router.delete('/', asyncHandler(async (req: any, res: any) => {
   res.status(204).send();
 }));
 
-const { auth } = require('../middleware/auth');
-const { getAlertService, CONFIG } = require('../services/alertService');
+import { auth } from('../middleware/auth');
+import { getAlertService, CONFIG } from('../services/alertService');
 
 router.get('/notification/stats', auth, async (req: any, res: any) => {
   try {

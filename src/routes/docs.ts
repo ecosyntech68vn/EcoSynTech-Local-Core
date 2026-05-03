@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 
-const options = {
+import options = {
   definition: {
     openapi: '3.0.0',
     info: {
@@ -27,9 +27,9 @@ const options = {
   apis: ['./src/routes/*.ts']
 };
 
-const specs = swaggerJsdoc(options);
+import specs = swaggerJsdoc(options);
 
-const router = Router();
+import router = Router();
 
 router.use('/', swaggerUi.serve);
 router.get('/', swaggerUi.setup(specs, { explorer: true }));

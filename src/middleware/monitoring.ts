@@ -1,41 +1,38 @@
-import { Response, NextFunction } from 'express';
-import prom_client from 'prom-client';
+import prometheus from('prom-client');
 
-const register = new prom_client.Registry();
+// Create a Registry to register the metrics
+import register = new prometheus.Registry();
 
-const httpRequestDurationHistogram = new prom_client.Histogram({
+// Create a Histogram for HTTP request duration
+import httpRequestDurationHistogram = new prometheus.Histogram({
   name: 'http_request_duration_seconds',
   help: 'Duration of HTTP requests in seconds',
   labelNames: ['method', 'route', 'status_code'],
   registers: [register]
 });
 
-const httpRequestTotalCounter = new prom_client.Counter({
+// Create a Counter for total HTTP requests
+import httpRequestTotalCounter = new prometheus.Counter({
   name: 'http_requests_total',
   help: 'Total number of HTTP requests',
   labelNames: ['method', 'route', 'status_code'],
   registers: [register]
 });
 
-export const monitoringMiddleware = (req: any, res: any, next: NextFunction): void => {
+// Middleware function
+import monitoringMiddleware = (req, res, next) => {
   const end = httpRequestDurationHistogram.startTimer();
   res.on('finish', () => {
-    const route = req.route ? req.route.path : req.path;
-    end({ method: req.method, route, status_code: res.statusCode });
-    httpRequestTotalCounter.inc({ method: req.method, route, status_code: res.statusCode });
+    end({ method: req.method, route: req.route ? req.route.path : req.path, status_code: res.statusCode });
+    httpRequestTotalCounter.inc({ method: req.method, route: req.route ? req.route.path : req.path, status_code: res.statusCode });
   });
   next();
 };
 
-export const metricsEndpoint = (req: any, res: Response): void => {
+// Expose the metrics endpoint
+import metricsEndpoint = (req, res) => {
   res.set('Content-Type', register.contentType);
   res.end(register.metrics());
 };
 
-export { register };
-
-export default {
-  monitoringMiddleware,
-  metricsEndpoint,
-  register
-};
+module.exports = { monitoringMiddleware, metricsEndpoint };

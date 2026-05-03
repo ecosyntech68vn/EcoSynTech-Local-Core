@@ -11,9 +11,9 @@ import * as redisCache from '../services/redisCache';
 import * as si from 'systeminformation';
 import * as os from 'os';
 
-const router: Router = express.Router();
+import router: Router = express.Router();
 
-const CACHE_TTL = 30;
+import CACHE_TTL = 30;
 
 redisCache.initRedis().catch(() => {});
 

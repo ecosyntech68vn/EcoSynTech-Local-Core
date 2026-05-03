@@ -4,7 +4,7 @@ import { asyncHandler } from '../middleware/errorHandler';
 import logger from '../config/logger';
 import { broadcast } from '../websocket';
 
-const router: Router = express.Router();
+import router: Router = express.Router();
 
 interface Schedule {
   id: string;

@@ -3,7 +3,7 @@ import { auth, requireAdmin } from '../middleware/auth';
 import * as complianceService from '../services/complianceService';
 import { getAll, runQuery } from '../config/database';
 
-const router = Router();
+import router = Router();
 
 router.get('/summary', auth, async (req: Request, res: Response) => {
   try {

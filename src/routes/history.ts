@@ -3,7 +3,7 @@ import { getAll, getOne, runQuery } from '../config/database';
 import { asyncHandler } from '../middleware/errorHandler';
 import logger from '../config/logger';
 
-const router = Router();
+import router = Router();
 
 interface HistoryEntry {
   id: string;

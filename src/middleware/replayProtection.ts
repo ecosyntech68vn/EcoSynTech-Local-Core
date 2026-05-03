@@ -1,9 +1,14 @@
-import logger from '../config/logger';
+/**
+ * Replay Attack Protection Middleware
+ * Validates timestamp to prevent replay attacks
+ */
 
-export const TIMESTAMP_WINDOW_MS = 300000;
-const recentRequests = new Map<string, number>();
+import logger from('../config/logger');
 
-export function replayProtection(req: any, res: any, next: any): void {
+import TIMESTAMP_WINDOW_MS = 300000;
+import recentRequests = new Map();
+
+function replayProtection(req, res, next) {
   const timestamp = req.headers['x-request-timestamp'];
   
   if (!timestamp) {
@@ -25,8 +30,7 @@ export function replayProtection(req: any, res: any, next: any): void {
     });
   }
   
-  const bodyStr = req.body ? JSON.stringify(req.body) : '{}';
-  const requestHash = `${req.method}:${req.path}:${req.ip}:${timestamp}:${bodyStr}:`;
+  const requestHash = `${req.method}:${req.path}:${req.ip}:${timestamp}:${JSON.stringify(req.body || {})}:`;
   
   if (recentRequests.has(requestHash)) {
     logger.warn('[Replay] Duplicate request detected');
@@ -44,7 +48,7 @@ export function replayProtection(req: any, res: any, next: any): void {
   next();
 }
 
-export function requireTimestamp(req: any, res: any, next: any): void {
+function requireTimestamp(req, res, next) {
   const timestamp = req.headers['x-request-timestamp'];
   
   if (!timestamp) {
@@ -57,4 +61,4 @@ export function requireTimestamp(req: any, res: any, next: any): void {
   next();
 }
 
-export default { replayProtection, requireTimestamp };
+module.exports = { replayProtection, requireTimestamp };

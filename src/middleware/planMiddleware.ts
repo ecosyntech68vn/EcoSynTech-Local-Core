@@ -1,9 +1,11 @@
-const { PricingService } = require('../services/pricingService');
+/**
+ * Pricing Middleware - Enforce plan limits
+ */
 
-export const PLANS = ['BASE', 'PRO', 'ENTERPRISE'];
+import { PLANS, PricingService } from('../services/pricingService');
 
-export function planMiddleware(requiredFeature: string) {
-  return (req: any, res: any, next: any): void => {
+function planMiddleware(requiredFeature) {
+  return (req, res, next) => {
     const userPlan = req.user?.plan || 'BASE';
     const pricing = new PricingService(userPlan);
     
@@ -17,6 +19,7 @@ export function planMiddleware(requiredFeature: string) {
       });
     }
     
+    // Check limits
     if (req.deviceCount !== undefined) {
       const check = pricing.checkLimit('devices', req.deviceCount);
       if (!check.allowed) {
@@ -30,9 +33,10 @@ export function planMiddleware(requiredFeature: string) {
       }
     }
     
+    // Attach pricing to request for downstream use
     req.pricing = pricing;
     next();
   };
 }
 
-export default { planMiddleware };
+module.exports = { planMiddleware };

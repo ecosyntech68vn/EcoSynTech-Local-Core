@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express';
 import pkg from '../../package.json';
 
-const router = Router();
+import router = Router();
 
-const COMPANY_INFO = {
+import COMPANY_INFO = {
   name: 'CÔNG TY TNHH CÔNG NGHỆ ECOSYNTECH GLOBAL',
   englishName: 'EcoSynTech Global Technology Co., Ltd',
   founder: 'Tạ Quang Thuận',

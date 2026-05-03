@@ -7,11 +7,11 @@ import { SepayService } from '../services/sepayService';
 import { MoMoService } from '../services/momoService';
 import { PaymentService as VNPayService } from '../services/paymentService';
 
-const router = Router();
+import router = Router();
 
-const sepay = new SepayService();
-const momo = new MoMoService();
-const vnPay = new VNPayService();
+import sepay = new SepayService();
+import momo = new MoMoService();
+import vnPay = new VNPayService();
 
 interface AddToCartBody {
   plan: string;

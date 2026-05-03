@@ -1,5 +1,5 @@
 import express from 'express';
-const router = express.Router();
+import router = express.Router();
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { getOne, runQuery } from '../config/database';
@@ -10,7 +10,7 @@ import { generateRefreshToken, storeRefreshToken, verifyRefreshToken, rotateRefr
 import config from '../config';
 import logger from '../config/logger';
 
-const authenticate = (authMiddleware as any).auth || ((req: any, res: any, next: any) => next());
+import authenticate = (authMiddleware as any).auth || ((req: any, res: any, next: any) => next());
 
 router.post('/register', validateMiddleware('auth.register'), asyncHandler(async (req: any, res: any) => {
   const { email, password, name } = req.body;

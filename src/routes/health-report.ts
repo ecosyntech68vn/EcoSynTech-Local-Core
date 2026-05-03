@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { auth } from '../middleware/auth';
 import * as healthReportService from '../services/healthReportService';
 
-const router = Router();
+import router = Router();
 
 interface UpdateSettingsBody {
   url?: string;

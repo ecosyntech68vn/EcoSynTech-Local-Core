@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { auth } from '../middleware/auth';
 import { getAll, getOne, runQuery } from '../config/database';
 
-const router = Router();
+import router = Router();
 
 interface Farm {
   id: string;

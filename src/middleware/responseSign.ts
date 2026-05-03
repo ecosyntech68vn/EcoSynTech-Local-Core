@@ -1,15 +1,13 @@
-import crypto from 'crypto';
-import { canonicalJson } from './deviceAuth';
+'use strict';
+import crypto from('crypto');
+import { canonicalJson } from('./deviceAuth');
 
-interface ResponseSignOptions {
-  logger?: any;
-}
-
-export function responseSign(opts: ResponseSignOptions = {}) {
+function responseSign(opts) {
+  opts = opts || {};
   const logger = opts.logger || console;
 
-  return function responseSignMiddleware(req: any, res: any, next: any): void {
-    res.signedJson = function signedJson(payload: any) {
+  return function responseSignMiddleware(req, res, next) {
+    res.signedJson = function signedJson(payload) {
       if (!req.deviceId || !req.deviceSecret) {
         logger.warn('responseSign', 'unsigned_response',
           { reason: 'no_device_context', path: req.path });
@@ -18,8 +16,7 @@ export function responseSign(opts: ResponseSignOptions = {}) {
 
       const ts = Math.floor(Date.now() / 1000);
       const nonce = crypto.randomBytes(8).toString('hex');
-      const payloadObj = payload || {};
-      const msg = req.deviceId + '|' + nonce + '|' + ts + '|' + canonicalJson(payloadObj);
+      const msg = req.deviceId + '|' + nonce + '|' + ts + '|' + canonicalJson(payload || {});
       const signature = crypto.createHmac('sha256', req.deviceSecret)
         .update(msg, 'utf8')
         .digest('hex');
@@ -28,7 +25,7 @@ export function responseSign(opts: ResponseSignOptions = {}) {
         _did: req.deviceId,
         _nonce: nonce,
         _ts: ts,
-        payload: payloadObj,
+        payload: payload || {},
         signature: signature
       };
 
@@ -39,4 +36,4 @@ export function responseSign(opts: ResponseSignOptions = {}) {
   };
 }
 
-export default responseSign;
+module.exports = responseSign;

@@ -1,30 +1,17 @@
-import { Response, NextFunction } from 'express';
-import crypto from 'crypto';
+'use strict';
+import crypto from('crypto');
 
-interface DeviceLookupResult {
-  secret: string;
-}
+import NONCE_STORE = new Map();
 
-interface DeviceAuthOptions {
-  lookupDeviceSecret: (did: string) => Promise<DeviceLookupResult | null>;
-  nonceCache?: NonceCache;
-  tsWindowSec?: number;
-  logger?: any;
-}
-
-export class NonceCache {
-  private tsWindowSec: number;
-  private _cache: Map<string, number>;
-  private _cleanupInterval: NodeJS.Timeout | null;
-
-  constructor(tsWindowSec: number = 300) {
-    this.tsWindowSec = tsWindowSec;
+class NonceCache {
+  constructor(tsWindowSec) {
+    this.tsWindowSec = tsWindowSec || 300;
     this._cache = new Map();
     this._cleanupInterval = setInterval(() => this._cleanup(), this.tsWindowSec * 1000);
-    if ((this._cleanupInterval as any).unref) (this._cleanupInterval as any).unref();
+    if (this._cleanupInterval.unref) this._cleanupInterval.unref();
   }
 
-  private _cleanup(): void {
+  _cleanup() {
     const now = Date.now();
     const windowMs = this.tsWindowSec * 1000 * 2;
     for (const [key, val] of this._cache) {
@@ -32,22 +19,22 @@ export class NonceCache {
     }
   }
 
-  has(key: string): boolean { return this._cache.has(key); }
-  remember(key: string): void { this._cache.set(key, Date.now()); }
-  destroy(): void {
+  has(key) { return this._cache.has(key); }
+  remember(key) { this._cache.set(key, Date.now()); }
+  destroy() {
     if (this._cleanupInterval) clearInterval(this._cleanupInterval);
   }
 }
 
-export function canonicalJson(payload: any): string {
+function canonicalJson(payload) {
   if (!payload || typeof payload !== 'object') return '{}';
   const keys = Object.keys(payload).sort();
-  const obj: Record<string, any> = {};
+  const obj = {};
   for (const k of keys) obj[k] = payload[k];
   return JSON.stringify(obj);
 }
 
-export function deviceAuth(opts: DeviceAuthOptions) {
+function deviceAuth(opts) {
   if (!opts || typeof opts.lookupDeviceSecret !== 'function') {
     throw new Error('lookupDeviceSecret function required');
   }
@@ -57,7 +44,7 @@ export function deviceAuth(opts: DeviceAuthOptions) {
   const tsWindowSec = opts.tsWindowSec || 300;
   const logger = opts.logger || console;
 
-  return async function deviceAuthMiddleware(req: any, res: any, next: NextFunction): Promise<void> {
+  return async function deviceAuthMiddleware(req, res, next) {
     const body = req.body;
 
     if (!body || typeof body !== 'object') {
@@ -80,7 +67,7 @@ export function deviceAuth(opts: DeviceAuthOptions) {
       return res.status(401).json({ ok: false, code: 'TS_OUT_OF_WINDOW' });
     }
 
-    let secret: string;
+    let secret;
     try {
       const result = await lookupDeviceSecret(did);
       if (!result || !result.secret) {
@@ -95,7 +82,7 @@ export function deviceAuth(opts: DeviceAuthOptions) {
     const msg = String(did) + '|' + nonce + '|' + ts + '|' + canonicalJson(payload);
     const expected = crypto.createHmac('sha256', secret).update(msg, 'utf8').digest('hex');
 
-    let sigOk: boolean;
+    let sigOk;
     try {
       const a = Buffer.from(String(sig), 'utf8');
       const b = Buffer.from(expected, 'utf8');
@@ -111,7 +98,7 @@ export function deviceAuth(opts: DeviceAuthOptions) {
 
     const nonceKey = did + ':' + nonce;
     if (nonceCache.has(nonceKey)) {
-      logger.warn('deviceAuth', 'nonce_reused', { device_id: did, nonce });
+      logger.warn('deviceAuth', 'nonce_reused', { device_id: did, nonce: nonce });
       return res.status(401).json({ ok: false, code: 'NONCE_REUSED' });
     }
     nonceCache.remember(nonceKey);
@@ -124,8 +111,8 @@ export function deviceAuth(opts: DeviceAuthOptions) {
   };
 }
 
-export function lookupDeviceSecret(did: string): Promise<DeviceLookupResult | null> {
-  const DEV_SECRETS: Record<string, string> = {
+function lookupDeviceSecret(did) {
+  const DEV_SECRETS = {
     'ECOSYNTECH0001': '0123456789abcdef0123456789abcdef01234567'
   };
   const secret = DEV_SECRETS[did];
@@ -133,4 +120,7 @@ export function lookupDeviceSecret(did: string): Promise<DeviceLookupResult | nu
   return Promise.resolve({ secret });
 }
 
-export default deviceAuth;
+module.exports = deviceAuth;
+module.exports.canonicalJson = canonicalJson;
+module.exports.NonceCache = NonceCache;
+module.exports.lookupDeviceSecret = lookupDeviceSecret;

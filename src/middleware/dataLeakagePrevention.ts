@@ -1,12 +1,8 @@
-import logger from '../config/logger';
+'use strict';
 
-interface SensitivePattern {
-  pattern: RegExp;
-  field: string;
-  action: 'mask' | 'block' | 'partial';
-}
+import logger from('../config/logger');
 
-export const SENSITIVE_PATTERNS: SensitivePattern[] = [
+import SENSITIVE_PATTERNS = [
   { pattern: /password/i, field: 'password', action: 'mask' },
   { pattern: /secret/i, field: 'secret', action: 'mask' },
   { pattern: /token/i, field: 'token', action: 'mask' },
@@ -20,7 +16,7 @@ export const SENSITIVE_PATTERNS: SensitivePattern[] = [
   { pattern: /email/i, field: 'email', action: 'partial' }
 ];
 
-const BLOCKED_VALUES = [
+import BLOCKED_VALUES = [
   'password',
   '123456',
   'admin',
@@ -28,26 +24,14 @@ const BLOCKED_VALUES = [
   'test'
 ];
 
-interface CheckResult {
-  allowed?: boolean;
-  blocked?: boolean;
-  masked?: boolean;
-  reason?: string;
-  field?: string;
-}
-
-export class DataLeakagePrevention {
-  mode: string;
-  blockedFields: Set<string>;
-  maskChar: string;
-
-  constructor(options: any = {}) {
+class DataLeakagePrevention {
+  constructor(options = {}) {
     this.mode = options.mode || 'log';
     this.blockedFields = new Set(options.blockedFields || ['password', 'privateKey', 'creditCard', 'ssn', 'passport']);
     this.maskChar = options.maskChar || '*';
   }
 
-  maskValue(value: any, fieldName: string): any {
+  maskValue(value, fieldName) {
     if (typeof value !== 'string') return value;
     
     if (fieldName.includes('email') && value.includes('@')) {
@@ -62,7 +46,7 @@ export class DataLeakagePrevention {
     return value.substring(0, 2) + this.maskChar.repeat(Math.min(value.length - 2, 6));
   }
 
-  checkValue(key: string, value: any): CheckResult {
+  checkValue(key, value) {
     if (typeof value === 'object' && value !== null) {
       return this.checkObject(value);
     }
@@ -85,8 +69,8 @@ export class DataLeakagePrevention {
     return { allowed: true };
   }
 
-  checkObject(obj: any): any {
-    const result: any = {
+  checkObject(obj) {
+    const result = {
       clean: true,
       masked: [],
       blocked: [],
@@ -108,7 +92,7 @@ export class DataLeakagePrevention {
     return result;
   }
 
-  sanitizeRequest(body: any): any {
+  sanitizeRequest(body) {
     if (!body || typeof body !== 'object') return body;
     
     const result = this.checkObject(body);
@@ -121,7 +105,7 @@ export class DataLeakagePrevention {
     return body;
   }
 
-  sanitizeResponse(data: any): any {
+  sanitizeResponse(data) {
     if (!data || typeof data !== 'object') return data;
     
     const result = this.checkObject(data);
@@ -136,7 +120,7 @@ export class DataLeakagePrevention {
     return sanitized;
   }
 
-  middleware(req: any, res: any, next: any): void {
+  middleware(req, res, next) {
     req.on('body', () => {
       if (req.body) {
         const sanitized = this.sanitizeRequest(req.body);
@@ -153,15 +137,16 @@ export class DataLeakagePrevention {
   }
 }
 
-export function dataLeakagePrevention(options: any = {}) {
+function dataLeakagePrevention(options = {}) {
   const dlp = new DataLeakagePrevention(options);
   
-  return (req: any, res: any, next: any) => {
+  return (req, res, next) => {
     dlp.middleware(req, res, next);
   };
 }
 
-export default {
+module.exports = {
+export default module.exports;
   DataLeakagePrevention,
   dataLeakagePrevention,
   SENSITIVE_PATTERNS

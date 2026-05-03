@@ -1,26 +1,14 @@
-/**
- * Encryption Middleware
- * AES-256-GCM encryption for sensitive data
- * Converted to TypeScript - Phase 1
- */
+import crypto from('crypto');
 
-import crypto, { CipherGCMTypes } from 'crypto';
+import ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || process.env.JWT_SECRET;
+import ALGORITHM = 'aes-256-gcm';
 
-export interface EncryptedData {
-  iv: string;
-  data: string;
-  tag: string;
-}
-
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || process.env.JWT_SECRET;
-const ALGORITHM: CipherGCMTypes = 'aes-256-gcm';
-
-export function getEncryptionKey(): Buffer | null {
+function getEncryptionKey() {
   if (!ENCRYPTION_KEY) return null;
   return crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
 }
 
-export function encrypt(plaintext: string): string | EncryptedData {
+function encrypt(plaintext) {
   const key = getEncryptionKey();
   if (!key || !plaintext) return plaintext;
 
@@ -39,46 +27,42 @@ export function encrypt(plaintext: string): string | EncryptedData {
   };
 }
 
-export function decrypt(encryptedObj: string | EncryptedData | null): string | null {
+function decrypt(encryptedObj) {
   const key = getEncryptionKey();
-  if (!key || !encryptedObj || typeof encryptedObj !== 'object') {
-    if (typeof encryptedObj === 'string') return encryptedObj;
-    return null;
-  }
+  if (!key || !encryptedObj || typeof encryptedObj !== 'object') return encryptedObj;
 
   try {
-    const iv = Buffer.from((encryptedObj as EncryptedData).iv, 'hex');
-    const authTag = Buffer.from((encryptedObj as EncryptedData).tag, 'hex');
+    const iv = Buffer.from(encryptedObj.iv, 'hex');
+    const authTag = Buffer.from(encryptedObj.tag, 'hex');
     const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
     decipher.setAuthTag(authTag);
 
-    let decrypted = decipher.update((encryptedObj as EncryptedData).data, 'hex', 'utf8');
+    let decrypted = decipher.update(encryptedObj.data, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
 
     return decrypted;
-  } catch (err: any) {
+  } catch (err) {
     return null;
   }
 }
 
-export function encryptField(fieldValue: string | null | undefined): string {
-  if (!fieldValue) return '';
-  if (typeof fieldValue !== 'string') return String(fieldValue);
+function encryptField(fieldValue) {
+  if (!fieldValue) return fieldValue;
+  if (typeof fieldValue !== 'string') return fieldValue;
   
   const encrypted = encrypt(fieldValue);
   if (typeof encrypted === 'string') return encrypted;
   return JSON.stringify(encrypted);
 }
 
-export function decryptField(fieldValue: string | null | undefined): string {
-  if (!fieldValue) return '';
-  if (typeof fieldValue !== 'string') return String(fieldValue);
+function decryptField(fieldValue) {
+  if (!fieldValue) return fieldValue;
+  if (typeof fieldValue !== 'string') return fieldValue;
 
   try {
     const parsed = JSON.parse(fieldValue);
     if (parsed.iv && parsed.data && parsed.tag) {
-      const decrypted = decrypt(parsed);
-      return decrypted || fieldValue;
+      return decrypt(parsed);
     }
     return fieldValue;
   } catch {
@@ -86,7 +70,7 @@ export function decryptField(fieldValue: string | null | undefined): string {
   }
 }
 
-export function isEncrypted(value: string | null | undefined): boolean {
+function isEncrypted(value) {
   if (!value || typeof value !== 'string') return false;
   try {
     const parsed = JSON.parse(value);
@@ -96,7 +80,7 @@ export function isEncrypted(value: string | null | undefined): boolean {
   }
 }
 
-export function encryptMiddleware(req: any, res: any, next: any): void {
+function encryptMiddleware(req, res, next) {
   const sensitiveFields = ['password', 'secret', 'token', 'apiKey', 'privateKey', 'creditCard'];
   
   if (req.body) {
@@ -109,37 +93,12 @@ export function encryptMiddleware(req: any, res: any, next: any): void {
   next();
 }
 
-export function hashData(data: string): string {
-  return crypto.createHash('sha256').update(data).digest('hex');
-}
-
-export function verifyHash(data: string, hash: string): boolean {
-  const computedHash = hashData(data);
-  return crypto.timingSafeEqual(Buffer.from(computedHash), Buffer.from(hash));
-}
-
-export function generateRandomKey(length: number = 32): string {
-  return crypto.randomBytes(length).toString('hex');
-}
-
-export function generateRandomIV(): string {
-  return crypto.randomBytes(16).toString('hex');
-}
-
-export {
-  ENCRYPTION_KEY,
-  ALGORITHM
-};
-
-export default {
+module.exports = {
+export default module.exports;
   encrypt,
   decrypt,
   encryptField,
   decryptField,
   isEncrypted,
-  encryptMiddleware,
-  hashData,
-  verifyHash,
-  generateRandomKey,
-  generateRandomIV
+  encryptMiddleware
 };

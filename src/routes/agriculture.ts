@@ -1,9 +1,9 @@
-import express, { Router, Request, Response } from 'express';
-const router = Router();
-const { getAll, getOne, runQuery } = require('../config/database');
-const { asyncHandler } = require('../middleware/errorHandler');
-const { auth: authenticate } = require('../middleware/auth');
-const { v4: uuidv4 } = require('uuid');
+import express from('express');
+import router = express.Router();
+import { getAll, getOne, runQuery } from('../config/database');
+import { asyncHandler } from('../middleware/errorHandler');
+import { auth: authenticate } from('../middleware/auth');
+import { v4: uuidv4 } from('uuid');
 
 router.get('/eto', authenticate, asyncHandler(async (req, res) => {
   const { lat, lon, date } = req.query;
@@ -222,4 +222,3 @@ router.get('/reports/yield', authenticate, asyncHandler(async (req, res) => {
 }));
 
 module.exports = router;
-export default router;

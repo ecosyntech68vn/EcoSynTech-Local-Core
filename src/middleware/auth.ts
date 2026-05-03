@@ -5,56 +5,31 @@
  * @requires jsonwebtoken
  * @requires crypto
  * @requires config/logger
+ * @see {@link https://github.com/ecosyntech68vn/EcoSynTech-Local-Core}
  * @copyright 2026 EcoSynTech
- * Converted to TypeScript - Phase 1
  */
 
-import jwt, { SignOptions, VerifyOptions, JwtPayload } from 'jsonwebtoken';
-import crypto from 'crypto';
-import logger from '../config/logger';
-import db from '../config/database';
+import jwt from('jsonwebtoken');
+import crypto from('crypto');
+import logger from('../config/logger');
+import db from('../config/database');
 
-export interface User {
-  id: string;
-  email: string;
-  role: string;
-  name?: string;
-}
+/**
+ * @typedef {Object} User
+ * @property {string} id - User unique identifier
+ * @property {string} email - User email address
+ * @property {string} role - User role (admin, manager, user)
+ */
 
-export interface TokenPayload extends JwtPayload {
-  sub: string;
-  email: string;
-  role: string;
-  type?: string;
-  iat?: number;
-  exp?: number;
-}
+/**
+ * @typedef {Object} TokenPayload
+ * @property {string} sub - Subject (user ID)
+ * @property {string} email - User email
+ * @property {string} role - User role
+ * @property {string} [type] - Token type (refresh)
+ */
 
-export interface RefreshTokenStore {
-  hash: string;
-  created: number;
-  rotationCount: number;
-}
-
-export interface FailedLoginAttempt {
-  count: number;
-  windowStart: number;
-}
-
-export interface AuthResult {
-  success: boolean;
-  user?: User;
-  token?: string;
-  refreshToken?: string;
-  error?: string;
-}
-
-export interface AuthRequest extends Request {
-  user?: User;
-  userId?: string;
-}
-
-const nodeEnv = process.env.NODE_ENV || 'development';
+import nodeEnv = process.env.NODE_ENV || 'development';
 let JWT_SECRET = process.env.JWT_SECRET;
 
 if (!JWT_SECRET) {
@@ -65,28 +40,28 @@ if (!JWT_SECRET) {
   logger.warn('⚠️  JWT_SECRET not set. Using default secret. NOT FOR PRODUCTION.');
 }
 
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
-const REFRESH_EXPIRES_IN = process.env.REFRESH_EXPIRES_IN || '7d';
-const SESSION_TIMEOUT = parseInt(process.env.SESSION_TIMEOUT || '1800', 10);
+import JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '1h';
+import REFRESH_EXPIRES_IN = process.env.REFRESH_EXPIRES_IN || '7d';
+import SESSION_TIMEOUT = parseInt(process.env.SESSION_TIMEOUT || '1800', 10);
 
-const MAX_FAILED_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5', 10);
-const LOCKOUT_DURATION_MS = parseInt(process.env.LOGIN_LOCKOUT_DURATION || '900000', 10);
-const LOCKOUT_WINDOW_MS = 300000;
+import MAX_FAILED_ATTEMPTS = parseInt(process.env.MAX_LOGIN_ATTEMPTS || '5', 10);
+import LOCKOUT_DURATION_MS = parseInt(process.env.LOGIN_LOCKOUT_DURATION || '900000', 10);
+import LOCKOUT_WINDOW_MS = 300000;
 
-const refreshTokenStore = new Map<string, RefreshTokenStore>();
-const REFRESH_TOKEN_MAX = 1000;
+import refreshTokenStore = new Map();
+import REFRESH_TOKEN_MAX = 1000;
 
-const failedLoginAttempts = new Map<string, FailedLoginAttempt>();
-const lockedAccounts = new Map<string, number>();
+import failedLoginAttempts = new Map();
+import lockedAccounts = new Map();
 
-export function hashToken(token: string): string {
+function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-export function storeRefreshToken(userId: string, token: string, ip?: string, userAgent?: string): void {
+function storeRefreshToken(userId, token, ip, userAgent) {
   try {
-    db.saveRefreshToken(userId, token, ip || '', userAgent || '', 7);
-  } catch (err: any) {
+    db.saveRefreshToken(userId, token, ip, userAgent, 7);
+  } catch (err) {
     logger.warn('[Auth] DB save refresh token failed, using memory fallback');
     const hash = hashToken(token);
     refreshTokenStore.set(userId, {
@@ -97,12 +72,12 @@ export function storeRefreshToken(userId: string, token: string, ip?: string, us
   }
 }
 
-export function verifyRefreshToken(userId: string, token: string): boolean {
+function verifyRefreshToken(userId, token) {
   try {
     if (db.verifyRefreshToken(userId, token)) {
       return true;
     }
-  } catch (err: any) {
+  } catch (err) {
     logger.debug('[Auth] DB verify refresh token failed, trying memory');
   }
   
@@ -113,16 +88,16 @@ export function verifyRefreshToken(userId: string, token: string): boolean {
   return stored.hash === hash;
 }
 
-export function rotateRefreshToken(userId: string, oldToken: string): string | null {
-  let newToken: string;
+function rotateRefreshToken(userId, oldToken) {
+  let newToken;
   
   try {
     newToken = generateRefreshToken({ id: userId });
-    const result = db.rotateRefreshToken(userId, oldToken, newToken, undefined, undefined);
+    const result = db.rotateRefreshToken(userId, oldToken, newToken, null, null);
     if (result) {
       return newToken;
     }
-  } catch (err: any) {
+  } catch (err) {
     logger.debug('[Auth] DB rotate failed, trying memory');
   }
   
@@ -141,10 +116,10 @@ export function rotateRefreshToken(userId: string, oldToken: string): string | n
   return newToken;
 }
 
-export function revokeRefreshToken(userId: string, token: string): void {
+function revokeRefreshToken(userId, token) {
   try {
     db.revokeRefreshToken(userId, token);
-  } catch (err: any) {
+  } catch (err) {
     logger.debug('[Auth] DB revoke refresh token failed');
   }
   
@@ -152,38 +127,38 @@ export function revokeRefreshToken(userId: string, token: string): void {
   logger.info('[Auth] Refresh token revoked for user:', userId);
 }
 
-export function generateAccessToken(user: User): string {
+function generateAccessToken(user) {
   return jwt.sign(
     {
       sub: user.id,
       email: user.email,
       role: user.role
     },
-    JWT_SECRET as string,
-    { expiresIn: JWT_EXPIRES_IN } as SignOptions
+    JWT_SECRET,
+    { expiresIn: JWT_EXPIRES_IN }
   );
 }
 
-export function generateRefreshToken(user: { id: string }): string {
+function generateRefreshToken(user) {
   return jwt.sign(
     {
       sub: user.id,
       type: 'refresh'
     },
-    JWT_SECRET as string,
-    { expiresIn: REFRESH_EXPIRES_IN } as SignOptions
+    JWT_SECRET,
+    { expiresIn: REFRESH_EXPIRES_IN }
   );
 }
 
-export function verifyToken(token: string): TokenPayload | null {
+function verifyToken(token) {
   try {
-    return jwt.verify(token, JWT_SECRET as string) as TokenPayload;
-  } catch (err: any) {
+    return jwt.verify(token, JWT_SECRET);
+  } catch (err) {
     return null;
   }
 }
 
-export function recordFailedLogin(userId: string): number {
+function recordFailedLogin(userId) {
   const now = Date.now();
   let attempts = failedLoginAttempts.get(userId);
   if (!attempts) {
@@ -208,7 +183,7 @@ export function recordFailedLogin(userId: string): number {
   return attempts.count;
 }
 
-export function checkAccountLocked(userId: string): boolean {
+function checkAccountLocked(userId) {
   const lockUntil = lockedAccounts.get(userId);
   if (lockUntil && lockUntil > Date.now()) {
     return true;
@@ -220,129 +195,122 @@ export function checkAccountLocked(userId: string): boolean {
   return false;
 }
 
-export function clearFailedLogins(userId: string): void {
+function clearFailedLogins(userId) {
   failedLoginAttempts.delete(userId);
   lockedAccounts.delete(userId);
 }
 
-export function authenticate(req: any, res: any, next: any): void {
+function auth(req, res, next) {
   const authHeader = req.headers.authorization;
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ ok: false, error: 'No token provided' });
-    return;
+    return res.status(401).json({ error: 'Access token required' });
   }
-  
+
   const token = authHeader.substring(7);
-  const payload = verifyToken(token);
-  
-  if (!payload) {
-    res.status(401).json({ ok: false, error: 'Invalid or expired token' });
-    return;
+  const decoded = verifyToken(token);
+
+  if (!decoded) {
+    return res.status(401).json({ error: 'Invalid or expired access token' });
   }
+
+  // Check session timeout
+  if (decoded.iat && SESSION_TIMEOUT > 0) {
+    const tokenAge = Math.floor(Date.now() / 1000) - decoded.iat;
+    if (tokenAge > SESSION_TIMEOUT) {
+      return res.status(401).json({ error: 'Session expired. Please login again.' });
+    }
+  }
+
+  req.user = decoded;
+  next();
+}
+
+function optionalAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
   
-  req.user = {
-    id: payload.sub,
-    email: payload.email,
-    role: payload.role
-  };
-  req.userId = payload.sub;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    const decoded = verifyToken(token);
+    if (decoded) {
+      req.user = decoded;
+    }
+  }
   
   next();
 }
 
-export function authorize(...roles: string[]) {
-  return (req: any, res: any, next: any): void => {
+function requireRole(...roles) {
+  return (req, res, next) => {
     if (!req.user) {
-      res.status(401).json({ ok: false, error: 'Not authenticated' });
-      return;
+      return res.status(401).json({ error: 'Authentication required' });
     }
     
-    if (roles.length > 0 && !roles.includes(req.user.role)) {
-      res.status(403).json({ ok: false, error: 'Insufficient permissions' });
-      return;
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Insufficient permissions' });
     }
     
     next();
   };
 }
 
-export function optionalAuth(req: any, res: any, next: any): void {
-  const authHeader = req.headers.authorization;
+// API Key authentication for devices
+function apiKeyAuth(req, res, next) {
+  const apiKey = req.headers['x-api-key'] || req.query.api_key;
   
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    next();
-    return;
+  if (!apiKey) {
+    return res.status(401).json({ error: 'API key required' });
   }
-  
-  const token = authHeader.substring(7);
-  const payload = verifyToken(token);
-  
-  if (payload) {
-    req.user = {
-      id: payload.sub,
-      email: payload.email,
-      role: payload.role
-    };
-    req.userId = payload.sub;
+
+  const { getOne } from('../config/database');
+  const keyRecord = getOne('SELECT * FROM api_keys WHERE key = ? AND expires_at > datetime("now")', [apiKey]);
+
+  if (!keyRecord) {
+    const apiPreview = (typeof apiKey === 'string') ? apiKey.substring(0, 8) : 'unknown';
+    logger.warn(`[Auth] Invalid API key: ${apiPreview}...`);
+    return res.status(401).json({ error: 'Invalid or expired API key' });
   }
-  
+
+  req.apiKey = keyRecord;
+  req.deviceId = keyRecord.device_id;
   next();
 }
 
-export function isAuthenticated(req: any): boolean {
-  return !!req.user && !!req.user.id;
+// HMAC signature authentication for ESP32
+function hmacAuth(req, res, next) {
+  const signature = req.headers['x-ecosyntech-signature'];
+  if (!signature) {
+    return res.status(401).json({ ok: false, error: 'Missing signature' });
+  }
+  next();
 }
 
-export function getUserRole(req: any): string | null {
-  return req.user?.role || null;
+function requireAdmin(req, res, next) {
+  if (!req.user) {
+    return res.status(401).json({ ok: false, error: 'Authentication required' });
+  }
+  if (req.user.role !== 'admin' && req.user.role !== 'manager') {
+    return res.status(403).json({ ok: false, error: 'Admin access required' });
+  }
+  next();
 }
 
-export function hasPermission(req: any, action: string): boolean {
-  const rolePermissions: Record<string, string[]> = {
-    admin: ['*'],
-    manager: ['read', 'write', 'execute'],
-    worker: ['read', 'execute'],
-    device: ['execute']
-  };
-  
-  const userRole = req.user?.role;
-  if (!userRole) return false;
-  
-  const permissions = rolePermissions[userRole] || [];
-  return permissions.includes('*') || permissions.includes(action);
-}
-
-export function getJWT_SECRET(): string {
-  return JWT_SECRET as string;
-}
-
-export function getJWT_EXPIRES_IN(): string {
-  return JWT_EXPIRES_IN;
-}
-
-export function getREFRESH_EXPIRES_IN(): string {
-  return REFRESH_EXPIRES_IN;
-}
-
-export function getSESSION_TIMEOUT(): number {
-  return SESSION_TIMEOUT;
-}
-
-export function getMAX_FAILED_ATTEMPTS(): number {
-  return MAX_FAILED_ATTEMPTS;
-}
-
-export function getLOCKOUT_DURATION_MS(): number {
-  return LOCKOUT_DURATION_MS;
-}
-
-export {
-  authenticate as default,
-  JWT_SECRET,
-  JWT_EXPIRES_IN,
-  REFRESH_EXPIRES_IN,
-  SESSION_TIMEOUT,
-  MAX_FAILED_ATTEMPTS,
-  LOCKOUT_DURATION_MS
+module.exports = {
+export default module.exports;
+  generateAccessToken,
+  generateRefreshToken,
+  verifyToken,
+  verifyRefreshToken,
+  rotateRefreshToken,
+  revokeRefreshToken,
+  storeRefreshToken,
+  recordFailedLogin,
+  checkAccountLocked,
+  clearFailedLogins,
+  auth,
+  optionalAuth,
+  requireRole,
+  requireAdmin,
+  apiKeyAuth,
+  hmacAuth
 };

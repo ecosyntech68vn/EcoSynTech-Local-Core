@@ -1,22 +1,4 @@
-export interface PaginationParams {
-  page: number;
-  limit: number;
-  offset: number;
-}
-
-export interface PaginatedResponse<T> {
-  data: T;
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
-  };
-}
-
-export function paginate(req: any, defaultLimit: number = 50, maxLimit: number = 500): PaginationParams {
+function paginate(req, defaultLimit = 50, maxLimit = 500) {
   const page = parseInt(req.query.page) || 1;
   let limit = parseInt(req.query.limit) || defaultLimit;
   
@@ -26,7 +8,7 @@ export function paginate(req: any, defaultLimit: number = 50, maxLimit: number =
   return { page, limit, offset };
 }
 
-export function paginatedResponse<T>(data: T, total: number, { page, limit }: PaginationParams): PaginatedResponse<T> {
+function paginatedResponse(data, total, { page, limit }) {
   const totalPages = Math.ceil(total / limit);
   
   return {
@@ -42,19 +24,19 @@ export function paginatedResponse<T>(data: T, total: number, { page, limit }: Pa
   };
 }
 
-export function validateLimit(limit: any, max: number = 500): number {
+function validateLimit(limit, max = 500) {
   const parsed = parseInt(limit);
   if (isNaN(parsed) || parsed < 1) return 1;
   if (parsed > max) return max;
   return parsed;
 }
 
-export function validateOffset(offset: any): number {
+function validateOffset(offset) {
   const parsed = parseInt(offset);
   return isNaN(parsed) || parsed < 0 ? 0 : parsed;
 }
 
-export function sanitizeInput(value: any): any {
+function sanitizeInput(value) {
   if (typeof value !== 'string') return value;
   return value
     .replace(/[<>]/g, '')
@@ -63,17 +45,18 @@ export function sanitizeInput(value: any): any {
     .trim();
 }
 
-export function sanitizeObject(obj: any): any {
+function sanitizeObject(obj) {
   if (!obj || typeof obj !== 'object') return obj;
   
-  const sanitized: Record<string, any> = {};
+  const sanitized = {};
   for (const [key, value] of Object.entries(obj)) {
     sanitized[key] = sanitizeInput(value);
   }
   return sanitized;
 }
 
-export default {
+module.exports = {
+export default module.exports;
   paginate,
   paginatedResponse,
   validateLimit,

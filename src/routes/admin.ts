@@ -1,8 +1,8 @@
 import express from 'express';
-const router = express.Router();
+import router = express.Router();
 import authMiddleware from '../middleware/auth';
 
-const authenticate = (authMiddleware as any).auth || ((req: any, res: any, next: any) => next());
+import authenticate = (authMiddleware as any).auth || ((req: any, res: any, next: any) => next());
 
 router.get('/ping', authenticate, (req: any, res: any) => {
   if (!req.user || req.user.role !== 'admin') {

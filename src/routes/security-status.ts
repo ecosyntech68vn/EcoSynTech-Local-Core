@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { auth } from '../middleware/auth';
 import { getSecurityStatus } from '../middleware/security-audit';
 
-const router = Router();
+import router = Router();
 
 router.get('/status', auth, (req: Request, res: Response) => {
   const status = getSecurityStatus();

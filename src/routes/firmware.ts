@@ -1,17 +1,17 @@
-import express, { Router, Request, Response } from 'express';
-const router = Router();
-const crypto = require('crypto');
-const { v4: uuidv4 } = require('uuid');
-const { getAll, getOne, runQuery } = require('../config/database');
-const logger = require('../config/logger');
-const { hmacAuth } = require('../middleware/auth');
-const { AdvisoryEngine, SmartControlEngine, sendTelegramNotification } = require('../modules/iot-engine');
+import express from('express');
+import router = express.Router();
+import crypto from('crypto');
+import { v4: uuidv4 } from('uuid');
+import { getAll, getOne, runQuery } from('../config/database');
+import logger from('../config/logger');
+import { hmacAuth } from('../middleware/auth');
+import { AdvisoryEngine, SmartControlEngine, sendTelegramNotification } from('../modules/iot-engine');
 
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+import TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+import TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
-const HMAC_SECRET = process.env.HMAC_SECRET || 'CEOTAQUANGTHUAN_TADUYANH_CTYTNHHDUYANH_ECOSYNTECH_2026';
-const TIMEOUT_WINDOW = 300000;
+import HMAC_SECRET = process.env.HMAC_SECRET || 'CEOTAQUANGTHUAN_TADUYANH_CTYTNHHDUYANH_ECOSYNTECH_2026';
+import TIMEOUT_WINDOW = 300000;
 
 function canonicalStringify(obj) {
   if (obj === null || obj === undefined) return 'null';
@@ -254,4 +254,3 @@ router.post('/batch/:batchId/attach', async (req, res) => {
 });
 
 module.exports = router;
-export default router;

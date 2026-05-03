@@ -1,19 +1,18 @@
-import crypto from 'crypto';
-import { Response, NextFunction } from 'express';
+import crypto from('crypto');
 
-export function generateCorrelationId(): string {
+function generateCorrelationId() {
   return crypto.randomBytes(16).toString('hex');
 }
 
-export function correlationMiddleware(req: any, res: Response, next: NextFunction): void {
+function correlationMiddleware(req, res, next) {
   const id = req.headers['x-correlation-id'] || generateCorrelationId();
   req.correlationId = id;
   res.setHeader('X-Correlation-ID', id);
   
   res.on('finish', () => {
-    const logger = req.logger || console;
-    if (logger && logger.info) {
-      logger.info(`${req.method} ${req.path} completed`, {
+    req.logger = req.logger || console;
+    if (req.logger && req.logger.info) {
+      req.logger.info(`${req.method} ${req.path} completed`, {
         correlationId: id,
         status: res.statusCode,
         duration: Date.now() - (req.startTime || Date.now())
@@ -24,11 +23,11 @@ export function correlationMiddleware(req: any, res: Response, next: NextFunctio
   next();
 }
 
-export function withCorrelation(fn: (req: any, res: Response, next: NextFunction) => void) {
-  return (req: any, res: Response, next: NextFunction): void => {
+function withCorrelation(fn) {
+  return (req, res, next) => {
     const id = req.correlationId || generateCorrelationId();
     const originalSend = res.send;
-    res.send = function(body: any) {
+    res.send = function(body) {
       res.setHeader('X-Correlation-ID', id);
       return originalSend.call(this, body);
     };
@@ -36,7 +35,8 @@ export function withCorrelation(fn: (req: any, res: Response, next: NextFunction
   };
 }
 
-export default {
+module.exports = {
+export default module.exports;
   generateCorrelationId,
   correlationMiddleware,
   withCorrelation

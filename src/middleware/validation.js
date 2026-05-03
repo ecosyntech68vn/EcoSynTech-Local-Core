@@ -300,6 +300,19 @@ const schemas = {
         farm_id: Joi.string()
       })
     }
+  },
+
+  // ========== AUTH SCHEMAS ==========
+  auth: {
+    register: Joi.object({
+      email: Joi.string().email().required(),
+      password: Joi.string().min(6).required(),
+      name: Joi.string().min(1).max(100).required()
+    }),
+    login: Joi.object({
+      email: Joi.string().required(),
+      password: Joi.string().required()
+    })
   }
 };
 

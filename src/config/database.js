@@ -186,8 +186,40 @@ function createTables() {
       password TEXT NOT NULL,
       name TEXT NOT NULL,
       role TEXT DEFAULT 'user',
+      phone TEXT,
+      provider TEXT DEFAULT 'email',
+      provider_id TEXT,
+      avatar TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create OTP codes table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS otp_codes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      phone TEXT NOT NULL,
+      code TEXT NOT NULL,
+      expires_at TEXT NOT NULL,
+      verified_at TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Create refresh tokens table
+  db.run(`
+    CREATE TABLE IF NOT EXISTS refresh_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL,
+      token TEXT NOT NULL,
+      ip TEXT,
+      user_agent TEXT,
+      expires_at TEXT NOT NULL,
+      revoked INTEGER DEFAULT 0,
+      rotated_at TEXT,
+      rotation_count INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `);
 

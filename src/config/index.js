@@ -64,5 +64,38 @@ module.exports = {
   weblocal: {
     webId: process.env.WEBLOCAL_WEB_ID || '',
     tsWindowSec: parseInt(process.env.DEVICE_TS_WINDOW_SEC || '300', 10)
+  },
+
+  oauth: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID || '',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      redirectUri: process.env.GOOGLE_REDIRECT_URI || 'http://localhost:3000/api/auth/google/callback'
+    },
+    facebook: {
+      appId: process.env.FACEBOOK_APP_ID || '',
+      appSecret: process.env.FACEBOOK_APP_SECRET || '',
+      redirectUri: process.env.FACEBOOK_REDIRECT_URI || 'http://localhost:3000/api/auth/facebook/callback'
+    }
+  },
+
+  otp: {
+    enabled: process.env.OTP_ENABLED === 'true',
+    expiryMinutes: parseInt(process.env.OTP_EXPIRY_MINUTES || '5', 10),
+    length: parseInt(process.env.OTP_LENGTH || '6', 10),
+    fakeMode: process.env.OTP_FAKE_MODE === 'true'
+  },
+
+  sms: {
+    twilio: {
+      accountSid: process.env.TWILIO_ACCOUNT_SID || '',
+      authToken: process.env.TWILIO_AUTH_TOKEN || '',
+      phoneNumber: process.env.TWILIO_PHONE_NUMBER || ''
+    },
+    esms: {
+      apiKey: process.env.ESMS_API_KEY || '',
+      secretKey: process.env.ESMS_SECRET_KEY || '',
+      brandName: process.env.ESMS_BRAND_NAME || 'ESMS'
+    }
   }
 };

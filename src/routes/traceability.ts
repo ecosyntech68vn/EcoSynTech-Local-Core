@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import express, { Router, Request, Response } from 'express';
 import QRCode from 'qrcode';
 import { v4 as uuidv4 } from 'uuid';
 import Joi from 'joi';
@@ -1419,3 +1419,4 @@ router.get('/tb/stats', auth, async (req, res) => {
 });
 
 module.exports = router;
+export default router;

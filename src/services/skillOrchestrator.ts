@@ -1,51 +1,8 @@
 'use strict';
 
-import logger from '../config/logger';
-
-interface SkillMetadata {
-  category?: string;
-  [key: string]: unknown;
-}
-
-interface Skill {
-  name: string;
-  handler: (context: unknown) => Promise<unknown>;
-  metadata: SkillMetadata;
-  enabled: boolean;
-  lastUsed: string | null;
-  successCount: number;
-  failCount: number;
-}
-
-interface SkillMapping {
-  skill: string;
-  weight: number;
-  priority: string;
-}
-
-interface ExecutionResult {
-  success: boolean;
-  skill: string;
-  result?: unknown;
-  duration?: number;
-  error?: string;
-  metadata?: SkillMetadata;
-}
-
-interface HistoryEntry {
-  skill: string;
-  context: unknown;
-  result: string;
-  duration: number;
-  success: boolean;
-  timestamp: string;
-}
+const logger = require('../config/logger');
 
 class SkillRegistry {
-  skills: Map<string, Skill>;
-  agentSkillMap: Map<string, SkillMapping[]>;
-  skillHistory: HistoryEntry[];
-
   constructor() {
     this.skills = new Map();
     this.agentSkillMap = new Map();
@@ -97,7 +54,7 @@ class SkillRegistry {
     ]);
   }
 
-  registerSkill(name: string, handler: (context: unknown) => Promise<unknown>, metadata: SkillMetadata = {}) {
+  registerSkill(name, handler, metadata = {}) {
     this.skills.set(name, {
       name,
       handler,
@@ -110,14 +67,14 @@ class SkillRegistry {
     logger.info(`[SkillRegistry] Registered skill: ${name}`);
   }
 
-  getSkillsForAgent(agentName: string): SkillMapping[] {
+  getSkillsForAgent(agentName) {
     return this.agentSkillMap.get(agentName) || [];
   }
 
-  async executeSkill(skillName: string, context: unknown): Promise<ExecutionResult> {
+  async executeSkill(skillName, context) {
     const skill = this.skills.get(skillName);
     if (!skill || !skill.enabled) {
-      return { success: false, skill: skillName, error: 'Skill not found or disabled' };
+      return { success: false, error: 'Skill not found or disabled' };
     }
 
     try {
@@ -137,25 +94,24 @@ class SkillRegistry {
         duration,
         metadata: skill.metadata
       };
-    } catch (error: unknown) {
-      const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    } catch (error) {
       skill.failCount++;
-      this.logExecution(skillName, context, errMsg, 0, false);
+      this.logExecution(skillName, context, error.message, 0, false);
 
       return {
         success: false,
         skill: skillName,
-        error: errMsg,
+        error: error.message,
         metadata: skill.metadata
       };
     }
   }
 
-  logExecution(skillName: string, context: unknown, result: unknown, duration: number, success: boolean) {
+  logExecution(skillName, context, result, duration, success) {
     this.skillHistory.push({
       skill: skillName,
       context: this.sanitizeContext(context),
-      result: typeof result === 'object' ? 'object' : String(result),
+      result: typeof result === 'object' ? 'object' : result,
       duration,
       success,
       timestamp: new Date().toISOString()
@@ -166,8 +122,8 @@ class SkillRegistry {
     }
   }
 
-  sanitizeContext(context: unknown): unknown {
-    const sanitized = { ...context as Record<string, unknown> };
+  sanitizeContext(context) {
+    const sanitized = { ...context };
     const sensitiveFields = ['password', 'token', 'secret', 'apiKey'];
     sensitiveFields.forEach(field => {
       if (sanitized[field]) sanitized[field] = '***';
@@ -176,7 +132,7 @@ class SkillRegistry {
   }
 
   getSkillStats() {
-    const stats: Record<string, unknown> = {};
+    const stats = {};
     for (const [name, skill] of this.skills) {
       stats[name] = {
         enabled: skill.enabled,
@@ -189,11 +145,11 @@ class SkillRegistry {
     return stats;
   }
 
-  getSkillHistory(limit = 50): HistoryEntry[] {
+  getSkillHistory(limit = 50) {
     return this.skillHistory.slice(-limit);
   }
 
-  enableSkill(skillName: string): boolean {
+  enableSkill(skillName) {
     const skill = this.skills.get(skillName);
     if (skill) {
       skill.enabled = true;
@@ -202,7 +158,7 @@ class SkillRegistry {
     return false;
   }
 
-  disableSkill(skillName: string): boolean {
+  disableSkill(skillName) {
     const skill = this.skills.get(skillName);
     if (skill) {
       skill.enabled = false;
@@ -211,32 +167,12 @@ class SkillRegistry {
     return false;
   }
 
-  mapAgentToSkills(agentName: string, skillMappings: SkillMapping[]) {
+  mapAgentToSkills(agentName, skillMappings) {
     this.agentSkillMap.set(agentName, skillMappings);
   }
 }
 
-interface OrchestrationOptions {
-  parallel?: boolean;
-  timeout?: number;
-}
-
-export interface OrchestrationResult {
-  agent: string;
-  context?: unknown;
-  executed?: number;
-  successful?: number;
-  results?: ExecutionResult[];
-  recommendations: Array<{ type: string; message: string }>;
-  message?: string;
-  actions?: unknown[];
-}
-
 class SkillOrchestrator {
-  registry: SkillRegistry;
-  executionQueue: unknown[];
-  isProcessing: boolean;
-
   constructor() {
     this.registry = new SkillRegistry();
     this.executionQueue = [];
@@ -269,33 +205,31 @@ class SkillOrchestrator {
         const skillModule = require(file);
         const handler = skillModule.execute || skillModule.handler || skillModule;
         this.registry.registerSkill(name, handler, { category: name.split('-')[0] });
-      } catch (e: unknown) {
-        const errMsg = e instanceof Error ? e.message : 'Unknown';
+      } catch (e) {
         if (!optional) {
-          logger.warn(`[SkillOrchestrator] Failed to load skill ${name}: ${errMsg}`);
+          logger.warn(`[SkillOrchestrator] Failed to load skill ${name}: ${e.message}`);
         }
       }
     });
   }
 
-  async orchestrate(agentName: string, context: unknown, options: OrchestrationOptions = {}): Promise<OrchestrationResult> {
+  async orchestrate(agentName, context, options = {}) {
     const { parallel = false, timeout = 5000 } = options;
 
     const skillMappings = this.registry.getSkillsForAgent(agentName);
     if (skillMappings.length === 0) {
-      return { agent: agentName, actions: [], message: 'No skills mapped', recommendations: [] };
+      return { agent: agentName, actions: [], message: 'No skills mapped' };
     }
 
-    const results: Array<ExecutionResult & { weight: number }> = [];
+    const results = [];
 
     if (parallel) {
       const promises = skillMappings.map(async ({ skill, weight }) => {
         try {
           const result = await this.executeWithTimeout(skill, context, timeout);
-          return { weight, ...result };
-        } catch (e: unknown) {
-          const errMsg = e instanceof Error ? e.message : 'Unknown';
-          return { weight, success: false, error: errMsg, skill };
+          return { skill, weight, ...result };
+        } catch (e) {
+          return { skill, weight, success: false, error: e.message };
         }
       });
       results.push(...await Promise.all(promises));
@@ -304,11 +238,10 @@ class SkillOrchestrator {
         if (priority === 'critical' || priority === 'high') {
           try {
             const result = await this.executeWithTimeout(skill, context, timeout);
-            results.push({ weight, ...result });
+            results.push({ skill, weight, ...result });
             if (result.success && priority === 'critical') break;
-          } catch (e: unknown) {
-            const errMsg = e instanceof Error ? e.message : 'Unknown';
-            results.push({ skill, weight, success: false, error: errMsg });
+          } catch (e) {
+            results.push({ skill, weight, success: false, error: e.message });
           }
         }
       }
@@ -325,9 +258,9 @@ class SkillOrchestrator {
     };
   }
 
-  async executeWithTimeout(skillName: string, context: unknown, timeout: number): Promise<ExecutionResult> {
-    let timeoutHandle: NodeJS.Timeout | undefined;
-    const timeoutPromise = new Promise<never>((_, reject) => {
+  async executeWithTimeout(skillName, context, timeout) {
+    let timeoutHandle;
+    const timeoutPromise = new Promise((_, reject) => {
       timeoutHandle = setTimeout(() => reject(new Error('Skill execution timeout')), timeout);
     });
 
@@ -336,12 +269,12 @@ class SkillOrchestrator {
     try {
       return await Promise.race([executionPromise, timeoutPromise]);
     } finally {
-      if (timeoutHandle) clearTimeout(timeoutHandle);
+      clearTimeout(timeoutHandle);
     }
   }
 
-  generateRecommendations(results: Array<ExecutionResult & { weight: number }>) {
-    const recommendations: Array<{ type: string; message: string }> = [];
+  generateRecommendations(results) {
+    const recommendations = [];
     
     const successRate = results.filter(r => r.success).length / results.length;
     if (successRate < 0.5) {
@@ -372,16 +305,16 @@ class SkillOrchestrator {
   }
 }
 
-let orchestrator: SkillOrchestrator | null = null;
+let orchestrator = null;
 
-function getOrchestrator(): SkillOrchestrator {
+function getOrchestrator() {
   if (!orchestrator) {
     orchestrator = new SkillOrchestrator();
   }
   return orchestrator;
 }
 
-export {
+module.exports = {
   SkillOrchestrator,
   SkillRegistry,
   getOrchestrator

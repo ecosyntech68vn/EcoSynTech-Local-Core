@@ -1,8 +1,8 @@
-import { getAll, getOne, runQuery } from '../config/database';
-import logger from '../config/logger';
-import aiTelemetry from './aiTelemetry';
-import { getBreaker } from './circuitBreaker';
-import { retry, RetryInfo } from './retryService';
+const { getAll, getOne, runQuery } = require('../config/database');
+const logger = require('../config/logger');
+const aiTelemetry = require('./aiTelemetry');
+const { getBreaker } = require('./circuitBreaker');
+const { retry } = require('./retryService');
 
 const MIN_DATA_QUALITY_SCORE = 40;
 
@@ -12,40 +12,7 @@ const BREAKER_CONFIGS = {
   database: { failureThreshold: 3, timeout: 15000 }
 };
 
-interface WeatherData {
-  hourly?: {
-    time?: string[];
-    temperature_2m?: number[];
-    relative_humidity_2m?: number[];
-    precipitation_probability?: number[];
-    precipitation?: number[];
-  };
-}
-
-interface PredictionResult {
-  prediction: { shouldIrrigate: boolean; duration: number; confidence: number } | null;
-  reason: string;
-  quality: { score: number; grade: string; meetsMinimumQuality: boolean };
-  auditId: string | null;
-  recommendation?: { id: string; priority: string; status: string };
-  weather?: { temp: number; humidity: number; precipProb: number; soilMoisture: number };
-  inputHash?: string;
-  dataQuality?: { score: number; grade: string; meetsMinimumQuality: boolean };
-}
-
-interface FertilizationResult {
-  prediction: { shouldFertilize: boolean; fertilizerType: string; amount: number };
-  reason: string;
-  recommendation: { id: string; priority: string; status: string };
-  dataQuality: { score: number; grade: string; meetsMinimumQuality: boolean };
-}
-
 class AIEngine {
-  enabled: boolean;
-  confidenceThreshold: number;
-  weatherBreaker: ReturnType<typeof getBreaker>;
-  modelBreaker: ReturnType<typeof getBreaker>;
-
   constructor() {
     this.enabled = process.env.AI_ENGINE_ENABLED !== 'false';
     this.confidenceThreshold = parseFloat(process.env.AI_CONFIDENCE_THRESHOLD || '0.6');
@@ -54,8 +21,8 @@ class AIEngine {
     this.modelBreaker = getBreaker('model', BREAKER_CONFIGS.model);
   }
 
-  async getWeatherData(): Promise<WeatherData> {
-    const fallbackData: WeatherData = {
+  async getWeatherData() {
+    const fallbackData = {
       hourly: {
         time: [new Date().toISOString()],
         temperature_2m: [28],
@@ -80,30 +47,28 @@ class AIEngine {
           maxRetries: 2,
           initialDelay: 1000,
           backoffFactor: 2,
-          onRetry: (info: RetryInfo) => logger.warn(`[Weather] Retry ${info.attempt}: ${info.error}`)
+          onRetry: (info) => logger.warn(`[Weather] Retry ${info.attempt}: ${info.error}`)
         });
       });
-    } catch (error: unknown) {
-      const errMsg = error instanceof Error ? error.message : 'Unknown error';
-      logger.warn(`[AIEngine] Weather API failed, using fallback: ${errMsg}`);
+    } catch (error) {
+      logger.warn(`[AIEngine] Weather API failed, using fallback: ${error.message}`);
       return fallbackData;
     }
   }
 
-  async getSoilMoisture(farmId: string): Promise<number> {
+  async getSoilMoisture(farmId) {
     try {
       return await this.modelBreaker.execute(async () => {
         const sensor = getOne('SELECT value FROM sensors WHERE type = ?', ['soil']);
         return sensor?.value || 30;
       });
-    } catch (error: unknown) {
-      const errMsg = error instanceof Error ? error.message : 'Unknown error';
-      logger.warn(`[AIEngine] Soil moisture query failed, using fallback: ${errMsg}`);
+    } catch (error) {
+      logger.warn(`[AIEngine] Soil moisture query failed, using fallback: ${error.message}`);
       return 30;
     }
   }
 
-  async predictIrrigation(farmId: string): Promise<PredictionResult> {
+  async predictIrrigation(farmId) {
     const soilMoisture = await this.getSoilMoisture(farmId);
     const weatherData = await this.getWeatherData();
     const hourly = weatherData?.hourly;
@@ -162,9 +127,8 @@ class AIEngine {
          VALUES (?, ?, ?, ?, ?, ?, datetime("now"))`,
         [predictionId, farmId, 'irrigation', JSON.stringify({ shouldIrrigate, duration }), confidence, reason]
       );
-    } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : 'Unknown error';
-      logger.warn(`[AIEngine] Failed to save prediction: ${errMsg}`);
+    } catch (e) {
+      logger.warn(`[AIEngine] Failed to save prediction: ${e.message}`);
     }
 
     const recId = 'rec-' + Date.now();
@@ -180,16 +144,15 @@ class AIEngine {
           JSON.stringify({ action: shouldIrrigate ? 'irrigate' : 'none', duration, confidence })
         ]
       );
-    } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : 'Unknown error';
-      logger.warn(`[AIEngine] Failed to save recommendation: ${errMsg}`);
+    } catch (e) {
+      logger.warn(`[AIEngine] Failed to save recommendation: ${e.message}`);
     }
 
     const auditEntry = aiTelemetry.logPredictionAudit({
       predictionType: 'irrigation',
       modelId: 'model-001',
-      inputHash: aiTelemetry.hashData(rawInput) ?? undefined,
-      outputHash: aiTelemetry.hashData({ shouldIrrigate, duration }) ?? undefined,
+      inputHash: aiTelemetry.hashData(rawInput),
+      outputHash: aiTelemetry.hashData({ shouldIrrigate, duration }),
       qualityScore: quality.score,
       qualityGrade: quality.grade,
       inputSources: ['sensors:soil', 'sensors:temperature', 'sensors:humidity', 'weather:open-meteo'],
@@ -199,16 +162,15 @@ class AIEngine {
     return {
       prediction: { shouldIrrigate, duration, confidence },
       reason,
-      quality,
       recommendation: { id: recId, priority, status: 'open' },
       weather: { temp, humidity, precipProb, soilMoisture },
       dataQuality: quality,
-      inputHash: auditEntry.inputHash ?? undefined,
-      auditId: auditEntry.id ?? null
+      inputHash: auditEntry.inputHash,
+      auditId: auditEntry.id
     };
   }
 
-  async predictFertilization(farmId: string): Promise<FertilizationResult> {
+  async predictFertilization(farmId) {
     const soilMoisture = await this.getSoilMoisture(farmId);
     const weatherData = await this.getWeatherData();
     const humidity = weatherData?.hourly?.relative_humidity_2m?.[0] || 70;
@@ -250,9 +212,8 @@ class AIEngine {
           [recId, farmId, 'fertilization', 'Khuyến nghị bón phân', reason, priority, 'open',
             JSON.stringify({ action: 'fertilize', type: fertilizerType, amount })]
         );
-      } catch (e: unknown) {
-        const errMsg = e instanceof Error ? e.message : 'Unknown error';
-        logger.warn(`[AIEngine] Failed to save fertilization recommendation: ${errMsg}`);
+      } catch (e) {
+        logger.warn(`[AIEngine] Failed to save fertilization recommendation: ${e.message}`);
       }
     }
 
@@ -260,16 +221,15 @@ class AIEngine {
       aiTelemetry.logPredictionAudit({
         predictionType: 'fertilization',
         modelId: 'model-001',
-        inputHash: aiTelemetry.hashData(rawInput) ?? undefined,
-        outputHash: aiTelemetry.hashData({ shouldFertilize, fertilizerType, amount }) ?? undefined,
+        inputHash: aiTelemetry.hashData(rawInput),
+        outputHash: aiTelemetry.hashData({ shouldFertilize, fertilizerType, amount }),
         qualityScore: quality.score,
         qualityGrade: quality.grade,
         inputSources: ['sensors:soil', 'weather:open-meteo'],
         dataClassification: aiTelemetry.getClassification('prediction_input')
       });
-    } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : 'Unknown error';
-      logger.warn(`[AIEngine] Failed to log fertilization audit: ${errMsg}`);
+    } catch (e) {
+      logger.warn(`[AIEngine] Failed to log fertilization audit: ${e.message}`);
     }
 
     return {
@@ -296,7 +256,7 @@ class AIEngine {
     };
   }
 
-  validateInputData(data: Record<string, unknown>) {
+  validateInputData(data) {
     const quality = aiTelemetry.assessDataQuality(data);
     return {
       score: quality.score,
@@ -311,4 +271,4 @@ class AIEngine {
   }
 }
 
-export default new AIEngine();
+module.exports = new AIEngine();

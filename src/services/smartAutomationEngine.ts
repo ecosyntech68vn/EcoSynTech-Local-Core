@@ -1,43 +1,19 @@
 'use strict';
 
-import os from 'os';
-import { AIManager } from './AIManager';
-import { getOrchestrator } from './skillOrchestrator';
-import logger from '../config/logger';
-
-interface HistoryEntry {
-  agent: string;
-  input: Record<string, unknown>;
-  output: unknown;
-  outcome: string;
-  timestamp: number;
-}
-
-interface PatternStats {
-  success: number;
-  total: number;
-}
-
-interface AgentStats {
-  successCount: number;
-  totalCount: number;
-  avgOutcome: number;
-}
+const os = require('os');
+const { AIManager } = require('./AIManager');
+const { getOrchestrator } = require('./skillOrchestrator');
+const logger = require('../config/logger');
 
 class ContextualLearning {
-  history: HistoryEntry[];
-  maxHistory: number;
-  patterns: Map<string, PatternStats>;
-  learnedThresholds: Map<string, number>;
-
-  constructor(options: { maxHistory?: number } = {}) {
+  constructor(options = {}) {
     this.history = [];
     this.maxHistory = options.maxHistory || 1000;
     this.patterns = new Map();
     this.learnedThresholds = new Map();
   }
 
-  record(agentName: string, input: Record<string, unknown>, output: unknown, outcome: string) {
+  record(agentName, input, output, outcome) {
     this.history.push({
       agent: agentName,
       input: this.sanitize(input),
@@ -53,8 +29,8 @@ class ContextualLearning {
     this.learn(input, output, outcome);
   }
 
-  sanitize(obj: Record<string, unknown>): Record<string, unknown> {
-    const sanitized: Record<string, unknown> = {};
+  sanitize(obj) {
+    const sanitized = {};
     for (const [k, v] of Object.entries(obj)) {
       if (typeof v === 'number') sanitized[k] = v;
       else if (typeof v === 'string') sanitized[k] = v.substring(0, 50);
@@ -62,7 +38,7 @@ class ContextualLearning {
     return sanitized;
   }
 
-  learn(input: Record<string, unknown>, _output: unknown, outcome: string) {
+  learn(input, output, outcome) {
     if (outcome === 'success') {
       const key = this.extractPatternKey(input);
       const current = this.patterns.get(key) || { success: 0, total: 0 };
@@ -72,23 +48,23 @@ class ContextualLearning {
     }
   }
 
-  extractPatternKey(input: Record<string, unknown>): string {
+  extractPatternKey(input) {
     const keys = Object.keys(input).sort().slice(0, 3);
     return keys.map(k => `${k}:${input[k]}`).join('|');
   }
 
-  getLearnedThreshold(agentName: string, metric: string): number | undefined {
+  getLearnedThreshold(agentName, metric) {
     const key = `${agentName}:${metric}`;
     return this.learnedThresholds.get(key);
   }
 
-  adaptThreshold(agentName: string, metric: string, currentValue: number, suggestedThreshold: number): number {
+  adaptThreshold(agentName, metric, currentValue, suggestedThreshold) {
     const key = `${agentName}:${metric}`;
     const recent = this.history
       .filter(h => h.agent === agentName)
       .slice(-50)
       .map(h => h.input[metric])
-      .filter((v): v is number => v !== undefined);
+      .filter(v => v !== undefined);
 
     if (recent.length >= 10) {
       const avg = recent.reduce((a, b) => a + b, 0) / recent.length;
@@ -101,96 +77,291 @@ class ContextualLearning {
   }
 
   getInsights() {
-    const agentStats: Record<string, AgentStats> = {};
-
+    const agentStats = {};
     for (const entry of this.history) {
       if (!agentStats[entry.agent]) {
-        agentStats[entry.agent] = { successCount: 0, totalCount: 0, avgOutcome: 0 };
+        agentStats[entry.agent] = { total: 0, success: 0 };
       }
-      const stats = agentStats[entry.agent];
-      if (stats) {
-        stats.totalCount++;
-        if (entry.outcome === 'success') stats.successCount++;
+      agentStats[entry.agent].total++;
+      if (entry.outcome === 'success') {
+        agentStats[entry.agent].success++;
       }
     }
 
     return {
-      agents: Object.keys(agentStats),
-      stats: agentStats,
-      patternCount: this.patterns.size,
-      thresholdCount: this.learnedThresholds.size
+      totalRecords: this.history.length,
+      agents: Object.entries(agentStats).map(([agent, stats]) => ({
+        agent,
+        total: stats.total,
+        successRate: (stats.success / stats.total * 100).toFixed(1) + '%'
+      }))
+    };
+  }
+}
+
+class PredictiveAlerting {
+  constructor(options = {}) {
+    this.alertHistory = new Map();
+    this.baseline = new Map();
+    this.anomalyThreshold = options.anomalyThreshold || 2.5;
+    this.baselineWindow = options.baselineWindow || 3600000;
+  }
+
+  record(alertType, value, timestamp = Date.now()) {
+    if (!this.alertHistory.has(alertType)) {
+      this.alertHistory.set(alertType, []);
+    }
+
+    const history = this.alertHistory.get(alertType);
+    history.push({ value, timestamp });
+
+    const cutoff = timestamp - this.baselineWindow;
+    const recent = history.filter(h => h.timestamp > cutoff);
+
+    if (recent.length >= 10) {
+      const mean = recent.reduce((a, b) => a + b.value, 0) / recent.length;
+      const variance = recent.reduce((a, b) => a + Math.pow(b.value - mean, 2), 0) / recent.length;
+      const stdDev = Math.sqrt(variance);
+
+      this.baseline.set(alertType, { mean, stdDev, count: recent.length });
+    }
+  }
+
+  predict(alertType, currentValue) {
+    const baseline = this.baseline.get(alertType);
+    if (!baseline || baseline.count < 10) {
+      return { predicted: false, confidence: 0 };
+    }
+
+    const zScore = Math.abs((currentValue - baseline.mean) / baseline.stdDev);
+    const isAnomaly = zScore > this.anomalyThreshold;
+
+    return {
+      predicted: isAnomaly,
+      confidence: Math.min(100, (zScore / this.anomalyThreshold) * 100).toFixed(1),
+      zScore: zScore.toFixed(2),
+      baseline: {
+        mean: baseline.mean.toFixed(2),
+        stdDev: baseline.stdDev.toFixed(2)
+      }
     };
   }
 
-  getHistory(agentName?: string, limit = 100): HistoryEntry[] {
-    let filtered = this.history;
-    if (agentName) {
-      filtered = filtered.filter(h => h.agent === agentName);
+  shouldAlert(alertType, value) {
+    const prediction = this.predict(alertType, value);
+    return prediction.predicted;
+  }
+}
+
+class SelfOptimizingPipeline {
+  constructor(options = {}) {
+    this.metrics = {
+      latency: [],
+      errors: [],
+      throughput: []
+    };
+    this.optimizations = [];
+    this.maxMetrics = 1000;
+  }
+
+  record(latency, success = true) {
+    this.metrics.latency.push({ value: latency, timestamp: Date.now() });
+    if (!success) {
+      this.metrics.errors.push({ timestamp: Date.now() });
     }
-    return filtered.slice(-limit);
+
+    if (this.metrics.latency.length > this.maxMetrics) {
+      this.metrics.latency = this.metrics.latency.slice(-this.maxMetrics / 2);
+    }
+    if (this.metrics.errors.length > this.maxMetrics) {
+      this.metrics.errors = this.metrics.errors.slice(-this.maxMetrics / 2);
+    }
+  }
+
+  analyze() {
+    const recent = this.metrics.latency.slice(-100);
+    if (recent.length < 10) {
+      return { status: 'insufficient_data' };
+    }
+
+    const avgLatency = recent.reduce((a, b) => a + b.value, 0) / recent.length;
+    const p95Latency = recent.sort((a, b) => a.value - b.value)[Math.floor(recent.length * 0.95)].value;
+    const errorRate = this.metrics.errors.length / this.metrics.latency.length;
+
+    let status = 'healthy';
+    const recommendations = [];
+
+    if (avgLatency > 1000) {
+      status = 'degraded';
+      recommendations.push('High latency - consider increasing cache TTL');
+    }
+    if (p95Latency > 2000) {
+      status = 'critical';
+      recommendations.push('P95 latency critical - investigate blocking operations');
+    }
+    if (errorRate > 0.05) {
+      status = 'degraded';
+      recommendations.push('Error rate elevated - review error logs');
+    }
+
+    return {
+      status,
+      avgLatency: Math.round(avgLatency),
+      p95Latency: Math.round(p95Latency),
+      errorRate: (errorRate * 100).toFixed(2) + '%',
+      throughput: recent.length,
+      recommendations
+    };
+  }
+
+  applyOptimization(type, params) {
+    this.optimizations.push({
+      type,
+      params,
+      timestamp: new Date().toISOString()
+    });
+    logger.info(`[Pipeline] Applied optimization: ${type}`, params);
   }
 }
 
 class SmartAutomationEngine {
-  enabled: boolean;
-  contextualLearning: ContextualLearning;
-  aiManager: AIManager;
-  orchestrator: ReturnType<typeof getOrchestrator>;
-  activeAutomations: Map<string, NodeJS.Timeout>;
-
-  constructor() {
-    this.enabled = process.env.AUTOMATION_ENABLED !== 'false';
-    this.contextualLearning = new ContextualLearning();
+  constructor(options = {}) {
     this.aiManager = new AIManager();
     this.orchestrator = getOrchestrator();
-    this.activeAutomations = new Map();
+    this.learning = new ContextualLearning(options.learning);
+    this.predictor = new PredictiveAlerting(options.predictive);
+    this.pipeline = new SelfOptimizingPipeline(options.pipeline);
+    this.enabled = options.enabled !== false;
+    this.autoExecute = options.autoExecute !== false;
+    this.executionCount = 0;
   }
 
-  async processAutomationRequest(agentName: string, context: Record<string, unknown>) {
+  async process(context = {}) {
     if (!this.enabled) {
-      return { success: false, message: 'Automation disabled' };
+      return { enabled: false };
     }
 
-    try {
-      const result = await this.orchestrator.orchestrate(agentName, context, { parallel: true });
-      
-      this.contextualLearning.record(agentName, context, result, result.successful ? 'success' : 'failure');
-      
-      return {
-        success: result.successful !== undefined && result.successful > 0,
-        result,
-        insights: this.contextualLearning.getInsights()
-      };
-    } catch (error) {
-      const errMsg = error instanceof Error ? error.message : 'Unknown';
-      logger.error(`[SmartAutomation] Error: ${errMsg}`);
-      return { success: false, error: errMsg };
-    }
-  }
+    const startTime = Date.now();
+    const systemContext = this.enrichContext(context);
 
-  getSystemLoad() {
-    const cpus = os.cpus();
-    const load = cpus.reduce((acc, cpu) => {
-      const total = Object.values(cpu.times).reduce((a, b) => a + b, 0);
-      const idle = cpu.times.idle / total;
-      return acc + (1 - idle);
-    }, 0) / cpus.length;
+    const aiInsights = this.aiManager.getInsights(systemContext);
+    const results = [];
+
+    for (const action of aiInsights.actions) {
+      const agentResult = await this.orchestrator.orchestrate(action.field, {
+        ...systemContext,
+        action: action.action,
+        details: action.details
+      }, { parallel: false, timeout: 3000 });
+
+      results.push({
+        agent: action.field,
+        decision: action.action,
+        details: action.details,
+        execution: agentResult
+      });
+
+      this.learning.record(action.field, action.details, action.action, 'success');
+    }
+
+    const prediction = this.predictor.predict('system_health', systemContext.cpu || 0);
+    
+    const pipelineAnalysis = this.pipeline.analyze();
+
+    this.executionCount++;
+    const duration = Date.now() - startTime;
+    this.pipeline.record(duration, results.length > 0);
 
     return {
-      cpu: Math.round(load * 100),
-      memory: Math.round((os.totalmem() - os.freemem()) / os.totalmem() * 100),
-      uptime: os.uptime()
+      timestamp: new Date().toISOString(),
+      duration,
+      insights: aiInsights,
+      executions: results,
+      prediction,
+      pipeline: pipelineAnalysis,
+      learning: this.learning.getInsights(),
+      stats: {
+        totalExecutions: this.executionCount,
+        agentsActive: aiInsights.actionableCount
+      }
     };
+  }
+
+  enrichContext(context) {
+    const mem = process.memoryUsage();
+    const cpuLoad = os.loadavg()[0] * 10;
+
+    return {
+      ...context,
+      cpu: cpuLoad,
+      ram: (mem.heapUsed / mem.heapTotal) * 100,
+      uptime: process.uptime(),
+      timestamp: Date.now()
+    };
+  }
+
+  async processAgent(agentName, context = {}) {
+    const enrichedContext = this.enrichContext(context);
+    const decision = this.aiManager.thinkForField(agentName, enrichedContext);
+
+    if (decision.action !== 'no_action' && decision.action !== 'ok') {
+      const orchestration = await this.orchestrator.orchestrate(agentName, {
+        ...enrichedContext,
+        decision
+      });
+
+      this.learning.record(agentName, context, decision, orchestration.successful > 0 ? 'success' : 'failed');
+
+      return {
+        decision,
+        orchestration
+      };
+    }
+
+    return { decision, orchestration: null };
   }
 
   getStats() {
     return {
       enabled: this.enabled,
-      activeAutomations: this.activeAutomations.size,
-      contextualLearning: this.contextualLearning.getInsights(),
-      systemLoad: this.getSystemLoad()
+      executionCount: this.executionCount,
+      aiAgents: this.aiManager.agents.size,
+      learning: this.learning.getInsights(),
+      pipeline: this.pipeline.analyze(),
+      orchestrator: this.orchestrator.getStats()
     };
+  }
+
+  enable() {
+    this.enabled = true;
+    logger.info('[SmartAutomationEngine] Enabled');
+  }
+
+  disable() {
+    this.enabled = false;
+    logger.info('[SmartAutomationEngine] Disabled');
   }
 }
 
-export default new SmartAutomationEngine();
+let engine = null;
+
+function getSmartEngine() {
+  if (!engine) {
+    engine = new SmartAutomationEngine({
+      enabled: true,
+      autoExecute: true,
+      learning: { maxHistory: 500 },
+      predictive: { anomalyThreshold: 2.0 },
+      pipeline: {}
+    });
+  }
+  return engine;
+}
+
+module.exports = {
+  SmartAutomationEngine,
+  ContextualLearning,
+  PredictiveAlerting,
+  SelfOptimizingPipeline,
+  getSmartEngine
+};

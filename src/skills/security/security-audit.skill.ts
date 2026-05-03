@@ -1,24 +1,53 @@
 'use strict';
 
+interface ThreatPattern {
+  maxAttempts?: number;
+  window?: number;
+  patterns?: string[];
+  keywords?: string[];
+}
+
+interface Threat {
+  type: string;
+  severity: string;
+  count: number;
+  sources?: string[];
+  recommendation: string;
+  hour?: number;
+  reason?: string;
+}
+
+interface Vulnerability {
+  id: string;
+  severity: string;
+  title: string;
+  status: string;
+  remediation: string;
+}
+
+interface AuditLogEntry {
+  timestamp: string;
+  event: string;
+  data: unknown;
+}
+
 class SecurityAuditSkill {
-  constructor() {
-    this.id = 'security-audit';
-    this.name = 'Continuous Security Audit';
-    this.description = 'Real-time security monitoring, threat detection, and compliance auditing';
-    
-    this.threatPatterns = {
-      bruteForce: { maxAttempts: 5, window: 300000 },
-      suspiciousIP: { patterns: ['^10\\.', '^192\\.168\\.', '^172\\.16-31\\.'] },
-      dataExfiltration: { keywords: ['password', 'token', 'secret', 'key', 'credential'] },
-      injection: { patterns: ['SELECT.*FROM', 'DELETE.*FROM', 'DROP.*TABLE', '<script', 'UNION.*SELECT'] }
-    };
+  id: string = 'security-audit';
+  name: string = 'Continuous Security Audit';
+  description: string = 'Real-time security monitoring, threat detection, and compliance auditing';
+  
+  threatPatterns = {
+    bruteForce: { maxAttempts: 5, window: 300000 },
+    suspiciousIP: { patterns: ['^10\\.', '^192\\.168\\.', '^172\\.16-31\\.'] },
+    dataExfiltration: { keywords: ['password', 'token', 'secret', 'key', 'credential'] },
+    injection: { patterns: ['SELECT.*FROM', 'DELETE.*FROM', 'DROP.*TABLE', '<script', 'UNION.*SELECT'] }
+  };
 
-    this.securityEvents = [];
-    this.threatsDetected = [];
-    this.auditLog = [];
-  }
+  securityEvents: unknown[] = [];
+  threatsDetected: Threat[] = [];
+  auditLog: AuditLogEntry[] = [];
 
-  async analyze(ctx) {
+  async analyze(ctx?: Record<string, unknown>) {
     const accessLogs = this.getAccessLogs();
     const threats = await this.detectThreats(accessLogs);
     const vulnerabilities = await this.scanVulnerabilities();
@@ -51,8 +80,8 @@ class SecurityAuditSkill {
     }
   }
 
-  async detectThreats(accessLogs) {
-    const threats = [];
+  async detectThreats(accessLogs: { id?: string; action?: string; status?: string; timestamp?: string }[]) {
+    const threats: Threat[] = [];
 
     const authFailures = this.detectBruteForce(accessLogs);
     if (authFailures.length > 0) {
@@ -60,7 +89,7 @@ class SecurityAuditSkill {
         type: 'brute_force',
         severity: 'high',
         count: authFailures.length,
-        sources: [...new Set(authFailures.map(l => l.id))],
+        sources: [...new Set(authFailures.map(l => l.id || 'unknown'))],
         recommendation: 'Block IP and reset credentials'
       });
     }
@@ -71,7 +100,7 @@ class SecurityAuditSkill {
         type: 'sql_injection',
         severity: 'critical',
         count: sqlInject.length,
-        sources: [...new Set(sqlInject.map(l => l.id))],
+        sources: [...new Set(sqlInject.map(l => l.id || 'unknown'))],
         recommendation: 'Immediate investigation required'
       });
     }
@@ -100,9 +129,9 @@ class SecurityAuditSkill {
     return threats;
   }
 
-  detectBruteForce(logs) {
-    const failures = new Map();
-    const windowMs = this.threatPatterns.bruteForce.window;
+  detectBruteForce(logs: { id?: string; action?: string; status?: string; timestamp?: string }[]) {
+    const failures = new Map<string, { id?: string; action?: string; status?: string; timestamp?: string }[]>();
+    const windowMs = this.threatPatterns.bruteForce.window || 300000;
     const now = Date.now();
 
     for (const log of logs) {
@@ -110,16 +139,16 @@ class SecurityAuditSkill {
         const id = log.id || 'unknown';
         if (!failures.has(id)) failures.set(id, []);
         
-        const logTime = new Date(log.timestamp).getTime();
+        const logTime = new Date(log.timestamp || '').getTime();
         if (now - logTime < windowMs) {
-          failures.get(id).push(log);
+          failures.get(id)?.push(log);
         }
       }
     }
 
-    const suspicious = [];
+    const suspicious: { id?: string; action?: string; status?: string; timestamp?: string }[] = [];
     for (const [id, attempts] of failures) {
-      if (attempts.length >= this.threatPatterns.bruteForce.maxAttempts) {
+      if (attempts.length >= (this.threatPatterns.bruteForce.maxAttempts || 5)) {
         suspicious.push(...attempts);
       }
     }
@@ -127,9 +156,9 @@ class SecurityAuditSkill {
     return suspicious;
   }
 
-  detectSQLInjection(logs) {
-    const patterns = this.threatPatterns.injection.patterns;
-    const suspicious = [];
+  detectSQLInjection(logs: { id?: string; action?: string; status?: string; timestamp?: string }[]) {
+    const patterns = this.threatPatterns.injection.patterns || [];
+    const suspicious: { id?: string; action?: string; status?: string; timestamp?: string }[] = [];
 
     for (const log of logs) {
       const text = JSON.stringify(log).toLowerCase();
@@ -144,9 +173,9 @@ class SecurityAuditSkill {
     return suspicious;
   }
 
-  detectXSS(logs) {
+  detectXSS(logs: { id?: string; action?: string; status?: string; timestamp?: string }[]) {
     const xssPatterns = ['<script', 'javascript:', 'onerror=', 'onclick='];
-    const suspicious = [];
+    const suspicious: { id?: string; action?: string; status?: string; timestamp?: string }[] = [];
 
     for (const log of logs) {
       const text = JSON.stringify(log).toLowerCase();
@@ -161,12 +190,12 @@ class SecurityAuditSkill {
     return suspicious;
   }
 
-  detectUnusualPatterns(logs) {
-    const patterns = [];
-    const hourCounts = {};
+  detectUnusualPatterns(logs: { timestamp?: string }[]) {
+    const patterns: { hour: number; count: number; reason: string }[] = [];
+    const hourCounts: Record<number, number> = {};
 
     for (const log of logs) {
-      const hour = new Date(log.timestamp).getHours();
+      const hour = new Date(log.timestamp || '').getHours();
       hourCounts[hour] = (hourCounts[hour] || 0) + 1;
     }
 
@@ -180,8 +209,8 @@ class SecurityAuditSkill {
     return patterns;
   }
 
-  async scanVulnerabilities() {
-    const vulnerabilities = [];
+  async scanVulnerabilities(): Promise<Vulnerability[]> {
+    const vulnerabilities: Vulnerability[] = [];
 
     vulnerabilities.push({
       id: 'VULN-001',
@@ -212,7 +241,7 @@ class SecurityAuditSkill {
     return vulnerabilities;
   }
 
-  hasRateLimiting() {
+  hasRateLimiting(): boolean {
     try {
       const rateLimit = require('express-rate-limit');
       return typeof rateLimit === 'function';
@@ -221,7 +250,7 @@ class SecurityAuditSkill {
     }
   }
 
-  hasHTTPS() {
+  hasHTTPS(): boolean {
     return process.env.HTTPS === 'true' || process.env.FORCE_HTTPS === 'true';
   }
 
@@ -246,12 +275,12 @@ class SecurityAuditSkill {
     };
   }
 
-  summarizeAccess(logs) {
-    const byAction = {};
-    const byUser = {};
+  summarizeAccess(logs: { id?: string; action?: string }[]) {
+    const byAction: Record<string, number> = {};
+    const byUser: Record<string, number> = {};
 
     for (const log of logs) {
-      byAction[log.action] = (byAction[log.action] || 0) + 1;
+      byAction[log.action || 'unknown'] = (byAction[log.action || 'unknown'] || 0) + 1;
       const user = log.id?.split('-')[0] || 'system';
       byUser[user] = (byUser[user] || 0) + 1;
     }
@@ -264,15 +293,15 @@ class SecurityAuditSkill {
     };
   }
 
-  calculateSecurityScore(threats, vulnerabilities, compliance) {
+  calculateSecurityScore(threats: Threat[], vulnerabilities: Vulnerability[], compliance: { complianceRate: string }) {
     let score = 100;
 
-    const threatPenalties = { critical: 30, high: 20, medium: 10, low: 5 };
+    const threatPenalties: Record<string, number> = { critical: 30, high: 20, medium: 10, low: 5 };
     for (const threat of threats) {
       score -= threatPenalties[threat.severity] || 10;
     }
 
-    const vulnPenalties = { critical: 25, high: 15, medium: 5, low: 2 };
+    const vulnPenalties: Record<string, number> = { critical: 25, high: 15, medium: 5, low: 2 };
     for (const vuln of vulnerabilities) {
       if (vuln.status === 'open') {
         score -= vulnPenalties[vuln.severity] || 5;
@@ -285,8 +314,8 @@ class SecurityAuditSkill {
     return Math.max(0, Math.min(100, Math.round(score)));
   }
 
-  generateRecommendations(threats, vulnerabilities) {
-    const recommendations = [];
+  generateRecommendations(threats: Threat[], vulnerabilities: Vulnerability[]) {
+    const recommendations: { type: string; priority: string; message: string }[] = [];
 
     for (const threat of threats) {
       if (threat.severity === 'critical') {
@@ -318,7 +347,7 @@ class SecurityAuditSkill {
     return recommendations;
   }
 
-  logAuditEvent(eventType, data) {
+  logAuditEvent(eventType: string, data: unknown) {
     this.auditLog.push({
       timestamp: new Date().toISOString(),
       event: eventType,
@@ -340,4 +369,4 @@ class SecurityAuditSkill {
   }
 }
 
-module.exports = new SecurityAuditSkill();
+export default new SecurityAuditSkill();

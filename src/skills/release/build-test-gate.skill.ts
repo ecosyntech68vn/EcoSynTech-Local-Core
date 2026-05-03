@@ -1,6 +1,6 @@
 const { execFile } = require('child_process');
 
-function runCmd(cmd, args, cwd = process.cwd()) {
+function runCmd(cmd: string, args: string[], cwd = process.cwd()): Promise<{ ok: boolean; code: number; stdout: string; stderr: string }> {
   return new Promise(resolve => {
     execFile(cmd, args, { cwd, timeout: 120000 }, (error, stdout, stderr) => {
       resolve({
@@ -13,21 +13,21 @@ function runCmd(cmd, args, cwd = process.cwd()) {
   });
 }
 
-module.exports = {
+export default {
   id: 'build-test-gate',
   name: 'Build Test Gate',
   triggers: ['event:release.request', 'event:deploy.request', 'event:watchdog.tick'],
-  riskLevel: 'high',
+  riskLevel: 'high' as const,
   canAutoFix: false,
-  async run(ctx) {
+  async run(ctx: { cwd?: string }): Promise<{ ok: boolean; results: { cmd: string; args: string[]; ok: boolean; code: number; stdout: string; stderr: string }[]; timestamp: string }> {
     const cwd = ctx.cwd || process.cwd();
-    const steps = [
+    const steps: [string, string[]][] = [
       ['npm', ['run', 'build']],
       ['npm', ['test']],
       ['npm', ['run', 'lint']]
     ];
 
-    const results = [];
+    const results: { cmd: string; args: string[]; ok: boolean; code: number; stdout: string; stderr: string }[] = [];
     for (const [cmd, args] of steps) {
       const result = await runCmd(cmd, args, cwd);
       results.push({ cmd, args, ...result });

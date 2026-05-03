@@ -1,17 +1,61 @@
 'use strict';
 
-class ComplianceMonitorSkill {
-  constructor() {
-    this.id = 'compliance-monitor';
-    this.name = 'ISO 27001 Compliance Monitor';
-    this.description = 'Continuous compliance monitoring against ISO 27001:2022 controls';
-    
-    this.controls = this.initializeControls();
-    this.complianceHistory = [];
-    this.lastCheck = null;
-  }
+interface ControlStatus {
+  status: string;
+  evidence: string;
+}
 
-  initializeControls() {
+interface ControlInfo {
+  name: string;
+  controls: string[];
+  status: string;
+}
+
+interface CategoryStatus {
+  name: string;
+  controls: ControlStatus[];
+  compliantCount: number;
+  totalCount: number;
+  percentage: string;
+  status: string;
+}
+
+interface Gap {
+  category: string;
+  name: string;
+  nonCompliantControls: string[];
+  severity: string;
+}
+
+interface RiskAssessment {
+  level: string;
+  highRiskCategories: string[];
+  mediumRiskCategories: string[];
+  nextAuditDate: string;
+}
+
+interface ComplianceReport {
+  skill: string;
+  timestamp: string;
+  standard: string;
+  complianceScore: string;
+  controlStatuses: Record<string, CategoryStatus>;
+  gaps: Gap[];
+  riskAssessment: RiskAssessment;
+  recommendations: { type: string; priority: string; category?: string; message: string }[];
+  lastCheck: string | null;
+}
+
+class ComplianceMonitorSkill {
+  id: string = 'compliance-monitor';
+  name: string = 'ISO 27001 Compliance Monitor';
+  description: string = 'Continuous compliance monitoring against ISO 27001:2022 controls';
+  
+  controls: Record<string, ControlInfo> = this.initializeControls();
+  complianceHistory: ComplianceReport[] = [];
+  lastCheck: string | null = null;
+
+  initializeControls(): Record<string, ControlInfo> {
     return {
       A5: { name: 'Information Security Policies', controls: ['A.5.1', 'A.5.2', 'A.5.3'], status: 'partial' },
       A6: { name: 'Organization of Information Security', controls: ['A.6.1', 'A.6.2', 'A.6.3'], status: 'compliant' },
@@ -30,14 +74,14 @@ class ComplianceMonitorSkill {
     };
   }
 
-  async analyze(ctx) {
+  async analyze(ctx?: Record<string, unknown>): Promise<ComplianceReport> {
     const controlStatuses = await this.checkAllControls();
     const complianceScore = this.calculateComplianceScore(controlStatuses);
     const gaps = this.identifyGaps(controlStatuses);
     const riskAssessment = this.assessComplianceRisk(controlStatuses);
     const recommendations = this.generateRecommendations(controlStatuses, gaps);
 
-    const report = {
+    const report: ComplianceReport = {
       skill: this.id,
       timestamp: new Date().toISOString(),
       standard: 'ISO 27001:2022',
@@ -56,11 +100,11 @@ class ComplianceMonitorSkill {
     return report;
   }
 
-  async checkAllControls() {
-    const statuses = {};
+  async checkAllControls(): Promise<Record<string, CategoryStatus>> {
+    const statuses: Record<string, CategoryStatus> = {};
     
     for (const [category, info] of Object.entries(this.controls)) {
-      const controls = [];
+      const controls: ControlStatus[] = [];
       
       for (const controlId of info.controls) {
         const status = await this.checkControl(controlId, category);
@@ -83,8 +127,8 @@ class ComplianceMonitorSkill {
     return statuses;
   }
 
-  async checkControl(controlId, category) {
-    const complianceChecks = {
+  async checkControl(controlId: string, category: string): Promise<ControlStatus> {
+    const complianceChecks: Record<string, ControlStatus> = {
       'A.5.1': { status: 'compliant', evidence: 'SECURITY_AWARENESS_TRAINING.md exists' },
       'A.5.2': { status: 'compliant', evidence: 'ISMS_POLICY.md exists' },
       'A.6.1': { status: 'compliant', evidence: 'RISK_REGISTER.md exists' },
@@ -105,7 +149,7 @@ class ComplianceMonitorSkill {
     return complianceChecks[controlId] || { status: 'unknown', evidence: 'Not assessed' };
   }
 
-  calculateComplianceScore(controlStatuses) {
+  calculateComplianceScore(controlStatuses: Record<string, CategoryStatus>): number {
     let total = 0;
     let compliant = 0;
     
@@ -117,8 +161,8 @@ class ComplianceMonitorSkill {
     return total > 0 ? (compliant / total) * 100 : 0;
   }
 
-  identifyGaps(controlStatuses) {
-    const gaps = [];
+  identifyGaps(controlStatuses: Record<string, CategoryStatus>): Gap[] {
+    const gaps: Gap[] = [];
     
     for (const [category, status] of Object.entries(controlStatuses)) {
       if (status.status !== 'compliant') {
@@ -137,7 +181,7 @@ class ComplianceMonitorSkill {
     return gaps;
   }
 
-  assessComplianceRisk(controlStatuses) {
+  assessComplianceRisk(controlStatuses: Record<string, CategoryStatus>): RiskAssessment {
     const highRisk = Object.entries(controlStatuses)
       .filter(([_, s]) => s.status === 'non-compliant')
       .map(([k, _]) => k);
@@ -154,8 +198,8 @@ class ComplianceMonitorSkill {
     };
   }
 
-  generateRecommendations(controlStatuses, gaps) {
-    const recommendations = [];
+  generateRecommendations(controlStatuses: Record<string, CategoryStatus>, gaps: Gap[]) {
+    const recommendations: { type: string; priority: string; category?: string; message: string }[] = [];
 
     for (const gap of gaps) {
       recommendations.push({
@@ -191,4 +235,4 @@ class ComplianceMonitorSkill {
   }
 }
 
-module.exports = new ComplianceMonitorSkill();
+export default new ComplianceMonitorSkill();

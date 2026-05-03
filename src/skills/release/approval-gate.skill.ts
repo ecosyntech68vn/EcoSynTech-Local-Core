@@ -1,11 +1,11 @@
-module.exports = {
+export default {
   id: 'approval-gate',
   name: 'Approval Gate',
   triggers: ['event:release.request', 'event:dangerous.action', 'event:watchdog.tick'],
-  riskLevel: 'high',
+  riskLevel: 'high' as const,
   canAutoFix: false,
-  async run(ctx) {
-    const action = ctx.event.action || ctx.event.requestedAction || ctx.event.type;
+  async run(ctx: { event: { action?: string; requestedAction?: string; type?: string; risk?: string; approvedBy?: string | null } }): Promise<{ ok: boolean; approved: boolean; approvedBy: string | null; action: string; risk: string; required: boolean; message: string; timestamp: string }> {
+    const action = ctx.event.action || ctx.event.requestedAction || ctx.event.type || 'unknown';
     const risk = ctx.event.risk || 'unknown';
     const approvedBy = ctx.event.approvedBy || null;
 

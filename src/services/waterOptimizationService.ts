@@ -1,38 +1,10 @@
-import { getAll, getOne, runQuery } from '../config/database';
-import logger from '../config/logger';
-import { getBreaker } from './circuitBreaker';
-import { retry, RetryInfo } from './retryService';
-import fuzzyController from './IrrigationFuzzyController';
-
-interface WeatherData {
-  temp: number;
-  humidity: number;
-  rainfall: number;
-  wind: number;
-  solar?: number;
-}
-
-interface IrrigationRecommendation {
-  action: string;
-  duration: number;
-  reason: string;
-  soilMoisture?: number;
-  method?: string;
-  explanation?: { reason: string; duration: number; error: number; rainProb: number; hour: number; activatedRules: number };
-  et0?: string;
-  etc?: string;
-  weatherSource?: string;
-  error?: string;
-}
+const { getAll, getOne, runQuery } = require('../config/database');
+import logger from '../config/logger'
+const { getBreaker } = require('./circuitBreaker');
+const { retry } = require('./retryService');
+const fuzzyController = require('./IrrigationFuzzyController');
 
 class WaterOptimizationService {
-  enabled: boolean;
-  minMoisture: number;
-  maxMoisture: number;
-  checkIntervalMs: number;
-  timer: NodeJS.Timeout | null;
-  weatherBreaker: ReturnType<typeof getBreaker>;
-
   constructor() {
     this.enabled = process.env.WATER_OPTIMIZATION_ENABLED === 'true';
     this.minMoisture = parseFloat(process.env.WATER_MIN_MOISTURE || '30');
@@ -62,21 +34,19 @@ class WaterOptimizationService {
     }, this.checkIntervalMs);
   }
 
-async getCropKc(cropType: string, growthStage: string): Promise<number> {
-    const defaultKc = { initial: 0.9, mid: 1.1, late: 0.8 };
-    const kcValues: Record<string, Record<string, number>> = {
+  async getCropKc(cropType, growthStage) {
+    const kcValues = {
       rice: { initial: 0.9, mid: 1.2, late: 0.9 },
       maize: { initial: 0.9, mid: 1.15, late: 0.7 },
       vegetable: { initial: 0.9, mid: 1.1, late: 0.8 },
       fruit: { initial: 0.9, mid: 1.05, late: 0.85 },
+      default: { initial: 0.9, mid: 1.1, late: 0.8 }
     };
-    const kc = kcValues[cropType] ?? defaultKc;
-    const stage = growthStage as keyof typeof kc;
-    const value = kc[stage];
-    return value !== undefined ? value : kc.mid;
+    const kc = kcValues[cropType] || kcValues.default;
+    return kc[growthStage] || kc.mid;
   }
 
-  calculateET0(temp: number, humidity: number, wind?: number, solar?: number): number {
+  calculateET0(temp, humidity, wind, solar) {
     if (!temp) return 4;
     const es = 0.6108 * Math.exp((17.27 * temp) / (temp + 237.3));
     const ea = es * (humidity / 100);
@@ -87,7 +57,7 @@ async getCropKc(cropType: string, growthStage: string): Promise<number> {
     return (0.408 * delta * es + gamma * u2 * (es - ea)) / (delta + gamma * u2 * 0.34);
   }
 
-  async getIrrigationRecommendation(farmId: string | null = null): Promise<IrrigationRecommendation> {
+  async getIrrigationRecommendation(farmId = null) {
     const useFuzzy = process.env.USE_FUZZY_IRRIGATION === 'true';
     
     if (useFuzzy) {
@@ -97,14 +67,14 @@ async getCropKc(cropType: string, growthStage: string): Promise<number> {
     return this.getET0IrrigationRecommendation(farmId);
   }
 
-  async getFuzzyIrrigationRecommendation(farmId: string | null = null): Promise<IrrigationRecommendation> {
+  async getFuzzyIrrigationRecommendation(farmId = null) {
     try {
       const whereClause = farmId ? 'WHERE zone LIKE ?' : '';
       const params = farmId ? [`%${farmId}%`] : [];
       const sensors = getAll(
         `SELECT type, value FROM sensors ${whereClause}`,
         params
-      ) as Array<{ type: string; value: number }>;
+      );
       
       const soilMoisture = sensors.find(s => s.type === 'soil')?.value || 30;
       const weatherData = await this.getWeatherForecast();
@@ -139,21 +109,20 @@ async getCropKc(cropType: string, growthStage: string): Promise<number> {
         method: 'fuzzy',
         explanation: explanation
       };
-    } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : 'Unknown';
-      logger.warn('[WaterOpt] Fuzzy recommendation error, fallback to ET0:', errMsg);
+    } catch (e) {
+      logger.warn('[WaterOpt] Fuzzy recommendation error, fallback to ET0:', e.message);
       return this.getET0IrrigationRecommendation(farmId);
     }
   }
 
-  async getET0IrrigationRecommendation(farmId: string | null = null): Promise<IrrigationRecommendation> {
+  async getET0IrrigationRecommendation(farmId = null) {
     try {
       const whereClause = farmId ? 'WHERE zone LIKE ?' : '';
       const params = farmId ? [`%${farmId}%`] : [];
       const sensors = getAll(
         `SELECT type, value FROM sensors ${whereClause}`,
         params
-      ) as Array<{ type: string; value: number }>;
+      );
       
       const soilMoisture = sensors.find(s => s.type === 'soil')?.value || 0;
       const temperature = sensors.find(s => s.type === 'temperature')?.value || 25;
@@ -167,7 +136,7 @@ async getCropKc(cropType: string, growthStage: string): Promise<number> {
         weatherData?.solar
       );
       
-      const crops = getAll('SELECT * FROM crops WHERE status = "active"') as Array<{ variety?: string; planting_date?: string }>;
+      const crops = getAll('SELECT * FROM crops WHERE status = "active"');
       let totalKc = 0;
       for (const crop of crops) {
         const stage = this.getGrowthStage(crop.planting_date);
@@ -194,15 +163,14 @@ async getCropKc(cropType: string, growthStage: string): Promise<number> {
         etc: etc.toFixed(2),
         weatherSource: weatherData ? 'api' : 'sensor'
       };
-    } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : 'Unknown';
-      logger.warn('[WaterOpt] Lỗi:', errMsg);
-      return { action: 'wait', duration: 0, reason: errMsg, error: errMsg };
+    } catch (e) {
+      logger.warn('[WaterOpt] Lỗi:', e.message);
+      return { action: 'wait', duration: 0, error: e.message };
     }
   }
 
-  async getWeatherForecast(): Promise<WeatherData> {
-    const fallbackWeather: WeatherData = {
+  async getWeatherForecast() {
+    const fallbackWeather = {
       temp: 28,
       humidity: 70,
       rainfall: 0,
@@ -223,7 +191,7 @@ async getCropKc(cropType: string, growthStage: string): Promise<number> {
           );
           const hourly = res.data.hourly;
           const now = new Date();
-          const idx = hourly?.time?.findIndex((t: string) => new Date(t) >= now) ?? -1;
+          const idx = hourly?.time?.findIndex(t => new Date(t) >= now) ?? -1;
           const safeIdx = idx >= 0 ? idx : 0;
           
           return {
@@ -236,17 +204,16 @@ async getCropKc(cropType: string, growthStage: string): Promise<number> {
           maxRetries: 2,
           initialDelay: 500,
           backoffFactor: 2,
-          onRetry: (info: RetryInfo) => logger.warn(`[WaterOpt] Weather retry ${info.attempt}: ${info.error}`)
+          onRetry: (info) => logger.warn(`[WaterOpt] Weather retry ${info.attempt}: ${info.error}`)
         });
       });
-    } catch (error: unknown) {
-      const errMsg = error instanceof Error ? error.message : 'Unknown';
-      logger.warn(`[WaterOpt] Weather API failed, using fallback: ${errMsg}`);
+    } catch (error) {
+      logger.warn(`[WaterOpt] Weather API failed, using fallback: ${error.message}`);
       return fallbackWeather;
     }
   }
 
-  getGrowthStage(plantingDate?: string): string {
+  getGrowthStage(plantingDate) {
     if (!plantingDate) return 'mid';
     const days = Math.floor((Date.now() - new Date(plantingDate).getTime()) / 86400000);
     if (days < 30) return 'initial';
@@ -261,9 +228,9 @@ async getCropKc(cropType: string, growthStage: string): Promise<number> {
     }
   }
 
-  triggerIrrigation(recommendation: IrrigationRecommendation) {
+  triggerIrrigation(recommendation) {
     try {
-      const pumpDevices = getAll('SELECT * FROM devices WHERE type = \'pump\' AND status = \'online\'') as Array<{ config?: string }>;
+      const pumpDevices = getAll('SELECT * FROM devices WHERE type = \'pump\' AND status = \'online\'');
       for (const pump of pumpDevices) {
         const config = JSON.parse(pump.config || '{}');
         if (config.autoMode) {
@@ -274,9 +241,8 @@ async getCropKc(cropType: string, growthStage: string): Promise<number> {
           logger.info(`[WaterOpt] Tưới tự động: ${recommendation.duration} phút - ${recommendation.reason}`);
         }
       }
-    } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : 'Unknown';
-      logger.warn('[WaterOpt] Lỗi kích hoạt:', errMsg);
+    } catch (e) {
+      logger.warn('[WaterOpt] Lỗi kích hoạt:', e.message);
     }
   }
 
@@ -289,4 +255,4 @@ async getCropKc(cropType: string, growthStage: string): Promise<number> {
   }
 }
 
-export default new WaterOptimizationService();
+module.exports = new WaterOptimizationService();

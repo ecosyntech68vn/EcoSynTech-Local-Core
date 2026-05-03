@@ -4,64 +4,13 @@
  * ISO 27001 Compliant: Audit Trail, Data Integrity, Access Control
  */
 
-import crypto from 'crypto';
+import crypto from 'crypto'
 
 const ENTRIES_COLLECTION = 'farm_journal_entries';
 const BATCHES_COLLECTION = 'fertilizer_batches';
 const TIMELINE_COLLECTION = 'timeline_events';
 
-interface JournalEntry {
-  id: string;
-  type: string;
-  farmId: string;
-  title: string;
-  description: string;
-  date: string;
-  author: string;
-  tags: string[];
-  attachments: string[];
-  location?: string;
-  weather?: string;
-  temperature?: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface FertilizerBatch {
-  id: string;
-  farmId: string;
-  name: string;
-  type: string;
-  manufacturer: string;
-  batchNumber: string;
-  purchaseDate: string;
-  expiryDate: string;
-  quantity: number;
-  unit: string;
-  remainingQuantity: number;
-  status: string;
-  appliedAreas: string[];
-  notes: string;
-}
-
-interface TimelineEvent {
-  id: string;
-  farmId: string;
-  eventType: string;
-  title: string;
-  description: string;
-  timestamp: string;
-  relatedEntity: string;
-  relatedEntityType: string;
-  metadata: Record<string, unknown>;
-}
-
 class FarmJournalService {
-  db: Map<string, Map<string, unknown>>;
-  batches: Map<string, FertilizerBatch[]>;
-  timeline: Map<string, TimelineEvent[]>;
-  sequence: { entries: number; batches: number; timeline: number };
-
   constructor() {
     this.db = new Map();
     this.batches = new Map();
@@ -80,7 +29,7 @@ class FarmJournalService {
     this.db.set(TIMELINE_COLLECTION, new Map());
   }
 
-  generateBatchId(): string {
+  generateBatchId() {
     this.sequence.batches++;
     const seq = String(this.sequence.batches).padStart(4, '0');
     const timestamp = Date.now().toString(36).toUpperCase();
@@ -88,219 +37,459 @@ class FarmJournalService {
     return `BATCH-${seq}-${timestamp.slice(-4)}${random}`;
   }
 
-  generateEntryId(type: string): string {
+  generateEntryId(type) {
     this.sequence.entries++;
     const timestamp = Date.now().toString(36);
     const seq = String(this.sequence.entries).padStart(6, '0');
     return `${type.toUpperCase()}-${timestamp.slice(-6)}${seq}`;
   }
 
-  generateTimelineId(): string {
+  generateTimelineId() {
     this.sequence.timeline++;
     return `TLINE-${Date.now().toString(36)}-${String(this.sequence.timeline).padStart(5, '0')}`;
   }
 
-  createEntry(data: Partial<JournalEntry>): JournalEntry {
-    const id = this.generateEntryId(data.type || 'general');
-    const now = new Date().toISOString();
-    
-    const entry: JournalEntry = {
-      id,
-      type: data.type || 'general',
-      farmId: data.farmId || '',
-      title: data.title || '',
-      description: data.description || '',
-      date: data.date || now,
-      author: data.author || 'system',
-      tags: data.tags || [],
-      attachments: data.attachments || [],
-      location: data.location,
-      weather: data.weather,
-      temperature: data.temperature,
-      createdAt: now,
-      updatedAt: now
+  async createSensorEntry(farmId, sensorData) {
+    const entryId = this.generateEntryId('sensor');
+    const entry = {
+      id: entryId,
+      type: 'sensor',
+      farmId,
+      timestamp: new Date().toISOString(),
+      data: {
+        soil_moisture: sensorData.soil_moisture,
+        temperature: sensorData.temperature,
+        humidity: sensorData.humidity,
+        light_intensity: sensorData.light_intensity,
+        soil_ph: sensorData.soil_ph,
+        soil_nitrogen: sensorData.soil_nitrogen,
+        soil_phosphorus: sensorData.soil_phosphorus,
+        soil_potassium: sensorData.soil_potassium,
+        device_id: sensorData.device_id,
+        zone: sensorData.zone
+      },
+      source: 'sensor',
+      created_at: new Date().toISOString(),
+      audit: {
+        created_by: 'system',
+        ip_address: 'sensor-gateway'
+      }
     };
 
-    const collection = this.db.get(ENTRIES_COLLECTION);
-    if (collection) {
-      collection.set(id, entry);
-    }
-    
+    this.db.get(ENTRIES_COLLECTION).set(entryId, entry);
+    await this.addTimelineEvent(farmId, entryId, 'SENSOR_READING', {
+      type: 'sensor',
+      zone: sensorData.zone,
+      readings: entry.data
+    });
+
     return entry;
   }
 
-  getEntries(farmId: string, options?: { type?: string; startDate?: string; endDate?: string; limit?: number }): JournalEntry[] {
-    const collection = this.db.get(ENTRIES_COLLECTION);
-    if (!collection) return [];
-    
-    let entries = Array.from(collection.values()) as JournalEntry[];
-    entries = entries.filter(e => e.farmId === farmId);
-    
-    if (options?.type) {
-      entries = entries.filter(e => e.type === options.type);
-    }
-    if (options?.startDate) {
-      entries = entries.filter(e => e.date >= options.startDate!);
-    }
-    if (options?.endDate) {
-      entries = entries.filter(e => e.date <= options.endDate!);
-    }
-    
-    entries.sort((a, b) => b.date.localeCompare(a.date));
-    
-    if (options?.limit) {
-      entries = entries.slice(0, options.limit);
-    }
-    
-    return entries;
-  }
+  async createIrrigationEntry(farmId, irrigationData) {
+    const entryId = this.generateEntryId('irrigation');
+    const entry = {
+      id: entryId,
+      type: 'irrigation',
+      farmId,
+      timestamp: new Date().toISOString(),
+      data: {
+        start_time: irrigationData.start_time,
+        end_time: irrigationData.end_time,
+        duration_minutes: irrigationData.duration_minutes,
+        water_volume_liters: irrigationData.water_volume_liters,
+        method: irrigationData.method,
+        zone: irrigationData.zone,
+        device_id: irrigationData.device_id,
+        flow_rate: irrigationData.flow_rate,
+        pressure_psi: irrigationData.pressure_psi
+      },
+      source: 'device',
+      created_at: new Date().toISOString(),
+      audit: {
+        created_by: 'irrigation-controller',
+        ip_address: 'device-gateway'
+      }
+    };
 
-  updateEntry(id: string, updates: Partial<JournalEntry>): JournalEntry | null {
-    const collection = this.db.get(ENTRIES_COLLECTION);
-    if (!collection) return null;
-    
-    const entry = collection.get(id) as JournalEntry;
-    if (!entry) return null;
-    
-    Object.assign(entry, updates, { updatedAt: new Date().toISOString() });
-    collection.set(id, entry);
-    
+    this.db.get(ENTRIES_COLLECTION).set(entryId, entry);
+    await this.addTimelineEvent(farmId, entryId, 'IRRIGATION', {
+      type: 'irrigation',
+      zone: irrigationData.zone,
+      duration: irrigationData.duration_minutes,
+      volume: irrigationData.water_volume_liters
+    });
+
     return entry;
   }
 
-  deleteEntry(id: string): boolean {
-    const collection = this.db.get(ENTRIES_COLLECTION);
-    if (!collection) return false;
-    
-    return collection.delete(id);
-  }
-
-  createFertilizerBatch(data: Partial<FertilizerBatch>): FertilizerBatch {
-    const id = this.generateBatchId();
-    const now = new Date().toISOString();
-    
-    const batch: FertilizerBatch = {
-      id,
-      farmId: data.farmId || '',
-      name: data.name || '',
-      type: data.type || 'fertilizer',
-      manufacturer: data.manufacturer || '',
-      batchNumber: data.batchNumber || '',
-      purchaseDate: data.purchaseDate || now,
-      expiryDate: data.expiryDate || '',
-      quantity: data.quantity || 0,
-      unit: data.unit || 'kg',
-      remainingQuantity: data.remainingQuantity ?? data.quantity ?? 0,
-      status: 'active',
-      appliedAreas: data.appliedAreas || [],
-      notes: data.notes || ''
+  async createManualEntry(farmId, entryData) {
+    const entryId = this.generateEntryId('manual');
+    const entry = {
+      id: entryId,
+      type: 'manual',
+      farmId,
+      timestamp: new Date().toISOString(),
+      data: {
+        activity: entryData.activity,
+        notes: entryData.notes,
+        photos: entryData.photos || [],
+        weather: entryData.weather,
+        temperature: entryData.temperature,
+        humidity: entryData.humidity,
+        location: entryData.location
+      },
+      source: 'manual',
+      created_at: new Date().toISOString(),
+      audit: {
+        created_by: entryData.userId || 'unknown',
+        ip_address: 'web-client'
+      }
     };
 
-    if (!this.batches.has(batch.farmId)) {
-      this.batches.set(batch.farmId, []);
-    }
-    this.batches.get(batch.farmId)?.push(batch);
+    this.db.get(ENTRIES_COLLECTION).set(entryId, entry);
+    await this.addTimelineEvent(farmId, entryId, 'MANUAL_ACTIVITY', {
+      type: 'manual',
+      activity: entryData.activity,
+      notes: entryData.notes
+    });
+
+    return entry;
+  }
+
+  async createActivityEntry(farmId, activityData) {
+    const entryId = this.generateEntryId('activity');
+    const entry = {
+      id: entryId,
+      type: 'activity',
+      farmId,
+      timestamp: new Date().toISOString(),
+      data: {
+        activity: activityData.activity,
+        quantity: activityData.quantity,
+        unit: activityData.unit,
+        area: activityData.area,
+        workers: activityData.workers,
+        notes: activityData.notes,
+        cost: activityData.cost
+      },
+      source: 'manual',
+      created_at: new Date().toISOString(),
+      audit: {
+        created_by: activityData.userId || 'unknown',
+        ip_address: 'web-client'
+      }
+    };
+
+    this.db.get(ENTRIES_COLLECTION).set(entryId, entry);
+    await this.addTimelineEvent(farmId, entryId, 'FARM_ACTIVITY', {
+      type: 'activity',
+      activity: activityData.activity,
+      area: activityData.area
+    });
+
+    return entry;
+  }
+
+  async createWeatherEntry(farmId, weatherData) {
+    const entryId = this.generateEntryId('weather');
+    const entry = {
+      id: entryId,
+      type: 'weather',
+      farmId,
+      timestamp: new Date().toISOString(),
+      data: {
+        source: weatherData.source,
+        temperature: weatherData.temperature,
+        humidity: weatherData.humidity,
+        rainfall_mm: weatherData.rainfall_mm,
+        wind_speed: weatherData.wind_speed,
+        wind_direction: weatherData.wind_direction,
+        cloud_cover: weatherData.cloud_cover,
+        uv_index: weatherData.uv_index,
+        description: weatherData.description
+      },
+      source: weatherData.source || 'api',
+      created_at: new Date().toISOString(),
+      audit: {
+        created_by: 'weather-service',
+        ip_address: 'external-api'
+      }
+    };
+
+    this.db.get(ENTRIES_COLLECTION).set(entryId, entry);
+    await this.addTimelineEvent(farmId, entryId, 'WEATHER', {
+      type: 'weather',
+      source: weatherData.source,
+      temperature: weatherData.temperature,
+      humidity: weatherData.humidity
+    });
+
+    return entry;
+  }
+
+  async createFertilizerBatch(farmId, batchData) {
+    const batchId = this.generateBatchId();
+    const now = new Date().toISOString();
     
+    const batch = {
+      id: batchId,
+      type: 'fertilizer',
+      farmId,
+      status: 'pending',
+      timestamp: now,
+      materials: batchData.materials.map(m => ({
+        name: m.name,
+        n: m.n,
+        p: m.p,
+        k: m.k,
+        amountKg: m.amountKg,
+        supplier: m.supplier,
+        lot_number: m.lot_number,
+        expiry_date: m.expiry_date
+      })),
+      method: batchData.method,
+      timing: batchData.timing,
+      weatherCondition: batchData.weatherCondition,
+      area: batchData.area,
+      crop: batchData.crop,
+      stage: batchData.stage,
+      notes: batchData.notes,
+      source: batchData.source,
+      timeline: [
+        {
+          event: 'BATCH_CREATED',
+          timestamp: now,
+          actor: batchData.userId || 'system',
+          notes: 'Batch created'
+        }
+      ],
+      created_at: now,
+      audit: {
+        created_by: batchData.userId || 'unknown',
+        ip_address: batchData.source === 'sensor_ai' ? 'ai-service' : 'web-client'
+      }
+    };
+
+    this.db.get(BATCHES_COLLECTION).set(batchId, batch);
+    await this.addTimelineEvent(farmId, batchId, 'FERTILIZER_BATCH', {
+      type: 'fertilizer',
+      batch_id: batchId,
+      materials: batch.materials,
+      method: batch.method,
+      area: batch.area,
+      crop: batch.crop
+    });
+
     return batch;
   }
 
-  getBatches(farmId: string): FertilizerBatch[] {
-    return this.batches.get(farmId) || [];
-  }
-
-  consumeBatch(batchId: string, quantity: number, area: string): boolean {
-    for (const batches of this.batches.values()) {
-      const batch = batches.find(b => b.id === batchId);
-      if (batch) {
-        if (batch.remainingQuantity >= quantity) {
-          batch.remainingQuantity -= quantity;
-          batch.appliedAreas.push(area);
-          if (batch.remainingQuantity <= 0) {
-            batch.status = 'depleted';
-          }
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  createTimelineEvent(data: Partial<TimelineEvent>): TimelineEvent {
-    const id = this.generateTimelineId();
-    
-    const event: TimelineEvent = {
-      id,
-      farmId: data.farmId || '',
-      eventType: data.eventType || 'general',
-      title: data.title || '',
-      description: data.description || '',
-      timestamp: data.timestamp || new Date().toISOString(),
-      relatedEntity: data.relatedEntity || '',
-      relatedEntityType: data.relatedEntityType || '',
-      metadata: data.metadata || {}
+  async addTimelineEvent(farmId, refId, eventType, data) {
+    const eventId = this.generateTimelineId();
+    const event = {
+      id: eventId,
+      farmId,
+      ref_id: refId,
+      event_type: eventType,
+      data,
+      timestamp: new Date().toISOString(),
+      created_at: new Date().toISOString()
     };
 
-    if (!this.timeline.has(event.farmId)) {
-      this.timeline.set(event.farmId, []);
+    const collection = this.db.get(TIMELINE_COLLECTION);
+    if (!collection.has(farmId)) {
+      collection.set(farmId, new Map());
     }
-    this.timeline.get(event.farmId)?.push(event);
-    
+    collection.get(farmId).set(eventId, event);
+
     return event;
   }
 
-  getTimeline(farmId: string, options?: { eventType?: string; startDate?: string; endDate?: string; limit?: number }): TimelineEvent[] {
-    const events = this.timeline.get(farmId) || [];
-    
-    let filtered = events;
-    if (options?.eventType) {
-      filtered = filtered.filter(e => e.eventType === options.eventType);
+  async getJournal(farmId, startDate, endDate) {
+    const entries = [];
+    const collection = this.db.get(ENTRIES_COLLECTION);
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+
+    for (const [id, entry] of collection) {
+      if (entry.farmId === farmId) {
+        const entryTime = new Date(entry.timestamp).getTime();
+        if (entryTime >= start && entryTime <= end) {
+          entries.push(entry);
+        }
+      }
     }
-    if (options?.startDate) {
-      filtered = filtered.filter(e => e.timestamp >= options.startDate!);
-    }
-    if (options?.endDate) {
-      filtered = filtered.filter(e => e.timestamp <= options.endDate!);
-    }
-    
-    filtered.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-    
-    if (options?.limit) {
-      filtered = filtered.slice(0, options.limit);
-    }
-    
-    return filtered;
+
+    entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    return entries;
   }
 
-  searchEntries(farmId: string, query: string): JournalEntry[] {
-    const entries = this.getEntries(farmId);
-    const lowerQuery = query.toLowerCase();
-    
-    return entries.filter(e => 
-      e.title.toLowerCase().includes(lowerQuery) ||
-      e.description.toLowerCase().includes(lowerQuery) ||
-      e.tags.some(t => t.toLowerCase().includes(lowerQuery))
-    );
+  async getTimeline(farmId, startDate, endDate) {
+    const events = [];
+    const collection = this.db.get(TIMELINE_COLLECTION);
+    const start = new Date(startDate).getTime();
+    const end = new Date(endDate).getTime();
+
+    const farmEvents = collection.get(farmId);
+    if (farmEvents) {
+      for (const [id, event] of farmEvents) {
+        const eventTime = new Date(event.timestamp).getTime();
+        if (eventTime >= start && eventTime <= end) {
+          events.push(event);
+        }
+      }
+    }
+
+    events.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    return events;
   }
 
-  getStatistics(farmId: string): Record<string, unknown> {
-    const entries = this.getEntries(farmId);
-    const batches = this.getBatches(farmId);
-    const events = this.getTimeline(farmId);
+  async getSummary(farmId, days) {
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const endDate = new Date().toISOString().slice(0, 10);
     
-    const typeCounts: Record<string, number> = {};
+    const entries = await this.getJournal(farmId, startDate, endDate);
+    const batches = this.getBatches(farmId, 100);
+
+    const summary = {
+      period: { startDate, endDate, days },
+      total_entries: entries.length,
+      by_type: {},
+      by_source: {},
+      activities: [],
+      weather: null,
+      fertilizer_batches: {
+        total: batches.length,
+        pending: batches.filter(b => b.status === 'pending').length,
+        completed: batches.filter(b => b.status === 'completed').length
+      },
+      sensor_readings: {
+        avg_soil_moisture: 0,
+        avg_temperature: 0,
+        avg_humidity: 0
+      }
+    };
+
+    let soilMoistureSum = 0, tempSum = 0, humiditySum = 0;
+    let sensorCount = 0;
+
     for (const entry of entries) {
-      typeCounts[entry.type] = (typeCounts[entry.type] || 0) + 1;
+      summary.by_type[entry.type] = (summary.by_type[entry.type] || 0) + 1;
+      summary.by_source[entry.source] = (summary.by_source[entry.source] || 0) + 1;
+
+      if (entry.type === 'sensor') {
+        soilMoistureSum += entry.data.soil_moisture || 0;
+        tempSum += entry.data.temperature || 0;
+        humiditySum += entry.data.humidity || 0;
+        sensorCount++;
+      }
+
+      if (entry.type === 'activity') {
+        summary.activities.push({
+          activity: entry.data.activity,
+          quantity: entry.data.quantity,
+          area: entry.data.area,
+          timestamp: entry.timestamp
+        });
+      }
+
+      if (entry.type === 'weather' && !summary.weather) {
+        summary.weather = entry.data;
+      }
     }
+
+    if (sensorCount > 0) {
+      summary.sensor_readings = {
+        avg_soil_moisture: Math.round(soilMoistureSum / sensorCount * 10) / 10,
+        avg_temperature: Math.round(tempSum / sensorCount * 10) / 10,
+        avg_humidity: Math.round(humiditySum / sensorCount * 10) / 10
+      };
+    }
+
+    return summary;
+  }
+
+  getBatches(farmId, limit = 50) {
+    const batches = [];
+    const collection = this.db.get(BATCHES_COLLECTION);
+
+    for (const [id, batch] of collection) {
+      if (batch.farmId === farmId) {
+        batches.push(batch);
+      }
+    }
+
+    batches.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    return batches.slice(0, limit);
+  }
+
+  getBatch(batchId) {
+    return this.db.get(BATCHES_COLLECTION).get(batchId);
+  }
+
+  updateBatchStatus(batchId, status, timestamp) {
+    const batch = this.db.get(BATCHES_COLLECTION).get(batchId);
+    if (!batch) {
+      throw new Error('Batch not found');
+    }
+
+    const statusTransitions = {
+      pending: ['in_progress', 'cancelled'],
+      in_progress: ['completed', 'cancelled'],
+      completed: [],
+      cancelled: []
+    };
+
+    if (!statusTransitions[batch.status].includes(status)) {
+      throw new Error(`Invalid status transition from ${batch.status} to ${status}`);
+    }
+
+    const oldStatus = batch.status;
+    batch.status = status;
+    batch.timeline.push({
+      event: `STATUS_${status.toUpperCase()}`,
+      timestamp,
+      actor: 'system',
+      notes: `Status changed from ${oldStatus} to ${status}`
+    });
+
+    this.db.get(BATCHES_COLLECTION).set(batchId, batch);
+    return batch;
+  }
+
+  async exportTraceability(farmId, cropId) {
+    const startDate = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const endDate = new Date().toISOString().slice(0, 10);
+
+    const timeline = await this.getTimeline(farmId, startDate, endDate);
     
+    const traceability = {
+      farmId,
+      crop_id: cropId,
+      export_date: new Date().toISOString(),
+      timeline: timeline.filter(e => 
+        e.data.crop === cropId || !e.data.crop
+      ),
+      summary: {
+        total_events: timeline.length,
+        fertilizer_applications: timeline.filter(e => e.event_type === 'FERTILIZER_BATCH').length,
+        irrigations: timeline.filter(e => e.event_type === 'IRRIGATION').length,
+        activities: timeline.filter(e => e.event_type === 'FARM_ACTIVITY').length
+      }
+    };
+
+    return traceability;
+  }
+
+  getTelemetry() {
     return {
-      totalEntries: entries.length,
-      totalBatches: batches.length,
-      totalEvents: events.length,
-      entriesByType: typeCounts,
-      activeBatches: batches.filter(b => b.status === 'active').length,
-      recentActivity: events.slice(0, 10).length
+      total_entries: this.db.get(ENTRIES_COLLECTION).size,
+      total_batches: this.db.get(BATCHES_COLLECTION).size,
+      total_timeline_events: this.db.get(TIMELINE_COLLECTION).size,
+      status: 'operational',
+      timestamp: new Date().toISOString()
     };
   }
 }
 
-export default new FarmJournalService();
+module.exports = new FarmJournalService();

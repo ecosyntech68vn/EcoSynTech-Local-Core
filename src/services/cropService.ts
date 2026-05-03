@@ -1,6 +1,6 @@
 /**
  * Crop Cycle Service - Quản lý chu kỳ cây trồng
- * V5.1.0 - Converted to TypeScript - Phase 1
+ * V5.1.0 - Tương thích với database schema
  * 
  * Features:
  * - Quản lý lô trồng (crop plantings)
@@ -10,81 +10,20 @@
  * - Tưới tiêu theo giai đoạn
  */
 
-import { v4 as uuidv4 } from 'uuid';
-import db from '../config/database';
-import logger from '../config/logger';
-import batchService from './batchService';
+import { v4 as uuidv4 } from 'uuid'
+import { getOne, getAll, db } from '../config/database'
+import logger from '../config/logger'
+import batchService from './batchService'
 
-export interface CropStageConfig {
-  name: string;
-  code: string;
-  kcMin: number;
-  kcMax: number;
-  days: number;
-}
-
-export interface CropKCValue {
-  kc: number;
-  waterNeed: 'low' | 'medium' | 'high';
-}
-
-export interface CropPlanting {
-  id: string;
-  farm_id?: string;
-  crop_id: string;
-  area?: number;
-  area_unit?: string;
-  planting_date: string;
-  expected_harvest_date?: string;
-  current_stage: string;
-  status: string;
-  yield_expected?: number;
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Crop {
-  id: string;
-  name: string;
-  name_vi?: string;
-  category?: string;
-  kc_initial?: number;
-  kc_mid?: number;
-  kc_end?: number;
-  growth_days?: number;
-  created_at: string;
-}
-
-export interface CreatePlantingData {
-  farmId?: string;
-  cropId: string;
-  area?: number;
-  areaUnit?: string;
-  plantingDate?: string;
-  expectedHarvestDate?: string;
-  yieldExpected?: number;
-  notes?: string;
-}
-
-export interface UpdatePlantingData {
-  area?: number;
-  current_stage?: string;
-  status?: string;
-  expected_harvest_date?: string;
-  yield_expected?: number;
-  notes?: string;
-}
-
-export const CROP_STAGES: Record<string, CropStageConfig> = {
-  GIEG_HAT: { name: 'Gieo hạt', code: 'gieo_hat', kcMin: 0.3, kcMax: 0.4, days: 20 },
+const CROP_STAGES = {
+  GIEO_HAT: { name: 'Gieo hạt', code: 'gieo_hat', kcMin: 0.3, kcMax: 0.4, days: 20 },
   CAY_CON: { name: 'Cây con', code: 'cay_con', kcMin: 0.4, kcMax: 0.8, days: 25 },
   SINH_TRUONG: { name: 'Sinh trưởng', code: 'sinh_truong', kcMin: 0.8, kcMax: 1.1, days: 30 },
   RA_HOA: { name: 'Ra hoa - Kết quả', code: 'ra_hoa', kcMin: 1.1, kcMax: 1.0, days: 30 },
   THU_HOACH: { name: 'Chín - Thu hoạch', code: 'thu_hoach', kcMin: 1.0, kcMax: 0.7, days: 15 }
 };
 
-export const CROP_KC_VALUES: Record<string, CropKCValue> = {
+const CROP_KC_VALUES = {
   gieo_hat: { kc: 0.35, waterNeed: 'low' },
   cay_con: { kc: 0.5, waterNeed: 'medium' },
   sinh_truong: { kc: 1.0, waterNeed: 'high' },
@@ -92,7 +31,7 @@ export const CROP_KC_VALUES: Record<string, CropKCValue> = {
   thu_hoach: { kc: 0.8, waterNeed: 'medium' }
 };
 
-export function createPlanting(data: CreatePlantingData): string {
+function createPlanting(data) {
   const id = `plant-${uuidv4().slice(0, 8)}`;
   const now = new Date().toISOString();
   
@@ -115,155 +54,323 @@ export function createPlanting(data: CreatePlantingData): string {
     'growing', data.yieldExpected || null, data.notes || null, now, now
   ]);
   
+  const planting = getOne('SELECT * FROM crop_plantings WHERE id = ?', [id]);
+  
   logger.info(`Tạo lô trồng mới: ${id}, crop_id: ${data.cropId}`);
-  
-  try {
-    batchService.createBatchFromPlanting(id);
-  } catch (e) {
-    logger.warn('Không tạo được traceability batch:', (e as Error).message);
+
+  if (data.createTraceability !== false) {
+    try {
+      const batchResult = batchService.createBatchFromPlanting(id);
+      logger.info(`Tạo traceability batch: ${batchResult.batch_code}`);
+      return { ...enrichPlanting(planting), traceability_batch: batchResult.batch_code };
+    } catch (err) {
+      logger.warn(`Không tạo được traceability batch: ${err.message}`);
+    }
   }
   
-  return id;
+  return enrichPlanting(planting);
 }
 
-export function getPlanting(plantingId: string): CropPlanting | null {
-  return db.get('SELECT * FROM crop_plantings WHERE id = ?', [plantingId]) as CropPlanting | null;
+function updatePlantingStage(plantingId, stageCode) {
+  const kcData = CROP_KC_VALUES[stageCode] || { kc: 0.5 };
+  const now = new Date().toISOString();
+  
+  db.run(
+    'UPDATE crop_plantings SET current_stage = ?, updated_at = ? WHERE id = ?',
+    [stageCode, now, plantingId]
+  );
+  
+  logger.info(`Cập nhật giai đoạn lô trồng ${plantingId}: ${stageCode}`);
+  
+  return { stageCode, kc: kcData.kc };
 }
 
-export function getPlantingsByFarm(farmId: string): CropPlanting[] {
-  return db.all('SELECT * FROM crop_plantings WHERE farm_id = ? ORDER BY planting_date DESC', [farmId]) as CropPlanting[];
-}
-
-export function getPlantingsByStatus(farmId: string, status: string): CropPlanting[] {
-  return db.all('SELECT * FROM crop_plantings WHERE farm_id = ? AND status = ?', [farmId, status]) as CropPlanting[];
-}
-
-export function updatePlanting(plantingId: string, data: UpdatePlantingData): boolean {
-  try {
-    const updates: string[] = [];
-    const values: any[] = [];
-
-    if (data.area !== undefined) { updates.push('area = ?'); values.push(data.area); }
-    if (data.current_stage !== undefined) { updates.push('current_stage = ?'); values.push(data.current_stage); }
-    if (data.status !== undefined) { updates.push('status = ?'); values.push(data.status); }
-    if (data.expected_harvest_date !== undefined) { updates.push('expected_harvest_date = ?'); values.push(data.expected_harvest_date); }
-    if (data.yield_expected !== undefined) { updates.push('yield_expected = ?'); values.push(data.yield_expected); }
-    if (data.notes !== undefined) { updates.push('notes = ?'); values.push(data.notes); }
-
-    updates.push('updated_at = ?');
-    values.push(new Date().toISOString());
-    values.push(plantingId);
-
-    db.run(`UPDATE crop_plantings SET ${updates.join(', ')} WHERE id = ?`, values);
-    return true;
-  } catch (error: any) {
-    logger.error('Update planting error:', error.message);
-    return false;
+function getAllPlantings(farmId, status) {
+  let query = `
+    SELECT cp.*, c.name as crop_name, c.name_vi, c.category, c.kc_mid, c.kc_initial, c.kc_mid, c.kc_end
+    FROM crop_plantings cp 
+    LEFT JOIN crops c ON cp.crop_id = c.id
+    WHERE 1=1`;
+  const params = [];
+  
+  if (farmId) {
+    query += ' AND cp.farm_id = ?';
+    params.push(farmId);
   }
-}
-
-export function deletePlanting(plantingId: string): boolean {
-  try {
-    db.run('DELETE FROM crop_plantings WHERE id = ?', [plantingId]);
-    return true;
-  } catch (error: any) {
-    logger.error('Delete planting error:', error.message);
-    return false;
+  if (status) {
+    query += ' AND cp.status = ?';
+    params.push(status);
   }
-}
-
-export function getCrop(cropId: string): Crop | null {
-  return db.get('SELECT * FROM crops WHERE id = ?', [cropId]) as Crop | null;
-}
-
-export function getCropsByCategory(category: string): Crop[] {
-  return db.all('SELECT * FROM crops WHERE category = ?', [category]) as Crop[];
-}
-
-export function getAllCrops(): Crop[] {
-  return db.all('SELECT * FROM crops ORDER BY category, name') as Crop[];
-}
-
-export function getCurrentKC(plantingId: string): number {
-  const planting = getPlanting(plantingId);
-  if (!planting) return 0.5;
-
-  const stage = planting.current_stage || 'gieo_hat';
-  const kcInfo = CROP_KC_VALUES[stage];
   
-  if (kcInfo) return kcInfo.kc;
+  query += ' ORDER BY cp.planting_date DESC';
   
-  const crop = getCrop(planting.crop_id);
-  if (!crop) return 0.5;
+  const plantings = getAll(query, params);
   
-  return crop.kc_mid || 0.5;
+  return plantings.map(p => enrichPlanting(p));
 }
 
-export function getWaterNeed(plantingId: string): 'low' | 'medium' | 'high' {
-  const planting = getPlanting(plantingId);
-  if (!planting) return 'medium';
-
-  const stage = planting.current_stage || 'gieo_hat';
-  const kcInfo = CROP_KC_VALUES[stage];
+function enrichPlanting(planting) {
+  const now = new Date();
+  const plantingDate = planting.planting_date ? new Date(planting.planting_date) : now;
   
-  return kcInfo?.waterNeed || 'medium';
-}
-
-export function calculateExpectedYield(plantingId: string): number | null {
-  const planting = getPlanting(plantingId);
-  if (!planting || !planting.yield_expected) return null;
-
-  const crop = getCrop(planting.crop_id);
-  if (!crop) return planting.yield_expected;
-
-  return planting.yield_expected * (crop.growth_days || 100) / 100;
-}
-
-export function updateStage(plantingId: string, newStage: string): boolean {
-  const validStages = Object.keys(CROP_STAGES);
-  if (!validStages.includes(newStage)) {
-    logger.error('Invalid stage:', newStage);
-    return false;
+  const daysSincePlanting = planting.planting_date 
+    ? Math.floor((now - plantingDate) / (1000 * 60 * 60 * 24))
+    : 0;
+  
+  const stageCode = planting.current_stage || 'gieo_hat';
+  const stageInfo = Object.values(CROP_STAGES).find(s => s.code === stageCode) || CROP_STAGES.GIEO_HAT;
+  const kcData = CROP_KC_VALUES[stageCode] || { kc: 0.5 };
+  
+  const stages = Object.values(CROP_STAGES);
+  const currentStageIndex = stages.findIndex(s => s.code === stageCode);
+  
+  let stageProgress = 0;
+  let nextStage = null;
+  let daysToNextStage = 0;
+  
+  if (currentStageIndex >= 0 && currentStageIndex < stages.length - 1) {
+    const nextStageInfo = stages[currentStageIndex + 1];
+    const stageDays = stageInfo.days || 20;
+    const daysInCurrentStage = daysSincePlanting % stageDays || stageDays;
+    stageProgress = Math.min(100, (daysInCurrentStage / stageDays) * 100);
+    nextStage = nextStageInfo.code;
+    daysToNextStage = stageDays - daysInCurrentStage;
   }
-
-  return updatePlanting(plantingId, { current_stage: newStage });
-}
-
-export function getPlantingsNeedingWater(farmId: string): CropPlanting[] {
-  const plantings = getPlantingsByFarm(farmId);
-  return plantings.filter(p => p.status === 'growing');
-}
-
-export function getCropStats(farmId: string): {
-  totalPlantings: number;
-  active: number;
-  harvested: number;
-  expectedYield: number;
-} {
-  const plantings = getPlantingsByFarm(farmId);
+  
+  let daysToHarvest = 0;
+  if (planting.expected_harvest_date) {
+    const expectedHarvest = new Date(planting.expected_harvest_date);
+    daysToHarvest = Math.ceil((expectedHarvest - now) / (1000 * 60 * 60 * 24));
+  }
   
   return {
-    totalPlantings: plantings.length,
-    active: plantings.filter(p => p.status === 'growing').length,
-    harvested: plantings.filter(p => p.status === 'harvested').length,
-    expectedYield: plantings.reduce((sum, p) => sum + (p.yield_expected || 0), 0)
+    id: planting.id,
+    farm_id: planting.farm_id,
+    crop_id: planting.crop_id,
+    crop_name: planting.crop_name,
+    crop_name_vi: planting.name_vi,
+    area: planting.area,
+    area_unit: planting.area_unit,
+    planting_date: planting.planting_date,
+    expected_harvest_date: planting.expected_harvest_date,
+    actual_harvest_date: planting.actual_harvest_date,
+    current_stage: stageCode,
+    current_stage_name: stageInfo.name,
+    status: daysToHarvest <= 0 && planting.status === 'growing' ? 'ready_harvest' : planting.status,
+    yield_expected: planting.yield_expected,
+    yield_actual: planting.yield_actual,
+    notes: planting.notes,
+    days_since_planting: Math.max(0, daysSincePlanting),
+    stage_progress: Math.round(stageProgress),
+    next_stage: nextStage,
+    days_to_next_stage: Math.max(0, daysToNextStage),
+    days_to_harvest: Math.max(0, daysToHarvest),
+    kc: kcData.kc,
+    water_need: kcData.waterNeed
   };
 }
 
-export default {
+function calculateIrrigationNeed(plantingId, eto = 4) {
+  const planting = getOne('SELECT * FROM crop_plantings WHERE id = ?', [plantingId]);
+  if (!planting) return null;
+  
+  const stageCode = planting.current_stage || 'gieo_hat';
+  const kcData = CROP_KC_VALUES[stageCode] || { kc: 0.5 };
+  const kc = kcData.kc;
+  const etc = eto * kc;
+  
+  const area = planting.area || 10000;
+  const waterNeedLiters = etc * area;
+  
+  return {
+    planting_id: plantingId,
+    crop_name: planting.crop_name,
+    current_stage: stageCode,
+    kc: parseFloat(kc.toFixed(2)),
+    eto: parseFloat(eto.toFixed(2)),
+    etc: parseFloat(etc.toFixed(2)),
+    water_need_liters: Math.round(waterNeedLiters),
+    water_need_m3: parseFloat((waterNeedLiters / 1000).toFixed(2)),
+    area: area,
+    area_unit: planting.area_unit || 'm2',
+    recommendation: getIrrigationRecommendation(etc, kcData.waterNeed)
+  };
+}
+
+function getIrrigationRecommendation(etc, waterNeed) {
+  if (waterNeed === 'low') return 'Tưới nhẹ - Đất còn ẩm';
+  if (etc < 4) return 'Tưới trung bình - 20-30 phút';
+  if (etc < 6) return 'Tưới đủ - 30-45 phút';
+  return 'Tưới nhiều - 45-60 phút';
+}
+
+function getCropStats(farmId = null) {
+  let whereClause = '';
+  const params = [];
+  if (farmId) {
+    whereClause = ' WHERE farm_id = ?';
+    params.push(farmId);
+  }
+  
+  const total = getOne(`SELECT COUNT(*) as count FROM crop_plantings${whereClause}`, params);
+  const byStatus = getAll(`
+    SELECT status, COUNT(*) as count 
+    FROM crop_plantings${whereClause ? whereClause + ' AND' : ' WHERE'} 1=1 GROUP BY status
+  `);
+  const byType = getAll(`
+    SELECT c.category, c.name_vi, COUNT(*) as count, SUM(cp.area) as total_area
+    FROM crop_plantings cp 
+    LEFT JOIN crops c ON cp.crop_id = c.id
+    ${whereClause || 'WHERE 1=1'}
+    GROUP BY cp.crop_id
+  `);
+  const readyHarvest = getOne(
+    `SELECT COUNT(*) as count FROM crop_plantings 
+     WHERE expected_harvest_date <= date('now') AND status = 'growing'`
+  );
+  
+  return {
+    total: total?.count || 0,
+    by_status: byStatus.reduce((acc, s) => { acc[s.status] = s.count; return acc; }, {}),
+    by_type: byType,
+    ready_to_harvest: readyHarvest?.count || 0
+  };
+}
+
+function recordHarvest(plantingId, quantity, quality, notes, createSupplyChain = false) {
+  const planting = getOne('SELECT * FROM crop_plantings WHERE id = ?', [plantingId]);
+  if (!planting) return null;
+  
+  const harvestId = `harvest-${uuidv4().slice(0, 8)}`;
+  const now = new Date().toISOString();
+  
+  db.run(`
+    INSERT INTO crop_yields (id, crop_id, harvest_date, quantity, quality, notes, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `, [harvestId, plantingId, now.split('T')[0], quantity, quality || '', notes || '']);
+  
+  db.run(
+    'UPDATE crop_plantings SET status = ?, yield_actual = ?, actual_harvest_date = ?, updated_at = ? WHERE id = ?',
+    ['harvested', quantity, now.split('T')[0], now, plantingId]
+  );
+  
+  logger.info(`Ghi nhận thu hoạch lô trồng ${plantingId}: ${quantity} ${planting.area_unit || 'kg'}`);
+
+  let traceabilityResult = null;
+  try {
+    traceabilityResult = batchService.recordHarvest(plantingId, quantity, quality);
+    logger.info(`Cập nhật traceability: ${traceabilityResult.batch_code}`);
+  } catch (err) {
+    logger.warn(`Không cập nhật được traceability: ${err.message}`);
+  }
+
+  let supplyChainResult = null;
+  if (createSupplyChain && traceabilityResult && !traceabilityResult.error) {
+    try {
+      supplyChainResult = batchService.linkToSupplyChain(traceabilityResult.batch_id, {
+        destination: 'market',
+        buyer_name: '',
+        buyer_contact: '',
+        price: 0
+      });
+      logger.info(`Tạo supply chain: ${supplyChainResult.supply_chain_id}`);
+    } catch (err) {
+      logger.warn(`Không tạo được supply chain: ${err.message}`);
+    }
+  }
+  
+  return { 
+    harvest_id: harvestId, 
+    planting_id: plantingId, 
+    quantity, 
+    quality, 
+    harvest_date: now,
+    traceability: traceabilityResult,
+    supply_chain: supplyChainResult
+  };
+}
+
+function getStageTimeline(plantingId) {
+  const planting = getOne(`
+    SELECT cp.*, c.name_vi as crop_name 
+    FROM crop_plantings cp 
+    LEFT JOIN crops c ON cp.crop_id = c.id
+    WHERE cp.id = ?
+  `, [plantingId]);
+  
+  if (!planting) return null;
+  
+  const plantingDate = planting.planting_date ? new Date(planting.planting_date) : new Date();
+  
+  const stages = Object.values(CROP_STAGES);
+  const timeline = stages.map(stageInfo => {
+    const startDate = new Date(plantingDate);
+    startDate.setDate(startDate.getDate() + stageInfo.days);
+    
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + stageInfo.days);
+    
+    const kcData = CROP_KC_VALUES[stageInfo.code] || { kc: 0.5 };
+    
+    return {
+      stage: stageInfo.name,
+      code: stageInfo.code,
+      kc: kcData.kc,
+      water_need: kcData.waterNeed,
+      start_date: startDate.toISOString().split('T')[0],
+      end_date: endDate.toISOString().split('T')[0],
+      duration_days: stageInfo.days
+    };
+  });
+  
+  return {
+    planting_id: plantingId,
+    crop_name: planting.crop_name,
+    planting_date: planting.planting_date,
+    expected_harvest_date: planting.expected_harvest_date,
+    timeline
+  };
+}
+
+function advanceStage(plantingId) {
+  const planting = getOne('SELECT * FROM crop_plantings WHERE id = ?', [plantingId]);
+  if (!planting) return null;
+  
+  const stages = Object.values(CROP_STAGES);
+  const currentIndex = stages.findIndex(s => s.code === planting.current_stage);
+  
+  if (currentIndex >= stages.length - 1) {
+    return { error: 'Đã ở giai đoạn cuối cùng', current_stage: planting.current_stage };
+  }
+  
+  const nextStage = stages[currentIndex + 1];
+  const now = new Date().toISOString();
+  
+  db.run(
+    'UPDATE crop_plantings SET current_stage = ?, updated_at = ? WHERE id = ?',
+    [nextStage.code, now, plantingId]
+  );
+  
+  logger.info(`Chuyển giai đoạn lô trồng ${plantingId}: ${planting.current_stage} → ${nextStage.code}`);
+  
+  return { 
+    success: true, 
+    previous_stage: planting.current_stage, 
+    current_stage: nextStage.code,
+    stage_name: nextStage.name
+  };
+}
+
+module.exports = {
   createPlanting,
-  getPlanting,
-  getPlantingsByFarm,
-  getPlantingsByStatus,
-  updatePlanting,
-  deletePlanting,
-  getCrop,
-  getCropsByCategory,
-  getAllCrops,
-  getCurrentKC,
-  getWaterNeed,
-  calculateExpectedYield,
-  updateStage,
-  getPlantingsNeedingWater,
-  getCropStats
+  updatePlantingStage,
+  getAllPlantings,
+  enrichPlanting,
+  calculateIrrigationNeed,
+  getCropStats,
+  recordHarvest,
+  getStageTimeline,
+  advanceStage,
+  CROP_STAGES,
+  CROP_KC_VALUES
 };

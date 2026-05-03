@@ -32,7 +32,7 @@ interface CalculationResult {
   roi: string;
 }
 
-const skill = {
+import skill = {
   id: 'cost-calculator',
   name: 'Cost Calculator',
   description: 'Tính chi phí đầu tư, vận hành và thời gian thu hồi vốn cho nông dân Việt Nam',

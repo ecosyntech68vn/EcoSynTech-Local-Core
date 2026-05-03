@@ -11,21 +11,21 @@
     return;
   }
   try {
-    const { NodeSDK } = require('@opentelemetry/sdk-node');
-    const { HttpInstrumentation } = require('@opentelemetry/instrumentation-http');
-    const { ExpressInstrumentation } = require('@opentelemetry/instrumentation-express');
+    const { NodeSDK } from('@opentelemetry/sdk-node');
+    const { HttpInstrumentation } from('@opentelemetry/instrumentation-http');
+    const { ExpressInstrumentation } from('@opentelemetry/instrumentation-express');
     const instrumentations = [
       new HttpInstrumentation(),
       new ExpressInstrumentation()
     ];
-    const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-http');
-    const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-http');
+    const { OTLPTraceExporter } from('@opentelemetry/exporter-trace-otlp-http');
+    const { OTLPMetricExporter } from('@opentelemetry/exporter-metrics-otlp-http');
     const collectorHost = process.env.OTEL_COLLECTOR_HOST || 'localhost';
     const otlpUrl = process.env.OTLP_URL || `http://${collectorHost}:4318/v1/traces`;
 
     let sampler;
     try {
-      const { TraceIdRatioBasedSampler } = require('@opentelemetry/sdk-trace-base');
+      const { TraceIdRatioBasedSampler } from('@opentelemetry/sdk-trace-base');
       const ratio = parseFloat(process.env.OTEL_SAMPLER_RATIO || '0.2');
       sampler = new TraceIdRatioBasedSampler(ratio);
     } catch (e) {

@@ -19,7 +19,7 @@ interface SkillResult {
   timestamp: string;
 }
 
-const skill = {
+import skill = {
   id: 'ws-heartbeat',
   name: 'WebSocket Heartbeat Watch',
   triggers: ['event:websocket.tick', 'event:watchdog.tick', 'route:/ws'],

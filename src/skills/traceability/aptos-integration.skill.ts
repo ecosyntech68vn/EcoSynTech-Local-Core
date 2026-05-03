@@ -1,5 +1,5 @@
-const crypto = require('crypto');
-const config = require('../../config');
+import crypto from('crypto');
+import config from('../../config');
 
 function getBlockchainConfig() {
   return config.blockchain || {};
@@ -26,6 +26,7 @@ function simulateAptosTx(payload) {
 }
 
 module.exports = {
+export default module.exports;
   id: 'aptos-integration',
   name: 'Aptos Integration Service',
   triggers: ['event:aptos.submit', 'event:traceability.certify', 'cron:10m'],

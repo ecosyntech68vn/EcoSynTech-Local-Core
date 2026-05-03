@@ -1,4 +1,4 @@
-const { execFile } = require('child_process');
+import { execFile } from('child_process');
 
 function runCmd(cmd: string, args: string[], cwd = process.cwd()): Promise<{ ok: boolean; code: number; stdout: string; stderr: string }> {
   return new Promise(resolve => {

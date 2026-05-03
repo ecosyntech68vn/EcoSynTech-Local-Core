@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'approval-gate-advanced',
   name: 'Approval Gate Advanced',
   triggers: ['event:deploy.request', 'event:dangerous.action', 'event:watchdog.tick'],

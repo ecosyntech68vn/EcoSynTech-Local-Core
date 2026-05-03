@@ -1,49 +1,23 @@
-interface ZaloEvent {
-  message?: string;
-  userId?: string;
-  from?: string;
-}
+import salesModule from('./sales-integration');
 
-interface ChatRequest {
-  message: string;
-  customerId: string;
-  sessionId: string;
-}
-
-interface ChatResponse {
-  message?: string;
-  text?: string;
-}
-
-interface ZaloResponse {
-  type: string;
-  message: string;
-}
-
-interface QuickReply {
-  label: string;
-  action: string;
-}
-
-const salesModule = require('./sales-integration');
-
-const module = {
+module.exports = {
+export default module.exports;
   version: '2.3.2',
   
-  handleWebhook: async function(event: ZaloEvent): Promise<ZaloResponse> {
+  handleWebhook: async function(event) {
     const message = event.message || '';
-    const userId = event.userId || event.from || '';
+    const userId = event.userId || event.from;
     
     const response = await salesModule.processChat({
       message: message,
       customerId: userId,
       sessionId: 'zalo-' + userId
-    }) as ChatResponse;
+    });
     
     return this.formatZaloResponse(response);
   },
   
-  formatZaloResponse: function(response: string | ChatResponse): ZaloResponse {
+  formatZaloResponse: function(response) {
     if (typeof response === 'string') {
       return {
         type: 'text',
@@ -57,7 +31,7 @@ const module = {
     };
   },
   
-  getQuickReplies: function(): QuickReply[] {
+  getQuickReplies: function() {
     return [
       { label: 'Xem san pham', action: 'products' },
       { label: 'Tinh ROI', action: 'roi' },
@@ -65,13 +39,58 @@ const module = {
       { label: 'Huong dan', action: 'help' }
     ];
   },
-
-  sendMessage: async function(userId: string, message: string): Promise<ZaloResponse> {
+  
+  getRichMenu: function() {
     return {
-      type: 'text',
-      message: message
+      type: 'richmenu',
+      richmenu: {
+        size: { width: 1200, height: 405 },
+        selected: true,
+        name: 'EcoSynTech Menu',
+        chatBarText: 'EcoSynTech',
+        areas: [
+          {
+            bounds: { x: 0, y: 0, width: 400, height: 405 },
+            action: { type: 'message', text: 'Xem san pham' }
+          },
+          {
+            bounds: { x: 400, y: 0, width: 400, height: 405 },
+            action: { type: 'message', text: 'Tinh ROI' }
+          },
+          {
+            bounds: { x: 800, y: 0, width: 400, height: 405 },
+            action: { type: 'message', text: 'Lien he ho tro' }
+          }
+        ]
+      }
     };
+  },
+  
+  sendRichMessage: async function(userId, data) {
+    const messages = [];
+    
+    if (data.products) {
+      messages.push({
+        type: 'template',
+        template: {
+          type: 'button',
+          text: '📦 San pham EcoSynTech',
+          actions: [
+            { label: 'Goi Co Ban (5.8M)', type: 'message', text: 'Mua goi Co Ban' },
+            { label: 'Goi Tieu Chuan (9.8M)', type: 'message', text: 'Mua goi Tieu Chuan' },
+            { label: 'Goi Nang Cao (18M)', type: 'message', text: 'Mua goi Nang Cao' }
+          ]
+        }
+      });
+    }
+    
+    if (data.quote) {
+      messages.push({
+        type: 'text',
+        text: `💰 Bao gia: ${data.quote.total} VNĐ\nROI: ${data.quote.roi}`
+      });
+    }
+    
+    return messages;
   }
 };
-
-export = module;

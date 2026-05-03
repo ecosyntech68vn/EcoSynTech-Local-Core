@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'fertilizer-scheduler',
   name: 'Fertilizer Scheduler',
   triggers: ['event:crop-update', 'cron:*/24h', 'event:watchdog.tick'],

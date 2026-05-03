@@ -11,8 +11,8 @@ export const RECOMMENDED_ENV_VARS = [
 
 export const PRODUCTION_REQUIRED = ['JWT_SECRET'];
 
-const warnings: string[] = [];
-const errors: string[] = [];
+import warnings: string[] = [];
+import errors: string[] = [];
 
 export interface ValidationResult {
   valid: boolean;

@@ -1,8 +1,9 @@
-const QRCode = require('qrcode');
-const { v4: uuidv4 } = require('uuid');
-const config = require('../../config');
+import QRCode from('qrcode');
+import { v4: uuidv4 } from('uuid');
+import config from('../../config');
 
 module.exports = {
+export default module.exports;
   id: 'qr-traceability',
   name: 'QR Code Traceability',
   triggers: ['event:traceability.create', 'event:traceability.qrgen', 'cron:1h'],

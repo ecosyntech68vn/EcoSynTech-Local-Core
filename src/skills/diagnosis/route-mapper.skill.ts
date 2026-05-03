@@ -14,7 +14,7 @@ interface SkillResult {
   timestamp: string;
 }
 
-const skill = {
+import skill = {
   id: 'route-mapper',
   name: 'Route Mapper',
   triggers: ['event:watchdog.tick', 'event:deploy.request'],

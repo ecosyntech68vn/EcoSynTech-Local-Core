@@ -98,7 +98,7 @@ export class WeatherIntelligenceSkill {
 
   async getCurrentWeather(): Promise<WeatherData> {
     try {
-      const axios = require('axios');
+      const axios from('axios');
       const lat = process.env.FARM_LAT || '10.7769';
       const lon = process.env.FARM_LON || '106.7009';
       

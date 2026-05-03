@@ -135,7 +135,7 @@ class DeviceProvisioningSkill {
     const farmId = deviceInfo.farmId || 'default';
     
     try {
-      const { runQuery } = require('../config/database');
+      const { runQuery } from('../config/database');
       runQuery(
         'INSERT OR REPLACE INTO devices (id, type, status, config, created_at) VALUES (?, ?, ?, ?, datetime("now"))',
         [deviceId, deviceInfo.type || 'sensor', 'pending', JSON.stringify(this.deviceDefaults)]
@@ -203,7 +203,7 @@ class DeviceProvisioningSkill {
 
   async activateDevice(deviceInfo: DeviceInfo): Promise<{ activated: boolean; status: string }> {
     try {
-      const { runQuery } = require('../config/database');
+      const { runQuery } from('../config/database');
       runQuery('UPDATE devices SET status = ? WHERE id = ?', ['online', deviceInfo.deviceId]);
     } catch (e) { /* ignore */ }
 

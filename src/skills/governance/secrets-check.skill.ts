@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'secrets-check',
   name: 'Secrets Check',
   triggers: ['event:deploy.request', 'event:watchdog.tick'],

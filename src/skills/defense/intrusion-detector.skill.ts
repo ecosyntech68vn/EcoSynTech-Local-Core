@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'intrusion-detector',
   name: 'Intrusion Detector',
   triggers: ['event:login.failed', 'event:rate.exceeded', 'event:watchdog.tick'],

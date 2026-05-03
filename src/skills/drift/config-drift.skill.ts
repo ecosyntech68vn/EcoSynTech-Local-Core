@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'config-drift-detect',
   name: 'Config Drift Detect',
   triggers: ['cron:*/15m', 'event:watchdog.tick', 'route:/readiness'],

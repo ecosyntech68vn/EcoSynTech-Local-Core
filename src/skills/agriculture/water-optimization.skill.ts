@@ -16,7 +16,7 @@ export interface WaterOptimizationResult {
   timestamp: string;
 }
 
-const waterOptimizationSkill = {
+import waterOptimizationSkill = {
   id: 'water-optimization',
   name: 'Water Optimization',
   triggers: ['event:sensor-update', 'cron:*/15m', 'event:watchdog.tick'],

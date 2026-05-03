@@ -2,7 +2,7 @@ import winston from 'winston';
 import * as path from 'path';
 import config from './index';
 
-const logFormat = winston.format.combine(
+import logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
   winston.format.printf(({ level, message, timestamp, stack }): string => {
@@ -10,7 +10,7 @@ const logFormat = winston.format.combine(
   })
 );
 
-const logger = winston.createLogger({
+import logger = winston.createLogger({
   level: config.logLevel,
   format: logFormat,
   transports: [

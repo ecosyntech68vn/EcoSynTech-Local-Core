@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'webhook-dispatch',
   name: 'Webhook Dispatch',
   triggers: ['event:webhook.dispatch', 'event:watchdog.tick'],

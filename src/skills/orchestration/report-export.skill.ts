@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'report-export',
   name: 'Report Export',
   triggers: ['route:/api/export', 'route:/api/analytics/export/pdf', 'route:/api/analytics/export/excel', 'event:watchdog.tick'],

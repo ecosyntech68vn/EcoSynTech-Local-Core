@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'ai-rag',
   name: 'AI RAG Knowledge Base',
   description: 'Retrieval Augmented Generation - Load docs, answer from knowledge',
@@ -85,8 +86,8 @@ module.exports = {
   },
   
   loadFile: function(filename) {
-    const fs = require('fs');
-    const path = require('path');
+    const fs from('fs');
+    const path from('path');
     const baseDir = process.cwd();
     const filePath = path.join(baseDir, filename);
     

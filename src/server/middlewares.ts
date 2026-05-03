@@ -1,60 +1,147 @@
 /**
- * Middleware Registry
+ * ============================================================================
+ * src/server/middlewares.js - Middleware Registry
  * 
- * Centralized middleware configuration
+ * Design: Centralized middleware configuration
  * Standards: ISO 27001, Security Best Practices
+ * 
+ * MỤC ĐÍCH:
+ *   - Tập trung tất cả middleware registrations
+ *   - Dễ dàng thêm/sửa middleware
+ *   - Security layers rõ ràng
+ * ============================================================================
  */
 
-import cors from 'cors';
-import helmet from 'helmet';
-import compression from 'compression';
-import rateLimit from 'express-rate-limit';
-import express, { Application } from 'express';
+'use strict';
 
-import config from '../config';
-import logger from '../config/logger';
+import cors from('cors');
+import helmet from('helmet');
+import compression from('compression');
+import rateLimit from('express-rate-limit');
+import express from('express');
 
-const requestId = require('../middleware/requestId').requestId;
-const responseSignatureMiddleware = require('../middleware/response-sign').responseSignatureMiddleware;
-const getAuditHashMiddleware = require('../middleware/audit-tamper-proof').getAuditHashMiddleware;
-const requestDeduplication = require('../middleware/requestDeduplication').requestDeduplication;
-const responseOptimizer = require('../middleware/responseOptimizer').responseOptimizer;
-const rateLimitPerDevice = require('../middleware/deviceRateLimit').rateLimitPerDevice;
-const ddosProtection = require('../middleware/ddosProtection').ddosProtection;
-const replayProtection = require('../middleware/replayProtection').replayProtection;
+import config from('../config');
+import logger from('../config/logger');
 
-function registerMiddlewares(app: Application): void {
+import { requestId } from('../middleware/requestId');
+import { responseSignatureMiddleware } from('../middleware/response-sign');
+import { getAuditHashMiddleware } from('../middleware/audit-tamper-proof');
+import { requestDeduplication } from('../middleware/requestDeduplication');
+import { responseOptimizer } from('../middleware/responseOptimizer');
+import { rateLimitPerDevice } from('../middleware/deviceRateLimit');
+import { ddosProtection } from('../middleware/ddosProtection');
+import { replayProtection } from('../middleware/replayProtection');
+
+function registerMiddlewares(app) {
   const isProduction = process.env.NODE_ENV === 'production';
   
+  // ============================================================
+  // HTTPS ENFORCEMENT (Production)
+  // ============================================================
+  if (isProduction) {
+    app.use((req, res, next) => {
+      if (!req.secure && !req.headers['x-forwarded-proto']) {
+        const httpsUrl = `https://${req.hostname}${req.url}`;
+        return res.redirect(301, httpsUrl);
+      }
+      next();
+    });
+  }
+  
+  // ============================================================
+  // SECURITY LAYER 1: Basic Protection (A.8.24, A.8.25)
+  // ============================================================
+  
+  app.use(helmet({
+    contentSecurityPolicy: isProduction ? {
+      directives: {
+        defaultSrc: ['\'self\''],
+        scriptSrc: ['\'self\'', '\'unsafe-inline\''],
+        styleSrc: ['\'self\'', '\'unsafe-inline\''],
+        imgSrc: ['\'self\'', 'data:', 'https:'],
+        connectSrc: ['\'self\'', 'wss:', 'https:'],
+        fontSrc: ['\'self\'', 'https:'],
+        objectSrc: ['\'none\''],
+        mediaSrc: ['\'self\'', 'https:'],
+        frameSrc: ['\'none\''],
+        upgradeInsecureRequests: []
+      },
+      reportOnly: false
+    } : false,
+    crossOriginEmbedderPolicy: false,
+    hsts: isProduction ? {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    } : false
+  }));
+
   app.use(cors({
-    origin: config.cors.origin,
+    origin: config.cors?.origin || '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-EcoSynTech-Signature', 'X-Request-ID'],
     credentials: true
   }));
 
-  app.use(helmet({
-    contentSecurityPolicy: isProduction ? undefined : false,
-    hsts: isProduction
-  }));
-
+  // ============================================================
+  // PERFORMANCE LAYER: Compression
+  // ============================================================
+  
   app.use(compression());
 
-  const apiLimiter = rateLimit({
-    windowMs: config.rateLimit.windowMs,
-    max: config.rateLimit.maxRequests,
-    message: { error: 'Too many requests, please try again later.' }
-  });
-  app.use('/api', apiLimiter);
-
+  // ============================================================
+  // TRACEABILITY LAYER: Request tracking (A.12.4)
+  // ============================================================
+  
   app.use(requestId);
-  app.use(responseSignatureMiddleware);
-  app.use(getAuditHashMiddleware);
+  app.use(getAuditHashMiddleware());
   app.use(requestDeduplication);
-  app.use(responseOptimizer);
-  app.use(rateLimitPerDevice);
-  app.use(ddosProtection);
-  app.use(replayProtection);
 
-  console.log('[MIDDLEWARE] All middlewares registered');
+  // ============================================================
+  // RATE LIMITING LAYER (A.8.16 - Network controls)
+  // ============================================================
+  
+  if (isProduction) {
+    app.use(ddosProtection);
+    app.use(replayProtection);
+  }
+  
+  // Global rate limit
+  const globalLimiter = rateLimit({
+    windowMs: (config.rateLimit?.windowMs || 900000),
+    max: config.rateLimit?.maxRequests || 100,
+    message: { ok: false, code: 'RATE_LIMIT_EXCEEDED' },
+    standardHeaders: true,
+    legacyHeaders: false
+  });
+  app.use('/api/', globalLimiter);
+
+  // Device-specific rate limit
+  app.use('/api/sensors', rateLimitPerDevice);
+  app.use('/api/devices', rateLimitPerDevice);
+
+  // ============================================================
+  // BODY PARSING
+  // ============================================================
+  
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+  // ============================================================
+  // RESPONSE OPTIMIZATION LAYER
+  // ============================================================
+  
+  app.use(responseOptimizer);
+  app.use(responseSignatureMiddleware);
+
+  // ============================================================
+  // STATIC FILES (non-API)
+  // ============================================================
+  
+  app.use('/public', express.static(config.server?.publicPath || './public'));
+  app.use('/dashboard', express.static(config.server?.publicPath || './public/dashboard.html'));
+
+  logger.info('[MIDDLEWARE] All middlewares registered successfully');
 }
 
-export = { registerMiddlewares };
+module.exports = registerMiddlewares;

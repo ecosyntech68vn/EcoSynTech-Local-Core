@@ -6,7 +6,7 @@ export interface IoTDashboardModuleType {
   cleanup: () => void;
 }
 
-const IoTDashboardModule = ((): IoTDashboardModuleType => {
+import IoTDashboardModule = ((): IoTDashboardModuleType => {
   const init = (): void => {
     console.log('IoT Dashboard initialized.');
   };

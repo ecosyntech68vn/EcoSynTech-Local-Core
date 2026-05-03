@@ -2,7 +2,7 @@ import express, { Router, Request, Response } from 'express';
 import { auth } from '../middleware/auth';
 import * as ml from './modelLoader';
 
-const router: Router = express.Router();
+import router: Router = express.Router();
 
 router.get('/status', auth, (req: Request, res: Response): void => {
   try {

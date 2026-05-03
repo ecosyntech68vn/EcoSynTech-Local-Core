@@ -39,7 +39,7 @@ export interface GuideBotSkill {
   run: (ctx: unknown) => unknown;
 }
 
-const guideBotSkill: GuideBotSkill = {
+import guideBotSkill: GuideBotSkill = {
   id: 'guide-bot',
   name: 'Hướng Dẫn Sử Dụng',
   description: 'Cung cấp hướng dẫn từng bước cho người dùng',

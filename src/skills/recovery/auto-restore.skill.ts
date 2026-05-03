@@ -1,11 +1,12 @@
 module.exports = {
+export default module.exports;
   id: 'auto-restore',
   name: 'Auto Restore',
   triggers: ['event:restore.request', 'event:data.corrupt'],
   riskLevel: 'high',
   canAutoFix: true,
   run: function(ctx) {
-    const AutoBackup = require('../../ops/advanced').AutoBackup;
+    const AutoBackup from('../../ops/advanced').AutoBackup;
     const config = { backupDir: './data/backups' };
     const backup = AutoBackup(config, ctx.logger);
     

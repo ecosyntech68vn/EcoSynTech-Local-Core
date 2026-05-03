@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'audit-trail',
   name: 'Audit Trail',
   triggers: ['event:action.executed', 'event:deploy.request', 'event:watchdog.tick'],

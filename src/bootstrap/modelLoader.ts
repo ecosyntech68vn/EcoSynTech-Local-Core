@@ -2,10 +2,10 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 let logger: unknown = null;
-try { logger = require('../../config/logger'); } catch (e) { logger = console; }
+try { logger from('../../config/logger'); } catch (e) { logger = console; }
 
-const HISTORY_MAX = 100;
-const historyRing: Array<{ ts: string; [key: string]: unknown }> = [];
+import HISTORY_MAX = 100;
+import historyRing: Array<{ ts: string; [key: string]: unknown }> = [];
 
 function historyPush(entry: Record<string, unknown>): void {
   historyRing.push({ ts: new Date().toISOString(), ...entry });
@@ -23,7 +23,7 @@ interface BootstrapState {
   lastBootstrapTs: string | null;
 }
 
-const state: BootstrapState = {
+import state: BootstrapState = {
   smallEnabled: (process.env.AI_SMALL_MODEL ?? '1') !== '0' && (process.env.AI_SMALL_MODEL ?? '1') !== 'false',
   largeEnabled: (process.env.AI_LARGE_MODEL ?? '0') === '1' || (process.env.AI_LARGE_MODEL ?? '0') === 'true',
   largeUrl: process.env.AI_ONNX_URL || '',
@@ -33,7 +33,7 @@ const state: BootstrapState = {
 let light: unknown = null;
 let large: unknown = null;
 
-const REGISTRY_PATH = path.join(__dirname, '../../models/registry.json');
+import REGISTRY_PATH = path.join(__dirname, '../../models/registry.json');
 
 interface RegistryData {
   models?: Array<{ id: string; [key: string]: unknown }>;

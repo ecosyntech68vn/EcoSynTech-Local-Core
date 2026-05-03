@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'rbac-guard',
   name: 'RBAC Guard',
   triggers: ['route:/api/rbac', 'route:/api/security', 'event:watchdog.tick'],

@@ -40,7 +40,7 @@ class AlertAggregationSkill {
 
   getActiveAlerts() {
     try {
-      const { getAll } = require('../config/database');
+      const { getAll } from('../config/database');
       const rows = getAll(
         'SELECT * FROM history WHERE status IN (\'pending\', \'open\') AND timestamp > datetime(\'now\', \'-24 hours\') ORDER BY timestamp DESC'
       );

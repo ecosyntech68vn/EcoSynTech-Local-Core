@@ -220,6 +220,7 @@
  */
 
 module.exports = {
+export default module.exports;
   ApiResponse: /** @type {import('./api').ApiResponse} */ ({}),
   FinanceSummary: /** @type {import('./api').FinanceSummary} */ ({}),
   InventoryStats: /** @type {import('./api').InventoryStats} */ ({}),

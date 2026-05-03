@@ -10,10 +10,10 @@
 import * as cron from 'node-cron';
 import logger from '../../config/logger';
 
-const LightGBMPredictor = require('../services/ai/LightGBMPredictor');
-const AutoMLService = require('../services/ai/AutoMLService');
-const BayesianOptimizer = require('../services/ai/BayesianOptimizer');
-const DigitalTwin = require('../services/ai/DigitalTwin');
+import LightGBMPredictor from('../services/ai/LightGBMPredictor');
+import AutoMLService from('../services/ai/AutoMLService');
+import BayesianOptimizer from('../services/ai/BayesianOptimizer');
+import DigitalTwin from('../services/ai/DigitalTwin');
 
 export interface MLJob {
   stop: () => void;

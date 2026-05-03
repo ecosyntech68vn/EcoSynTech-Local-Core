@@ -24,7 +24,7 @@ interface SkillResult {
   timestamp: string;
 }
 
-const skill = {
+import skill = {
   id: 'cleanup-agent',
   name: 'Cleanup Agent',
   triggers: ['cron:*/24h', 'event:cleanup.request', 'event:disk.low'],

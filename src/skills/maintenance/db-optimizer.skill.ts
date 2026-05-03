@@ -20,7 +20,7 @@ interface SkillResult {
   timestamp: string;
 }
 
-const skill = {
+import skill = {
   id: 'db-optimizer',
   name: 'Database Optimizer',
   triggers: ['cron:*/24h', 'event:db.optimize', 'event:watchdog.tick'],

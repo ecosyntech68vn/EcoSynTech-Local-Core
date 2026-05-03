@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'command-router',
   name: 'Command Router',
   triggers: ['event:device.command', 'route:/api/devices', 'route:/api/device-mgmt', 'event:watchdog.tick'],

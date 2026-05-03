@@ -29,7 +29,7 @@ export interface SyncChange {
   error?: string;
 }
 
-const hybridSync = {
+import hybridSync = {
   id: 'hybrid-sync',
   name: 'Hybrid Sync Module',
   version: '2.3.2',

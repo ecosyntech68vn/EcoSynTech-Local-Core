@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'weather-decision',
   name: 'Weather Decision',
   triggers: ['event:weather.update', 'cron:*/30m', 'event:watchdog.tick'],

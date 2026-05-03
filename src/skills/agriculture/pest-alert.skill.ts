@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'pest-alert',
   name: 'Pest Alert',
   triggers: ['event:sensor-update', 'cron:*/1h', 'event:watchdog.tick'],

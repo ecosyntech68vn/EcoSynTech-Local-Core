@@ -14,7 +14,7 @@ interface SkillContext {
   event?: Record<string, unknown>;
 }
 
-const skill = {
+import skill = {
   id: 'energy-saver',
   name: 'Energy Saver',
   triggers: ['event:power.status', 'cron:*/30m', 'event:watchdog.tick'],

@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'hybrid-sync',
   name: 'Hybrid Sync Module',
   description: 'Edge SQLite + Cloud Sync - Offline-first data synchronization với conflict resolution',

@@ -71,7 +71,7 @@ class SecurityAuditSkill {
 
   getAccessLogs() {
     try {
-      const { getAll } = require('../config/database');
+      const { getAll } from('../config/database');
       return getAll(
         'SELECT * FROM history WHERE timestamp > datetime(\'now\', \'-24 hours\') ORDER BY timestamp DESC LIMIT 500'
       );
@@ -243,7 +243,7 @@ class SecurityAuditSkill {
 
   hasRateLimiting(): boolean {
     try {
-      const rateLimit = require('express-rate-limit');
+      const rateLimit from('express-rate-limit');
       return typeof rateLimit === 'function';
     } catch {
       return false;

@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'ai-predict-weather',
   name: 'AI Weather Prediction',
   triggers: ['event:weather.update', 'cron:*/6h', 'event:watchdog.tick'],

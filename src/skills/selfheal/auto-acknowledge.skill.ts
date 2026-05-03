@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'auto-acknowledge',
   name: 'Auto Acknowledge',
   triggers: ['event:alert.created', 'event:alert.duplicate', 'event:watchdog.tick'],

@@ -13,7 +13,7 @@ export const DEFAULT_FLAGS: Record<string, boolean> = {
   ENABLE_EXPERIMENTAL_FEATURES: false
 };
 
-const featureFlags = new Map<string, boolean>(Object.entries(DEFAULT_FLAGS));
+import featureFlags = new Map<string, boolean>(Object.entries(DEFAULT_FLAGS));
 
 export function getFlag(name: string): boolean {
   if (Object.prototype.hasOwnProperty.call(process.env, 'FF_' + name)) {

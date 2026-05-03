@@ -24,7 +24,7 @@ interface WSClient extends WebSocket {
 }
 
 let wss: WebSocket.Server | null = null;
-const clients = new Set<WSClient>();
+import clients = new Set<WSClient>();
 
 export function initWebSocket(server: unknown): WebSocket.Server {
   wss = new WebSocket.Server({ 

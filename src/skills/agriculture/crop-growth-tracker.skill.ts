@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'crop-growth-tracker',
   name: 'Crop Growth Tracker',
   triggers: ['event:sensor-update', 'cron:*/6h', 'event:watchdog.tick'],

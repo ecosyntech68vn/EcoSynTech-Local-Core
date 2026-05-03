@@ -1,5 +1,5 @@
-const crypto = require('crypto');
-const config = require('../../config');
+import crypto from('crypto');
+import config from('../../config');
 
 let BC_ENABLED = false;
 let BC_NETWORK = 'testnet';
@@ -120,6 +120,7 @@ function createTxRecord(txType, batchCode, dataHash, metadata) {
 }
 
 module.exports = {
+export default module.exports;
   id: 'aptos-blockchain',
   name: 'Aptos Blockchain Handler',
   triggers: ['event:blockchain.record', 'event:traceability.harvest', 'event:traceability.export', 'cron:5m'],

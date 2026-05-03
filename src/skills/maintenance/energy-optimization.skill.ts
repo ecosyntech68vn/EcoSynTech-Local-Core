@@ -233,7 +233,7 @@ class EnergyOptimizationSkill {
 
   getDevices() {
     try {
-      const { getAll } = require('../config/database');
+      const { getAll } from('../config/database');
       return getAll('SELECT * FROM devices');
     } catch {
       return [];

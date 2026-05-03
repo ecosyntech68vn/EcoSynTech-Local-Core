@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'mobile-dashboard',
   name: 'PWA Mobile Dashboard',
   description: 'Mobile Dashboard for Farmers - Quick access, offline-first, Vietnamese UI',

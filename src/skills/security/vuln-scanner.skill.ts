@@ -5,7 +5,7 @@ export default {
   riskLevel: 'low' as const,
   canAutoFix: false,
   run: function(ctx: { logger: unknown; cwd?: string }): { ok: boolean; filesScanned: number; highFindings: number; mediumFindings: number; details: unknown[]; timestamp: string } {
-    const VulnerabilityScanner = require('../../ops/advanced').VulnerabilityScanner;
+    const VulnerabilityScanner from('../../ops/advanced').VulnerabilityScanner;
     const scanner = VulnerabilityScanner(ctx.logger);
     
     const srcDir = ctx.cwd || process.cwd();

@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'device-state-diff',
   name: 'Device State Diff',
   triggers: ['event:device.update', 'event:device.status', 'event:watchdog.tick'],

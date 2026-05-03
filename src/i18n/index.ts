@@ -19,7 +19,7 @@ export const SUPPORTED_LANGUAGES: Record<string, LanguageConfig> = {
 
 export const DEFAULT_LANGUAGE = 'vi';
 
-const translationCache: Record<string, Record<string, string>> = {};
+import translationCache: Record<string, Record<string, string>> = {};
 let currentLanguage = DEFAULT_LANGUAGE;
 
 export function setLanguage(lang: string): boolean {

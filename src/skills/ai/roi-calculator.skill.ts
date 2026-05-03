@@ -11,7 +11,7 @@ interface SkillContext {
   };
 }
 
-const skill = {
+import skill = {
   id: 'roi-calculator',
   name: 'ROI Calculator',
   description: 'Calculate and display ROI for IoT Agriculture investment',

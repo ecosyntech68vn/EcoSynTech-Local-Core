@@ -1,12 +1,13 @@
 module.exports = {
+export default module.exports;
   id: 'auto-backup',
   name: 'Auto Backup',
   triggers: ['cron:*/1h', 'event:backup.request', 'event:watchdog.tick'],
   riskLevel: 'low',
   canAutoFix: false,
   run: function(ctx) {
-    const fs = require('fs');
-    const path = require('path');
+    const fs from('fs');
+    const path from('path');
     
     const backupDir = path.join(process.cwd(), 'data', 'backups');
     try {

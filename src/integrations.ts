@@ -36,7 +36,7 @@ export async function initInfluxDB(config?: InfluxConfig): Promise<void> {
   }
   
   try {
-    const { InfluxDB, Point } = require('@influxdata/influxdb-client');
+    const { InfluxDB, Point } from('@influxdata/influxdb-client');
     influxClient = new InfluxDB({ url: config.url, token: config.token });
     logger.info('InfluxDB client initialized');
   } catch (err: unknown) {
@@ -49,7 +49,7 @@ export async function writeSensorDataToInflux(sensorType: string, value: number,
   if (!influxClient) return;
   
   try {
-    const { Point } = require('@influxdata/influxdb-client');
+    const { Point } from('@influxdata/influxdb-client');
     const writeApi = (influxClient as { getWriteApi: (org: string, bucket: string) => unknown }).getWriteApi(appConfig!.influx!.org, appConfig!.influx!.bucket);
     
     const point = new Point('sensor_data')
@@ -74,7 +74,7 @@ export function initMQTTBridge(config?: MQTTConfig): void {
   }
   
   try {
-    const mqtt = require('mqtt');
+    const mqtt from('mqtt');
     const client = mqtt.connect(config.broker, {
       clientId: 'ecosyntech-bridge',
       username: config.username,
@@ -108,7 +108,7 @@ function handleMQTTMessage(topic: string, message: string): void {
     
     if (parts[1] === 'sensors') {
       const sensorType = parts[2];
-      const { v4: uuidv4 } = require('uuid');
+      const { v4: uuidv4 } from('uuid');
       runQuery(
         'INSERT INTO sensor_readings (id, sensor_type, value, timestamp) VALUES (?, ?, ?, ?)',
         [uuidv4(), sensorType, data.value, new Date().toISOString()]

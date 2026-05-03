@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'version-drift-detect',
   name: 'Version Drift Detect',
   triggers: ['cron:*/10m', 'event:watchdog.tick', 'route:/api/health'],

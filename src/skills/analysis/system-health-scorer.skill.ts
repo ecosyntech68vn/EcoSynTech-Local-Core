@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'system-health-scorer',
   name: 'System Health Scorer',
   triggers: ['event:watchdog.tick', 'cron:*/30m'],

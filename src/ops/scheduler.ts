@@ -25,7 +25,7 @@ export interface OpsInput {
   context: OpsContext;
 }
 
-const INTERVALS: Record<string, number> = {
+import INTERVALS: Record<string, number> = {
   critical: 60000,
   high: 300000,
   medium: 600000,
@@ -33,7 +33,7 @@ const INTERVALS: Record<string, number> = {
   hourly: 3600000
 };
 
-const SKILL_PRIORITIES: Record<string, string> = {
+import SKILL_PRIORITIES: Record<string, string> = {
   'version-drift-detect': 'high',
   'config-drift-detect': 'high',
   'ws-heartbeat': 'critical',

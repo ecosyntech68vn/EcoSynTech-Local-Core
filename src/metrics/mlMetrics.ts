@@ -1,7 +1,7 @@
 // Lightweight in-process ML metrics registry
 // Tracks per-model call counts and latency distributions for health/observability.
 
-const SNAPSHOT_TTL_MS = 5 * 60 * 1000; // 5 minutes heatmap-ish freshness (not strictly used here)
+import SNAPSHOT_TTL_MS = 5 * 60 * 1000; // 5 minutes heatmap-ish freshness (not strictly used here)
 
 export interface ModelEventStats {
   count: number;
@@ -25,7 +25,7 @@ export interface MetricsSnapshot {
   models: Record<string, ModelSnapshot>;
 }
 
-const store: { models: Record<string, ModelStats> } = {
+import store: { models: Record<string, ModelStats> } = {
   models: {}
 };
 

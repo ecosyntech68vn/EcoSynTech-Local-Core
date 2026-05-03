@@ -6,7 +6,7 @@ export interface CartItem {
   [key: string]: unknown;
 }
 
-const cart: CartItem[] = [];
+import cart: CartItem[] = [];
 
 export function addToCart(item: CartItem): void {
   cart.push(item);

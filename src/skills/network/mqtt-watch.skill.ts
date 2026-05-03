@@ -19,7 +19,7 @@ interface SkillResult {
   timestamp: string;
 }
 
-const skill = {
+import skill = {
   id: 'mqtt-watch',
   name: 'MQTT Watch',
   triggers: ['event:mqtt.tick', 'cron:*/1m', 'event:watchdog.tick'],

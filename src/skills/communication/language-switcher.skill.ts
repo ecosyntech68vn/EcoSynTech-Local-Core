@@ -1,11 +1,12 @@
 module.exports = {
+export default module.exports;
   id: 'language-switcher',
   name: 'Language Switcher',
   triggers: ['event:language.change', 'route:/api/settings/language', 'event:watchdog.tick'],
   riskLevel: 'low',
   canAutoFix: true,
   run: function(ctx) {
-    const i18n = require('../../i18n');
+    const i18n from('../../i18n');
     const requestedLang = ctx.event.language || ctx.event.lang || 'vi';
     const previousLang = i18n.getLanguage();
     

@@ -1,11 +1,12 @@
 module.exports = {
+export default module.exports;
   id: 'telegram-notifier',
   name: 'Telegram Notifier',
   triggers: ['event:alert.created', 'event:incident.created', 'event:security.threat', 'event:deploy.request'],
   riskLevel: 'low',
   canAutoFix: false,
   run: function(ctx) {
-    const TelegramNotifier = require('../../ops/advanced').TelegramNotifier;
+    const TelegramNotifier from('../../ops/advanced').TelegramNotifier;
     const config = {
       botToken: process.env.TELEGRAM_BOT_TOKEN,
       chatId: process.env.TELEGRAM_CHAT_ID

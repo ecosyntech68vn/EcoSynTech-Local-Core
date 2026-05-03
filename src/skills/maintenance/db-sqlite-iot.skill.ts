@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'db-sqlite-iot',
   name: 'SQLite IoT Optimizer',
   description: 'Optimize SQLite for IoT Agriculture - WAL mode, circular buffer, performance tuning',

@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'ai-inference',
   name: 'AI Inference',
   description: 'Free AI inference using Ollama, LM Studio, or compatible APIs for local/cloud AI',
@@ -88,7 +89,7 @@ module.exports = {
     };
     
     try {
-      const customConfig = require('../../config');
+      const customConfig from('../../config');
       return customConfig.ai || defaultConfig;
     } catch (e) {
       return defaultConfig;
@@ -219,9 +220,9 @@ module.exports = {
   },
   
   httpSync: function(url, options) {
-    const http = require('http');
-    const https = require('https');
-    const urlObj = require('url').parse(url);
+    const http from('http');
+    const https from('https');
+    const urlObj from('url').parse(url);
     const client = urlObj.protocol === 'https:' ? https : http;
     
     return new Promise(function(resolve, reject) {

@@ -15,9 +15,9 @@ export async function initDatabase(): Promise<any> {
 }
 
 async function initSqliteDatabase(): Promise<any> {
-  const initSqlJs = require('sql.js');
-  const fs = require('fs');
-  const path = require('path');
+  const initSqlJs from('sql.js');
+  const fs from('fs');
+  const path from('path');
   
   const dbPath = process.env.DB_PATH || './data/ecosyntech.db';
   const dbDir = path.dirname(dbPath);
@@ -191,7 +191,7 @@ function createTables(): void {
 
 function seedInitialData(): void {
   if (!db) return;
-  const bcrypt = require('bcryptjs');
+  const bcrypt from('bcryptjs');
   const hashedPassword = bcrypt.hashSync('admin123', 10);
   
   db.run('INSERT OR IGNORE INTO users (id, email, password, name, role) VALUES (?, ?, ?, ?, ?)',
@@ -202,7 +202,7 @@ function seedInitialData(): void {
 
 export function saveDatabase(): void {
   if (!db) return;
-  const fs = require('fs');
+  const fs from('fs');
   const data = db.export();
   const buffer = Buffer.from(data);
   fs.writeFileSync(process.env.DB_PATH || './data/ecosyntech.db', buffer);
@@ -275,7 +275,7 @@ export function closeDatabase(): void {
 }
 
 async function initPostgresDatabase(): Promise<any> {
-  const { Pool } = require('pg');
+  const { Pool } from('pg');
   
   pool = new Pool({
     host: process.env.PG_HOST || 'localhost',

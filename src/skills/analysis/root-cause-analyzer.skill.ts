@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'root-cause-analyzer',
   name: 'Root Cause Analyzer',
   triggers: ['event:error', 'event:watchdog.tick', 'event:incident.created'],

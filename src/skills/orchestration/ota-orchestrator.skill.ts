@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'ota-orchestrator',
   name: 'OTA Orchestrator',
   triggers: ['route:/api/ota', 'route:/api/firmware', 'event:ota.request', 'event:watchdog.tick'],

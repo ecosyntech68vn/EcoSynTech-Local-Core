@@ -156,7 +156,7 @@ class PredictiveMaintenanceSkill {
 
   getDevices() {
     try {
-      const { getAll } = require('../config/database');
+      const { getAll } from('../config/database');
       return getAll('SELECT * FROM devices WHERE status = "online"').map(d => ({
         ...d,
         config: typeof d.config === 'string' ? JSON.parse(d.config) : d.config,

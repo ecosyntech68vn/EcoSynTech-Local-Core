@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'voice-notifier',
   name: 'Voice Notifier',
   triggers: ['event:alert.created', 'event:incident.created', 'event:emergency'],

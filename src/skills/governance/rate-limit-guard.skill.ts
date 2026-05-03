@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'rate-limit-guard',
   name: 'Rate Limit Guard',
   triggers: ['event:watchdog.tick', 'event:request.spike'],

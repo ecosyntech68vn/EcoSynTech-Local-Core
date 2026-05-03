@@ -19,7 +19,7 @@ interface SkillResult {
   timestamp: string;
 }
 
-const skill = {
+import skill = {
   id: 'anomaly-classifier',
   name: 'Anomaly Classifier',
   triggers: ['event:alert.created', 'event:sensor-update', 'event:watchdog.tick'],

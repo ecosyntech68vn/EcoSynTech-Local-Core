@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'anomaly-predictor',
   name: 'Anomaly Predictor',
   triggers: ['event:sensor-update', 'event:watchdog.tick', 'cron:*/15m'],

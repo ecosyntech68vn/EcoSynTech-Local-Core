@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'rules-engine',
   name: 'Rules Engine',
   triggers: ['route:/api/rules', 'event:rule.changed', 'event:watchdog.tick'],

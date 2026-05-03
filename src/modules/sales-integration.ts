@@ -1,107 +1,166 @@
-interface SalesContext {
-  leadId?: string;
-  lead?: Record<string, unknown>;
-  message?: string;
-  customerId?: string;
-  sessionId?: string;
-  [key: string]: unknown;
-}
+import leadClaw from('../skills/sales/lead-claw');
+import productClaw from('../skills/sales/product-claw');
+import quoteClaw from('../skills/sales/quote-claw');
+import contractClaw from('../skills/sales/contract-claw');
+import installClaw from('../skills/sales/install-claw');
+import supportClaw from('../skills/sales/support-claw');
 
-interface SalesResult {
-  lead?: { id: string; [key: string]: unknown };
-  productResult?: unknown;
-  quote?: { id: string; [key: string]: unknown };
-  contract?: { id: string; [key: string]: unknown };
-  [key: string]: unknown;
-}
-
-interface SessionData {
-  stage: string;
-  data: unknown;
-  updatedAt: string;
-}
-
-const leadClaw = require('../skills/sales/lead-claw');
-const productClaw = require('../skills/sales/product-claw');
-const quoteClaw = require('../skills/sales/quote-claw');
-const contractClaw = require('../skills/sales/contract-claw');
-const installClaw = require('../skills/sales/install-claw');
-const supportClaw = require('../skills/sales/support-claw');
-
-const module = {
+module.exports = {
+export default module.exports;
   version: '2.3.2',
   
-  sessions: new Map<string, SessionData>(),
-  leads: new Map<string, SalesResult>(),
-  quotes: new Map<string, SalesResult>(),
-  contracts: new Map<string, SalesResult>(),
-  tickets: new Map<string, unknown>(),
+  sessions: new Map(),
+  leads: new Map(),
+  quotes: new Map(),
+  contracts: new Map(),
+  tickets: new Map(),
   
-  async processLead(context: SalesContext): Promise<SalesResult> {
+  async processLead(context) {
     const result = leadClaw.process(context);
     this.leads.set(result.lead.id, result);
     this.createSession(result.lead.id, 'lead');
     return result;
   },
   
-  async processProduct(context: SalesContext): Promise<SalesResult> {
+  async processProduct(context) {
     const lead = this.findLead(context.leadId);
     context.lead = lead?.lead || {};
     const result = productClaw.process(context);
     if (lead) {
-      (lead as Record<string, unknown>).productResult = result;
-      (lead as Record<string, unknown>).stage = 'product';
+      lead.productResult = result;
+      lead.stage = 'product';
       this.updateSession(lead.lead.id, result);
     }
     return result;
   },
   
-  async processQuote(context: SalesContext): Promise<SalesResult> {
+  async processQuote(context) {
     const lead = this.findLead(context.leadId);
     context.lead = lead?.lead || {};
     const result = quoteClaw.process(context);
     this.quotes.set(result.quote.id, result);
     if (lead) {
-      (lead as Record<string, unknown>).quoteResult = result;
-      (lead as Record<string, unknown>).stage = 'quote';
-      this.updateSession(lead.lead.id, result);
+      lead.quoteResult = result;
+      lead.stage = 'quote';
     }
     return result;
   },
-
-  findLead(leadId: string): SalesResult | undefined {
-    return this.leads.get(leadId);
+  
+  async processContract(context) {
+    const quote = this.findQuote(context.quoteId);
+    context.quote = quote?.quote || context;
+    const result = contractClaw.process(context);
+    this.contracts.set(result.contract.number, result);
+    if (quote) {
+      quote.contractResult = result;
+      quote.stage = 'contract';
+    }
+    return result;
   },
-
-  createSession(id: string, stage: string): void {
-    this.sessions.set(id, {
-      stage,
-      data: {},
-      updatedAt: new Date().toISOString()
-    });
+  
+  async processInstall(context) {
+    const contract = this.findContract(context.contractId);
+    context.contract = contract?.contract || context;
+    const result = installClaw.process(context);
+    return result;
   },
-
-  updateSession(id: string, data: unknown): void {
-    const session = this.sessions.get(id);
-    if (session) {
-      session.data = data;
-      session.updatedAt = new Date().toISOString();
+  
+  async processSupport(context) {
+    const result = supportClaw.process(context);
+    this.tickets.set(result.ticket.id, result);
+    return result;
+  },
+  
+  async processChat(context) {
+    let session = this.sessions.get(context.sessionId);
+    
+    if (!session) {
+      const leadResult = await this.processLead({
+        message: context.message,
+        customer: { id: context.customerId }
+      });
+      session = { leadId: leadResult.lead.id, stage: 'lead' };
+      this.sessions.set(context.sessionId, session);
+    }
+    
+    const msg = context.message.toLowerCase();
+    let response = null;
+    
+    if (msg.includes('giá') || msg.includes('bao nhiêu') || msg.includes('price')) {
+      response = await this.processProduct({
+        leadId: session.leadId,
+        farmSize: 1000,
+        cropType: 'vegetables'
+      });
+      session.stage = 'product';
+    } else if (msg.includes('mua') || msg.includes('đặt') || msg.includes('purchase')) {
+      response = await this.processQuote({
+        leadId: session.leadId,
+        packageId: 'standard',
+        farmSize: 1000,
+        cropType: 'vegetables'
+      });
+      session.stage = 'quote';
+    } else if (msg.includes('cài') || msg.includes('cài đặt') || msg.includes('install')) {
+      response = await this.processInstall({});
+      session.stage = 'install';
+    } else if (msg.includes('lỗi') || msg.includes('hỏng') || msg.includes('support')) {
+      response = await this.processSupport({
+        issue: context.message
+      });
+      session.stage = 'support';
+    } else {
+      response = { message: 'Anh/chị cần em hỗ trợ gì ạ?' };
+    }
+    
+    this.sessions.set(context.sessionId, session);
+    return response;
+  },
+  
+  findLead(leadId) {
+    for (const [id, data] of this.leads) {
+      if (id === leadId || data.lead?.id === leadId) return data;
+    }
+    return null;
+  },
+  
+  findQuote(quoteId) {
+    for (const [id, data] of this.quotes) {
+      if (id === quoteId || data.quote?.id === quoteId) return data;
+    }
+    return null;
+  },
+  
+  findContract(contractId) {
+    for (const [id, data] of this.contracts) {
+      if (id === contractId || data.contract?.number === contractId) return data;
+    }
+    return null;
+  },
+  
+  createSession(leadId, stage) {
+    const sessionId = 'SESS-' + Date.now();
+    this.sessions.set(sessionId, { leadId, stage });
+    return sessionId;
+  },
+  
+  updateSession(leadId, data) {
+    for (const [sessionId, session] of this.sessions) {
+      if (session.leadId === leadId) {
+        this.sessions.set(sessionId, { ...session, ...data });
+        break;
+      }
     }
   },
-
-  async processChat(context: SalesContext): Promise<{ message: string }> {
-    const message = context.message?.toLowerCase() || '';
-    
-    if (message.includes('san pham') || message.includes('product')) {
-      return { message: 'EcoSynTech co cac goi IoT sau:\n1. Basic - 5.000.000VND\n2. Pro - 12.000.000VND\n3. Enterprise - Lien he' };
-    }
-    
-    if (message.includes('roi') || message.includes('tinh')) {
-      return { message: 'Vui long cho biet dien tich va loai cay de tinh ROI' };
-    }
-    
-    return { message: 'Xin chao! EcoSynTech ho tro gi cho ban?' };
+  
+  getStats() {
+    return {
+      version: this.version,
+      leads: this.leads.size,
+      quotes: this.quotes.size,
+      contracts: this.contracts.size,
+      tickets: this.tickets.size,
+      sessions: this.sessions.size
+    };
   }
 };
-
-export = module;

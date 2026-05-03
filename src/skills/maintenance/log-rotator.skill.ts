@@ -27,7 +27,7 @@ interface SkillResult {
   timestamp: string;
 }
 
-const skill = {
+import skill = {
   id: 'log-rotator',
   name: 'Log Rotator',
   triggers: ['cron:*/24h', 'event:log.rotate'],

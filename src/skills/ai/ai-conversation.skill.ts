@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'ai-conversation',
   name: 'AI Context Conversation',
   description: 'Multi-turn conversation with context memory and smart follow-ups',

@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'tenant-isolation',
   name: 'Tenant Isolation',
   triggers: ['event:request.incoming', 'event:watchdog.tick'],

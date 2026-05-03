@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'report-generator',
   name: 'Report Generator',
   triggers: ['event:report.request', 'cron:*/24h', 'event:watchdog.tick'],

@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'root-cause-hint',
   name: 'Root Cause Hint',
   triggers: ['event:incident.created', 'event:alert.created', 'event:watchdog.tick'],

@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'kpi-drift',
   name: 'KPI Drift',
   triggers: ['event:analytics.refresh', 'route:/api/analytics/kpis', 'event:watchdog.tick'],

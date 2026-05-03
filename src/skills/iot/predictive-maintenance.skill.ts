@@ -26,7 +26,7 @@ interface SkillContext {
   };
 }
 
-const skill = {
+import skill = {
   id: 'predictive-maintenance',
   name: 'Predictive Maintenance',
   triggers: ['event:device-status', 'cron:*/1h', 'event:watchdog.tick'],

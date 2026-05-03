@@ -56,9 +56,9 @@ async function initDatabase(): Promise<Database> {
 
 let pendingSave = false;
 let saveTimeout: NodeJS.Timeout | null = null;
-const SAVE_DEBOUNCE_MS = 500;
-const BACKUP_DIR = path.join(__dirname, '../../backups');
-const MAX_BACKUPS = 10;
+import SAVE_DEBOUNCE_MS = 500;
+import BACKUP_DIR = path.join(__dirname, '../../backups');
+import MAX_BACKUPS = 10;
 
 function ensureBackupDir(): void {
   if (!fs.existsSync(BACKUP_DIR)) {
@@ -1984,7 +1984,7 @@ function seedInitialData(): void {
   if (!db) return;
   
   try {
-    const bcrypt = require('bcryptjs');
+    const bcrypt from('bcryptjs');
     const adminPassword = bcrypt.hashSync('admin123', 10);
     
     db.run(`INSERT OR IGNORE INTO users (id, email, password, name, role) VALUES (?, ?, ?, ?, ?)`,

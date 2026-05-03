@@ -56,7 +56,7 @@ export interface KPIResult {
   };
 }
 
-const analyticsEngine = {
+import analyticsEngine = {
   version: '2.3.2',
   
   salesData: {

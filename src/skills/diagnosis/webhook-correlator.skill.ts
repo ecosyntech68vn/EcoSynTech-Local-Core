@@ -20,7 +20,7 @@ interface SkillResult {
   timestamp: string;
 }
 
-const skill = {
+import skill = {
   id: 'webhook-correlator',
   name: 'Webhook Correlator',
   triggers: ['event:webhook.sensor-alert', 'event:webhook.device-status', 'event:webhook.rule-triggered', 'event:webhook.schedule-run'],

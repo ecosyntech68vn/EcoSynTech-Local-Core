@@ -24,7 +24,7 @@ interface SkillContext {
   };
 }
 
-const skill = {
+import skill = {
   id: 'multi-farm-manager',
   name: 'Multi-Farm Manager',
   triggers: ['event:farm-status', 'cron:*/1h', 'event:watchdog.tick'],

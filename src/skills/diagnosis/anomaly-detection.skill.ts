@@ -293,7 +293,7 @@ class AnomalyDetectionSkill {
 
   getSensorHistory(type) {
     try {
-      const { getAll } = require('../config/database');
+      const { getAll } from('../config/database');
       const rows = getAll(
         'SELECT value, timestamp FROM sensors WHERE type = ? ORDER BY timestamp DESC LIMIT ?',
         [type, this.windowSize]
@@ -306,7 +306,7 @@ class AnomalyDetectionSkill {
 
   getSensorData() {
     try {
-      const { getAll } = require('../config/database');
+      const { getAll } from('../config/database');
       return getAll('SELECT * FROM sensors WHERE value IS NOT NULL');
     } catch {
       return [];

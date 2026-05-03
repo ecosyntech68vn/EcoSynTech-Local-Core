@@ -1,4 +1,5 @@
 module.exports = {
+export default module.exports;
   id: 'schedules-engine',
   name: 'Schedules Engine',
   triggers: ['route:/api/schedules', 'event:schedule.changed', 'event:watchdog.tick'],

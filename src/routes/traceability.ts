@@ -44,7 +44,7 @@ const stageSchema = Joi.object({
 });
 
 // GET /api/traceability/batch/:code - Trace batch by QR code
-router.get('/batch/:code', async (req: Request, res: Response) => {
+router.get('/batch/:code', async (req, res) => {
   try {
     const batch = getOne('SELECT * FROM traceability_batches WHERE batch_code = ?', [req.params.code]);
     
@@ -1420,3 +1420,5 @@ router.get('/tb/stats', auth, async (req, res) => {
 
 module.exports = router;
 export default router;
+
+module.exports = router;

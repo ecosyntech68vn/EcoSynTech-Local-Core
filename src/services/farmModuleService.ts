@@ -1,29 +1,57 @@
 /**
  * Farm Module Service - Quản lý module nông nghiệp đa dạng
- * V5.1.0 - Modular architecture for easy extension
+ * V5.1.0 - Converted to TypeScript - Phase 1
  * 
  * Modules:
  * - crops: Cây trồng đồng ruộng
  * - aquaculture: Thủy sản (tôm, cá)
- * - greenhouse: Nhà màng/ greenhouse
+ * - greenhouse: Nhà màng
  * - hydroponics: Thủy canh
  * - livestock: Chăn nuôi
  * - aeroponics: Khí canh
- * 
- * Features:
- * - Unified dashboard aggregation
- * - Cross-module traceability
- * - Activity tracking per module
- * - Easy to add new modules
  */
 
 import { v4 as uuidv4 } from 'uuid';
-import { getOne, getAll, db } from '../config/database';
+import db from '../config/database';
 import logger from '../config/logger';
-import batchService from './batchService';
-import farmActivityService from './farmActivityService';
 
-const FARM_MODULES = {
+export interface FarmModule {
+  id: string;
+  name: string;
+  name_en: string;
+  icon: string;
+  color: string;
+  description: string;
+  primary_table: string;
+  source_type: string;
+  stages: string[];
+  activities: string[];
+}
+
+export interface ModuleData {
+  id: string;
+  module_id: string;
+  farm_id: string;
+  name: string;
+  status: string;
+  area?: number;
+  area_unit?: string;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateModuleData {
+  module_id: string;
+  farm_id: string;
+  name: string;
+  area?: number;
+  area_unit?: string;
+  metadata?: Record<string, any>;
+  status?: string;
+}
+
+export const FARM_MODULES: Record<string, FarmModule> = {
   crops: {
     id: 'crops',
     name: 'Cây trồng',
@@ -42,11 +70,11 @@ const FARM_MODULES = {
     name_en: 'Aquaculture',
     icon: '🐟',
     color: '#0ea5e9',
-    description: 'Nuôi tôm, cá, cua, ốc...',
-    primary_table: 'aquaculture_spawning',
+    description: 'Nuôi tôm, cá, cua, ốc',
+    primary_table: 'aquaculture',
     source_type: 'aquaculture',
-    stages: ['chuẩn_bị_ao', 'thả_giống', 'nuôi_ươm', 'nuôi_trưởng', 'thu_hoạch'],
-    activities: ['feeding', 'water_change', 'vaccination', 'monitoring', 'harvesting', 'grading']
+    stages: ['giai_con', 'nuoi_1', 'nuoi_2', 'nuoi_3', 'thu_hoach'],
+    activities: ['cho_an', 'thay_nuoc', 'kiem_tra', 'phong_benh', 'thu_hoach']
   },
   greenhouse: {
     id: 'greenhouse',
@@ -54,23 +82,23 @@ const FARM_MODULES = {
     name_en: 'Greenhouse',
     icon: '🏡',
     color: '#f59e0b',
-    description: 'Trồng trong nhà màng, nhà kính',
-    primary_table: 'greenhouse_zones',
+    description: 'Trồng trong nhà kính, nhà màng',
+    primary_table: 'greenhouse_plantings',
     source_type: 'greenhouse',
-    stages: ['chuẩn_bị', 'gieo_trồng', 'chăm_sóc', 'thu_hoạch'],
-    activities: ['climate_control', 'irrigation', 'fertilizer', 'spray', 'harvesting']
+    stages: ['gây_giong', 'chăm_soc', 'thu_hoach'],
+    activities: ['tưới', 'bón_phân', 'kiểm_tra', 'điều_chỉnh_nhiệt']
   },
   hydroponics: {
     id: 'hydroponics',
     name: 'Thủy canh',
     name_en: 'Hydroponics',
     icon: '💧',
-    color: '#8b5cf6',
-    description: 'Trồng cây không đất, dung dịch dinh dưỡng',
-    primary_table: 'hydroponic_systems',
+    color: '#06b6d4',
+    description: 'Trồng rau thủy canh',
+    primary_table: 'hydroponics_systems',
     source_type: 'hydroponics',
-    stages: ['ủ_hạt', 'nảy_mầm', 'sinh_trưởng', 'thu_hoạch'],
-    activities: ['nutrient_check', 'ph_adjust', 'water_cycle', 'harvesting']
+    stages: ['cây_giống', 'giai_đoạn_1', 'giai_đoạn_2', 'thu_hoach'],
+    activities: ['điều_chỉnh_pH', 'bón_phân', 'kiểm_tra_EC', 'thu_hoach']
   },
   livestock: {
     id: 'livestock',
@@ -78,400 +106,103 @@ const FARM_MODULES = {
     name_en: 'Livestock',
     icon: '🐄',
     color: '#ef4444',
-    description: 'Nuôi bò, heo, gà, cừu...',
-    primary_table: 'livestock_batches',
+    description: 'Nuôi gia súc, gia cầm',
+    primary_table: 'livestock_herds',
     source_type: 'livestock',
-    stages: ['thả_giống', 'nuôi_con', 'nuôi_nguồn', 'xuất_chuồng'],
-    activities: ['feeding', 'vaccination', 'health_check', 'cleaning', 'medication']
-  },
-  aeroponics: {
-    id: 'aeroponics',
-    name: 'Khí canh',
-    name_en: 'Aeroponics',
-    icon: '💨',
-    color: '#06b6d4',
-    description: 'Trồng cây trong sương mù dinh dưỡng',
-    primary_table: 'aeroponic_systems',
-    source_type: 'aeroponics',
-    stages: ['ủ_hạt', 'nảy_mầm', 'sinh_trưởng', 'thu_hoạch'],
-    activities: ['mist_check', 'nutrient_cycle', 'root_check', 'harvesting']
+    stages: ['giai_con', 'nuoi_grow', 'cho_sua', 'thu_hoach'],
+    activities: ['cho_ăn', 'tiêm_phòng', 'vệ_sinh', 'chăm_sóc']
   }
 };
 
-function getModules() {
-  return FARM_MODULES;
+export function getModules(): FarmModule[] {
+  return Object.values(FARM_MODULES);
 }
 
-function getModule(moduleId) {
-  return FARM_MODULES[moduleId] || null;
+export function getModule(moduleId: string): FarmModule | undefined {
+  return FARM_MODULES[moduleId];
 }
 
-function createModuleUnit(moduleId, data) {
-  const module = FARM_MODULES[moduleId];
-  if (!module) {
-    throw new Error('Module không tồn tại: ' + moduleId);
-  }
-
-  const id = `${moduleId.substring(0, 4)}-${uuidv4().slice(0, 8)}`;
+export function createModuleInstance(data: CreateModuleData): string {
+  const id = uuidv4();
   const now = new Date().toISOString();
 
-  switch (moduleId) {
-  case 'crops':
-    return createCropUnit(id, data, now);
-  case 'aquaculture':
-    return createAquacultureUnit(id, data, now);
-  case 'greenhouse':
-    return createGreenhouseUnit(id, data, now);
-  case 'hydroponics':
-    return createHydroponicUnit(id, data, now);
-  case 'livestock':
-    return createLivestockUnit(id, data, now);
-  case 'aeroponics':
-    return createAeroponicUnit(id, data, now);
-  default:
-    throw new Error('Module chưa được hỗ trợ: ' + moduleId);
-  }
-}
-
-function createCropUnit(id, data, now) {
   db.run(`
-    INSERT INTO crop_plantings (
-      id, farm_id, crop_id, area, area_unit, planting_date, 
-      expected_harvest_date, current_stage, status, notes, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO farm_modules (
+      id, module_id, farm_id, name, status, area, area_unit, metadata, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `, [
-    id, data.farm_id || null, data.crop_id, data.area || null, 
-    data.area_unit || 'hectare', data.start_date || now.split('T')[0],
-    data.expected_harvest_date, data.current_stage || 'gieo_hat', 
-    data.status || 'growing', data.notes || '', now, now
+    id,
+    data.module_id,
+    data.farm_id,
+    data.name,
+    'active',
+    data.area || null,
+    data.area_unit || null,
+    JSON.stringify(data.metadata || {}),
+    now,
+    now
   ]);
 
-  const batchResult = batchService.createBatchFromPlanting(id);
-
-  return {
-    id,
-    module: 'crops',
-    batch_code: batchResult.batch_code,
-    ...data
-  };
+  logger.info(`[FarmModule] Created: ${data.module_id} instance ${id}`);
+  return id;
 }
 
-function createAquacultureUnit(id, data, now) {
-  const expectedHarvest = data.start_date 
-    ? new Date(data.start_date) 
-    : new Date();
-  expectedHarvest.setDate(expectedHarvest.getDate() + (data.growth_days || 90));
-
-  db.run(`
-    INSERT INTO aquaculture_spawning (
-      id, species_id, pond_id, farm_id, quantity, source_pool,
-      spawning_date, expected_harvest_date, status, notes, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [
-    id, data.species_id, data.pond_id || '', data.farm_id || null,
-    data.quantity || 0, data.source_pool || '', 
-    data.start_date || now.split('T')[0], expectedHarvest.toISOString().split('T')[0],
-    data.status || 'nursing', data.notes || '', now, now
-  ]);
-
-  const batchResult = batchService.createBatchFromAquaculture(id);
-
-  return {
-    id,
-    module: 'aquaculture',
-    batch_code: batchResult.batch_code,
-    ...data
-  };
+export function getModuleInstances(farmId: string, moduleId?: string): ModuleData[] {
+  if (moduleId) {
+    return db.all('SELECT * FROM farm_modules WHERE farm_id = ? AND module_id = ?', [farmId, moduleId]) as ModuleData[];
+  }
+  return db.all('SELECT * FROM farm_modules WHERE farm_id = ?', [farmId]) as ModuleData[];
 }
 
-function createGreenhouseUnit(id, data, now) {
-  db.run(`
-    INSERT INTO greenhouse_zones (
-      id, farm_id, zone_name, area, area_unit, crop_type, 
-      start_date, expected_harvest, status, notes, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [
-    id, data.farm_id || null, data.name || '', data.area || null,
-    data.area_unit || 'm2', data.crop_type || '', 
-    data.start_date || now.split('T')[0], data.expected_harvest_date,
-    data.status || 'active', data.notes || '', now, now
-  ]);
+export function updateModuleInstance(instanceId: string, data: Partial<CreateModuleData>): boolean {
+  try {
+    const updates: string[] = [];
+    const values: any[] = [];
 
-  return {
-    id,
-    module: 'greenhouse',
-    ...data
-  };
-}
+    if (data.name) { updates.push('name = ?'); values.push(data.name); }
+    if (data.area !== undefined) { updates.push('area = ?'); values.push(data.area); }
+    if (data.status) { updates.push('status = ?'); values.push(data.status); }
 
-function createHydroponicUnit(id, data, now) {
-  db.run(`
-    INSERT INTO hydroponic_systems (
-      id, farm_id, system_name, system_type, capacity, crop_type,
-      start_date, expected_harvest, status, notes, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [
-    id, data.farm_id || null, data.name || '', data.system_type || 'NFT',
-    data.capacity || 0, data.crop_type || '', 
-    data.start_date || now.split('T')[0], data.expected_harvest_date,
-    data.status || 'active', data.notes || '', now, now
-  ]);
+    updates.push('updated_at = ?');
+    values.push(new Date().toISOString());
+    values.push(instanceId);
 
-  return {
-    id,
-    module: 'hydroponics',
-    ...data
-  };
-}
-
-function createLivestockUnit(id, data, now) {
-  db.run(`
-    INSERT INTO livestock_batches (
-      id, farm_id, animal_type, quantity, batch_name, 
-      start_date, expected_out_date, status, notes, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [
-    id, data.farm_id || null, data.animal_type || '', data.quantity || 0,
-    data.name || '', data.start_date || now.split('T')[0], 
-    data.expected_out_date, data.status || 'growing', data.notes || '', now, now
-  ]);
-
-  return {
-    id,
-    module: 'livestock',
-    ...data
-  };
-}
-
-function createAeroponicUnit(id, data, now) {
-  db.run(`
-    INSERT INTO aeroponic_systems (
-      id, farm_id, system_name, capacity, crop_type,
-      start_date, expected_harvest, status, notes, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `, [
-    id, data.farm_id || null, data.name || '', data.capacity || 0,
-    data.crop_type || '', data.start_date || now.split('T')[0],
-    data.expected_harvest_date, data.status || 'active', data.notes || '', now, now
-  ]);
-
-  return {
-    id,
-    module: 'aeroponics',
-    ...data
-  };
-}
-
-function getModuleUnits(moduleId, farmId = null) {
-  const module = FARM_MODULES[moduleId];
-  if (!module) return [];
-
-  let query = '';
-  const params = [];
-
-  switch (moduleId) {
-  case 'crops':
-    query = `SELECT cp.*, c.name as crop_name, c.name_vi, c.category 
-               FROM crop_plantings cp 
-               LEFT JOIN crops c ON cp.crop_id = c.id
-               WHERE 1=1`;
-    if (farmId) { query += ' AND cp.farm_id = ?'; params.push(farmId); }
-    query += ' ORDER BY cp.created_at DESC';
-    break;
-  case 'aquaculture':
-    query = `SELECT a.*, ao.name_vi as species_name, ao.category 
-               FROM aquaculture_spawning a
-               LEFT JOIN aquaculture ao ON a.species_id = ao.id
-               WHERE 1=1`;
-    if (farmId) { query += ' AND a.farm_id = ?'; params.push(farmId); }
-    query += ' ORDER BY a.created_at DESC';
-    break;
-  case 'greenhouse':
-    query = 'SELECT * FROM greenhouse_zones WHERE 1=1';
-    if (farmId) { query += ' AND farm_id = ?'; params.push(farmId); }
-    query += ' ORDER BY created_at DESC';
-    break;
-  case 'hydroponics':
-    query = 'SELECT * FROM hydroponic_systems WHERE 1=1';
-    if (farmId) { query += ' AND farm_id = ?'; params.push(farmId); }
-    query += ' ORDER BY created_at DESC';
-    break;
-  case 'livestock':
-    query = 'SELECT * FROM livestock_batches WHERE 1=1';
-    if (farmId) { query += ' AND farm_id = ?'; params.push(farmId); }
-    query += ' ORDER BY created_at DESC';
-    break;
-  case 'aeroponics':
-    query = 'SELECT * FROM aeroponic_systems WHERE 1=1';
-    if (farmId) { query += ' AND farm_id = ?'; params.push(farmId); }
-    query += ' ORDER BY created_at DESC';
-    break;
-  default:
-    return [];
-  }
-
-  return getAll(query, params);
-}
-
-function getModuleStats(moduleId, farmId = null) {
-  const module = FARM_MODULES[moduleId];
-  if (!module) return null;
-
-  const baseQuery = farmId ? ` WHERE farm_id = '${farmId}'` : '';
-
-  switch (moduleId) {
-  case 'crops': {
-    const total = getOne(`SELECT COUNT(*) as count FROM crop_plantings${baseQuery}`);
-    const active = getOne(`SELECT COUNT(*) as count FROM crop_plantings${baseQuery ? baseQuery + ' AND' : ' WHERE'} status = 'growing'`);
-    const harvested = getOne(`SELECT COUNT(*) as count FROM crop_plantings${baseQuery ? baseQuery + ' AND' : ' WHERE'} status = 'harvested'`);
-    const totalArea = getOne(`SELECT SUM(area) as total FROM crop_plantings${baseQuery}`);
-    return { total: total?.count || 0, active: active?.count || 0, harvested: harvested?.count || 0, total_area: totalArea?.total || 0 };
-  }
-  case 'aquaculture': {
-    const total = getOne(`SELECT COUNT(*) as count FROM aquaculture_spawning${baseQuery}`);
-    const active = getOne(`SELECT COUNT(*) as count FROM aquaculture_spawning${baseQuery ? baseQuery + ' AND' : ' WHERE'} status = 'nursing'`);
-    const ready = getOne(`SELECT COUNT(*) as count FROM aquaculture_spawning${baseQuery ? baseQuery + ' AND' : ' WHERE'} status = 'ready'`);
-    const totalQty = getOne(`SELECT SUM(quantity) as total FROM aquaculture_spawning${baseQuery}`);
-    return { total: total?.count || 0, active: active?.count || 0, ready: ready?.count || 0, total_quantity: totalQty?.total || 0 };
-  }
-  case 'greenhouse': {
-    const total = getOne(`SELECT COUNT(*) as count FROM greenhouse_zones${baseQuery}`);
-    const active = getOne(`SELECT COUNT(*) as count FROM greenhouse_zones${baseQuery ? baseQuery + ' AND' : ' WHERE'} status = 'active'`);
-    const totalArea = getOne(`SELECT SUM(area) as total FROM greenhouse_zones${baseQuery}`);
-    return { total: total?.count || 0, active: active?.count || 0, total_area: totalArea?.total || 0 };
-  }
-  case 'hydroponics': {
-    const total = getOne(`SELECT COUNT(*) as count FROM hydroponic_systems${baseQuery}`);
-    const active = getOne(`SELECT COUNT(*) as count FROM hydroponic_systems${baseQuery ? baseQuery + ' AND' : ' WHERE'} status = 'active'`);
-    const totalCapacity = getOne(`SELECT SUM(capacity) as total FROM hydroponic_systems${baseQuery}`);
-    return { total: total?.count || 0, active: active?.count || 0, total_capacity: totalCapacity?.total || 0 };
-  }
-  case 'livestock': {
-    const total = getOne(`SELECT COUNT(*) as count FROM livestock_batches${baseQuery}`);
-    const active = getOne(`SELECT COUNT(*) as count FROM livestock_batches${baseQuery ? baseQuery + ' AND' : ' WHERE'} status = 'growing'`);
-    const totalQty = getOne(`SELECT SUM(quantity) as total FROM livestock_batches${baseQuery}`);
-    return { total: total?.count || 0, active: active?.count || 0, total_quantity: totalQty?.total || 0 };
-  }
-  case 'aeroponics': {
-    const total = getOne(`SELECT COUNT(*) as count FROM aeroponic_systems${baseQuery}`);
-    const active = getOne(`SELECT COUNT(*) as count FROM aeroponic_systems${baseQuery ? baseQuery + ' AND' : ' WHERE'} status = 'active'`);
-    return { total: total?.count || 0, active: active?.count || 0 };
-  }
-  default:
-    return null;
+    db.run(`UPDATE farm_modules SET ${updates.join(', ')} WHERE id = ?`, values);
+    return true;
+  } catch (error: any) {
+    logger.error('[FarmModule] Update error:', error.message);
+    return false;
   }
 }
 
-function getDashboardSummary(farmId = null) {
-  const modules = Object.keys(FARM_MODULES);
-  const summary = {};
-
-  modules.forEach(moduleId => {
-    summary[moduleId] = {
-      ...FARM_MODULES[moduleId],
-      stats: getModuleStats(moduleId, farmId),
-      units: getModuleUnits(moduleId, farmId).slice(0, 5)
-    };
-  });
-
-  const totalActivities = getOne(`
-    SELECT COUNT(*) as count FROM farm_activities${farmId ? ` WHERE farm_id = '${farmId}'` : ''}
-  `);
-
-  const totalCost = getOne(`
-    SELECT SUM(cost) as total FROM farm_activities${farmId ? ` WHERE farm_id = '${farmId}'` : ''}
-  `);
-
-  const traceabilityBatches = getOne(`
-    SELECT COUNT(*) as count FROM traceability_batches${farmId ? ` WHERE farm_name = (SELECT name FROM farms WHERE id = '${farmId}')` : ''}
-  `);
-
-  return {
-    modules: summary,
-    overview: {
-      total_modules: modules.length,
-      active_modules: modules.filter(m => getModuleStats(m, farmId)?.active > 0).length,
-      total_activities: totalActivities?.count || 0,
-      total_cost: totalCost?.total || 0,
-      traceability_batches: traceabilityBatches?.count || 0
-    }
-  };
-}
-
-function getModuleTimeline(moduleId, unitId) {
-  const module = FARM_MODULES[moduleId];
-  if (!module) return null;
-
-  const activities = farmActivityService.getActivitiesTimeline(module.source_type, unitId);
-
-  let stages = [];
-  if (moduleId === 'crops') {
-    const planting = getOne('SELECT * FROM crop_plantings WHERE id = ?', [unitId]);
-    stages = planting ? [{
-      type: 'planting',
-      name: 'Gieo trồng',
-      date: planting.planting_date,
-      icon: '🌱'
-    }] : [];
+export function deleteModuleInstance(instanceId: string): boolean {
+  try {
+    db.run('UPDATE farm_modules SET status = ?, updated_at = ? WHERE id = ?', ['deleted', new Date().toISOString(), instanceId]);
+    return true;
+  } catch (error: any) {
+    logger.error('[FarmModule] Delete error:', error.message);
+    return false;
   }
-
-  return {
-    module: moduleId,
-    unit_id: unitId,
-    activities: activities,
-    stages: stages
-  };
 }
 
-function deleteModuleUnit(moduleId, unitId) {
-  const module = FARM_MODULES[moduleId];
-  if (!module) return false;
-
-  let table = '';
-  switch (moduleId) {
-  case 'crops': table = 'crop_plantings'; break;
-  case 'aquaculture': table = 'aquaculture_spawning'; break;
-  case 'greenhouse': table = 'greenhouse_zones'; break;
-  case 'hydroponics': table = 'hydroponic_systems'; break;
-  case 'livestock': table = 'livestock_batches'; break;
-  case 'aeroponics': table = 'aeroponic_systems'; break;
-  default: return false;
+export function getFarmModuleStats(farmId: string): Record<string, number> {
+  const stats: Record<string, number> = {};
+  
+  for (const [moduleId, module] of Object.entries(FARM_MODULES)) {
+    const instances = db.all('SELECT COUNT(*) as count FROM farm_modules WHERE farm_id = ? AND module_id = ? AND status = ?', 
+      [farmId, moduleId, 'active']) as Array<{ count: number }>;
+    stats[moduleId] = instances[0]?.count || 0;
   }
-
-  db.run(`DELETE FROM ${table} WHERE id = ?`, [unitId]);
-  logger.info(`Xóa ${moduleId} unit: ${unitId}`);
-
-  return true;
+  
+  return stats;
 }
 
-function getTraceabilityWithModuleData(batchCode) {
-  const batchData = batchService.getCompleteTraceabilityData(batchCode);
-  if (!batchData) return null;
-
-  const activities = farmActivityService.getActivitiesByBatch(batchData.id);
-
-  return {
-    ...batchData,
-    activities: activities.map(a => ({
-      type: a.activity_type,
-      name: a.activity_name,
-      date: a.activity_date,
-      description: a.description,
-      cost: a.cost,
-      performed_by: a.performed_by
-    }))
-  };
-}
-
-module.exports = {
+export default {
   getModules,
   getModule,
-  createModuleUnit,
-  getModuleUnits,
-  getModuleStats,
-  getDashboardSummary,
-  getModuleTimeline,
-  deleteModuleUnit,
-  getTraceabilityWithModuleData,
-  FARM_MODULES
+  createModuleInstance,
+  getModuleInstances,
+  updateModuleInstance,
+  deleteModuleInstance,
+  getFarmModuleStats
 };

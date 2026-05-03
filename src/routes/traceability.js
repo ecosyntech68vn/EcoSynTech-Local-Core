@@ -1,15 +1,14 @@
-import { Router, Request, Response } from 'express';
-import QRCode from 'qrcode';
-import { v4 as uuidv4 } from 'uuid';
-import Joi from 'joi';
-import PDFDocument from 'pdfkit';
-import ExcelJS from 'exceljs';
-import { runQuery, getOne, getAll } from '../config/database';
-import logger from '../config/logger';
-import { auth } from '../middleware/auth';
-import blockchainHelper from '../modules/blockchain-helper';
-
-const router = Router();
+const express = require('express');
+const router = express.Router();
+const QRCode = require('qrcode');
+const { v4: uuidv4 } = require('uuid');
+const Joi = require('joi');
+const PDFDocument = require('pdfkit');
+const ExcelJS = require('exceljs');
+const { runQuery, getOne, getAll } = require('../config/database');
+const logger = require('../config/logger');
+const { auth } = require('../middleware/auth');
+const blockchainHelper = require('../modules/blockchain-helper');
 
 const BASE_URL = process.env.BASE_URL || 'https://ecosyntech.com';
 
@@ -44,7 +43,7 @@ const stageSchema = Joi.object({
 });
 
 // GET /api/traceability/batch/:code - Trace batch by QR code
-router.get('/batch/:code', async (req: Request, res: Response) => {
+router.get('/batch/:code', async (req, res) => {
   try {
     const batch = getOne('SELECT * FROM traceability_batches WHERE batch_code = ?', [req.params.code]);
     

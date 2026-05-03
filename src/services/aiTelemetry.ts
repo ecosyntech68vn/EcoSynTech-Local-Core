@@ -1,67 +1,22 @@
 'use strict';
 
-import { getAll, getOne, runQuery } from '../config/database';
+const { getAll, getOne, runQuery } = require('../config/database');
 
-let logger: typeof console = console;
+let logger = null;
 try { logger = require('../../config/logger'); } catch (e) { logger = console; }
 
-function sortKeysDeep(obj: unknown): unknown {
+function sortKeysDeep(obj) {
   if (Array.isArray(obj)) return obj.map(sortKeysDeep);
   if (obj !== null && typeof obj === 'object') {
     return Object.keys(obj).sort().reduce((acc, k) => {
-      (acc as Record<string, unknown>)[k] = sortKeysDeep((obj as Record<string, unknown>)[k]);
+      acc[k] = sortKeysDeep(obj[k]);
       return acc;
     }, {});
   }
   return obj;
 }
 
-interface QualityRule {
-  min: number;
-  max: number;
-  unit: string;
-  required: boolean;
-}
-
-interface ValidationResult {
-  valid: boolean;
-  quality: string;
-  reason: string;
-  unit?: string;
-}
-
-export interface DataQualityResult {
-  score: number;
-  grade: string;
-  totalSensors: number;
-  validSensors: number;
-  issuesCount: number;
-  details: Record<string, unknown>;
-  timestamp: string;
-  meetsMinimumQuality: boolean;
-}
-
-export interface AuditEntry {
-  id: string;
-  timestamp: string;
-  predictionType?: string;
-  modelId?: string;
-  inputHash?: string;
-  outputHash?: string;
-  qualityScore?: number;
-  qualityGrade?: string;
-  inputSources?: string[];
-  dataClassification?: string;
-}
-
-interface FreshnessResult {
-  freshness: Record<string, { ageMinutes: number | null; fresh: boolean | null; ageSeconds: number | null }>;
-  overall: string;
-  maxAgeMinutes: number;
-  timestamp: string;
-}
-
-const DATA_QUALITY_RULES: Record<string, QualityRule> = {
+const DATA_QUALITY_RULES = {
   soil: { min: 0, max: 100, unit: '%', required: false },
   temperature: { min: -10, max: 60, unit: '°C', required: false },
   humidity: { min: 0, max: 100, unit: '%', required: false },
@@ -72,7 +27,7 @@ const DATA_QUALITY_RULES: Record<string, QualityRule> = {
   co2: { min: 200, max: 10000, unit: 'ppm', required: false }
 };
 
-const DATA_CLASSIFICATION: Record<string, string> = {
+const DATA_CLASSIFICATION = {
   sensor_reading: 'Operational',
   device_telemetry: 'Operational',
   prediction_input: 'Internal',
@@ -83,38 +38,30 @@ const DATA_CLASSIFICATION: Record<string, string> = {
 };
 
 class AITelemetryService {
-  qualityRules: Record<string, QualityRule>;
-  classification: Record<string, string>;
-  predictionAuditTrail: AuditEntry[];
-  AUDIT_MAX: number;
-  enabled: boolean;
-
   constructor() {
     this.qualityRules = DATA_QUALITY_RULES;
     this.classification = DATA_CLASSIFICATION;
     this.predictionAuditTrail = [];
     this.AUDIT_MAX = 500;
-    this.enabled = true;
   }
 
-  validateSensorValue(type: string, value: unknown): ValidationResult {
+  validateSensorValue(type, value) {
     const rule = this.qualityRules[type];
     if (!rule) return { valid: true, quality: 'unknown', reason: 'no_rule_defined' };
     if (value === null || value === undefined) {
       return { valid: !rule.required, quality: 'missing', reason: 'value_missing' };
     }
-    const numValue = Number(value);
-    if (isNaN(numValue)) {
+    if (isNaN(value)) {
       return { valid: false, quality: 'invalid', reason: 'not_a_number' };
     }
-    if (numValue < rule.min || numValue > rule.max) {
+    if (value < rule.min || value > rule.max) {
       return { valid: false, quality: 'out_of_range', reason: `out_of_range [${rule.min}-${rule.max}]`, unit: rule.unit };
     }
     return { valid: true, quality: 'good', reason: 'within_expected_range' };
   }
 
-  assessDataQuality(sensorData: Record<string, unknown>): DataQualityResult {
-    const results: Record<string, unknown> = {};
+  assessDataQuality(sensorData) {
+    const results = {};
     let overallScore = 100;
     let issuesCount = 0;
     let validCount = 0;
@@ -154,12 +101,12 @@ class AITelemetryService {
     };
   }
 
-  getClassification(dataType: string): string {
+  getClassification(dataType) {
     return this.classification[dataType] || 'Unknown';
   }
 
-  logPredictionAudit(entry: Partial<AuditEntry>): AuditEntry {
-    const auditEntry: AuditEntry = {
+  logPredictionAudit(entry) {
+    const auditEntry = {
       id: 'audit-' + Date.now() + '-' + Math.random().toString(36).substring(2, 8),
       timestamp: new Date().toISOString(),
       ...entry
@@ -184,30 +131,29 @@ class AITelemetryService {
           entry.dataClassification || 'Internal'
         ]
       );
-    } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : 'Unknown';
-      logger.warn('[AITelemetry] Audit DB write failed:', errMsg);
+    } catch (e) {
+      logger.warn('[AITelemetry] Audit DB write failed:', e.message);
     }
     return auditEntry;
   }
 
-  getRecentAudit(n = 20): unknown[] {
+  getRecentAudit(n = 20) {
     try {
       const rows = getAll(
         'SELECT * FROM ai_prediction_audit ORDER BY created_at DESC LIMIT ?',
         [Math.min(n, 100)]
       );
       return rows;
-    } catch (e: unknown) {
+    } catch (e) {
       return this.predictionAuditTrail.slice(-n);
     }
   }
 
-  getAuditLog(): AuditEntry[] {
+  getAuditLog() {
     return this.predictionAuditTrail.slice();
   }
 
-  enrichSensorData(sensorData: Record<string, unknown>, farmId = 'default'): Record<string, unknown> {
+  enrichSensorData(sensorData, farmId = 'default') {
     const enriched = { ...sensorData };
     const timestamp = new Date().toISOString();
     const deviceCount = this._getDeviceCount(farmId);
@@ -226,21 +172,21 @@ class AITelemetryService {
     return enriched;
   }
 
-  _getDeviceCount(_farmId: string): number {
+  _getDeviceCount(_farmId) {
     try {
       const row = getOne('SELECT COUNT(*) as count FROM devices');
       return row?.count || 0;
-    } catch (e: unknown) { return 0; }
+    } catch (e) { return 0; }
   }
 
-  _getOnlineDeviceCount(_farmId: string): number {
+  _getOnlineDeviceCount(_farmId) {
     try {
       const row = getOne('SELECT COUNT(*) as count FROM devices WHERE status = \'online\'');
       return row?.count || 0;
-    } catch (e: unknown) { return 0; }
+    } catch (e) { return 0; }
   }
 
-  hashData(data: unknown): string | null {
+  hashData(data) {
     try {
       const str = JSON.stringify(sortKeysDeep(data));
       let hash = 0;
@@ -250,25 +196,24 @@ class AITelemetryService {
         hash = hash & hash;
       }
       return Math.abs(hash).toString(16).padStart(8, '0');
-    } catch (e: unknown) { return null; }
+    } catch (e) { return null; }
   }
 
-  getSensorHistory(type: string, hours = 24, limit = 100): unknown[] {
+  getSensorHistory(type, hours = 24, limit = 100) {
     try {
       const since = new Date(Date.now() - hours * 3600 * 1000).toISOString();
       return getAll(
         'SELECT * FROM sensor_readings WHERE sensor_type = ? AND timestamp > ? ORDER BY timestamp DESC LIMIT ?',
         [type, since, Math.min(limit, 1000)]
       );
-    } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : 'Unknown';
-      logger.warn('[AITelemetry] Sensor history query failed:', errMsg);
+    } catch (e) {
+      logger.warn('[AITelemetry] Sensor history query failed:', e.message);
       return [];
     }
   }
 
-  getAggregatedSensors(_farmId = 'default', hours = 24): Record<string, unknown> {
-    const results: Record<string, unknown> = {};
+  getAggregatedSensors(_farmId = 'default', hours = 24) {
+    const results = {};
     const types = ['soil', 'temperature', 'humidity', 'water', 'light', 'ph'];
 
     for (const type of types) {
@@ -288,22 +233,20 @@ class AITelemetryService {
             unit: this.qualityRules[type]?.unit || ''
           };
         }
-      } catch (e: unknown) {
-        const errMsg = e instanceof Error ? e.message : 'Unknown';
-        logger.warn(`[AITelemetry] Aggregated query for ${type} failed:`, errMsg);
+      } catch (e) {
+        logger.warn(`[AITelemetry] Aggregated query for ${type} failed:`, e.message);
       }
     }
     return results;
   }
 
-  checkDataFreshness(sensorData: Record<string, unknown>, maxAgeMinutes = 60): FreshnessResult {
-    const freshness: Record<string, { ageMinutes: number | null; fresh: boolean | null; ageSeconds: number | null }> = {};
+  checkDataFreshness(sensorData, maxAgeMinutes = 60) {
+    const freshness = {};
     const now = Date.now();
 
     for (const [type, entry] of Object.entries(sensorData)) {
-      if (entry && typeof entry === 'object' && 'timestamp' in entry) {
-        const timestamp = (entry as { timestamp: string }).timestamp;
-        const ageMs = now - new Date(timestamp).getTime();
+      if (entry && entry.timestamp) {
+        const ageMs = now - new Date(entry.timestamp).getTime();
         const ageMinutes = ageMs / 60000;
         freshness[type] = {
           ageMinutes: Math.round(ageMinutes),
@@ -330,7 +273,7 @@ class AITelemetryService {
     };
   }
 
-  getDataGovernanceReport(): Record<string, unknown> {
+  getDataGovernanceReport() {
     try {
       const totalDevices = getOne('SELECT COUNT(*) as count FROM devices');
       const onlineDevices = getOne('SELECT COUNT(*) as count FROM devices WHERE status = \'online\'');
@@ -358,12 +301,11 @@ class AITelemetryService {
         dataClassification: { ...this.classification },
         qualityRules: Object.keys(this.qualityRules)
       };
-    } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : 'Unknown';
-      logger.warn('[AITelemetry] Governance report failed:', errMsg);
-      return { error: errMsg, timestamp: new Date().toISOString() };
+    } catch (e) {
+      logger.warn('[AITelemetry] Governance report failed:', e.message);
+      return { error: e.message, timestamp: new Date().toISOString() };
     }
   }
 }
 
-export default new AITelemetryService();
+module.exports = new AITelemetryService();

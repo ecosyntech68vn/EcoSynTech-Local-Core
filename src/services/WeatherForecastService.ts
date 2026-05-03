@@ -1,38 +1,16 @@
 'use strict';
 
-import MarkovNowcastV2 from './MarkovNowcastV2';
-import GreenhouseMicroclimate from './GreenhouseMicroclimate';
-
-interface SensorData {
-  pressure?: number;
-  lux?: number;
-  humidity?: number;
-  hour?: number;
-  externalRainProb?: number;
-  outsideTemp?: number;
-  outsideHum?: number;
-  roofOpen?: number;
-  fanSpeed?: number;
-}
-
-interface ForecastResult {
-  outdoor: unknown;
-  indoor: unknown;
-  timestamp: string;
-}
+const MarkovNowcastV2 = require('./MarkovNowcastV2');
+const GreenhouseMicroclimate = require('./GreenhouseMicroclimate');
 
 class WeatherForecastService {
-  markov: MarkovNowcastV2;
-  greenhouse: GreenhouseMicroclimate;
-  lastProcessed: ForecastResult | null;
-
   constructor() {
     this.markov = new MarkovNowcastV2();
     this.greenhouse = new GreenhouseMicroclimate();
     this.lastProcessed = null;
   }
 
-  process(sensorData: SensorData): ForecastResult {
+  process(sensorData) {
     const outdoorForecast = this.markov.update(
       sensorData.pressure,
       sensorData.lux,
@@ -57,7 +35,7 @@ class WeatherForecastService {
     return this.lastProcessed;
   }
 
-  feedback(pressure: number, humidity: number, actualRain: boolean) {
+  feedback(pressure, humidity, actualRain) {
     this.markov.onlineUpdate(pressure, humidity, actualRain);
   }
 
@@ -69,7 +47,7 @@ class WeatherForecastService {
     return this.greenhouse.getStats();
   }
 
-  predictGreenhouse(outsideTemp: number, outsideHum: number, roofOpen: number, fanSpeed: number) {
+  predictGreenhouse(outsideTemp, outsideHum, roofOpen, fanSpeed) {
     return this.greenhouse.predictNextHour(outsideTemp, outsideHum, roofOpen, fanSpeed);
   }
 
@@ -87,4 +65,4 @@ class WeatherForecastService {
   }
 }
 
-export default new WeatherForecastService();
+module.exports = new WeatherForecastService();

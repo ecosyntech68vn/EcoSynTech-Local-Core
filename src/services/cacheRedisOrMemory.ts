@@ -1,45 +1,35 @@
 'use strict';
 
-interface CacheEntry {
-  value: unknown;
-  expires: number;
-}
-
-interface CacheClient {
-  get(key: string): Promise<unknown>;
-  set(key: string, value: unknown, ttl?: number): Promise<void>;
-  del(key: string): Promise<void>;
-}
-
-let redisClient: unknown = null;
+// Lightweight, dual backend cache: Redis (if available) or in-memory fallback.
+let redisClient = null;
 let useRedis = false;
-const memoryCache = new Map<string, CacheEntry>();
+const memoryCache = new Map();
 
-async function initRedis(): Promise<void> {
+async function initRedis() {
   if (redisClient || useRedis) return;
   try {
     const redis = require('redis');
     redisClient = redis.createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' });
-    await (redisClient as { connect: () => Promise<void> }).connect();
+    await redisClient.connect();
     useRedis = true;
     console.info('[Cache] Redis cache initialized');
   } catch (e) {
     useRedis = false;
+    // Do not throw; we fallback to in-memory cache
   }
 }
 
-async function getCache(): Promise<CacheClient> {
+async function getCache() {
   if (!redisClient && !useRedis) {
     await initRedis();
   }
   return {
-    async get(key: string): Promise<unknown> {
+    async get(key) {
       if (useRedis && redisClient) {
         try {
-          const redisCli = redisClient as { get: (key: string) => Promise<string | null> };
-          const raw = await redisCli.get(key);
+          const raw = await redisClient.get(key);
           if (raw) return JSON.parse(raw);
-        } catch (e) { /* fallback to memory */ }
+        } catch (e) { /* istanbul ignore next */ }
       }
       const entry = memoryCache.get(key);
       if (entry) {
@@ -49,66 +39,32 @@ async function getCache(): Promise<CacheClient> {
       }
       return null;
     },
-    async set(key: string, value: unknown, ttl?: number): Promise<void> {
+    async set(key, value, ttl) {
       const ttlMs = typeof ttl === 'number' ? ttl : 60000;
       if (useRedis && redisClient) {
         try {
-          const redisCli = redisClient as { setEx: (key: string, ttl: number, value: string) => Promise<void> };
-          await redisCli.setEx(key, Math.ceil(ttlMs / 1000), JSON.stringify(value));
+          await redisClient.setEx(key, Math.ceil(ttlMs / 1000), JSON.stringify(value));
           return;
         } catch (e) {
+          // Fallback to memory if Redis write fails
           useRedis = false;
         }
       }
-      memoryCache.set(key, {
-        value,
-        expires: Date.now() + ttlMs
-      });
+      memoryCache.set(key, { value, expires: Date.now() + ttlMs });
     },
-    async del(key: string): Promise<void> {
+    async invalidate(key) {
       if (useRedis && redisClient) {
-        try {
-          const redisCli = redisClient as { del: (key: string) => Promise<number> };
-          await redisCli.del(key);
-        } catch (e) { /* ignore */ }
+        try { await redisClient.del(key); } catch (e) { /* istanbul ignore next */ }
       }
       memoryCache.delete(key);
+    },
+    async clear() {
+      if (useRedis && redisClient) {
+        try { await redisClient.flushAll(); } catch (e) { /* istanbul ignore next */ }
+      }
+      memoryCache.clear();
     }
   };
 }
 
-async function getCachedData<T>(key: string, fetchFn: () => Promise<T>, ttl = 60000): Promise<T> {
-  const cache = await getCache();
-  const cached = await cache.get(key);
-  if (cached !== null) {
-    return cached as T;
-  }
-  const data = await fetchFn();
-  await cache.set(key, data, ttl);
-  return data;
-}
-
-async function invalidateCache(pattern: string): Promise<number> {
-  const cache = await getCache();
-  const keys = Array.from(memoryCache.keys()).filter(k => k.includes(pattern));
-  for (const key of keys) {
-    await cache.del(key);
-  }
-  return keys.length;
-}
-
-function getStats() {
-  return {
-    useRedis,
-    memoryEntries: memoryCache.size,
-    memoryKeys: Array.from(memoryCache.keys())
-  };
-}
-
-export {
-  getCache,
-  getCachedData,
-  invalidateCache,
-  getStats,
-  initRedis
-};
+module.exports = { getCache, initRedis };

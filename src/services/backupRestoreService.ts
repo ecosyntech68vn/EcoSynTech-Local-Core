@@ -1,59 +1,29 @@
-/**
- * Backup & Restore Service
- * Converted to TypeScript - Phase 1
- */
-
-import fs from 'fs';
-import path from 'path';
-import { execSync } from 'child_process';
-import logger from '../config/logger';
-import db from '../config/database';
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+const logger = require('../config/logger');
+const { getAll, runQuery, getOne } = require('../config/database');
 
 const BACKUP_DIR = process.env.BACKUP_DIR || './backups';
 const RETENTION_DAYS = parseInt(process.env.BACKUP_RETENTION_DAYS || '30', 10);
 
-export interface BackupOptions {
-  includeMedia?: boolean;
-  compression?: boolean;
-}
-
-export interface BackupResult {
-  success: boolean;
-  backupPath?: string;
-  originalPath?: string;
-  error?: string;
-}
-
-export interface RestoreResult {
-  success: boolean;
-  restoredPath?: string;
-  error?: string;
-}
-
-export interface BackupInfo {
-  filename: string;
-  path: string;
-  size: number;
-  created: string;
-  compressed: boolean;
-}
-
-function ensureBackupDir(): void {
+function ensureBackupDir() {
   if (!fs.existsSync(BACKUP_DIR)) {
     fs.mkdirSync(BACKUP_DIR, { recursive: true });
   }
 }
 
-export function getBackupFilename(prefix: string = 'ecosyntech'): string {
+function getBackupFilename(prefix = 'ecosyntech') {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   return `${prefix}_${timestamp}.db`;
 }
 
-export async function createBackup(options: BackupOptions = {}): Promise<BackupResult> {
-  const { compression = true } = options;
+async function createBackup(options = {}) {
+  const { includeMedia = false, compression = true } = options;
   ensureBackupDir();
 
   const dbPath = process.env.DB_PATH || './data/ecosyntech.db';
+  const timestamp = new Date();
   const filename = getBackupFilename();
   const backupPath = path.join(BACKUP_DIR, filename);
 
@@ -63,135 +33,151 @@ export async function createBackup(options: BackupOptions = {}): Promise<BackupR
 
     if (compression) {
       const compressedPath = backupPath + '.gz';
-      execSync(`gzip -c "${backupPath}" > "${compressedPath}"`, { stdio: 'ignore' });
+      execSync(`gzip -c "${backupPath}" > "${compressedPath}"`);
       fs.unlinkSync(backupPath);
       logger.info(`[Backup] Compressed to ${compressedPath}`);
       return { success: true, backupPath: compressedPath, originalPath: backupPath };
     }
 
     return { success: true, backupPath, originalPath: backupPath };
-  } catch (error: any) {
+  } catch (error) {
     logger.error(`[Backup] Failed: ${error.message}`);
     return { success: false, error: error.message };
   }
 }
 
-export async function restoreBackup(backupPath: string): Promise<RestoreResult> {
+async function restoreBackup(backupPath) {
   if (!fs.existsSync(backupPath)) {
     return { success: false, error: 'Backup file not found' };
   }
 
   const dbPath = process.env.DB_PATH || './data/ecosyntech.db';
-  const tempPath = dbPath + '.restore';
+  const tempPath = dbPath + '.restore.temp';
 
   try {
-    let sourcePath = backupPath;
-    
     if (backupPath.endsWith('.gz')) {
-      const decompressedPath = backupPath.replace('.gz', '');
-      execSync(`gunzip -c "${backupPath}" > "${decompressedPath}"`, { stdio: 'ignore' });
-      sourcePath = decompressedPath;
+      execSync(`gunzip -c "${backupPath}" > "${tempPath}"`);
+    } else {
+      fs.copyFileSync(backupPath, tempPath);
     }
 
-    if (fs.existsSync(dbPath)) {
-      const backupOriginal = dbPath + '.backup';
-      fs.copyFileSync(dbPath, backupOriginal);
-    }
+    fs.copyFileSync(tempPath, dbPath);
+    fs.unlinkSync(tempPath);
 
-    fs.copyFileSync(sourcePath, tempPath);
-    fs.renameSync(tempPath, dbPath);
-
-    logger.info(`[Restore] Database restored from ${backupPath}`);
+    logger.info(`[Restore] Restored from ${backupPath}`);
     return { success: true, restoredPath: dbPath };
-  } catch (error: any) {
+  } catch (error) {
+    if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
     logger.error(`[Restore] Failed: ${error.message}`);
     return { success: false, error: error.message };
   }
 }
 
-export function listBackups(): BackupInfo[] {
+async function listBackups() {
   ensureBackupDir();
-  
-  const files = fs.readdirSync(BACKUP_DIR);
-  const backups: BackupInfo[] = [];
-
-  for (const file of files) {
-    if (file.startsWith('ecosyntech_') && (file.endsWith('.db') || file.endsWith('.db.gz'))) {
-      const filePath = path.join(BACKUP_DIR, file);
+  const files = fs.readdirSync(BACKUP_DIR)
+    .filter(f => f.endsWith('.db') || f.endsWith('.db.gz'))
+    .map(f => {
+      const filePath = path.join(BACKUP_DIR, f);
       const stats = fs.statSync(filePath);
-      
-      backups.push({
-        filename: file,
+      return {
+        filename: f,
         path: filePath,
         size: stats.size,
-        created: stats.mtime.toISOString(),
-        compressed: file.endsWith('.gz')
-      });
-    }
-  }
+        created: stats.birthtime,
+        modified: stats.mtime
+      };
+    })
+    .sort((a, b) => new Date(b.modified) - new Date(a.modified));
 
-  return backups.sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
+  return files;
 }
 
-export function deleteBackup(backupPath: string): boolean {
-  try {
-    if (fs.existsSync(backupPath)) {
-      fs.unlinkSync(backupPath);
-      logger.info(`[Backup] Deleted ${backupPath}`);
-      return true;
-    }
-    return false;
-  } catch (error: any) {
-    logger.error(`[Backup] Delete failed: ${error.message}`);
-    return false;
-  }
-}
-
-export function cleanOldBackups(): number {
-  const backups = listBackups();
+async function cleanupOldBackups() {
+  const files = await listBackups();
   const cutoffDate = new Date();
   cutoffDate.setDate(cutoffDate.getDate() - RETENTION_DAYS);
-  
-  let deleted = 0;
-  
-  for (const backup of backups) {
-    const created = new Date(backup.created);
-    if (created < cutoffDate) {
-      if (deleteBackup(backup.path)) {
-        deleted++;
-      }
+
+  let deletedCount = 0;
+  for (const file of files) {
+    if (new Date(file.modified) < cutoffDate) {
+      fs.unlinkSync(file.path);
+      deletedCount++;
+      logger.info(`[Backup] Deleted old backup: ${file.filename}`);
     }
   }
 
-  logger.info(`[Backup] Cleaned ${deleted} old backups`);
-  return deleted;
+  return { deletedCount, remaining: files.length - deletedCount };
 }
 
-export function getBackupStats(): {
-  total: number;
-  totalSize: number;
-  oldest: string | null;
-  newest: string | null;
-} {
-  const backups = listBackups();
-  const totalSize = backups.reduce((sum, b) => sum + b.size, 0);
-  
-  const oldestBackup = backups[backups.length - 1];
-  const newestBackup = backups[0];
-  
-  return {
-    total: backups.length,
-    totalSize,
-    oldest: oldestBackup?.created || null,
-    newest: newestBackup?.created || null
-  };
+async function verifyBackup(backupPath) {
+  const dbPath = process.env.DB_PATH || './data/ecosyntech.db';
+
+  try {
+    const SQL = require('sql.js');
+    const SQL_MODIFIED_PATH = dbPath + '.verify.temp';
+    let data;
+
+    if (backupPath.endsWith('.gz')) {
+      execSync(`gunzip -c "${backupPath}" > "${SQL_MODIFIED_PATH}"`);
+      data = fs.readFileSync(SQL_MODIFIED_PATH);
+      fs.unlinkSync(SQL_MODIFIED_PATH);
+    } else {
+      data = fs.readFileSync(backupPath);
+    }
+
+    const db = new SQL.Database(data);
+    const tables = db.exec('SELECT name FROM sqlite_master WHERE type=\'table\'');
+
+    db.close();
+
+    return {
+      valid: true,
+      tables: tables[0]?.values?.map(t => t[0]) || [],
+      size: fs.statSync(backupPath).size
+    };
+  } catch (error) {
+    return { valid: false, error: error.message };
+  }
 }
 
-export default {
+async function autoBackupSchedule() {
+  const lastBackup = await getOne(
+    'SELECT value FROM settings WHERE key = ?',
+    ['last_auto_backup']
+  );
+
+  const now = new Date();
+  let shouldBackup = true;
+
+  if (lastBackup) {
+    const lastBackupDate = new Date(lastBackup.value);
+    const hoursDiff = (now - lastBackupDate) / (1000 * 60 * 60);
+    shouldBackup = hoursDiff >= 24;
+  }
+
+  if (shouldBackup) {
+    const result = await createBackup();
+    if (result.success) {
+      runQuery(
+        'INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, ?)',
+        ['last_auto_backup', now.toISOString(), now.toISOString()]
+      );
+      logger.info('[Backup] Auto backup completed');
+    }
+  }
+
+  return { triggered: shouldBackup };
+}
+
+module.exports = {
+export default module.exports;
   createBackup,
   restoreBackup,
   listBackups,
-  deleteBackup,
-  cleanOldBackups,
-  getBackupStats
+  cleanupOldBackups,
+  verifyBackup,
+  autoBackupSchedule,
+  BACKUP_DIR,
+  RETENTION_DAYS
 };

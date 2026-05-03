@@ -362,6 +362,7 @@ function advanceStage(plantingId) {
 }
 
 module.exports = {
+export default module.exports;
   createPlanting,
   updatePlantingStage,
   getAllPlantings,

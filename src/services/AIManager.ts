@@ -1,29 +1,8 @@
 'use strict';
 
-import os from 'os';
+const os = require('os');
 
-interface ThresholdConfig {
-  critical?: number;
-  warning?: number;
-  optimal?: number;
-  cpu?: number;
-  ram?: number;
-  disk?: number;
-  failedLogins?: number;
-  responseTime?: number;
-  errorRate?: number;
-  alertCount?: number;
-  [key: string]: number | undefined;
-}
-
-interface AgentResult {
-  field: string;
-  action: string;
-  details: Record<string, unknown>;
-  confidence: number;
-}
-
-const AGRICULTURE_THRESHOLDS: Record<string, ThresholdConfig> = {
+const AGRICULTURE_THRESHOLDS = {
   irrigation: { critical: 20, warning: 40, optimal: 60 },
   climate: { critical: 34, warning: 30 },
   soil_health: { critical: 15, warning: 30, optimal: 50 },
@@ -31,7 +10,7 @@ const AGRICULTURE_THRESHOLDS: Record<string, ThresholdConfig> = {
   pest_control: { critical: 70, warning: 50, optimal: 25 }
 };
 
-const SYSTEM_THRESHOLDS: Record<string, ThresholdConfig> = {
+const SYSTEM_THRESHOLDS = {
   system_health: { cpu: 90, ram: 90, disk: 95 },
   security_monitor: { failedLogins: 5 },
   performance_tuner: { responseTime: 2000, errorRate: 5 },
@@ -39,32 +18,28 @@ const SYSTEM_THRESHOLDS: Record<string, ThresholdConfig> = {
 };
 
 class Agent {
-  field: string;
-  memory: Record<string, unknown>;
-  thresholds: ThresholdConfig;
-
-  constructor(field: string) {
+  constructor(field) {
     this.field = field;
     this.memory = {};
     this.thresholds = AGRICULTURE_THRESHOLDS[field] || SYSTEM_THRESHOLDS[field] || { critical: 80, warning: 60 };
   }
 
-  think(context: Record<string, unknown> = {}): AgentResult {
+  think(context = {}) {
     const field = this.field;
-    const ctx = (context[field] || context) as Record<string, unknown>;
-    const result: AgentResult = { field, action: 'no_action', details: {}, confidence: 0.8 };
+    const ctx = context[field] || context;
+    const result = { field, action: 'no_action', details: {}, confidence: 0.8 };
     const th = this.thresholds;
 
     if (field === 'irrigation') {
       const soil = typeof ctx.soilMoisture === 'number' ? ctx.soilMoisture : null;
       if (soil !== null) {
-        if (soil < (th.critical ?? 20)) {
+        if (soil < th.critical) {
           result.action = 'irrigate';
           result.details = { level: 'high', soilMoisture: soil, reason: 'critical_low_moisture' };
-        } else if (soil < (th.warning ?? 40)) {
+        } else if (soil < th.warning) {
           result.action = 'irrigate';
           result.details = { level: 'medium', soilMoisture: soil, reason: 'warning_low_moisture' };
-        } else if (soil >= (th.optimal ?? 60) && ctx.forecast === 'rain') {
+        } else if (soil >= th.optimal && ctx.forecast === 'rain') {
           result.action = 'delay_irrigation';
           result.details = { reason: 'rain_forecasted', forecast: 'rain' };
         }
@@ -72,8 +47,8 @@ class Agent {
     }
     else if (field === 'climate' || field === 'weather') {
       const forecast = ctx.forecast || context.forecast;
-      const temp = typeof ctx.temperature === 'number' ? ctx.temperature : (context.temperature as number);
-      if (forecast === 'dry' || (typeof temp === 'number' && temp > (th.critical ?? 34))) {
+      const temp = typeof ctx.temperature === 'number' ? ctx.temperature : context.temperature;
+      if (forecast === 'dry' || (typeof temp === 'number' && temp > th.critical)) {
         result.action = 'adjust_irrigation_schedule';
         result.details = { reason: 'dry_heat', forecast, temperature: temp };
       } else if (forecast === 'rain' || temp < 20) {
@@ -106,10 +81,10 @@ class Agent {
       const solarOutput = typeof ctx.solarOutput === 'number' ? ctx.solarOutput : null;
       const hour = typeof ctx.hour === 'number' ? ctx.hour : new Date().getHours();
       if (powerUsage !== null) {
-        if (powerUsage > (th.critical ?? 80)) {
+        if (powerUsage > th.critical) {
           result.action = 'reduce_load';
           result.details = { powerUsage, reason: 'high_power_consumption', severity: 'critical' };
-        } else if (powerUsage > (th.warning ?? 60)) {
+        } else if (powerUsage > th.warning) {
           result.action = 'optimize_schedule';
           result.details = { powerUsage, reason: 'moderate_power_usage' };
         }
@@ -123,10 +98,10 @@ class Agent {
       const temperature = typeof ctx.temperature === 'number' ? ctx.temperature : null;
       const pestRisk = typeof ctx.pestRisk === 'number' ? ctx.pestRisk : null;
       if (pestRisk !== null) {
-        if (pestRisk > (th.critical ?? 70)) {
+        if (pestRisk > th.critical) {
           result.action = 'activate_spraying';
           result.details = { pestRisk, reason: 'high_pest_risk', severity: 'critical' };
-        } else if (pestRisk > (th.warning ?? 50)) {
+        } else if (pestRisk > th.warning) {
           result.action = 'increase_monitoring';
           result.details = { pestRisk, reason: 'elevated_pest_risk' };
         }
@@ -142,9 +117,9 @@ class Agent {
       const ram = typeof ctx.ram === 'number' ? ctx.ram : 0;
       const disk = typeof ctx.disk === 'number' ? ctx.disk : 0;
       const uptime = typeof ctx.uptime === 'number' ? ctx.uptime : 0;
-      const reasons: string[] = [];
+      const reasons = [];
 
-      if (cpu > (th.cpu ?? 90)) {
+      if (cpu > th.cpu) {
         result.action = 'critical';
         reasons.push('cpu_overload');
         result.details.cpu = cpu;
@@ -154,7 +129,7 @@ class Agent {
         result.details.cpu = cpu;
       }
 
-      if (ram > (th.ram ?? 90)) {
+      if (ram > th.ram) {
         if (result.action === 'no_action') result.action = 'critical';
         result.details.ram = ram;
         reasons.push('memory_critical');
@@ -164,7 +139,7 @@ class Agent {
         reasons.push('memory_high');
       }
 
-      if (disk > (th.disk ?? 95)) {
+      if (disk > th.disk) {
         if (result.action === 'no_action') result.action = 'critical';
         result.details.disk = disk;
         reasons.push('disk_full');
@@ -182,111 +157,145 @@ class Agent {
       if (uptime > 0 && uptime < 3600) {
         result.details.recentReboot = true;
       }
+      if (result.action === 'no_action') result.action = 'ok';
+      result.confidence = 0.9;
+    }
+    else if (field === 'security_monitor') {
+      const failedLogins = typeof ctx.failedLogins === 'number' ? ctx.failedLogins : 0;
+      const suspiciousIPs = typeof ctx.suspiciousIPs === 'number' ? ctx.suspiciousIPs : 0;
+      const unusualAccess = ctx.unusualAccess === true;
+      const anomalies = typeof ctx.anomalies === 'number' ? ctx.anomalies : 0;
+
+      if (failedLogins >= th.failedLogins) {
+        result.action = 'block_ip';
+        result.details = { failedLogins, reason: 'brute_force_detected', severity: 'critical' };
+      } else if (failedLogins >= 3) {
+        result.action = 'alert';
+        result.details = { failedLogins, reason: 'multiple_failed_logins', severity: 'warning' };
+      }
+
+      if (suspiciousIPs > 0) {
+        result.details.suspiciousIPs = suspiciousIPs;
+        if (result.action === 'no_action') result.action = 'investigate';
+      }
+      if (unusualAccess) {
+        result.action = 'investigate';
+        result.details.unusualAccess = true;
+        result.details.reason = 'unusual_access_pattern';
+      }
+      if (anomalies > 3) {
+        result.details.anomalyScore = anomalies;
+        if (result.action === 'no_action') result.action = 'anomaly_detected';
+      }
+      if (result.action === 'no_action') { result.action = 'ok'; result.confidence = 0.9; }
+    }
+    else if (field === 'performance_tuner') {
+      const responseTime = typeof ctx.responseTime === 'number' ? ctx.responseTime : 0;
+      const errorRate = typeof ctx.errorRate === 'number' ? ctx.errorRate : 0;
+      const connections = typeof ctx.connections === 'number' ? ctx.connections : 0;
+      const cacheHitRate = typeof ctx.cacheHitRate === 'number' ? ctx.cacheHitRate : 0;
+
+      const reasons = [];
+      if (responseTime > th.responseTime) {
+        result.action = 'optimize';
+        reasons.push('slow_response');
+        result.details.responseTime = responseTime;
+      }
+      if (errorRate > th.errorRate) {
+        if (result.action === 'no_action') result.action = 'investigate';
+        result.details.errorRate = errorRate;
+        reasons.push('high_error_rate');
+      }
+      if (connections > 100) {
+        result.details.highConnections = true;
+        if (result.action === 'no_action') result.action = 'scale_resources';
+        reasons.push('high_connections');
+      }
+      if (cacheHitRate < 50) {
+        result.details.cacheOptimization = true;
+        reasons.push('low_cache_hit_rate');
+      }
+      if (reasons.length > 0) {
+        result.details.reason = reasons.join('; ');
+      }
+      if (result.action === 'no_action') { result.action = 'ok'; result.confidence = 0.9; }
+    }
+    else if (field === 'alert_aggregator') {
+      const alertCount = typeof ctx.alertCount === 'number' ? ctx.alertCount : 0;
+      const alertType = ctx.alertType || 'mixed';
+
+      if (alertCount > th.alertCount) {
+        result.action = 'group_alerts';
+        result.details = { alertCount, reason: 'alert_fatigue_prevention', groupBy: 'severity' };
+      } else if (alertCount > 10) {
+        result.action = 'summarize';
+        result.details = { alertCount, reason: 'reduce_noise' };
+      }
+      if (alertType === 'sensor' && alertCount > 5) {
+        result.details.recommendation = 'consider_sensor_maintenance';
+      }
+      if (result.action === 'no_action') { result.action = 'ok'; result.confidence = 0.9; }
     }
 
+    this.memory.lastDecision = result;
     return result;
-  }
-
-  remember(key: string, value: unknown) {
-    this.memory[key] = value;
-  }
-
-  recall(key: string): unknown {
-    return this.memory[key];
-  }
-
-  learn(context: Record<string, unknown>, result: AgentResult, outcome: string) {
-    this.remember(`last_${this.field}`, { context, result, outcome, time: Date.now() });
   }
 }
 
 class AIManager {
-  agents: Map<string, Agent>;
-  decisionHistory: Array<{ agent: string; result: AgentResult; timestamp: number }>;
-
   constructor() {
     this.agents = new Map();
-    this.decisionHistory = [];
-    this.initAgents();
+    this.totalMem = os.totalmem();
+    this.availableMemGB = this.totalMem / (1024 * 1024 * 1024);
+    this.mode = this.availableMemGB >= 4 ? 'hybrid' : 'heuristic_only';
+    ['irrigation', 'climate', 'soil_health', 'energy_saver', 'pest_control',
+      'system_health', 'security_monitor', 'performance_tuner', 'alert_aggregator'].forEach(name => {
+      this.registerAgent(name);
+    });
   }
 
-  initAgents() {
-    const agentFields = [
-      'irrigation', 'climate', 'soil_health', 'energy_saver', 'pest_control',
-      'system_health', 'security_monitor', 'performance_tuner', 'alert_aggregator'
-    ];
-    for (const field of agentFields) {
-      this.agents.set(field, new Agent(field));
-    }
+  getMode() {
+    return this.mode;
   }
 
-  async process(field: string, context: Record<string, unknown>): Promise<AgentResult> {
-    const agent = this.agents.get(field);
-    if (!agent) {
-      return { field, action: 'unknown_agent', details: { error: 'Agent not found' }, confidence: 0 };
-    }
-
-    const result = agent.think(context);
-    agent.learn(context, result, result.action !== 'no_action' ? 'success' : 'no_action');
-
-    this.decisionHistory.push({ agent: field, result, timestamp: Date.now() });
-    if (this.decisionHistory.length > 1000) {
-      this.decisionHistory = this.decisionHistory.slice(-500);
-    }
-
-    return result;
+  registerAgent(name) {
+    const agent = new Agent(name);
+    this.agents.set(name, agent);
+    return agent;
   }
 
-  async processAll(context: Record<string, unknown>): Promise<AgentResult[]> {
-    const results: AgentResult[] = [];
-    for (const [field, agent] of this.agents) {
-      const result = agent.think(context);
-      results.push(result);
+  getAgent(name) {
+    return this.agents.get(name);
+  }
+
+  getOrCreateAgent(name) {
+    if (this.agents.has(name)) return this.agents.get(name);
+    return this.registerAgent(name);
+  }
+
+  thinkForField(field, context = {}) {
+    const agent = this.getOrCreateAgent(field);
+    return agent.think(context);
+  }
+
+  thinkForAll(context = {}) {
+    const results = {};
+    for (const [name, agent] of this.agents) {
+      results[name] = agent.think(context);
     }
     return results;
   }
 
-  getAgent(field: string): Agent | undefined {
-    return this.agents.get(field);
-  }
-
-  getDecisionHistory(agentField?: string, limit = 50) {
-    let history = this.decisionHistory;
-    if (agentField) {
-      history = history.filter(h => h.agent === agentField);
-    }
-    return history.slice(-limit);
-  }
-
-  getStats() {
-    const agentStats: Record<string, { actionCount: number; lastAction: string }> = {};
-    for (const [field, agent] of this.agents) {
-      agentStats[field] = { actionCount: 0, lastAction: 'none' };
-    }
-    for (const entry of this.decisionHistory.slice(-100)) {
-      const stats = agentStats[entry.agent];
-      if (stats) {
-        stats.actionCount++;
-        stats.lastAction = entry.result.action;
-      }
-    }
+  getInsights(context = {}) {
+    const all = this.thinkForAll(context);
+    const actions = Object.values(all).filter(r => r.action !== 'no_action' && r.action !== 'ok');
     return {
+      mode: this.mode,
       totalAgents: this.agents.size,
-      totalDecisions: this.decisionHistory.length,
-      agentStats,
-      systemLoad: {
-        cpu: os.loadavg()[0],
-        memory: Math.round((os.totalmem() - os.freemem()) / os.totalmem() * 100)
-      }
+      actionableCount: actions.length,
+      actions: actions.map(a => ({ field: a.field, action: a.action, details: a.details }))
     };
-  }
-
-  reset() {
-    this.decisionHistory = [];
-    for (const [, agent] of this.agents) {
-      agent.memory = {};
-    }
   }
 }
 
-export { AIManager, Agent, AgentResult };
+module.exports = { AIManager };

@@ -843,6 +843,7 @@ function getAverageCost(itemId) {
 }
 
 module.exports = {
+export default module.exports;
   createItem,
   getItems,
   getItemById,

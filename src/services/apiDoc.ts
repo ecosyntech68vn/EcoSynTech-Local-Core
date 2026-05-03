@@ -1,23 +1,5 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const swaggerJsdoc = require('swagger-jsdoc');
-import path from 'path';
-
-interface ApiDocOptions {
-  tags?: string[];
-  summary?: string;
-  description?: string;
-}
-
-interface SwaggerEndpoint {
-  tags?: string[];
-  summary?: string;
-  description?: string;
-  responses: Record<string, { description: string }>;
-}
-
-interface SwaggerSpec {
-  paths: Record<string, Record<string, SwaggerEndpoint>>;
-}
+const path = require('path');
 
 const options = {
   definition: {
@@ -43,16 +25,15 @@ const options = {
       { name: 'Schedules', description: 'Lịch tưới' },
       { name: 'Auth', description: 'Xác thực' }
     ],
-    paths: {} as Record<string, Record<string, SwaggerEndpoint>>
+    paths: {}
   },
   apis: [path.join(__dirname, '../routes/*.js')]
 };
 
-const swaggerSpec = swaggerJsdoc(options) as SwaggerSpec;
+const swaggerSpec = swaggerJsdoc(options);
 
-function addApiDoc(_router: string, _endpointPath: string, method: string, options: ApiDocOptions): void {
-  const firstTag = options.tags?.[0] ?? '';
-  const endpoint = firstTag ? `/${firstTag.toLowerCase()}` : '/';
+function addApiDoc(router, path, method, options) {
+  const endpoint = options.tags ? `/${options.tags[0].toLowerCase()}` : '/';
   if (!swaggerSpec.paths[endpoint]) {
     swaggerSpec.paths[endpoint] = {};
   }
@@ -68,17 +49,16 @@ function addApiDoc(_router: string, _endpointPath: string, method: string, optio
   };
 }
 
-function getSwaggerSpec(): SwaggerSpec {
+function setupSwagger(app) {
+  const swaggerUi = require('swagger-ui-express');
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
   return swaggerSpec;
 }
 
-function getApiDocs(): SwaggerSpec {
-  return swaggerSpec;
-}
-
-export {
-  addApiDoc,
-  getSwaggerSpec,
-  getApiDocs,
-  swaggerSpec
+module.exports = {
+export default module.exports;
+  swaggerSpec,
+  setupSwagger,
+  addApiDoc
 };

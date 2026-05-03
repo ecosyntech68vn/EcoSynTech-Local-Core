@@ -1,31 +1,6 @@
 'use strict';
 
-interface HistoryEntry {
-  temp?: number;
-  humidity?: number;
-  timestamp: number;
-}
-
-export interface PredictionEntry {
-  temp: number;
-  humidity: number;
-  minutes: number;
-}
-
-interface Recommendation {
-  action: string;
-  message: string;
-}
-
 class GreenhouseMicroclimate {
-  states: string[];
-  transitionMatrix: number[][];
-  currentState: string;
-  lastTemp: number;
-  lastHumidity: number;
-  tempHistory: HistoryEntry[];
-  humHistory: HistoryEntry[];
-
   constructor() {
     this.states = ['COOL', 'OPTIMAL', 'HOT'];
     this.transitionMatrix = [
@@ -40,8 +15,8 @@ class GreenhouseMicroclimate {
     this.humHistory = [];
   }
 
-  update(outsideTemp?: number, outsideHum?: number, roofOpen?: number, fanSpeed?: number) {
-    let state: string;
+  update(outsideTemp, outsideHum, roofOpen, fanSpeed) {
+    let state;
     if (this.lastTemp < 18) state = 'COOL';
     else if (this.lastTemp > 30) state = 'HOT';
     else state = 'OPTIMAL';
@@ -52,12 +27,12 @@ class GreenhouseMicroclimate {
     let humChange = 0;
 
     if (roofOpen) {
-      tempChange += ((outsideTemp || 25) - this.lastTemp) * 0.2;
-      humChange += ((outsideHum || 70) - this.lastHumidity) * 0.2;
+      tempChange += (outsideTemp - this.lastTemp) * 0.2;
+      humChange += (outsideHum - this.lastHumidity) * 0.2;
     }
 
-    if (fanSpeed && fanSpeed > 0) {
-      tempChange -= (this.lastTemp - (outsideTemp || 25)) * 0.1 * (fanSpeed / 100);
+    if (fanSpeed > 0) {
+      tempChange -= (this.lastTemp - outsideTemp) * 0.1 * (fanSpeed / 100);
       humChange -= 2 * (fanSpeed / 100);
     }
 
@@ -79,7 +54,7 @@ class GreenhouseMicroclimate {
     };
   }
 
-  private _getRecommendation(): Recommendation {
+  _getRecommendation() {
     if (this.currentState === 'HOT' && this.lastHumidity < 50) {
       return { action: 'COOL_DOWN', message: 'Too hot and dry - activate misting' };
     }
@@ -95,8 +70,8 @@ class GreenhouseMicroclimate {
     return { action: 'MONITOR', message: 'Continue monitoring' };
   }
 
-  predictNextHour(outsideTemp: number, outsideHum: number, roofOpen: number, fanSpeed: number): PredictionEntry[] {
-    const predictions: PredictionEntry[] = [];
+  predictNextHour(outsideTemp, outsideHum, roofOpen, fanSpeed) {
+    const predictions = [];
     let temp = this.lastTemp;
     let hum = this.lastHumidity;
 
@@ -142,4 +117,4 @@ class GreenhouseMicroclimate {
   }
 }
 
-export default GreenhouseMicroclimate;
+module.exports = GreenhouseMicroclimate;

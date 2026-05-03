@@ -2,49 +2,27 @@
  * Shopping Cart Service
  */
 
-interface CartItem {
-  plan: string;
-  duration: number;
-  quantity: number;
-  addedAt: string;
-}
-
-interface CartSummary {
-  items: CartItem[];
-  total: number;
-  itemCount: number;
-}
-
-interface PlanPricing {
-  monthly: number;
-  yearly: number;
-  features: string[];
-}
+const { PLANS } = require('../services/pricingService');
 
 class CartService {
-  carts: Map<string, CartItem[]>;
-
   constructor() {
-    this.carts = new Map();
+    this.carts = new Map(); // userId -> cart items
   }
 
-  getCart(userId: string): CartItem[] {
+  getCart(userId) {
     if (!this.carts.has(userId)) {
       this.carts.set(userId, []);
     }
-    return this.carts.get(userId) || [];
+    return this.carts.get(userId);
   }
 
-  addItem(userId: string, plan: string, duration = 1): CartSummary {
+  addItem(userId, plan, duration = 1) {
     const cart = this.getCart(userId);
     const existing = cart.findIndex(item => item.plan === plan);
     
     if (existing >= 0) {
-      const item = cart[existing];
-      if (item) {
-        item.duration += duration;
-        item.quantity = (item.quantity || 1) + 1;
-      }
+      cart[existing].duration += duration;
+      cart[existing].quantity = (cart[existing].quantity || 1) + 1;
     } else {
       cart.push({
         plan,
@@ -54,18 +32,18 @@ class CartService {
       });
     }
     
-    this.carts.set(userId, [...cart]);
+    this.carts.set(userId, cart);
     return this.getCartSummary(userId);
   }
 
-  removeItem(userId: string, plan: string): CartSummary {
+  removeItem(userId, plan) {
     const cart = this.getCart(userId);
     const filtered = cart.filter(item => item.plan !== plan);
     this.carts.set(userId, filtered);
     return this.getCartSummary(userId);
   }
 
-  updateQuantity(userId: string, plan: string, quantity: number): CartSummary {
+  updateQuantity(userId, plan, quantity) {
     const cart = this.getCart(userId);
     const item = cart.find(i => i.plan === plan);
     
@@ -74,54 +52,92 @@ class CartService {
         return this.removeItem(userId, plan);
       }
       item.quantity = quantity;
-      this.carts.set(userId, [...cart]);
     }
     
+    this.carts.set(userId, cart);
     return this.getCartSummary(userId);
   }
 
-  clearCart(userId: string): void {
+  clearCart(userId) {
     this.carts.set(userId, []);
+    return { ok: true };
   }
 
-  getCartSummary(userId: string): CartSummary {
+  getCartSummary(userId) {
     const cart = this.getCart(userId);
-    const { getPlanPricing } = require('./pricingService') as { getPlanPricing: (plan: string) => PlanPricing };
     
-    let total = 0;
-    for (const item of cart) {
-      const pricing = getPlanPricing(item.plan);
-      const period = item.duration >= 12 ? 'yearly' : 'monthly';
-      const unitPrice = pricing[period as keyof PlanPricing] as number;
-      total += unitPrice * item.quantity * item.duration;
+    const items = cart.map(item => {
+      const planInfo = PLANS[item.plan];
+      const monthlyPrice = planInfo?.price || 0;
+      const total = monthlyPrice * item.duration * item.quantity;
+      
+      return {
+        plan: item.plan,
+        planName: planInfo?.name || item.plan,
+        quantity: item.quantity,
+        duration: item.duration,
+        monthlyPrice,
+        total,
+        features: planInfo?.features || {}
+      };
+    });
+
+    const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+    const itemsCount = items.reduce((sum, item) => sum + item.quantity, 0);
+
+    return {
+      userId,
+      items,
+      itemsCount,
+      subtotal,
+      total: subtotal,
+      currency: 'VND',
+      validUntil: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 min
+    };
+  }
+
+  validateCart(userId) {
+    const summary = this.getCartSummary(userId);
+    const errors = [];
+
+    if (summary.itemsCount === 0) {
+      errors.push('Cart is empty');
+    }
+
+    for (const item of summary.items) {
+      if (!PLANS[item.plan]) {
+        errors.push(`Invalid plan: ${item.plan}`);
+      }
+      if (item.quantity < 1) {
+        errors.push('Quantity must be at least 1');
+      }
     }
 
     return {
-      items: cart,
-      total,
-      itemCount: cart.reduce((sum, item) => sum + item.quantity, 0)
+      valid: errors.length === 0,
+      errors
     };
   }
 
-  applyCoupon(userId: string, couponCode: string): { valid: boolean; discount: number; message: string } {
-    const coupons: Record<string, { discount: number; minPurchase: number }> = {
-      'WELCOME10': { discount: 10, minPurchase: 0 },
-      'SAVE20': { discount: 20, minPurchase: 100 },
-      'SPECIAL50': { discount: 50, minPurchase: 500 }
-    };
-
-    const coupon = coupons[couponCode];
-    if (!coupon) {
-      return { valid: false, discount: 0, message: 'Invalid coupon code' };
+  getCheckoutData(userId) {
+    const validation = this.validateCart(userId);
+    if (!validation.valid) {
+      return { ok: false, errors: validation.errors };
     }
 
     const summary = this.getCartSummary(userId);
-    if (summary.total < coupon.minPurchase) {
-      return { valid: false, discount: 0, message: `Minimum purchase of $${coupon.minPurchase} required` };
-    }
+    const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
-    return { valid: true, discount: coupon.discount, message: 'Coupon applied successfully' };
+    return {
+      ok: true,
+      orderId,
+      items: summary.items,
+      subtotal: summary.subtotal,
+      total: summary.total,
+      currency: summary.currency,
+      validUntil: summary.validUntil
+    };
   }
 }
 
-export default new CartService();
+module.exports = new CartService();

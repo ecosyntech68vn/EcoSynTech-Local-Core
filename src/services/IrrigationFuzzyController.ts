@@ -1,53 +1,4 @@
-type MembershipFunction = (x: number) => number;
-
-interface MembershipFunctions {
-  soilMoistureError: {
-    veryDry: MembershipFunction;
-    dry: MembershipFunction;
-    optimal: MembershipFunction;
-    wet: MembershipFunction;
-    veryWet: MembershipFunction;
-  };
-  rainProbability: {
-    none: MembershipFunction;
-    light: MembershipFunction;
-    moderate: MembershipFunction;
-    heavy: MembershipFunction;
-  };
-  timeOfDay: {
-    night: MembershipFunction;
-    dawn: MembershipFunction;
-    morning: MembershipFunction;
-    noon: MembershipFunction;
-    evening: MembershipFunction;
-  };
-}
-
-interface FuzzyInputs {
-  soilMoistureError: number;
-  rainProbability: number;
-  timeOfDay: number;
-}
-
-interface RuleActivation {
-  outputSet: string;
-  strength: number;
-}
-
-interface ExplanationResult {
-  duration: number;
-  reason: string;
-  error: number;
-  rainProb: number;
-  hour: number;
-  activatedRules: number;
-}
-
 class IrrigationFuzzyController {
-  membershipFunctions: MembershipFunctions;
-  outputSingletons: Record<string, number>;
-  rules: string[][];
-
   constructor() {
     this.membershipFunctions = {
       soilMoistureError: {
@@ -110,29 +61,29 @@ class IrrigationFuzzyController {
     ];
   }
 
-  evaluateRule(rule: string[], inputs: FuzzyInputs): RuleActivation {
+  evaluateRule(rule, inputs) {
     const [soilMF, rainMF, timeMF, outputSet] = rule;
     
     let fireStrength = 1.0;
     
     if (soilMF === 'any') fireStrength *= 1;
-    else fireStrength *= this.membershipFunctions.soilMoistureError[soilMF as keyof typeof this.membershipFunctions.soilMoistureError](inputs.soilMoistureError);
+    else fireStrength *= this.membershipFunctions.soilMoistureError[soilMF](inputs.soilMoistureError);
 
     if (rainMF === 'any') fireStrength *= 1;
-    else fireStrength *= this.membershipFunctions.rainProbability[rainMF as keyof typeof this.membershipFunctions.rainProbability](inputs.rainProbability);
+    else fireStrength *= this.membershipFunctions.rainProbability[rainMF](inputs.rainProbability);
 
     if (timeMF === 'any') fireStrength *= 1;
-    else fireStrength *= this.membershipFunctions.timeOfDay[timeMF as keyof typeof this.membershipFunctions.timeOfDay](inputs.timeOfDay);
+    else fireStrength *= this.membershipFunctions.timeOfDay[timeMF](inputs.timeOfDay);
 
-    return { outputSet: outputSet ?? 'zero', strength: fireStrength };
+    return { outputSet, strength: fireStrength };
   }
 
-  defuzzify(activations: RuleActivation[]): number {
+  defuzzify(activations) {
     let numerator = 0;
     let denominator = 0;
 
     for (const act of activations) {
-      const singletonValue = this.outputSingletons[act.outputSet] ?? 0;
+      const singletonValue = this.outputSingletons[act.outputSet];
       numerator += act.strength * singletonValue;
       denominator += act.strength;
     }
@@ -141,16 +92,16 @@ class IrrigationFuzzyController {
     return Math.round(numerator / denominator);
   }
 
-  compute(targetMoisture: number, currentMoisture: number, rainProb: number, hour: number): number {
+  compute(targetMoisture, currentMoisture, rainProb, hour) {
     const error = targetMoisture - currentMoisture;
     
-    const inputs: FuzzyInputs = {
+    const inputs = {
       soilMoistureError: error,
       rainProbability: rainProb,
       timeOfDay: hour
     };
 
-    const activations: RuleActivation[] = [];
+    const activations = [];
     for (const rule of this.rules) {
       const result = this.evaluateRule(rule, inputs);
       if (result.strength > 0.01) {
@@ -161,7 +112,7 @@ class IrrigationFuzzyController {
     return this.defuzzify(activations);
   }
 
-  getMembershipValues(inputs: FuzzyInputs) {
+  getMembershipValues(inputs) {
     return {
       soil: {
         veryDry: this.membershipFunctions.soilMoistureError.veryDry(inputs.soilMoistureError),
@@ -186,15 +137,15 @@ class IrrigationFuzzyController {
     };
   }
 
-  explainDecision(targetMoisture: number, currentMoisture: number, rainProb: number, hour: number): ExplanationResult {
+  explainDecision(targetMoisture, currentMoisture, rainProb, hour) {
     const error = targetMoisture - currentMoisture;
-    const inputs: FuzzyInputs = {
+    const inputs = {
       soilMoistureError: error,
       rainProbability: rainProb,
       timeOfDay: hour
     };
 
-    const activations: RuleActivation[] = [];
+    const activations = [];
     for (const rule of this.rules) {
       const result = this.evaluateRule(rule, inputs);
       if (result.strength > 0.01) {
@@ -228,10 +179,6 @@ class IrrigationFuzzyController {
       activatedRules: activations.length
     };
   }
-
-  get outputSingletonsValue(): Record<string, number> {
-    return this.outputSingletons;
-  }
 }
 
-export default new IrrigationFuzzyController();
+module.exports = new IrrigationFuzzyController();

@@ -1,11 +1,6 @@
 'use strict';
 
 class KalmanFilter {
-  R: number;
-  Q: number;
-  x: number | null;
-  P: number | null;
-
   constructor(R = 0.1, Q = 0.01) {
     this.R = R;
     this.Q = Q;
@@ -13,18 +8,18 @@ class KalmanFilter {
     this.P = null;
   }
 
-  filter(z: number): number {
+  filter(z) {
     if (this.x === null) {
       this.x = z;
       this.P = 1;
-      return this.x ?? z;
+      return this.x;
     }
     const x_pred = this.x;
-    const P_pred = (this.P ?? 0) + this.Q;
+    const P_pred = this.P + this.Q;
     const K = P_pred / (P_pred + this.R);
     this.x = x_pred + K * (z - x_pred);
     this.P = (1 - K) * P_pred;
-    return this.x ?? z;
+    return this.x;
   }
 
   reset() {
@@ -37,4 +32,4 @@ class KalmanFilter {
   }
 }
 
-export default KalmanFilter;
+module.exports = KalmanFilter;

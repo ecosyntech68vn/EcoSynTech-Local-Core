@@ -315,6 +315,7 @@ function getOrchestrator() {
 }
 
 module.exports = {
+export default module.exports;
   SkillOrchestrator,
   SkillRegistry,
   getOrchestrator

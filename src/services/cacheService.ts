@@ -1,39 +1,10 @@
-/**
- * Memory Cache Service - LRU in-memory caching
- * Converted to TypeScript - Phase 1
- */
-
-import logger from '../config/logger';
+const logger = require('../config/logger');
 
 const DEFAULT_TTL = 60 * 1000;
 const DEFAULT_MAX_SIZE = 100;
 
-export interface CacheItem<T = any> {
-  value: T;
-  expires: number;
-  accessed: number;
-}
-
-export interface CacheOptions {
-  ttl?: number;
-  maxSize?: number;
-}
-
-export interface CacheStats {
-  size: number;
-  hits: number;
-  misses: number;
-  hitRate: string;
-}
-
-export class MemoryCacheClass {
-  private ttl: number;
-  private maxSize: number;
-  private cache: Map<string, CacheItem>;
-  private hits: number;
-  private misses: number;
-
-  constructor(options: CacheOptions = {}) {
+class MemoryCache {
+  constructor(options = {}) {
     this.ttl = options.ttl || DEFAULT_TTL;
     this.maxSize = options.maxSize || DEFAULT_MAX_SIZE;
     this.cache = new Map();
@@ -41,9 +12,9 @@ export class MemoryCacheClass {
     this.misses = 0;
   }
 
-  set<T>(key: string, value: T, ttl?: number): void {
+  set(key, value, ttl = this.ttl) {
     if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
-      let lruKey: string | null = null;
+      let lruKey = null;
       let oldestTime = Date.now();
       for (const [k, v] of this.cache) {
         if (v.accessed < oldestTime) {
@@ -56,13 +27,13 @@ export class MemoryCacheClass {
 
     this.cache.set(key, {
       value,
-      expires: Date.now() + (ttl || this.ttl),
+      expires: Date.now() + ttl,
       accessed: Date.now()
     });
   }
 
-  get<T>(key: string): T | null {
-    const item = this.cache.get(key) as CacheItem<T> | undefined;
+  get(key) {
+    const item = this.cache.get(key);
     
     if (!item) {
       this.misses++;
@@ -80,78 +51,125 @@ export class MemoryCacheClass {
     return item.value;
   }
 
-  has(key: string): boolean {
+  has(key) {
     const item = this.cache.get(key);
     if (!item) return false;
-    
     if (Date.now() > item.expires) {
       this.cache.delete(key);
       return false;
     }
-    
     return true;
   }
 
-  delete(key: string): boolean {
+  delete(key) {
     return this.cache.delete(key);
   }
 
-  clear(): void {
+  clear() {
     this.cache.clear();
     this.hits = 0;
     this.misses = 0;
   }
 
-  getStats(): CacheStats {
-    const total = this.hits + this.misses;
-    return {
-      size: this.cache.size,
-      hits: this.hits,
-      misses: this.misses,
-      hitRate: total > 0 ? ((this.hits / total) * 100).toFixed(1) + '%' : '0%'
-    };
-  }
-
-  getSize(): number {
-    return this.cache.size;
-  }
-
-  keys(): string[] {
-    return Array.from(this.cache.keys());
-  }
-
-  prune(): number {
-    let pruned = 0;
+  cleanup() {
     const now = Date.now();
-    
     for (const [key, item] of this.cache) {
       if (now > item.expires) {
         this.cache.delete(key);
-        pruned++;
       }
     }
+  }
+
+  getStats() {
+    const size = this.cache.size;
+    const total = this.hits + this.misses;
+    const hitRate = total > 0 ? (this.hits / total * 100).toFixed(1) : 0;
     
-    return pruned;
+    return {
+      size,
+      hits: this.hits,
+      misses: this.misses,
+      hitRate: `${hitRate}%`
+    };
   }
 }
 
-export const MemoryCache = new MemoryCacheClass();
+let globalCache = null;
+let cacheInterval = null;
 
-export function createCache(options?: CacheOptions): MemoryCacheClass {
-  return new MemoryCacheClass(options);
+function getCache() {
+  if (!globalCache) {
+    const ttlVal = parseInt(process.env.CACHE_TTL || '60000', 10);
+    const sizeVal = parseInt(process.env.CACHE_MAX_SIZE || '100', 10);
+    globalCache = new MemoryCache({
+      ttl: isNaN(ttlVal) ? 60000 : ttlVal,
+      maxSize: isNaN(sizeVal) ? 100 : sizeVal
+    });
+
+    cacheInterval = setInterval(() => {
+      globalCache.cleanup();
+    }, 30000);
+  }
+  return globalCache;
 }
 
-export function getCacheStats(): CacheStats {
-  return MemoryCache.getStats();
+function cached(key, fn, ttl) {
+  const cache = getCache();
+  const cachedValue = cache.get(key);
+  
+  if (cachedValue !== null) {
+    return Promise.resolve(cachedValue);
+  }
+  
+  return fn().then(value => {
+    cache.set(key, value, ttl);
+    return value;
+  });
 }
 
-export function clearCache(): void {
-  MemoryCache.clear();
+function invalidate(key) {
+  return getCache().delete(key);
 }
 
-export default {
-  MemoryCache,
-  createCache,
-  getCacheStats,
-  clearCache
+function invalidatePattern(pattern) {
+  const cache = getCache();
+  const regex = new RegExp(pattern);
+  
+  for (const key of cache.cache.keys()) {
+    if (regex.test(key)) {
+      cache.delete(key);
+    }
+  }
+}
+
+function invalidateByPrefix(prefix) {
+  const cache = getCache();
+  
+  for (const key of cache.cache.keys()) {
+    if (key.startsWith(prefix)) {
+      cache.delete(key);
+    }
+  }
+}
+
+function stopCache() {
+  if (cacheInterval) {
+    clearInterval(cacheInterval);
+    cacheInterval = null;
+  }
+  if (globalCache) {
+    globalCache.clear();
+    globalCache = null;
+  }
+}
+
+module.exports = {
+export default module.exports;
+  getCache,
+  cached,
+  invalidate,
+  invalidatePattern,
+  invalidateByPrefix,
+  stopCache,
+  MemoryCache
 };

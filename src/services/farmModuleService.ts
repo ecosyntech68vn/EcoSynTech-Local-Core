@@ -465,6 +465,7 @@ function getTraceabilityWithModuleData(batchCode) {
 
 module.exports = {
 export default module.exports;
+export default module.exports;
   getModules,
   getModule,
   createModuleUnit,

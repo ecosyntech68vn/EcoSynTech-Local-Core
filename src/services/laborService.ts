@@ -370,6 +370,7 @@ function predictLaborDemand(cropId, days) {
 
 module.exports = {
 export default module.exports;
+export default module.exports;
   createWorker: createWorker,
   getWorkers: getWorkers,
   getWorkerById: getWorkerById,

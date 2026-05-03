@@ -9,9 +9,9 @@
  * - Tạo QR code với dữ liệu đầy đủ từ chu kỳ nuôi trồng
  */
 
-import { v4 as uuidv4 } from 'uuid';
-import { getOne, getAll, db, runQuery } from '../config/database';
-import logger from '../config/logger';
+const { v4: uuidv4 } = require('uuid');
+const { getOne, getAll, db, runQuery } = require('../config/database');
+const logger = require('../config/logger');
 
 const PRODUCT_TYPES = {
   vegetable: { label: 'Rau củ', icon: '🥬' },
@@ -517,6 +517,7 @@ function getBatchesWithSource(farmId = null, sourceType = null) {
 }
 
 module.exports = {
+export default module.exports;
   createBatchFromPlanting,
   createBatchFromAquaculture,
   syncPlantingToTraceability,
@@ -532,4 +533,3 @@ module.exports = {
   PRODUCT_TYPES,
   STAGE_TYPES
 };
-export default module.exports;

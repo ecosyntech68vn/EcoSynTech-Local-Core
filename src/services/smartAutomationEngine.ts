@@ -359,6 +359,7 @@ function getSmartEngine() {
 }
 
 module.exports = {
+export default module.exports;
   SmartAutomationEngine,
   ContextualLearning,
   PredictiveAlerting,

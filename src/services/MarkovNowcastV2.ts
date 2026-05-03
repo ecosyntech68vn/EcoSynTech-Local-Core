@@ -1,9 +1,9 @@
 'use strict';
 
-import fs from 'fs';
-import path from 'path';
-import KalmanFilter from './KalmanFilter';
-import AdaptiveThresholds from './AdaptiveThresholds';
+const fs = require('fs');
+const path = require('path');
+const KalmanFilter = require('./KalmanFilter');
+const AdaptiveThresholds = require('./AdaptiveThresholds');
 
 const WeatherState = Object.freeze({
   SUNNY: 'SUNNY',
@@ -11,28 +11,7 @@ const WeatherState = Object.freeze({
   RAINY: 'RAINY'
 });
 
-type WeatherStateType = 'SUNNY' | 'CLOUDY' | 'RAINY';
-
-interface Config {
-  pressureLow: number;
-  luxCloudy: number;
-  confirmMinutes: number;
-  maxHistoryDays: number;
-  stateFile: string;
-  priorWeight: number;
-}
-
-export interface Forecast {
-  state: string;
-  rainProbability: number;
-  estimatedRainMM: number;
-  confidence: string;
-  recommendation: string;
-  filteredValues: { pressure: number; lux: number };
-  timestamp: string;
-}
-
-const DEFAULT_CONFIG: Config = {
+const DEFAULT_CONFIG = {
   pressureLow: 1005,
   luxCloudy: 15000,
   confirmMinutes: 10,
@@ -42,22 +21,9 @@ const DEFAULT_CONFIG: Config = {
 };
 
 class MarkovNowcastV2 {
-  config: Config;
-  STATES: WeatherStateType[];
-  transitionMatrix2: Record<string, number[]>;
-  currentState: WeatherStateType;
-  prevState: WeatherStateType;
-  stateCounter: number;
-  transitionLog: Array<{ key: string; to: string; timestamp: string }>;
-  kalmanPressure: KalmanFilter;
-  kalmanLux: KalmanFilter;
-  thresholds: AdaptiveThresholds;
-  rainModel: { a: number; b: number; c: number };
-  lastForecast: Forecast | null;
-
-  constructor(config: Partial<Config> = {}) {
+  constructor(config = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-    this.STATES = Object.values(WeatherState) as WeatherStateType[];
+    this.STATES = Object.values(WeatherState);
     this.transitionMatrix2 = {};
     
     const defaultRow = [0.6, 0.3, 0.1];
@@ -84,7 +50,7 @@ class MarkovNowcastV2 {
     this._loadState();
   }
 
-  private _classifyState(pressure: number, lux: number, hour: number): WeatherStateType {
+  _classifyState(pressure, lux, hour) {
     const { pressureLow, luxCloudy } = this.thresholds.get();
     if (pressure < pressureLow) return WeatherState.RAINY;
     const isNight = hour >= 18 || hour <= 5;
@@ -94,11 +60,11 @@ class MarkovNowcastV2 {
     return lux < luxCloudy ? WeatherState.CLOUDY : WeatherState.SUNNY;
   }
 
-  update(pressureRaw?: number, luxRaw?: number, humidity?: number, hour?: number, externalRainProb: number | null = null): Forecast {
-    const pressure = this.kalmanPressure.filter(pressureRaw || 1013);
-    const lux = this.kalmanLux.filter(luxRaw || 30000);
+  update(pressureRaw, luxRaw, humidity, hour, externalRainProb = null) {
+    const pressure = this.kalmanPressure.filter(pressureRaw);
+    const lux = this.kalmanLux.filter(luxRaw);
 
-    const detected = this._classifyState(pressure, lux, hour || 12);
+    const detected = this._classifyState(pressure, lux, hour);
 
     if (detected === this.currentState) {
       this.stateCounter++;
@@ -113,19 +79,19 @@ class MarkovNowcastV2 {
 
     const key = `${this.prevState}|${this.currentState}`;
     const row = this.transitionMatrix2[key] || [0.6, 0.3, 0.1];
-    const markovRainProb = row[2] ?? 0.1;
+    const markovRainProb = row[2];
 
     let finalRainProb = markovRainProb;
     if (externalRainProb !== null && externalRainProb >= 0) {
       const prior = markovRainProb;
       const likelihood = externalRainProb / 100;
       const posterior = (prior * likelihood) / (prior * likelihood + (1 - prior) * (1 - likelihood) + 1e-6);
-      finalRainProb = (this.config.priorWeight * prior) + (1 - this.config.priorWeight) * posterior;
+      finalRainProb = this.config.priorWeight * prior + (1 - this.config.priorWeight) * posterior;
     }
 
     let estimatedRainMM = 0;
     if (finalRainProb > 0.5) {
-      estimatedRainMM = Math.max(0, this.rainModel.a * pressure + this.rainModel.b * (humidity || 70) + this.rainModel.c);
+      estimatedRainMM = Math.max(0, this.rainModel.a * pressure + this.rainModel.b * humidity + this.rainModel.c);
       estimatedRainMM = Math.round(estimatedRainMM * 10) / 10;
     }
 
@@ -133,7 +99,7 @@ class MarkovNowcastV2 {
       state: this.currentState,
       rainProbability: Math.round(finalRainProb * 100),
       estimatedRainMM,
-      confidence: (row[2] ?? 0.1) > 0.7 ? 'high' : 'medium',
+      confidence: row[2] > 0.7 ? 'high' : 'medium',
       recommendation: finalRainProb > 0.6 ? 'DELAY_IRRIGATION' : 'IRRIGATE_AS_NEEDED',
       filteredValues: { pressure: Math.round(pressure * 10) / 10, lux: Math.round(lux) },
       timestamp: new Date().toISOString()
@@ -142,7 +108,7 @@ class MarkovNowcastV2 {
     return this.lastForecast;
   }
 
-  private _recordTransition(prevPrev: WeatherStateType, prev: WeatherStateType, curr: WeatherStateType) {
+  _recordTransition(prevPrev, prev, curr) {
     const key = `${prevPrev}|${prev}`;
     const entry = { key, to: curr, timestamp: new Date().toISOString() };
     this.transitionLog.push(entry);
@@ -154,8 +120,8 @@ class MarkovNowcastV2 {
     this._saveState();
   }
 
-  private _updateMatrix2() {
-    const counts: Record<string, Record<string, number>> = {};
+  _updateMatrix2() {
+    const counts = {};
     for (const s1 of this.STATES) {
       for (const s2 of this.STATES) {
         const key = `${s1}|${s2}`;
@@ -163,27 +129,22 @@ class MarkovNowcastV2 {
       }
     }
     for (const entry of this.transitionLog) {
-      const entryCounts = counts[entry.key];
-      if (entryCounts) {
-        const toKey = entry.to as 'SUNNY' | 'CLOUDY' | 'RAINY';
-        if (toKey in entryCounts && typeof entryCounts[toKey] === 'number') {
-          entryCounts[toKey]++;
-        }
+      if (counts[entry.key]) {
+        counts[entry.key][entry.to]++;
       }
     }
     for (const key in counts) {
       const c = counts[key];
-      if (!c) continue;
-      const total = (c.SUNNY ?? 0) + (c.CLOUDY ?? 0) + (c.RAINY ?? 0) + 3;
+      const total = c.SUNNY + c.CLOUDY + c.RAINY + 3;
       this.transitionMatrix2[key] = [
-        ((c.SUNNY ?? 0) + 1) / total,
-        ((c.CLOUDY ?? 0) + 1) / total,
-        ((c.RAINY ?? 0) + 1) / total
+        (c.SUNNY + 1) / total,
+        (c.CLOUDY + 1) / total,
+        (c.RAINY + 1) / total
       ];
     }
   }
 
-  onlineUpdate(pressure: number, humidity: number, actualRain: boolean) {
+  onlineUpdate(pressure, humidity, actualRain) {
     if (this.lastForecast) {
       if (actualRain !== (this.lastForecast.state === 'RAINY')) {
         this.thresholds.update(pressure, 0, actualRain, this.lastForecast.state);
@@ -198,23 +159,18 @@ class MarkovNowcastV2 {
     }
   }
 
-  getForecast(): Forecast {
-    if (this.lastForecast) {
-      return this.lastForecast;
-    }
-    const forecast: Forecast = {
+  getForecast() {
+    return this.lastForecast || {
       state: this.currentState,
       rainProbability: 0,
       estimatedRainMM: 0,
       confidence: 'low',
       recommendation: 'NO_DATA',
-      filteredValues: { pressure: 1013, lux: 30000 },
       timestamp: new Date().toISOString()
     };
-    return forecast;
   }
 
-  private _saveState() {
+  _saveState() {
     try {
       const stateDir = path.dirname(this.config.stateFile);
       if (!fs.existsSync(stateDir)) {
@@ -230,13 +186,12 @@ class MarkovNowcastV2 {
         savedAt: new Date().toISOString()
       };
       fs.writeFileSync(this.config.stateFile, JSON.stringify(state, null, 2));
-    } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : 'Unknown';
-      console.warn('[MarkovV2] Cannot save state:', errMsg);
+    } catch (e) {
+      console.warn('[MarkovV2] Cannot save state:', e.message);
     }
   }
 
-  private _loadState() {
+  _loadState() {
     try {
       if (fs.existsSync(this.config.stateFile)) {
         const state = JSON.parse(fs.readFileSync(this.config.stateFile, 'utf8'));
@@ -260,9 +215,8 @@ class MarkovNowcastV2 {
           this.rainModel = state.rainModel;
         }
       }
-    } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : 'Unknown';
-      console.warn('[MarkovV2] Cannot load state:', errMsg);
+    } catch (e) {
+      console.warn('[MarkovV2] Cannot load state:', e.message);
     }
   }
 
@@ -289,4 +243,4 @@ class MarkovNowcastV2 {
   }
 }
 
-export default MarkovNowcastV2;
+module.exports = MarkovNowcastV2;

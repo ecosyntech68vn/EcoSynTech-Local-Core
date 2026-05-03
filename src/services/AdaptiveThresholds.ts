@@ -1,19 +1,6 @@
 'use strict';
 
-interface TrainingEntry {
-  pressure: number;
-  lux: number;
-  actualRain: boolean;
-  predictedState: string;
-  timestamp: number;
-}
-
 class AdaptiveThresholds {
-  pressureLow: number;
-  luxCloudy: number;
-  lr: number;
-  trainingHistory: TrainingEntry[];
-
   constructor(initialPressureLow = 1005, initialLuxCloudy = 15000, learningRate = 0.01) {
     this.pressureLow = initialPressureLow;
     this.luxCloudy = initialLuxCloudy;
@@ -21,7 +8,7 @@ class AdaptiveThresholds {
     this.trainingHistory = [];
   }
 
-  update(pressure: number, lux: number, actualRain: boolean, predictedState: string) {
+  update(pressure, lux, actualRain, predictedState) {
     if (actualRain && predictedState !== 'RAINY') {
       this.pressureLow += this.lr * (pressure - this.pressureLow);
       this.luxCloudy -= this.lr * (lux - this.luxCloudy);
@@ -68,4 +55,4 @@ class AdaptiveThresholds {
   }
 }
 
-export default AdaptiveThresholds;
+module.exports = AdaptiveThresholds;

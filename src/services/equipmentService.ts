@@ -718,6 +718,7 @@ function generateEquipmentQR(equipmentId) {
 
 module.exports = {
 export default module.exports;
+export default module.exports;
   EQUIPMENT_TYPES,
   EQUIPMENT_STATUS,
   MAINTENANCE_TYPES,

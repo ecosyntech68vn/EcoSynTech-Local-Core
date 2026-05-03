@@ -335,6 +335,7 @@ function generateReport(options) {
 }
 
 module.exports = {
+export default module.exports;
   ComplianceReportService,
   getComplianceService,
   generateReport

@@ -610,6 +610,7 @@ function getFinancialSummary(farmId, startDate, endDate) {
 
 module.exports = {
 export default module.exports;
+export default module.exports;
   INCOME_TYPES,
   EXPENSE_TYPES,
   BUDGET_TYPES,

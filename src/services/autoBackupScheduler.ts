@@ -1,7 +1,7 @@
-import backupService, { BackupResult as BackupResultType } from './backupRestoreService';
-import logger from '../config/logger';
-import fs from 'fs';
-import path from 'path';
+const backupService = require('./backupRestoreService');
+const logger = require('../config/logger');
+const fs = require('fs');
+const path = require('path');
 
 const BACKUP_ENABLED = process.env.AUTO_BACKUP_ENABLED === 'true';
 const BACKUP_CRON = process.env.AUTO_BACKUP_CRON || '0 2 * * *';
@@ -9,34 +9,27 @@ const BACKUP_RETENTION_DAYS = parseInt(process.env.BACKUP_RETENTION_DAYS || '7',
 const BACKUP_MAX_COUNT = parseInt(process.env.BACKUP_MAX_COUNT || '7', 10);
 const MIN_DISK_SPACE_MB = 100;
 
-let intervalHandle: NodeJS.Timeout | null = null;
+let intervalHandle = null;
 
-function checkDiskSpace(dir: string): boolean {
+function checkDiskSpace(dir) {
   try {
     const stat = fs.statfsSync(dir);
     const freeMB = (stat.bsize * stat.blocks) / 1024 / 1024;
     return freeMB >= MIN_DISK_SPACE_MB;
-  } catch (e: unknown) {
-    const errMsg = e instanceof Error ? e.message : 'Unknown';
-    logger.warn('[AutoBackup] Cannot check disk space:', errMsg);
+  } catch (e) {
+    logger.warn('[AutoBackup] Cannot check disk space:', e.message);
     return true;
   }
 }
 
-interface CronParsed {
-  minute: number;
-  hour: number;
-}
-
-function parseCron(cron: string): CronParsed | null {
+function parseCron(cron) {
   const parts = cron.split(' ');
   if (parts.length !== 5) return null;
-  const minute = parts[1] ?? '0';
-  const hour = parts[2] ?? '0';
+  const [, minute, hour] = parts;
   return { minute: parseInt(minute), hour: parseInt(hour) };
 }
 
-function shouldRunNow(cron: string): boolean {
+function shouldRunNow(cron) {
   const parsed = parseCron(cron);
   if (!parsed) return false;
   
@@ -44,13 +37,7 @@ function shouldRunNow(cron: string): boolean {
   return now.getMinutes() === parsed.minute && now.getHours() === parsed.hour;
 }
 
-interface BackupResult {
-  success: boolean;
-  error?: string;
-  backupId?: string;
-}
-
-async function runScheduledBackup(): Promise<BackupResultType> {
+async function runScheduledBackup() {
   logger.info('[AutoBackup] Running scheduled backup...');
   
   const backDir = process.env.BACKUP_DIR || './backups';
@@ -60,69 +47,71 @@ async function runScheduledBackup(): Promise<BackupResultType> {
   }
   
   try {
-    const result = await backupService.createBackup({ compression: true }) as BackupResultType;
-    
-    logger.info('[AutoBackup] Scheduled backup completed:', result.backupPath);
-    return { success: true, backupPath: result.backupPath };
-  } catch (e: unknown) {
-    const errMsg = e instanceof Error ? e.message : 'Unknown';
-    logger.error('[AutoBackup] Backup failed:', errMsg);
-    return { success: false, error: errMsg };
+    const result = await backupService.createBackup({ compression: true });
+    if (result.success) {
+      logger.info('[AutoBackup] Backup created:', result.backupPath);
+      
+      const verifyResult = await backupService.verifyBackup(result.backupPath);
+      if (!verifyResult.valid) {
+        logger.error('[AutoBackup] Backup verification FAILED:', verifyResult.error);
+        return { success: false, error: 'Backup verification failed', verifyResult };
+      }
+      logger.info('[AutoBackup] Backup verified successfully');
+      
+      await cleanupOldBackups();
+      
+      return { success: true, backupPath: result.backupPath, verified: true };
+    } else {
+      logger.error('[AutoBackup] Failed:', result.error);
+    }
+    return result;
+  } catch (err) {
+    logger.error('[AutoBackup] Error:', err.message);
+    return { success: false, error: err.message };
   }
 }
 
-async function cleanupOldBackups(): Promise<number> {
-  const backDir = process.env.BACKUP_DIR || './backups';
+async function cleanupOldBackups() {
+  const backupService = require('./backupRestoreService');
+  const backups = await backupService.listBackups();
   
-  try {
-    if (!fs.existsSync(backDir)) return 0;
-    
-    const files = fs.readdirSync(backDir)
-      .map(f => ({ name: f, path: path.join(backDir, f), time: fs.statSync(path.join(backDir, f)).mtime.getTime() }))
-      .sort((a, b) => b.time - a.time);
-    
-    let deleted = 0;
-    const cutoffTime = Date.now() - (BACKUP_RETENTION_DAYS * 24 * 60 * 60 * 1000);
-    
-    for (let i = BACKUP_MAX_COUNT; i < files.length; i++) {
-      const file = files[i];
-      if (file && file.path) {
-        fs.unlinkSync(file.path);
-        deleted++;
-      }
-    }
-    
-    for (const file of files) {
-      if (file.time < cutoffTime) {
-        fs.unlinkSync(file.path);
-        deleted++;
-      }
-    }
-    
-    logger.info(`[AutoBackup] Cleaned up ${deleted} old backups`);
-    return deleted;
-  } catch (e: unknown) {
-    const errMsg = e instanceof Error ? e.message : 'Unknown';
-    logger.error('[AutoBackup] Cleanup failed:', errMsg);
-    return 0;
+  if (backups.length <= BACKUP_MAX_COUNT) {
+    return { cleaned: 0 };
   }
+  
+  const toDelete = backups.slice(BACKUP_MAX_COUNT);
+  let cleaned = 0;
+  
+  for (const backup of toDelete) {
+    try {
+      require('fs').unlinkSync(backup.path);
+      cleaned++;
+    } catch (e) {
+      logger.warn('[AutoBackup] Could not delete:', backup.path);
+    }
+  }
+  
+  logger.info(`[AutoBackup] Cleaned ${cleaned} old backups`);
+  return { cleaned };
 }
 
 function startScheduler() {
   if (!BACKUP_ENABLED) {
-    logger.info('[AutoBackup] Auto backup disabled');
+    logger.info('[AutoBackup] Disabled (AUTO_BACKUP_ENABLED not set)');
     return;
   }
   
-  logger.info('[AutoBackup] Starting auto backup scheduler');
+  logger.info(`[AutoBackup] Starting scheduler with cron: ${BACKUP_CRON}`);
   
   intervalHandle = setInterval(() => {
     if (shouldRunNow(BACKUP_CRON)) {
-      runScheduledBackup().then(() => cleanupOldBackups());
+      runScheduledBackup().catch(err => {
+        logger.error('[AutoBackup] Scheduler error:', err);
+      });
     }
   }, 60000);
   
-  logger.info(`[AutoBackup] Scheduler running with cron: ${BACKUP_CRON}`);
+  logger.info('[AutoBackup] Scheduler started');
 }
 
 function stopScheduler() {
@@ -133,20 +122,14 @@ function stopScheduler() {
   }
 }
 
-function getStatus() {
-  return {
-    enabled: BACKUP_ENABLED,
-    cron: BACKUP_CRON,
-    retentionDays: BACKUP_RETENTION_DAYS,
-    maxCount: BACKUP_MAX_COUNT,
-    running: intervalHandle !== null
-  };
-}
-
-export {
+module.exports = {
+export default module.exports;
   startScheduler,
   stopScheduler,
   runScheduledBackup,
   cleanupOldBackups,
-  getStatus
+  shouldRunNow,
+  BACKUP_CRON,
+  BACKUP_RETENTION_DAYS,
+  BACKUP_MAX_COUNT
 };

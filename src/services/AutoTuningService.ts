@@ -1,15 +1,7 @@
-import GeneticOptimizer from './GeneticOptimizer';
-import logger from '../config/logger';
+const GeneticOptimizer = require('./GeneticOptimizer');
+const logger = require('../config/logger');
 
-interface HistoricalData {
-  soilMoistureError: number;
-  rainProb: number;
-  hour: number;
-  actualDurationUsed: number;
-  stressFlag: number;
-}
-
-async function collectHistoricalData(): Promise<HistoricalData[]> {
+async function collectHistoricalData() {
   try {
     const { getAll } = require('../config/database');
     
@@ -32,24 +24,23 @@ async function collectHistoricalData(): Promise<HistoricalData[]> {
       LIMIT 100
     `;
     
-    return getAll(query) as HistoricalData[];
-  } catch (err: unknown) {
-    const errMsg = err instanceof Error ? err.message : 'Unknown';
-    logger.warn('[AutoTuning] Lỗi truy vấn dữ liệu:', errMsg);
+    return getAll(query);
+  } catch (err) {
+    logger.warn('[AutoTuning] Lỗi truy vấn dữ liệu:', err.message);
     return [];
   }
 }
 
-function generateMockData(): HistoricalData[] {
-  const data: HistoricalData[] = [];
+function generateMockData() {
+  const data = [];
   const soilErrors = [-30, -20, -10, 0, 10, 20, 30, 40];
   const rainProbs = [0, 10, 20, 30, 50, 70, 90];
   const hours = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
   
   for (let i = 0; i < 50; i++) {
-    const error = soilErrors[Math.floor(Math.random() * soilErrors.length)] ?? 0;
-    const rainProb = rainProbs[Math.floor(Math.random() * rainProbs.length)] ?? 0;
-    const hour = hours[Math.floor(Math.random() * hours.length)] ?? 12;
+    const error = soilErrors[Math.floor(Math.random() * soilErrors.length)];
+    const rainProb = rainProbs[Math.floor(Math.random() * rainProbs.length)];
+    const hour = hours[Math.floor(Math.random() * hours.length)];
     
     const actualDuration = Math.max(0, error > 0 ? Math.round(error * 1.5) : 0);
     const stressFlag = error > 20 && actualDuration < 15 ? 1 : 0;
@@ -66,58 +57,65 @@ function generateMockData(): HistoricalData[] {
   return data;
 }
 
-async function tuneIrrigationSchedule(): Promise<{ success: boolean; message: string; results?: unknown }> {
-  logger.info('[AutoTuning] Bắt đầu tối ưu hóa lịch tưới');
+async function runDailyOptimization() {
+  logger.info('[AutoTuning] Bắt đầu thu thập dữ liệu và tối ưu GA...');
   
-  let historicalData = await collectHistoricalData();
+  let dataLogs = await collectHistoricalData();
   
-  if (historicalData.length < 10) {
-    logger.warn('[AutoTuning] Dữ liệu lịch sử không đủ, sử dụng dữ liệu mô phỏng');
-    historicalData = generateMockData();
+  if (!dataLogs || dataLogs.length < 10) {
+    logger.info('[AutoTuning] Dữ liệu thực không đủ, sử dụng dữ liệu mô phỏng');
+    dataLogs = generateMockData();
   }
   
-  const stressCount = historicalData.filter(d => d.stressFlag === 1).length;
-  const avgRainProb = historicalData.reduce((sum, d) => sum + d.rainProb, 0) / historicalData.length;
+  logger.info(`[AutoTuning] Sử dụng ${dataLogs.length} bản ghi để huấn luyện`);
   
-  logger.info(`[AutoTuning] Phân tích: ${stressCount} lần cây bị stress, mưa trung bình ${avgRainProb.toFixed(1)}%`);
+  const result = await GeneticOptimizer.runOptimization(dataLogs);
   
-  const result = GeneticOptimizer.evolve();
+  if (result) {
+    logger.info(`[AutoTuning] Hoàn tất - Fitness: ${result.bestFitness.toFixed(4)}`);
+  }
   
-  if (result.converged || result.generation >= 50) {
-    const best = GeneticOptimizer.getBestSolution();
-    logger.info(`[AutoTuning] Hoàn thành sau ${result.generation} thế hệ`);
-    logger.info(`[AutoTuning] Lịch tưới tối ưu: ${best.join(' -> ')} phút`);
-    
-    return {
-      success: true,
-      message: `Đã tối ưu sau ${result.generation} thế hệ`,
-      results: {
-        generation: result.generation,
-        schedule: best,
-        fitness: result.bestFitness
-      }
-    };
+  return result;
+}
+
+let cronJob = null;
+
+function startAutoTuning(schedule = '0 3 * * *') {
+  if (cronJob) {
+    logger.warn('[AutoTuning] Đã có lịch chạy, dừng trước');
+    cronJob.stop();
+  }
+  
+  logger.info(`[AutoTuning] Đăng ký lịch chạy: ${schedule}`);
+  
+  try {
+    const cron = require('node-cron');
+    cronJob = cron.schedule(schedule, runDailyOptimization);
+    logger.info('[AutoTuning] Đã kích hoạt tự động tối ưu');
+  } catch (err) {
+    logger.warn('[AutoTuning] node-cron không khả dụng, chạy thủ công:', err.message);
   }
   
   return {
-    success: true,
-    message: `Tiến hành tối ưu hóa (thế hệ ${result.generation})`
+    run: runDailyOptimization,
+    stop: () => {
+      if (cronJob) {
+        cronJob.stop();
+        cronJob = null;
+      }
+    },
+    getOptimizerStatus: () => GeneticOptimizer.getStatus()
   };
 }
 
-function getTuningStats() {
-  return GeneticOptimizer.getStats();
+function startImmediate() {
+  return runDailyOptimization();
 }
 
-function resetTuning() {
-  GeneticOptimizer.reset();
-  logger.info('[AutoTuning] Đã reset bộ tối ưu');
-}
-
-export {
-  tuneIrrigationSchedule,
-  getTuningStats,
-  resetTuning,
+module.exports = {
+export default module.exports;
+  startAutoTuning,
+  startImmediate,
   collectHistoricalData,
   generateMockData
 };

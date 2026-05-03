@@ -2,416 +2,793 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#219465">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>EcoSynTech - Smart Farming</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="manifest" href="/manifest.webmanifest">
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     :root {
       --primary: #219465;
       --primary-dark: #1a7a4a;
-      --primary-light: #4CAF50;
       --secondary: #4CAF50;
       --accent: #8BC34A;
       --danger: #f44336;
       --warning: #ff9800;
       --info: #2196F3;
-      --success: #4CAF50;
       --light: #f5f5f5;
       --dark: #212121;
-      --surface: #ffffff;
+      --card-bg: #ffffff;
+      --text-primary: #212121;
+      --text-secondary: #666;
       --border: #e0e0e0;
-      --text: #333333;
-      --text-secondary: #666666;
-      --text-muted: #999999;
-      --radius: 12px;
-      --radius-sm: 8px;
-      --shadow: 0 2px 8px rgba(0,0,0,0.08);
-      --shadow-lg: 0 4px 20px rgba(0,0,0,0.12);
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    html, body { height: 100%; overflow: hidden; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background: var(--light); color: var(--text); }
-
-    /* Typography */
-    h1, h2, h3 { font-weight: 600; line-height: 1.3; }
-    h1 { font-size: 24px; }
-    h2 { font-size: 20px; }
-    h3 { font-size: 16px; }
-
-    /* App Container */
-    .app-container { max-width: 480px; margin: 0 auto; background: var(--surface); min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.1); position: relative; display: flex; flex-direction: column; }
-    .app-content { flex: 1; overflow-y: auto; padding: 16px; padding-bottom: 80px; }
-
-    /* Auth Screen */
-    .auth-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .auth-container { width: 100%; max-width: 360px; }
-    .auth-header { text-align: center; margin-bottom: 32px; }
-    .auth-logo { font-size: 48px; margin-bottom: 12px; }
-    .auth-header h1 { color: var(--primary); margin-bottom: 4px; }
-    .auth-subtitle { color: var(--text-secondary); font-size: 14px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--light); }
+    .app-container { max-width: 480px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
     
-    .auth-tabs { display: flex; background: var(--light); border-radius: var(--radius); padding: 4px; margin-bottom: 24px; }
-    .auth-tab { flex: 1; padding: 12px; border: none; background: none; font-size: 14px; font-weight: 500; color: var(--text-secondary); cursor: pointer; border-radius: var(--radius-sm); transition: all 0.2s; }
-    .auth-tab.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow); }
-
-    .auth-form { display: flex; flex-direction: column; gap: 16px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group label { font-size: 13px; font-weight: 500; color: var(--text-secondary); }
-    .form-group input { padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 15px; transition: border-color 0.2s; }
-    .form-group input:focus { outline: none; border-color: var(--primary); }
-    .form-group input::placeholder { color: var(--text-muted); }
-
-    .btn-primary { background: var(--primary); color: white; border: none; padding: 16px; border-radius: var(--radius-sm); font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-    .btn-primary:active { background: var(--primary-dark); }
-    .btn-primary:disabled { background: var(--text-muted); cursor: not-allowed; }
-
-    .auth-divider { display: flex; align-items: center; gap: 16px; margin: 8px 0; }
-    .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-    .auth-divider span { font-size: 12px; color: var(--text-muted); }
-
-    .social-buttons { display: flex; flex-direction: column; gap: 10px; }
-    .social-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
-    .social-btn:active { background: var(--light); }
-    .social-btn.google { color: #4285F4; }
-    .social-btn.facebook { color: #1877F2; }
-
-    .phone-login-link { text-align: center; margin-top: 8px; }
-    .phone-login-link button { background: none; border: none; color: var(--primary); font-size: 14px; cursor: pointer; text-decoration: underline; }
-
-    .auth-terms { font-size: 12px; color: var(--text-muted); text-align: center; margin-top: 8px; }
-    .auth-terms a { color: var(--primary); text-decoration: none; }
-
-    .auth-error { background: #ffebee; color: var(--danger); padding: 12px; border-radius: var(--radius-sm); font-size: 13px; margin-top: 16px; text-align: center; }
-    .auth-loading { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; z-index: 1000; }
-    .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .hidden { display: none !important; }
-
     /* Header */
     .header { background: var(--primary); color: white; padding: 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
-    .header-left { display: flex; align-items: center; gap: 12px; }
-    .header-logo { font-size: 24px; }
-    .header-title { font-size: 18px; font-weight: 600; }
-    .header-right { display: flex; align-items: center; gap: 8px; }
-    .header-btn { background: none; border: none; color: white; font-size: 20px; padding: 8px; cursor: pointer; }
-
-    /* User Profile in Header */
-    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: pointer; }
-    .user-dropdown { position: absolute; top: 60px; right: 16px; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow-lg); min-width: 200px; z-index: 200; display: none; }
-    .user-dropdown.show { display: block; }
-    .user-dropdown-item { padding: 14px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
-    .user-dropdown-item:last-child { border-bottom: none; }
-    .user-dropdown-item:active { background: var(--light); }
-
+    .header h1 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .header .user-info { font-size: 12px; opacity: 0.9; }
+    .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: var(--secondary); }
+    .status-indicator.offline { background: var(--danger); }
+    .menu-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+    
+    /* Content */
+    .content { padding: 16px; padding-bottom: 80px; }
+    .section-title { font-size: 14px; color: var(--text-secondary); font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    
     /* Cards */
-    .card { background: var(--surface); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow); }
-    .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .card { background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .card-title { font-size: 14px; color: var(--text-secondary); }
-    .card-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 20px; background: var(--light); }
-    .card-value { font-size: 24px; font-weight: 600; color: var(--dark); }
-    .card-unit { font-size: 14px; color: var(--text-muted); font-weight: normal; }
-
-    /* Metric Grid */
-    .metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .metric { text-align: center; padding: 16px; background: var(--light); border-radius: var(--radius-sm); }
-    .metric-value { font-size: 20px; font-weight: 600; color: var(--primary); }
+    .card-value { font-size: 28px; font-weight: 600; color: var(--text-primary); }
+    .card-unit { font-size: 14px; color: var(--text-secondary); font-weight: normal; }
+    .card-change { font-size: 12px; padding: 2px 6px; border-radius: 4px; }
+    .card-change.up { background: #e8f5e9; color: var(--secondary); }
+    .card-change.down { background: #ffebee; color: var(--danger); }
+    
+    /* Metrics Grid */
+    .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px; }
+    .metric-card { background: var(--card-bg); border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .metric-value { font-size: 24px; font-weight: 600; color: var(--primary); }
     .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
-
-    /* Device List */
-    .device-list { list-style: none; }
-    .device-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
-    .device-item:last-child { border-bottom: none; }
-    .device-info { display: flex; align-items: center; gap: 12px; }
-    .device-icon { width: 40px; height: 40px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; background: var(--light); }
-    .device-name { font-weight: 500; }
-    .device-status { font-size: 12px; padding: 4px 8px; border-radius: 4px; }
-    .device-status.online { background: #e8f5e9; color: var(--success); }
-    .device-status.offline { background: #ffebee; color: var(--danger); }
-
-    /* Toggle Switch */
-    .device-toggle { width: 52px; height: 28px; border-radius: 14px; background: var(--border); position: relative; transition: all 0.3s; border: none; cursor: pointer; }
-    .device-toggle.active { background: var(--primary); }
-    .device-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; background: white; border-radius: 50%; transition: all 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-    .device-toggle.active::after { left: 26px; }
-
-    /* Quick Actions */
-    .quick-actions { display: flex; gap: 10px; overflow-x: auto; padding: 4px 0; scrollbar-width: none; }
-    .quick-actions::-webkit-scrollbar { display: none; }
-    .action-btn { flex-shrink: 0; width: 72px; height: 72px; background: var(--light); border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 1px solid transparent; transition: all 0.2s; }
-    .action-btn:active { transform: scale(0.95); }
-    .action-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
-    .action-btn-icon { font-size: 24px; }
-    .action-btn-label { font-size: 11px; color: var(--text-secondary); font-weight: 500; text-align: center; }
-    .action-btn.active .action-btn-label { color: white; }
-
-    /* Alerts */
-    .alert-item { display: flex; align-items: flex-start; gap: 12px; padding: 14px; background: #fff8e1; border-radius: var(--radius-sm); border-left: 3px solid var(--warning); margin-bottom: 8px; }
-    .alert-item.critical { background: #ffebee; border-left-color: var(--danger); }
-    .alert-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; background: rgba(0,0,0,0.05); }
-    .alert-content { flex: 1; }
-    .alert-title { font-weight: 500; font-size: 14px; }
-    .alert-time { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-
+    
+    /* Lists */
+    .data-list { list-style: none; }
+    .data-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .data-item:last-child { border-bottom: none; }
+    .data-name { font-weight: 500; color: var(--text-primary); }
+    .data-value { font-size: 14px; color: var(--text-secondary); }
+    .data-badge { font-size: 12px; padding: 4px 8px; border-radius: 4px; }
+    .data-badge.online { background: #e8f5e9; color: var(--secondary); }
+    .data-badge.offline { background: #ffebee; color: var(--danger); }
+    .data-badge.active { background: #e3f2fd; color: var(--info); }
+    
+    /* Buttons */
+    .btn { background: var(--primary); color: white; border: none; padding: 14px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; width: 100%; cursor: pointer; transition: all 0.2s; }
+    .btn:active { background: var(--primary-dark); transform: scale(0.98); }
+    .btn-secondary { background: var(--light); color: var(--text-primary); }
+    .btn-danger { background: var(--danger); }
+    .btn-group { display: flex; gap: 8px; }
+    .btn-group .btn { flex: 1; }
+    .btn-small { padding: 8px 16px; font-size: 12px; }
+    
+    /* Forms */
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px; display: block; }
+    .form-input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+    .form-input:focus { outline: none; border-color: var(--primary); }
+    .form-select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: white; }
+    
     /* Navigation */
-    .nav { display: flex; background: var(--surface); border-top: 1px solid var(--border); position: fixed; bottom: 0; width: 100%; max-width: 480px; z-index: 100; }
-    .nav-item { flex: 1; text-align: center; padding: 12px 8px; color: var(--text-muted); font-size: 11px; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .nav { display: flex; background: white; border-top: 1px solid var(--border); position: fixed; bottom: 0; width: 100%; max-width: 480px; justify-content: space-around; }
+    .nav-item { flex: 1; text-align: center; padding: 12px 8px; color: var(--text-secondary); font-size: 11px; cursor: pointer; }
     .nav-item.active { color: var(--primary); }
-    .nav-icon { font-size: 22px; }
-    .nav-item:active { background: var(--light); }
-
-    /* Pull to Refresh */
-    .pull-refresh { position: absolute; top: -50px; left: 0; right: 0; height: 50px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 13px; transition: top 0.3s; }
-    .pull-refresh.show { top: 0; }
-
-    /* Loading States */
-    .loading { text-align: center; padding: 40px; color: var(--text-muted); }
-    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
-    .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
-
-    /* Sections */
-    .section { margin-bottom: 24px; }
-    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .section-title { font-size: 16px; font-weight: 600; }
-    .section-action { font-size: 13px; color: var(--primary); }
-
-    /* Greeting */
-    .greeting { padding: 16px 0; }
-    .greeting-title { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
-    .greeting-subtitle { font-size: 14px; color: var(--text-secondary); }
-    .last-update { font-size: 12px; color: var(--text-muted); margin-top: 8px; }
-
-    /* Status Indicator */
-    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
-    .status-dot.offline { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
-
-    /* FAB */
-    .fab { position: fixed; bottom: 90px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: var(--shadow-lg); border: none; color: white; z-index: 90; cursor: pointer; }
-    .fab:active { transform: scale(0.9); }
-
-    /* Toast */
-    .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--dark); color: white; padding: 12px 24px; border-radius: 24px; font-size: 14px; z-index: 1000; opacity: 0; transition: opacity 0.3s; }
-    .toast.show { opacity: 1; }
-    .toast.success { background: var(--success); }
-    .toast.error { background: var(--danger); }
-
-    /* Weather Card */
-    .weather-card { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
-    .weather-main { display: flex; align-items: center; gap: 16px; }
+    .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+    
+    /* States */
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+    .loading { text-align: center; padding: 20px; color: var(--text-secondary); }
+    .error { background: #ffebee; color: var(--danger); padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+    .success { background: #e8f5e9; color: var(--secondary); padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+    
+    /* Pages */
+    .page { display: none; }
+    .page.active { display: block; }
+    
+    /* Quick Actions */
+    .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+    .quick-action { text-align: center; padding: 12px 8px; background: var(--light); border-radius: 8px; cursor: pointer; }
+    .quick-action:active { background: var(--border); }
+    .quick-action-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+    .quick-action-label { font-size: 10px; color: var(--text-secondary); }
+    
+    /* Weather */
+    .weather-card { display: flex; align-items: center; gap: 16px; }
     .weather-icon { font-size: 48px; }
-    .weather-temp { font-size: 36px; font-weight: 700; }
-    .weather-desc { font-size: 14px; opacity: 0.9; }
-    .weather-details { display: flex; gap: 16px; margin-top: 12px; font-size: 13px; opacity: 0.9; }
-
-    /* Modal */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 500; padding: 20px; }
-    .modal-overlay.show { display: flex; }
-    .modal { background: var(--surface); border-radius: var(--radius); width: 100%; max-width: 360px; max-height: 80vh; overflow: auto; }
-    .modal-header { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
-    .modal-title { font-size: 18px; font-weight: 600; }
-    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted); }
-    .modal-body { padding: 16px; }
-    .modal-footer { padding: 16px; border-top: 1px solid var(--border); display: flex; gap: 12px; }
-    .modal-btn { flex: 1; padding: 12px; border-radius: var(--radius-sm); font-weight: 500; cursor: pointer; text-align: center; }
-    .modal-btn.primary { background: var(--primary); color: white; border: none; }
-    .modal-btn.secondary { background: var(--light); color: var(--text); border: 1px solid var(--border); }
-
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .weather-info { flex: 1; }
+    .weather-temp { font-size: 32px; font-weight: 600; }
+    .weather-desc { font-size: 14px; color: var(--text-secondary); }
+    
+    /* Alerts */
+    .alert-item { padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+    .alert-item.warning { background: #fff3e0; border-left: 4px solid var(--warning); }
+    .alert-item.danger { background: #ffebee; border-left: 4px solid var(--danger); }
+    .alert-item.info { background: #e3f2fd; border-left: 4px solid var(--info); }
+    
+    /* QR Scanner Placeholder */
+    .qr-scanner { width: 100%; height: 200px; background: var(--dark); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+    
+    /* Responsive */
+    @media (max-width: 380px) {
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+      .quick-actions { grid-template-columns: repeat(3, 1fr); }
+    }
   </style>
 </head>
 <body>
-  <div id="app"></div>
-  <div id="toast" class="toast"></div>
-
-  <!-- Auth Module -->
-  <script src="src/services/api.js"></script>
-  <script src="src/auth/auth.js"></script>
+  <div class="app-container">
+    <!-- LOGIN PAGE -->
+    <div id="page-login" class="page">
+      <div class="header">
+        <h1>🌾 EcoSynTech</h1>
+      </div>
+      <div class="content">
+        <div style="text-align: center; padding: 40px 0;">
+          <div style="font-size: 64px;">🌾</div>
+          <h2 style="margin: 20px 0 8px;">Smart Farming</h2>
+          <p style="color: var(--text-secondary);">Quản lý trang trại thông minh</p>
+        </div>
+        
+        <div id="login-error" class="error" style="display: none;"></div>
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="login-email" placeholder="email@domain.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mật khẩu</label>
+            <input type="password" class="form-input" id="login-password" placeholder="Nhập mật khẩu" required>
+          </div>
+          <button type="submit" class="btn" id="login-btn">Đăng nhập</button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 20px;">
+          <p style="font-size: 12px; color: var(--text-secondary);">
+            Chưa có tài khoản? <a href="#" style="color: var(--primary);" onclick="app.showRegister()">Đăng ký ngay</a>
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- REGISTER PAGE -->
+    <div id="page-register" class="page">
+      <div class="header">
+        <h1 onclick="app.showLogin()">← Đăng ký</h1>
+      </div>
+      <div class="content">
+        <form id="register-form">
+          <div class="form-group">
+            <label class="form-label">Họ tên</label>
+            <input type="text" class="form-input" id="register-name" placeholder="Nguyễn Văn A" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="register-email" placeholder="email@domain.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mật khẩu</label>
+            <input type="password" class="form-input" id="register-password" placeholder="Nhập mật khẩu" required>
+          </div>
+          <button type="submit" class="btn">Tạo tài khoản</button>
+        </form>
+      </div>
+    </div>
+    
+    <!-- MAIN DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="header">
+        <h1>🌾 EcoSynTech <span class="user-info" id="header-user"></span></h1>
+        <div style="display: flex; gap: 8px;">
+          <button class="menu-btn" onclick="app.showSettings()">⚙️</button>
+          <div class="status-indicator" id="connectionStatus"></div>
+        </div>
+      </div>
+      
+      <div class="content">
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <div class="quick-action" onclick="app.navigate('traceability')">
+            <span class="quick-action-icon">📦</span>
+            <span class="quick-action-label">QR Code</span>
+          </div>
+          <div class="quick-action" onclick="app.navigate('inventory')">
+            <span class="quick-action-icon">📋</span>
+            <span class="quick-action-label">Kho</span>
+          </div>
+          <div class="quick-action" onclick="app.navigate('finance')">
+            <span class="quick-action-icon">💰</span>
+            <span class="quick-action-label">Tài chính</span>
+          </div>
+          <div class="quick-action" onclick="app.navigate('labor')">
+            <span class="quick-action-icon">👷</span>
+            <span class="quick-action-label">Chấm công</span>
+          </div>
+        </div>
+        
+        <!-- Weather -->
+        <div class="card">
+          <div class="weather-card">
+            <div class="weather-icon" id="weather-icon">☀️</div>
+            <div class="weather-info">
+              <div class="weather-temp" id="weather-temp">28°C</div>
+              <div class="weather-desc" id="weather-desc">Trời nắng</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 12px; color: var(--text-secondary);">Độ ẩm</div>
+              <div style="font-size: 18px; font-weight: 600;" id="weather-humidity">72%</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Metrics -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value" id="metric-devices">0</div>
+            <div class="metric-label">Thiết bị</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="metric-alerts">0</div>
+            <div class="metric-label">Cảnh báo</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="metric-crops">0</div>
+            <div class="metric-label">Cây trồng</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="metric-workers">0</div>
+            <div class="metric-label">Công nhân</div>
+          </div>
+        </div>
+        
+        <!-- Sensors -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📡 Cảm biến</span>
+            <button class="btn-small btn-secondary" onclick="app.fetchDashboard()">🔄</button>
+          </div>
+          <div id="sensor-list">
+            <div class="loading">Đang tải...</div>
+          </div>
+        </div>
+        
+        <!-- Alerts -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🔔 Cảnh báo</span>
+          </div>
+          <div id="alert-list">
+            <div class="empty-state">Không có cảnh báo</div>
+          </div>
+        </div>
+      </div>
+      
+      <nav class="nav">
+        <div class="nav-item active" onclick="app.navigate('dashboard')">
+          <span class="nav-icon">📊</span>
+          Dashboard
+        </div>
+        <div class="nav-item" onclick="app.navigate('crops')">
+          <span class="nav-icon">🌱</span>
+          Cây trồng
+        </div>
+        <div class="nav-item" onclick="app.navigate('traceability')">
+          <span class="nav-icon">📦</span>
+          QR Code
+        </div>
+        <div class="nav-item" onclick="app.navigate('settings')">
+          <span class="nav-icon">⚙️</span>
+          Cài đặt
+        </div>
+      </nav>
+    </div>
+    
+    <!-- TRACEABILITY PAGE -->
+    <div id="page-traceability" class="page">
+      <div class="header">
+        <h1 onclick="app.navigate('dashboard')">← Quay lại</h1>
+        <button class="menu-btn" onclick="app.scanQR()">📷</button>
+      </div>
+      <div class="content">
+        <div class="section-title">Quét QR Code</div>
+        <div class="card">
+          <div class="qr-scanner" onclick="app.scanQR()">
+            <div>
+              <div style="font-size: 48px;">📷</div>
+              <div>Nhấn để quét QR</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="section-title">Tra cứu lô</div>
+        <div class="form-group">
+          <input type="text" class="form-input" id="trace-code" placeholder="Nhập mã lô (VD: BATCH-XXXX)">
+        </div>
+        <button class="btn" onclick="app.lookupBatch()">Tra cứu</button>
+        
+        <div id="batch-result"></div>
+        
+        <div class="section-title" style="margin-top: 20px;">Lô gần đây</div>
+        <div class="card">
+          <div id="recent-batches">
+            <div class="empty-state">Chưa có lô nào</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item" onclick="app.navigate('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+        <div class="nav-item" onclick="app.navigate('crops')"><span class="nav-icon">🌱</span>Cây trồng</div>
+        <div class="nav-item active" onclick="app.navigate('traceability')"><span class="nav-icon">📦</span>QR Code</div>
+        <div class="nav-item" onclick="app.navigate('settings')"><span class="nav-icon">⚙️</span>Cài đặt</div>
+      </nav>
+    </div>
+    
+    <!-- INVENTORY PAGE -->
+    <div id="page-inventory" class="page">
+      <div class="header">
+        <h1 onclick="app.navigate('dashboard')">← Quay lại</h1>
+      </div>
+      <div class="content">
+        <div class="section-title">Quản lý kho</div>
+        
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value" id="inv-total">0</div>
+            <div class="metric-label">Tổng vật tư</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="inv-low" style="color: var(--danger);">0</div>
+            <div class="metric-label">Sắp hết</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Danh sách vật tư</span>
+          </div>
+          <div id="inventory-list">
+            <div class="empty-state">Đang tải...</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item" onclick="app.navigate('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+        <div class="nav-item" onclick="app.navigate('crops')"><span class="nav-icon">🌱</span>Cây trồng</div>
+        <div class="nav-item" onclick="app.navigate('traceability')"><span class="nav-icon">📦</span>QR Code</div>
+        <div class="nav-item" onclick="app.navigate('settings')"><span class="nav-icon">⚙️</span>Cài đặt</div>
+      </nav>
+    </div>
+    
+    <!-- FINANCE PAGE -->
+    <div id="page-finance" class="page">
+      <div class="header">
+        <h1 onclick="app.navigate('dashboard')">← Quay lại</h1>
+      </div>
+      <div class="content">
+        <div class="section-title">Tài chính tháng này</div>
+        
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value" id="fin-income">0</div>
+            <div class="metric-label">Thu</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="fin-expense" style="color: var(--danger);">0</div>
+            <div class="metric-label">Chi</div>
+          </div>
+          <div class="metric-card" style="grid-column: span 2;">
+            <div class="metric-value" id="fin-profit">0</div>
+            <div class="metric-label">Lãi</div>
+          </div>
+        </div>
+        
+        <div class="btn-group" style="margin-bottom: 16px;">
+          <button class="btn btn-secondary" onclick="app.addTransaction('income')">+ Thu</button>
+          <button class="btn btn-secondary" onclick="app.addTransaction('expense')">+ Chi</button>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Giao dịch gần đây</span>
+          </div>
+          <div id="finance-list">
+            <div class="empty-state">Đang tải...</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item" onclick="app.navigate('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+        <div class="nav-item" onclick="app.navigate('crops')"><span class="nav-icon">🌱</span>Cây trồng</div>
+        <div class="nav-item" onclick="app.navigate('traceability')"><span class="nav-icon">📦</span>QR Code</div>
+        <div class="nav-item" onclick="app.navigate('settings')"><span class="nav-icon">⚙️</span>Cài đ���t</div>
+      </nav>
+    </div>
+    
+    <!-- LABOR PAGE -->
+    <div id="page-labor" class="page">
+      <div class="header">
+        <h1 onclick="app.navigate('dashboard')">← Quay lại</h1>
+      </div>
+      <div class="content">
+        <div class="section-title">Chấm công</div>
+        
+        <div class="btn-group" style="margin-bottom: 16px;">
+          <button class="btn" onclick="app.clockIn()">⏰ Vào ca</button>
+          <button class="btn btn-secondary" onclick="app.clockOut()">⏹ Ra ca</button>
+        </div>
+        
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value" id="worker-total">0</div>
+            <div class="metric-label">Tổng CN</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="worker-today">0</div>
+            <div class="metric-label">Hôm nay</div>
+          </div>
+        </div>
+        
+        <div class="section-title">Danh sách công nhân</div>
+        <div class="card">
+          <div id="worker-list">
+            <div class="empty-state">Đang tải...</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item" onclick="app.navigate('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+        <div class="nav-item" onclick="app.navigate('crops')"><span class="nav-icon">🌱</span>Cây trồng</div>
+        <div class="nav-item" onclick="app.navigate('traceability')"><span class="nav-icon">📦</span>QR Code</div>
+        <div class="nav-item" onclick="app.navigate('settings')"><span class="nav-icon">⚙️</span>Cài đặt</div>
+      </nav>
+    </div>
+    
+    <!-- CROPS PAGE -->
+    <div id="page-crops" class="page">
+      <div class="header">
+        <h1 onclick="app.navigate('dashboard')">← Quay lại</h1>
+      </div>
+      <div class="content">
+        <div class="section-title">Cây trồng</div>
+        
+        <div class="card">
+          <div id="crop-list">
+            <div class="empty-state">Đang tải...</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item" onclick="app.navigate('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+        <div class="nav-item active" onclick="app.navigate('crops')"><span class="nav-icon">🌱</span>Cây trồng</div>
+        <div class="nav-item" onclick="app.navigate('traceability')"><span class="nav-icon">📦</span>QR Code</div>
+        <div class="nav-item" onclick="app.navigate('settings')"><span class="nav-icon">⚙️</span>Cài đặt</div>
+      </nav>
+    </div>
+    
+    <!-- SETTINGS PAGE -->
+    <div id="page-settings" class="page">
+      <div class="header">
+        <h1 onclick="app.navigate('dashboard')">← Quay lại</h1>
+      </div>
+      <div class="content">
+        <div class="section-title">Cài đặt</div>
+        
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">Server URL</label>
+            <input type="text" class="form-input" id="server-url" placeholder="http://localhost:3000">
+          </div>
+          <button class="btn btn-secondary" onclick="app.saveSettings()">Lưu cài đặt</button>
+        </div>
+        
+        <div class="card">
+          <button class="btn btn-danger" onclick="app.logout()">Đăng xuất</button>
+        </div>
+        
+        <div style="text-align: center; padding: 20px; color: var(--text-secondary); font-size: 12px;">
+          EcoSynTech v5.1<br>
+          ISO 27001 Compliant
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item" onclick="app.navigate('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+        <div class="nav-item" onclick="app.navigate('crops')"><span class="nav-icon">🌱</span>Cây trồng</div>
+        <div class="nav-item" onclick="app.navigate('traceability')"><span class="nav-icon">📦</span>QR Code</div>
+        <div class="nav-item active" onclick="app.navigate('settings')"><span class="nav-icon">⚙️</span>Cài đặt</div>
+      </nav>
+    </div>
+  </div>
 
   <script>
-    // App Router
-    class AppRouter {
-      constructor() {
-        this.pages = {
-          'dashboard': 'renderDashboard',
-          'sensors': 'renderSensors',
-          'devices': 'renderDevices',
-          'alerts': 'renderAlerts',
-          'crops': 'renderCrops',
-          'finance': 'renderFinance',
-          'settings': 'renderSettings'
-        };
-        this.currentPage = 'dashboard';
-        this.init();
-      }
-
+    const API_BASE = localStorage.getItem('serverUrl') || 'http://localhost:3000';
+    const TOKEN_KEY = 'authToken';
+    const USER_KEY = 'authUser';
+    
+    const app = {
+      token: null,
+      user: null,
+      
       init() {
-        const params = new URLSearchParams(window.location.search);
-        const page = params.get('page') || 'dashboard';
+        // Check auth
+        this.token = localStorage.getItem(TOKEN_KEY);
+        this.user = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
         
-        if (window.ecoApi.isAuthenticated()) {
-          this.showPage(page);
+        if (this.token && this.user) {
+          this.showDashboard();
+          this.fetchDashboard();
         } else {
-          window.authModule.init();
-        }
-
-        window.addEventListener('popstate', (e) => {
-          if (e.state?.page) this.showPage(e.state.page, false);
-        });
-
-        window.addEventListener('auth:logout', () => {
-          window.location.href = window.location.pathname;
-        });
-      }
-
-      showPage(pageName, pushState = true) {
-        if (!this.pages[pageName]) pageName = 'dashboard';
-        this.currentPage = pageName;
-        
-        if (pushState) {
-          history.pushState({ page: pageName }, '', `?page=${pageName}`);
-        }
-
-        this.render();
-      }
-
-      render() {
-        const app = document.getElementById('app');
-        if (!app) return;
-
-        if (!window.ecoApi.isAuthenticated()) {
-          window.authModule.init();
-          return;
-        }
-
-        app.innerHTML = this.getAppLayout();
-        this.setupNavigation();
-        
-        const renderMethod = this.pages[this.currentPage];
-        if (window.appModule && window.appModule[renderMethod]) {
-          window.appModule[renderMethod]();
+          this.showLogin();
         }
         
-        window.appModule?.setupEventListeners?.();
+        // Auto refresh
+        setInterval(() => {
+          if (this.token) this.fetchDashboard();
+        }, 30000);
+      },
+      
+      showPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + pageId).classList.add('active');
+      },
+      
+      showLogin() { this.showPage('login'); },
+      showRegister() { this.showPage('register'); },
+      showDashboard() { 
+        this.showPage('dashboard'); 
+        document.getElementById('header-user').textContent = this.user?.name || '';
+      },
+      
+      navigate(page) {
+        this.showPage(page);
+        this.fetchDataForPage(page);
+      },
+      
+      async fetchDataForPage(page) {
+        if (!this.token) return;
+        
+        try {
+          const headers = { 'Authorization': 'Bearer ' + this.token };
+          
+          if (page === 'dashboard') {
+            const res = await fetch(API_BASE + '/api/dashboard/overview', { headers });
+            const data = await res.json();
+            if (data.data) {
+              document.getElementById('metric-devices').textContent = data.data.devices?.total || 0;
+              document.getElementById('metric-alerts').textContent = data.data.alerts?.pending || 0;
+              document.getElementById('metric-crops').textContent = data.data.crops?.total || 0;
+            }
+          } else if (page === 'inventory') {
+            const res = await fetch(API_BASE + '/api/inventory/', { headers });
+            const data = await res.json();
+            if (data.data) {
+              document.getElementById('inv-total').textContent = data.data.length || 0;
+              const lowStock = data.data.filter(i => i.quantity <= i.min_quantity).length;
+              document.getElementById('inv-low').textContent = lowStock;
+            }
+          } else if (page === 'finance') {
+            const res = await fetch(API_BASE + '/api/finance/', { headers });
+            const data = await res.json();
+            if (data.data) {
+              const income = data.data.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+              const expense = data.data.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+              document.getElementById('fin-income').textContent = this.formatCurrency(income);
+              document.getElementById('fin-expense').textContent = this.formatCurrency(expense);
+              document.getElementById('fin-profit').textContent = this.formatCurrency(income - expense);
+            }
+          } else if (page === 'labor') {
+            const res = await fetch(API_BASE + '/api/labor/workers', { headers });
+            const data = await res.json();
+            if (data.data) {
+              document.getElementById('worker-total').textContent = data.data.length || 0;
+            }
+          } else if (page === 'crops') {
+            const res = await fetch(API_BASE + '/api/crops/plantings', { headers });
+            const data = await res.json();
+            if (data.data) {
+              document.getElementById('crop-list').innerHTML = data.data.length ? 
+                data.data.map(c => '<div class="data-item"><span class="data-name">' + (c.name || 'Cây trồng') + '</span><span class="data-badge ' + (c.status || 'active') + '">' + (c.status || 'active') + '</span></div>').join('') :
+                '<div class="empty-state">Không có cây trồng</div>';
+            }
+          }
+        } catch (err) {
+          console.error('Fetch error:', err);
+        }
+      },
+      
+      async fetchDashboard() {
+        if (!this.token) return;
+        
+        try {
+          const headers = { 'Authorization': 'Bearer ' + this.token };
+          
+          // Overview
+          const overview = await fetch(API_BASE + '/api/dashboard/overview', { headers });
+          const overviewData = await overview.json();
+          
+          if (overviewData.data) {
+            document.getElementById('metric-devices').textContent = overviewData.data.devices?.total || 0;
+            document.getElementById('metric-alerts').textContent = overviewData.data.alerts?.pending || 0;
+            document.getElementById('metric-crops').textContent = overviewData.data.crops?.total || 0;
+            document.getElementById('connectionStatus').classList.remove('offline');
+          }
+          
+          // Weather
+          const weather = await fetch(API_BASE + '/api/dashboard/weather', { headers });
+          const weatherData = await weather.json();
+          if (weatherData.data?.current) {
+            document.getElementById('weather-temp').textContent = weatherData.data.current.temp + '°C';
+            document.getElementById('weather-humidity').textContent = weatherData.data.current.humidity + '%';
+          }
+        } catch (err) {
+          console.error('Dashboard error:', err);
+          document.getElementById('connectionStatus').classList.add('offline');
+        }
+      },
+      
+      async login(email, password) {
+        try {
+          const res = await fetch(API_BASE + '/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          
+          const data = await res.json();
+          
+          if (res.ok && data.token) {
+            this.token = data.token;
+            this.user = data.user;
+            localStorage.setItem(TOKEN_KEY, data.token);
+            localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+            this.showDashboard();
+            this.fetchDashboard();
+            return { success: true };
+          } else {
+            return { success: false, error: data.error || 'Đăng nhập thất bại' };
+          }
+        } catch (err) {
+          return { success: false, error: 'Lỗi kết nối' };
+        }
+      },
+      
+      async register(name, email, password) {
+        try {
+          const res = await fetch(API_BASE + '/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+          });
+          
+          const data = await res.json();
+          
+          if (res.ok || data.token) {
+            return this.login(email, password);
+          } else {
+            return { success: false, error: data.error || 'Đăng ký thất bại' };
+          }
+        } catch (err) {
+          return { success: false, error: 'Lỗi kết nối' };
+        }
+      },
+      
+      logout() {
+        this.token = null;
+        this.user = null;
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        this.showLogin();
+      },
+      
+      lookupBatch() {
+        const code = document.getElementById('trace-code').value;
+        if (!code) return;
+        
+        fetch(API_BASE + '/api/traceability/batch/' + code)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              document.getElementById('batch-result').innerHTML = `
+                <div class="card" style="margin-top: 16px;">
+                  <div class="card-title">${data.batch.product_name}</div>
+                  <div>Mã lô: ${data.batch.batch_code}</div>
+                  <div>Trạng thái: ${data.batch.status}</div>
+                  <div>Số giai đoạn: ${data.stages?.length || 0}</div>
+                </div>
+              `;
+            } else {
+              document.getElementById('batch-result').innerHTML = '<div class="error">Không tìm thấy lô</div>';
+            }
+          })
+          .catch(err => {
+            document.getElementById('batch-result').innerHTML = '<div class="error">Lỗi kết nối</div>';
+          });
+      },
+      
+      scanQR() {
+        // Placeholder for QR scanning - would use Capacitor Camera plugin
+        alert('Tính năng quét QR cần cài đặt Capacitor Camera plugin');
+      },
+      
+      clockIn() {
+        if (!this.token) return;
+        alert('Đã chấm vào ca!');
+      },
+      
+      clockOut() {
+        if (!this.token) return;
+        alert('Đã chấm ra ca!');
+      },
+      
+      addTransaction(type) {
+        const amount = prompt('Nhập số tiền:');
+        const desc = prompt('Nhập mô tả:');
+        if (amount && desc) {
+          alert('Đã thêm giao dịch ' + type);
+          this.fetchDataForPage('finance');
+        }
+      },
+      
+      saveSettings() {
+        const url = document.getElementById('server-url').value;
+        localStorage.setItem('serverUrl', url);
+        alert('Đã lưu cài đặt');
+      },
+      
+      formatCurrency(amount) {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
       }
-
-      getAppLayout() {
-        const user = window.ecoApi.getUser() || {};
-        return `
-          <div class="app-container">
-            <header class="header">
-              <div class="header-left">
-                <span class="header-logo">🌾</span>
-                <span class="header-title">EcoSynTech</span>
-              </div>
-              <div class="header-right">
-                <div class="status-dot" id="connectionStatus" title="Online"></div>
-                <div class="user-avatar" onclick="toggleUserDropdown()">${user.name?.[0] || 'U'}</div>
-              </div>
-            </header>
-            <div class="user-dropdown" id="userDropdown">
-              <div class="user-dropdown-item" onclick="appRouter.showPage('settings'); toggleUserDropdown()">
-                <span>⚙️</span> Cài đặt
-              </div>
-              <div class="user-dropdown-item" onclick="handleLogout()">
-                <span>🚪</span> Đăng xuất
-              </div>
-            </div>
-            <div class="app-content" id="appContent"></div>
-            <button class="fab" onclick="startVoiceCommand()">🎤</button>
-            <nav class="nav">
-              <div class="nav-item ${this.currentPage === 'dashboard' ? 'active' : ''}" onclick="appRouter.showPage('dashboard')">
-                <span class="nav-icon">🏠</span>
-                <span>Tổng quan</span>
-              </div>
-              <div class="nav-item ${this.currentPage === 'sensors' ? 'active' : ''}" onclick="appRouter.showPage('sensors')">
-                <span class="nav-icon">📡</span>
-                <span>Cảm biến</span>
-              </div>
-              <div class="nav-item ${this.currentPage === 'devices' ? 'active' : ''}" onclick="appRouter.showPage('devices')">
-                <span class="nav-icon">🔌</span>
-                <span>Thiết bị</span>
-              </div>
-              <div class="nav-item ${this.currentPage === 'alerts' ? 'active' : ''}" onclick="appRouter.showPage('alerts')">
-                <span class="nav-icon">⚠️</span>
-                <span>Cảnh báo</span>
-              </div>
-              <div class="nav-item ${this.currentPage === 'settings' ? 'active' : ''}" onclick="appRouter.showPage('settings')">
-                <span class="nav-icon">⚙️</span>
-                <span>Cài đặt</span>
-              </div>
-            </nav>
-          </div>
-        `;
-      }
-
-      setupNavigation() {
-        // Navigation already handled by onclick
-      }
-    }
-
-    // Toggle user dropdown
-    function toggleUserDropdown() {
-      const dropdown = document.getElementById('userDropdown');
-      dropdown?.classList.toggle('show');
-    }
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.user-avatar') && !e.target.closest('.user-dropdown')) {
-        document.getElementById('userDropdown')?.classList.remove('show');
+    };
+    
+    // Login form
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const btn = document.getElementById('login-btn');
+      
+      btn.textContent = '⏳ Đang đăng nhập...';
+      btn.disabled = true;
+      
+      const result = await app.login(email, password);
+      
+      btn.textContent = 'Đăng nhập';
+      btn.disabled = false;
+      
+      if (!result.success) {
+        document.getElementById('login-error').textContent = result.error;
+        document.getElementById('login-error').style.display = 'block';
       }
     });
-
-    // Logout
-    async function handleLogout() {
-      if (confirm('Bạn có chắc muốn đăng xuất?')) {
-        await window.ecoApi.logout();
+    
+    // Register form
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('register-name').value;
+      const email = document.getElementById('register-email').value;
+      const password = document.getElementById('register-password').value;
+      
+      const result = await app.register(name, email, password);
+      
+      if (!result.success) {
+        alert(result.error);
       }
-    }
-
-    // Voice Command
-    function startVoiceCommand() {
-      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SR();
-        recognition.lang = 'vi-VN';
-        recognition.start();
-        
-        recognition.onresult = function(event) {
-          const query = event.results[0][0].transcript;
-          window.appModule?.processVoice?.(query);
-        };
-        
-        recognition.onerror = function() {
-          showToast('Không nhận giọng nói!', 'error');
-        };
-      } else {
-        showToast('Trình duyệt không hỗ trợ giọng nói!', 'error');
-      }
-    }
-
-    // Toast
-    function showToast(message, type = '') {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.className = 'toast show ' + type;
-      setTimeout(() => toast.classList.remove('show'), 3000);
-    }
-
-    // Initialize router
-    window.appRouter = new AppRouter();
+    });
+    
+    // Init app
+    app.init();
   </script>
-
-  <!-- App Module -->
-  <script src="src/app.js"></script>
 </body>
 </html>

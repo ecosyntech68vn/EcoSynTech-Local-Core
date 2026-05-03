@@ -1,824 +1,794 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#219465">
-<title>EcoSynTech FarmOS PRO</title>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:#f4f6f8}
-.app{max-width:560px;margin:0 auto;background:white;min-height:100vh}
-.hdr{background:linear-gradient(135deg,#219465,#1565c0);color:white;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100}
-.hdr h1{font-size:16px;font-weight:600}
-.st{display:flex;align-items:center;gap:6px}
-.dot{width:8px;height:8px;border-radius:50%;background:#ff5252}
-.dot.on{background:#69f0ae;box-shadow:0 0 6px #69f0ae}
-.sc{font-size:9px;opacity:0.9}
-.tb{display:none;padding:10px;padding-bottom:90px}
-.tb.on{display:block}
-.nav{display:flex;position:fixed;bottom:0;width:100%;max-width:560px;background:white;border-top:1px solid #e0e0e0;box-shadow:0 -2px 10px rgba(0,0,0,0.06);z-index:100;flex-wrap:wrap}
-.nb{flex:1;min-width:25%;text-align:center;padding:8px 4px;color:#888;font-size:8px;cursor:pointer;border:none;background:none}
-.nb.on{color:#219465;background:#e8f5e9}
-.nic{display:block;font-size:18px;margin-bottom:1px}
-.c{background:white;border-radius:10px;padding:12px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
-.tt{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.tt span{font-size:12px;font-weight:600;color:#333}
-.btn{background:#219465;color:white;border:none;width:24px;height:24px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-.g{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:10px}
-.gb{background:#fafafa;padding:8px 4px;border-radius:6px;text-align:center}
-.gn{font-size:16px;font-weight:700;color:#219465}
-.gt{font-size:8px;color:#666}
-.big{font-size:24px;font-weight:700}
-.u{font-size:13px;color:#888}
-.lst{max-height:300px;overflow-y:auto}
-.r{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5}
-.l{flex:1}
-.nm{font-weight:600;font-size:13px;color:#222}
-.ds{font-size:11px;color:#777;margin-top:2px}
-.d{font-size:10px;color:#888}
-.be{background:#2196f3;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:10px}
-.bx{background:#ff5252;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:10px;margin-left:2px}
-.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:200;display:none;align-items:flex-start;justify-content:center;padding-top:15px;overflow-y:auto}
-.modal.on{display:flex}
-.bx{background:#ff5252;color:white;border:none;padding:4px 8px;border-radius:4px;font-size:10px}
-.box{background:white;width:94%;max-width:460px;max-height:92vh;border-radius:12px;padding:14px;overflow-y:auto}
-.h{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.h span{font-size:14px;font-weight:600}
-.cl{background:none;border:none;font-size:20px;color:#888;cursor:pointer}
-.gp{margin-bottom:10px}
-.lb{display:block;font-size:11px;color:#555;margin-bottom:4px;font-weight:500}
-.in{width:100%;padding:9px;border:1px solid #ddd;border-radius:7px;font-size:13px}
-.sel{width:100%;padding:9px;border:1px solid #ddd;border-radius:7px;font-size:13px;background:white}
-.tx{width:100%;padding:9px;border:1px solid #ddd;border-radius:7px;font-size:12px;min-height:50px}
-.bt{background:#219465;color:white;border:none;padding:11px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;width:100%;margin-top:8px}
-.ts{position:fixed;top:10px;left:50%;transform:translateX(-50%);padding:10px 16px;border-radius:6px;z-index:300;font-size:12px;color:white;font-weight:500;display:none}
-.ts.d{display:block}
-.tsok{background:#4caf50}
-.tser{background:#f44336}
-.st{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:12px}
-.st label{color:#666}
-.st span{font-weight:600}
-.st span.ps{color:#4caf50}
-.st span.ng{color:#f44336}
-.emp{text-align:center;padding:25px;color:#999;font-size:11px}
-.tbl{width:100%;border-collapse:collapse;font-size:11px}
-.tbl th,.tbl td{padding:8px 4px;text-align:left;border-bottom:1px solid #eee}
-.tbl th{color:#666;font-weight:500;background:#fafafa}
-.tbl tr:active{background:#f9f9f9}
-.tag{display:inline-block;padding:2px 6px;background:#e3f2fd;color:#1565c0;border-radius:3px;font-size:9px;margin:2px}
-.tag.exp{background:#ffebee;color:#c62828}
-.tag.inc{background:#e8f5e9;color:#2e7d32}
-.accordion{margin-bottom:8px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden}
-.acc-h{background:#f5f5f5;padding:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:500}
-.acc-h:after{content:'▼';font-size:8px;color:#888;transition:transform 0.2s}
-.acc-h.open:after{transform:rotate(180deg)}
-.acc-c{display:none;padding:10px;background:white}
-.acc-c.open{display:block}
-.acc-c .r{border-bottom:1px solid #f0f0f0;padding:6px 0}
-.cond-row{display:flex;gap:4px;margin-bottom:6px;align-items:center}
-.cond-row select,.cond-row input{flex:1}
-.rm-cond{background:#ff5252;color:white;border:none;width:20px;height:20px;border-radius:50%;font-size:12px;cursor:pointer}
-.add-cond{background:#219465;color:white;border:none;padding:6px 12px;border-radius:4px;font-size:11px;cursor:pointer;margin-bottom:10px}
-.nav-exp{background:#f5f5f5;border-radius:8px;margin:8px 0;overflow:hidden}
-.ne-head{background:#219465;color:white;padding:10px 12px;cursor:pointer;display:flex;justify-content:space-between;font-size:12px;font-weight:600}
-.ne-head:after{content:'▼';font-size:10px}
-.ne-head.open:after{transform:rotate(180deg)}
-.ne-items{display:none;padding:4px}
-.ne-items.open{display:flex;flex-wrap:wrap;gap:2px}
-.ne-btn{flex:1;min-width:30%;text-align:center;padding:8px 4px;font-size:9px;background:white;border:1px solid #ddd;border-radius:4px;color:#555;cursor:pointer}
-.ne-btn.on{background:#219465;color:white;border-color:#219465}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#219465">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>EcoSynTech - Smart Farming</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    :root {
+      --primary: #219465;
+      --primary-dark: #1a7a4a;
+      --secondary: #4CAF50;
+      --accent: #8BC34A;
+      --danger: #f44336;
+      --warning: #ff9800;
+      --info: #2196F3;
+      --light: #f5f5f5;
+      --dark: #212121;
+      --card-bg: #ffffff;
+      --text-primary: #212121;
+      --text-secondary: #666;
+      --border: #e0e0e0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--light); }
+    .app-container { max-width: 480px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+    
+    /* Header */
+    .header { background: var(--primary); color: white; padding: 16px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .header h1 { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .header .user-info { font-size: 12px; opacity: 0.9; }
+    .status-indicator { width: 10px; height: 10px; border-radius: 50%; background: var(--secondary); }
+    .status-indicator.offline { background: var(--danger); }
+    .menu-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+    
+    /* Content */
+    .content { padding: 16px; padding-bottom: 80px; }
+    .section-title { font-size: 14px; color: var(--text-secondary); font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    /* Cards */
+    .card { background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .card-title { font-size: 14px; color: var(--text-secondary); }
+    .card-value { font-size: 28px; font-weight: 600; color: var(--text-primary); }
+    .card-unit { font-size: 14px; color: var(--text-secondary); font-weight: normal; }
+    .card-change { font-size: 12px; padding: 2px 6px; border-radius: 4px; }
+    .card-change.up { background: #e8f5e9; color: var(--secondary); }
+    .card-change.down { background: #ffebee; color: var(--danger); }
+    
+    /* Metrics Grid */
+    .metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px; }
+    .metric-card { background: var(--card-bg); border-radius: 12px; padding: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .metric-value { font-size: 24px; font-weight: 600; color: var(--primary); }
+    .metric-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+    
+    /* Lists */
+    .data-list { list-style: none; }
+    .data-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .data-item:last-child { border-bottom: none; }
+    .data-name { font-weight: 500; color: var(--text-primary); }
+    .data-value { font-size: 14px; color: var(--text-secondary); }
+    .data-badge { font-size: 12px; padding: 4px 8px; border-radius: 4px; }
+    .data-badge.online { background: #e8f5e9; color: var(--secondary); }
+    .data-badge.offline { background: #ffebee; color: var(--danger); }
+    .data-badge.active { background: #e3f2fd; color: var(--info); }
+    
+    /* Buttons */
+    .btn { background: var(--primary); color: white; border: none; padding: 14px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; width: 100%; cursor: pointer; transition: all 0.2s; }
+    .btn:active { background: var(--primary-dark); transform: scale(0.98); }
+    .btn-secondary { background: var(--light); color: var(--text-primary); }
+    .btn-danger { background: var(--danger); }
+    .btn-group { display: flex; gap: 8px; }
+    .btn-group .btn { flex: 1; }
+    .btn-small { padding: 8px 16px; font-size: 12px; }
+    
+    /* Forms */
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 14px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px; display: block; }
+    .form-input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+    .form-input:focus { outline: none; border-color: var(--primary); }
+    .form-select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: white; }
+    
+    /* Navigation */
+    .nav { display: flex; background: white; border-top: 1px solid var(--border); position: fixed; bottom: 0; width: 100%; max-width: 480px; justify-content: space-around; }
+    .nav-item { flex: 1; text-align: center; padding: 12px 8px; color: var(--text-secondary); font-size: 11px; cursor: pointer; }
+    .nav-item.active { color: var(--primary); }
+    .nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+    
+    /* States */
+    .empty-state { text-align: center; padding: 40px 20px; color: var(--text-secondary); }
+    .loading { text-align: center; padding: 20px; color: var(--text-secondary); }
+    .error { background: #ffebee; color: var(--danger); padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+    .success { background: #e8f5e9; color: var(--secondary); padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+    
+    /* Pages */
+    .page { display: none; }
+    .page.active { display: block; }
+    
+    /* Quick Actions */
+    .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+    .quick-action { text-align: center; padding: 12px 8px; background: var(--light); border-radius: 8px; cursor: pointer; }
+    .quick-action:active { background: var(--border); }
+    .quick-action-icon { font-size: 24px; display: block; margin-bottom: 4px; }
+    .quick-action-label { font-size: 10px; color: var(--text-secondary); }
+    
+    /* Weather */
+    .weather-card { display: flex; align-items: center; gap: 16px; }
+    .weather-icon { font-size: 48px; }
+    .weather-info { flex: 1; }
+    .weather-temp { font-size: 32px; font-weight: 600; }
+    .weather-desc { font-size: 14px; color: var(--text-secondary); }
+    
+    /* Alerts */
+    .alert-item { padding: 12px; border-radius: 8px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+    .alert-item.warning { background: #fff3e0; border-left: 4px solid var(--warning); }
+    .alert-item.danger { background: #ffebee; border-left: 4px solid var(--danger); }
+    .alert-item.info { background: #e3f2fd; border-left: 4px solid var(--info); }
+    
+    /* QR Scanner Placeholder */
+    .qr-scanner { width: 100%; height: 200px; background: var(--dark); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; }
+    
+    /* Responsive */
+    @media (max-width: 380px) {
+      .metrics-grid { grid-template-columns: 1fr 1fr; }
+      .quick-actions { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
 </head>
 <body>
-<div class="app">
-<div class="hdr">
-<h1>EcoSynTech FarmOS PRO</h1>
-<div class="st"><div class="dot" id="dot"></div><span class="sc" id="sctxt">Offline</span></div>
-</div>
+  <div class="app-container">
+    <!-- LOGIN PAGE -->
+    <div id="page-login" class="page">
+      <div class="header">
+        <h1>🌾 EcoSynTech</h1>
+      </div>
+      <div class="content">
+        <div style="text-align: center; padding: 40px 0;">
+          <div style="font-size: 64px;">🌾</div>
+          <h2 style="margin: 20px 0 8px;">Smart Farming</h2>
+          <p style="color: var(--text-secondary);">Quản lý trang trại thông minh</p>
+        </div>
+        
+        <div id="login-error" class="error" style="display: none;"></div>
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="login-email" placeholder="email@domain.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mật khẩu</label>
+            <input type="password" class="form-input" id="login-password" placeholder="Nhập mật khẩu" required>
+          </div>
+          <button type="submit" class="btn" id="login-btn">Đăng nhập</button>
+        </form>
+        
+        <div style="text-align: center; margin-top: 20px;">
+          <p style="font-size: 12px; color: var(--text-secondary);">
+            Chưa có tài khoản? <a href="#" style="color: var(--primary);" onclick="app.showRegister()">Đăng ký ngay</a>
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- REGISTER PAGE -->
+    <div id="page-register" class="page">
+      <div class="header">
+        <h1 onclick="app.showLogin()">← Đăng ký</h1>
+      </div>
+      <div class="content">
+        <form id="register-form">
+          <div class="form-group">
+            <label class="form-label">Họ tên</label>
+            <input type="text" class="form-input" id="register-name" placeholder="Nguyễn Văn A" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" id="register-email" placeholder="email@domain.com" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Mật khẩu</label>
+            <input type="password" class="form-input" id="register-password" placeholder="Nhập mật khẩu" required>
+          </div>
+          <button type="submit" class="btn">Tạo tài khoản</button>
+        </form>
+      </div>
+    </div>
+    
+    <!-- MAIN DASHBOARD -->
+    <div id="page-dashboard" class="page active">
+      <div class="header">
+        <h1>🌾 EcoSynTech <span class="user-info" id="header-user"></span></h1>
+        <div style="display: flex; gap: 8px;">
+          <button class="menu-btn" onclick="app.showSettings()">⚙️</button>
+          <div class="status-indicator" id="connectionStatus"></div>
+        </div>
+      </div>
+      
+      <div class="content">
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <div class="quick-action" onclick="app.navigate('traceability')">
+            <span class="quick-action-icon">📦</span>
+            <span class="quick-action-label">QR Code</span>
+          </div>
+          <div class="quick-action" onclick="app.navigate('inventory')">
+            <span class="quick-action-icon">📋</span>
+            <span class="quick-action-label">Kho</span>
+          </div>
+          <div class="quick-action" onclick="app.navigate('finance')">
+            <span class="quick-action-icon">💰</span>
+            <span class="quick-action-label">Tài chính</span>
+          </div>
+          <div class="quick-action" onclick="app.navigate('labor')">
+            <span class="quick-action-icon">👷</span>
+            <span class="quick-action-label">Chấm công</span>
+          </div>
+        </div>
+        
+        <!-- Weather -->
+        <div class="card">
+          <div class="weather-card">
+            <div class="weather-icon" id="weather-icon">☀️</div>
+            <div class="weather-info">
+              <div class="weather-temp" id="weather-temp">28°C</div>
+              <div class="weather-desc" id="weather-desc">Trời nắng</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 12px; color: var(--text-secondary);">Độ ẩm</div>
+              <div style="font-size: 18px; font-weight: 600;" id="weather-humidity">72%</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Metrics -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value" id="metric-devices">0</div>
+            <div class="metric-label">Thiết bị</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="metric-alerts">0</div>
+            <div class="metric-label">Cảnh báo</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="metric-crops">0</div>
+            <div class="metric-label">Cây trồng</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="metric-workers">0</div>
+            <div class="metric-label">Công nhân</div>
+          </div>
+        </div>
+        
+        <!-- Sensors -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📡 Cảm biến</span>
+            <button class="btn-small btn-secondary" onclick="app.fetchDashboard()">🔄</button>
+          </div>
+          <div id="sensor-list">
+            <div class="loading">Đang tải...</div>
+          </div>
+        </div>
+        
+        <!-- Alerts -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🔔 Cảnh báo</span>
+          </div>
+          <div id="alert-list">
+            <div class="empty-state">Không có cảnh báo</div>
+          </div>
+        </div>
+      </div>
+      
+      <nav class="nav">
+        <div class="nav-item active" onclick="app.navigate('dashboard')">
+          <span class="nav-icon">📊</span>
+          Dashboard
+        </div>
+        <div class="nav-item" onclick="app.navigate('crops')">
+          <span class="nav-icon">🌱</span>
+          Cây trồng
+        </div>
+        <div class="nav-item" onclick="app.navigate('traceability')">
+          <span class="nav-icon">📦</span>
+          QR Code
+        </div>
+        <div class="nav-item" onclick="app.navigate('settings')">
+          <span class="nav-icon">⚙️</span>
+          Cài đặt
+        </div>
+      </nav>
+    </div>
+    
+    <!-- TRACEABILITY PAGE -->
+    <div id="page-traceability" class="page">
+      <div class="header">
+        <h1 onclick="app.navigate('dashboard')">← Quay lại</h1>
+        <button class="menu-btn" onclick="app.scanQR()">📷</button>
+      </div>
+      <div class="content">
+        <div class="section-title">Quét QR Code</div>
+        <div class="card">
+          <div class="qr-scanner" onclick="app.scanQR()">
+            <div>
+              <div style="font-size: 48px;">📷</div>
+              <div>Nhấn để quét QR</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="section-title">Tra cứu lô</div>
+        <div class="form-group">
+          <input type="text" class="form-input" id="trace-code" placeholder="Nhập mã lô (VD: BATCH-XXXX)">
+        </div>
+        <button class="btn" onclick="app.lookupBatch()">Tra cứu</button>
+        
+        <div id="batch-result"></div>
+        
+        <div class="section-title" style="margin-top: 20px;">Lô gần đây</div>
+        <div class="card">
+          <div id="recent-batches">
+            <div class="empty-state">Chưa có lô nào</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item" onclick="app.navigate('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+        <div class="nav-item" onclick="app.navigate('crops')"><span class="nav-icon">🌱</span>Cây trồng</div>
+        <div class="nav-item active" onclick="app.navigate('traceability')"><span class="nav-icon">📦</span>QR Code</div>
+        <div class="nav-item" onclick="app.navigate('settings')"><span class="nav-icon">⚙️</span>Cài đặt</div>
+      </nav>
+    </div>
+    
+    <!-- INVENTORY PAGE -->
+    <div id="page-inventory" class="page">
+      <div class="header">
+        <h1 onclick="app.navigate('dashboard')">← Quay lại</h1>
+      </div>
+      <div class="content">
+        <div class="section-title">Quản lý kho</div>
+        
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value" id="inv-total">0</div>
+            <div class="metric-label">Tổng vật tư</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="inv-low" style="color: var(--danger);">0</div>
+            <div class="metric-label">Sắp hết</div>
+          </div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Danh sách vật tư</span>
+          </div>
+          <div id="inventory-list">
+            <div class="empty-state">Đang tải...</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item" onclick="app.navigate('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+        <div class="nav-item" onclick="app.navigate('crops')"><span class="nav-icon">🌱</span>Cây trồng</div>
+        <div class="nav-item" onclick="app.navigate('traceability')"><span class="nav-icon">📦</span>QR Code</div>
+        <div class="nav-item" onclick="app.navigate('settings')"><span class="nav-icon">⚙️</span>Cài đặt</div>
+      </nav>
+    </div>
+    
+    <!-- FINANCE PAGE -->
+    <div id="page-finance" class="page">
+      <div class="header">
+        <h1 onclick="app.navigate('dashboard')">← Quay lại</h1>
+      </div>
+      <div class="content">
+        <div class="section-title">Tài chính tháng này</div>
+        
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value" id="fin-income">0</div>
+            <div class="metric-label">Thu</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="fin-expense" style="color: var(--danger);">0</div>
+            <div class="metric-label">Chi</div>
+          </div>
+          <div class="metric-card" style="grid-column: span 2;">
+            <div class="metric-value" id="fin-profit">0</div>
+            <div class="metric-label">Lãi</div>
+          </div>
+        </div>
+        
+        <div class="btn-group" style="margin-bottom: 16px;">
+          <button class="btn btn-secondary" onclick="app.addTransaction('income')">+ Thu</button>
+          <button class="btn btn-secondary" onclick="app.addTransaction('expense')">+ Chi</button>
+        </div>
+        
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Giao dịch gần đây</span>
+          </div>
+          <div id="finance-list">
+            <div class="empty-state">Đang tải...</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item" onclick="app.navigate('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+        <div class="nav-item" onclick="app.navigate('crops')"><span class="nav-icon">🌱</span>Cây trồng</div>
+        <div class="nav-item" onclick="app.navigate('traceability')"><span class="nav-icon">📦</span>QR Code</div>
+        <div class="nav-item" onclick="app.navigate('settings')"><span class="nav-icon">⚙️</span>Cài đ���t</div>
+      </nav>
+    </div>
+    
+    <!-- LABOR PAGE -->
+    <div id="page-labor" class="page">
+      <div class="header">
+        <h1 onclick="app.navigate('dashboard')">← Quay lại</h1>
+      </div>
+      <div class="content">
+        <div class="section-title">Chấm công</div>
+        
+        <div class="btn-group" style="margin-bottom: 16px;">
+          <button class="btn" onclick="app.clockIn()">⏰ Vào ca</button>
+          <button class="btn btn-secondary" onclick="app.clockOut()">⏹ Ra ca</button>
+        </div>
+        
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value" id="worker-total">0</div>
+            <div class="metric-label">Tổng CN</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="worker-today">0</div>
+            <div class="metric-label">Hôm nay</div>
+          </div>
+        </div>
+        
+        <div class="section-title">Danh sách công nhân</div>
+        <div class="card">
+          <div id="worker-list">
+            <div class="empty-state">Đang tải...</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item" onclick="app.navigate('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+        <div class="nav-item" onclick="app.navigate('crops')"><span class="nav-icon">🌱</span>Cây trồng</div>
+        <div class="nav-item" onclick="app.navigate('traceability')"><span class="nav-icon">📦</span>QR Code</div>
+        <div class="nav-item" onclick="app.navigate('settings')"><span class="nav-icon">⚙️</span>Cài đặt</div>
+      </nav>
+    </div>
+    
+    <!-- CROPS PAGE -->
+    <div id="page-crops" class="page">
+      <div class="header">
+        <h1 onclick="app.navigate('dashboard')">← Quay lại</h1>
+      </div>
+      <div class="content">
+        <div class="section-title">Cây trồng</div>
+        
+        <div class="card">
+          <div id="crop-list">
+            <div class="empty-state">Đang tải...</div>
+          </div>
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item" onclick="app.navigate('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+        <div class="nav-item active" onclick="app.navigate('crops')"><span class="nav-icon">🌱</span>Cây trồng</div>
+        <div class="nav-item" onclick="app.navigate('traceability')"><span class="nav-icon">📦</span>QR Code</div>
+        <div class="nav-item" onclick="app.navigate('settings')"><span class="nav-icon">⚙️</span>Cài đặt</div>
+      </nav>
+    </div>
+    
+    <!-- SETTINGS PAGE -->
+    <div id="page-settings" class="page">
+      <div class="header">
+        <h1 onclick="app.navigate('dashboard')">← Quay lại</h1>
+      </div>
+      <div class="content">
+        <div class="section-title">Cài đặt</div>
+        
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">Server URL</label>
+            <input type="text" class="form-input" id="server-url" placeholder="http://localhost:3000">
+          </div>
+          <button class="btn btn-secondary" onclick="app.saveSettings()">Lưu cài đặt</button>
+        </div>
+        
+        <div class="card">
+          <button class="btn btn-danger" onclick="app.logout()">Đăng xuất</button>
+        </div>
+        
+        <div style="text-align: center; padding: 20px; color: var(--text-secondary); font-size: 12px;">
+          EcoSynTech v5.1<br>
+          ISO 27001 Compliant
+        </div>
+      </div>
+      <nav class="nav">
+        <div class="nav-item" onclick="app.navigate('dashboard')"><span class="nav-icon">📊</span>Dashboard</div>
+        <div class="nav-item" onclick="app.navigate('crops')"><span class="nav-icon">🌱</span>Cây trồng</div>
+        <div class="nav-item" onclick="app.navigate('traceability')"><span class="nav-icon">📦</span>QR Code</div>
+        <div class="nav-item active" onclick="app.navigate('settings')"><span class="nav-icon">⚙️</span>Cài đặt</div>
+      </nav>
+    </div>
+  </div>
 
-<!-- DASHBOARD -->
-<div id="t0" class="tb on">
-<div class="c"><div class="big" id="tmp">--<span class="u">°C</span></div></div>
-<div class="c"><div class="big" id="hum">--<span class="u">%</span></div></div>
-<div class="g">
-<div class="gb" onclick="go(1)"><div class="gn" id="ccnt">0</div><div class="gt">Crops</div></div>
-<div class="gb" onclick="go(2)"><div class="gn" id="dcnt">0</div><div class="gt">Devices</div></div>
-<div class="gb" onclick="go(3)"><div class="gn" id="rcnt">0</div><div class="gt">Rules</div></div>
-<div class="gb" onclick="go(5)"><div class="gn" id="tcnt">0</div><div class="gt">Trace</div></div>
-</div>
-<div class="c"><div class="tt"><span>Thiet bi</span></div><div class="lst" id="devlst"><div class="emp">Chua co</div></div></div>
-<button class="bt" onclick="sync()">Dong bo</button>
-</div>
-
-<!-- CROPS -->
-<div id="t1" class="tb">
-<div class="c"><div class="tt"><span>Cay trong</span><button class="btn" onclick="openF('crop')">+</button></div><div class="lst" id="clst"><div class="emp">Chua co</div></div></div></div>
-
-<!-- DEVICES -->
-<div id="t2" class="tb">
-<div class="c"><div class="tt"><span>Thiet bi</span><button class="btn" onclick="openF('device')">+</button></div><div class="lst" id="dlst"><div class="emp">Chua co</div></div></div></div>
-
-<!-- RULES -->
-<div id="t3" class="tb">
-<div class="c"><div class="tt"><span>Luat</span><button class="btn" onclick="openF('rule')">+</button></div><div class="lst" id="rlst"><div class="emp">Chua co</div></div></div>
-<div class="c"><div class="tt"><span>Lich trinh</span><button class="btn" onclick="openF('sched')">+</button></div><div class="lst" id="slst"><div class="emp">Chua co</div></div></div></div>
-
-<!-- ZONES -->
-<div id="t4" class="tb">
-<div class="c"><div class="tt"><span>Khu vuc</span><button class="btn" onclick="openF('zone')">+</button></div><div class="lst" id="zlst"><div class="emp">Chua co</div></div></div></div>
-
-<!-- TRACE -->
-<div id="t5" class="tb">
-<div class="c"><div class="tt"><span>Lot san pham</span><button class="btn" onclick="openF('trace')">+</button></div><div class="lst" id="tlst"><div class="emp">Chua co</div></div></div>
-<div class="c"><div class="tt"><span>Su kien Truy xuat (an/hien)</span></div>
-<div id="evaccordion"></div>
-<button class="bt" style="background:#757575;margin-top:8px" onclick="openF('event')">+ Them su kien</button>
-</div>
-<div class="c"><div class="tt"><span>QR Code</span></div>
-<input class="in" id="qr" placeholder="Nhap ma QR...">
-<button class="bt" onclick="chkQR()">Tra cuu</button>
-<div id="qrres" style="margin-top:10px"></div>
-</div></div>
-
-<!-- INVENTORY -->
-<div id="t6" class="tb">
-<div class="c"><div class="tt"><span>Ton kho</span><button class="btn" onclick="openF('inv')">+</button></div><div class="lst" id="invlst"><div class="emp">Chua co</div></div></div></div>
-
-<!-- FINANCE -->
-<div id="t7" class="tb">
-<div class="c">
-<div class="st"><label>Thu</label><span class="ps" id="inc">0</span></div>
-<div class="st"><label>Chi</label><span class="ng" id="exp">0</span></div>
-<div class="st"><label>Loi nhuan</label><span id="pf">0</span></div>
-</div>
-<div class="c"><div class="tt"><span>Giao dich chi tiet</span></div>
-<table class="tbl" id="txlst"><thead><tr><th>Ngay</th><th>Mo ta</th><th>Tien</th></tr></thead><tbody></tbody></table>
-</div>
-<div class="g"><button class="bt" onclick="openF('inc')">+ Thu</button><button class="bt" style="background:#757575" onclick="openF('exp')">+ Chi</button></div>
-</div>
-
-<!-- SETTINGS -->
-<div id="t8" class="tb">
-<div class="c">
-<div class="st"><label>Server</label><span id="srv">--</span></div>
-<div class="st"><label>Cap nhat</label><span id="last">--</span></div>
-<div class="st"><label>Version</label><span>PRO v1.2.0</span></div>
-</div>
-<button class="bt" onclick="sync()">Dong bo API</button>
-<button class="bt" style="background:#757575" onclick="clearAll()">Xoa data</button>
-</div>
-
-<!-- SUPPLY CHAIN -->
-<div id="t9" class="tb">
-<div class="c"><div class="tt"><span>Nha cung cap</span><button class="btn" onclick="openF('supplier')">+</button></div><div class="lst" id="suplst"><div class="emp">Chua co</div></div></div>
-<div class="c"><div class="tt"><span>Van chuyen</span><button class="btn" onclick="openF('transport')">+</button></div><div class="lst" id="tranlst"><div class="emp">Chua co</div></div></div>
-<div class="c"><div class="tt"><span>Khach hang</span><button class="btn" onclick="openF('customer')">+</button></div><div class="lst" id="custlst"><div class="emp">Chua co</div></div></div>
-</div>
-
-<!-- NAV -->
-<div class="nav-exp">
-<div class="ne-head" onclick="toggleNav(this)">Quan ly Chung</div>
-<div class="ne-items" id="nav0">
-<button class="ne-btn on" id="b0" onclick="go(0)">📊 Dash</button>
-<button class="ne-btn" id="b1" onclick="go(1)">🌱 Cay trong</button>
-<button class="ne-btn" id="b2" onclick="go(2)">📱 Thiet bi</button>
-<button class="ne-btn" id="b3" onclick="go(3)">⚡ Auto</button>
-</div>
-</div>
-<div class="nav-exp">
-<div class="ne-head" onclick="toggleNav(this)">Khu vuc & Truy xuat</div>
-<div class="ne-items" id="nav1">
-<button class="ne-btn" id="b4" onclick="go(4)">🏠 Khu vuc</button>
-<button class="ne-btn" id="b5" onclick="go(5)">🏷️ Trace</button>
-</div>
-</div>
-<div class="nav-exp">
-<div class="ne-head" onclick="toggleNav(this)">Kho & Tien</div>
-<div class="ne-items" id="nav2">
-<button class="ne-btn" id="b6" onclick="go(6)">📦 Kho</button>
-<button class="ne-btn" id="b7" onclick="go(7)">💰 Tien</button>
-</div>
-</div>
-<div class="nav-exp">
-<div class="ne-head" onclick="toggleNav(this)">Cung ung & Settings</div>
-<div class="ne-items" id="nav3">
-<button class="ne-btn" id="b8" onclick="go(8)">⚙️ Settings</button>
-</div>
-</div>
-</div>
-
-<!-- CROP -->
-<div id="cropF" class="modal"><div class="box">
-<div class="h"><span>Cay trong</span><button class="cl" onclick="closeF()">&times;</button></div>
-<input type="hidden" id="cid">
-<div class="gp"><label class="lb">Ten (*)</label><input class="in" id="cname"></div>
-<div class="gp"><label class="lb">Loai</label><select class="sel" id="ctype"><option value="lua">Lua</option><option value="donglot">Dong lot</option><option value="cachua">Ca chua</option><option value="dualuoi">Dua luoi</option><option value="bap">Bap cau</option><option value="tao">Tao</option><option value="chuoi">Chuoi</option><option value="cafe">Ca phe</option></select></div>
-<div class="gp"><label class="lb">Giai doan</label><select class="sel" id="cstage"><option value="gieo">Gieo hat</option><option value="noc">Noc mai</option><option value="sinh">Sinh truong</option><option value="rahoa">Ra hoa</option><option value="thuhoach">Thu hoach</option></select></div>
-<div class="gp"><label class="lb">Khu vuc</label><input class="in" id="czone"></div>
-<div class="gp"><label class="lb">Ngay trong</label><input type="date" class="in" id="cplanted"></div>
-<div class="gp"><label class="lb">Dien tich (m2)</label><input type="number" class="in" id="carea"></div>
-<button class="bt" onclick="saveCrop()">Luu</button>
-</div></div>
-
-<!-- DEVICE -->
-<div id="deviceF" class="modal"><div class="box">
-<div class="h"><span>Thiet bi</span><button class="cl" onclick="closeF()">&times;</button></div>
-<input type="hidden" id="did">
-<div class="gp"><label class="lb">Ten (*)</label><input class="in" id="dname"></div>
-<div class="gp"><label class="lb">Loai</label><select class="sel" id="dtype"><option value="esp32">ESP32</option><option value="dht22">DHT22</option><option value="soil">Soil</option><option value="relay">Relay</option><option value="pump">Bom</option><option value="camera">Camera</option></select></div>
-<div class="gp"><label class="lb">MAC</label><input class="in" id="dmac"></div>
-<div class="gp"><label class="lb">Khu vuc</label><input class="in" id="dzone"></div>
-<button class="bt" onclick="saveDevice()">Luu</button>
-</div></div>
-
-<!-- RULE -->
-<div id="ruleF" class="modal"><div class="box">
-<div class="h"><span>Luat Auto</span><button class="cl" onclick="closeF()">&times;</button></div>
-<input type="hidden" id="rid">
-<div class="gp"><label class="lb">Ten (*)</label><input class="in" id="rname"></div>
-<div class="gp"><label class="lb">Dieu kien (AND/OR)</label>
-<select class="sel" id="rlogic" style="margin-bottom:6px"><option value="AND">Tat ca (AND)</option><option value="OR">Bat ky (OR)</option></select>
-<div id="conds"></div>
-<button type="button" class="add-cond" onclick="addCond()">+ Them dieu kien</button>
-</div>
-<div class="gp"><label class="lb">Hanh dong</label><select class="sel" id="ract"><option value="on">Bat</option><option value="off">Tat</option><option value="alert">Canh bao</option></select></div>
-<div class="gp"><label class="lb">Thoi gian chay (phut)</label><input type="number" class="in" id="rdur" placeholder="0 = cho den khi dk thay doi"></div>
-<div class="gp"><label class="lb">Cooldown (phut)</label><input type="number" class="in" id="rcool" placeholder="Loi giua 2 lan chay"></div>
-<div class="gp"><label class="lb">Hysteresis</label><input type="number" class="in" id="rhys" placeholder="Nguong on/off (vd: 2)"></div>
-<div class="gp"><label class="lb">Thoi gian ap dung</label>
-<select class="sel" id="rtime"><option value="always">Luon luon</option><option value="day">Chi ban ngay</option><option value="night">Chi ban dem</option></select>
-</div>
-<button class="bt" onclick="saveRule()">Luu</button>
-</div></div>
-
-<!-- SCHED -->
-<div id="schedF" class="modal"><div class="box">
-<div class="h"><span>Lich trinh</span><button class="cl" onclick="closeF()">&times;</button></div>
-<input type="hidden" id="sid">
-<div class="gp"><label class="lb">Ten (*)</label><input class="in" id="sname"></div>
-<div class="gp"><label class="lb">Gio</label><input type="time" class="in" id="stime"></div>
-<div class="gp"><label class="lb">Lap lai</label><select class="sel" id="srep"><option value="daily">Hang ngay</option><option value="weekly">Hang tuan</option></select></div>
-<button class="bt" onclick="saveSched()">Luu</button>
-</div></div>
-
-<!-- ZONE -->
-<div id="zoneF" class="modal"><div class="box">
-<div class="h"><span>Khu vuc</span><button class="cl" onclick="closeF()">&times;</button></div>
-<input type="hidden" id="zid">
-<div class="gp"><label class="lb">Ten (*)</label><input class="in" id="zname"></div>
-<div class="gp"><label class="lb">Loai</label><select class="sel" id="ztype"><option value="greenhouse">Nha kinh</option><option value="garden">Vuon</option><option value="livestock">Chuong</option><option value="aqua">Ao nuoi</option></select></div>
-<button class="bt" onclick="saveZone()">Luu</button>
-</div></div>
-
-<!-- TRACE -->
-<div id="traceF" class="modal"><div class="box">
-<div class="h"><span>Lot san pham</span><button class="cl" onclick="closeF()">&times;</button></div>
-<input type="hidden" id="tid">
-<div class="gp"><label class="lb">Ma lot (*)</label><input class="in" id="tcode"></div>
-<div class="gp"><label class="lb">San pham</label><input class="in" id="tname"></div>
-<div class="gp"><label class="lb">Cay trong</label><input class="in" id="tcrop"></div>
-<div class="gp"><label class="lb">Khoi luong (kg)</label><input type="number" class="in" id="twgt"></div>
-<div class="gp"><label class="lb">Don vi</label><select class="sel" id="tunit"><option value="kg">kg</option><option value="bao">Bao</option><option value="thung">Thung</option></select></div>
-<div class="gp"><label class="lb">Ngay thu hoach</label><input type="date" class="in" id="thv"></div>
-<div class="gp"><label class="lb">Nguon goc</label><input class="in" id="tsrc" placeholder="Trang trai, dia diem..."></div>
-<div class="gp"><label class="lb">Nha cung cap</label><input class="in" id="tsup"></div>
-<div class="gp"><label class="lb">Ngay san xuat</label><input type="date" class="in" id="tmf"></div>
-<div class="gp"><label class="lb">Han su dung</label><input type="date" class="in" id="texp"></div>
-<div class="gp"><label class="lb">Gia ban (VND)</label><input type="number" class="in" id="tprice"></div>
-<div class="gp"><label class="lb">Ghi chu</label><textarea class="tx" id="tnote"></textarea></div>
-<button class="bt" onclick="saveTrace()">Luu</button>
-</div></div>
-
-<!-- EVENT -->
-<div id="eventF" class="modal"><div class="box">
-<div class="h"><span>Su kien Truy xuat</span><button class="cl" onclick="closeF()">&times;</button></div>
-<input type="hidden" id="eid">
-<div class="gp"><label class="lb">Loai su kien (Quy trinh)</label><select class="sel" id="evtype"><option value="seed">Gieo hat/Gieo trong</option><option value="water">Tuoi nuoc</option><option value="fert">Bon phan</option><option value="pest">Phun thuoc BVTV</option><option value=" weed">Thu hoat (nen)</option><option value="sprinkle">Xit suong</option><option value="fan">Quat thong</option><option value="shade">Che luoi</option><option value="temp">Do nhiet do</option><option value="harvest">Thu hoach</option><option value="quality">Kiem tra chat luong</option><option value="pack">Dong go</option><option value="store">Nhap kho</option><option value="sell">Ban hang</option><option value="return">Tra lai</option></select></div>
-<div class="gp"><label class="lb">Ma lot</label><input class="in" id="evcode"></div>
-<div class="gp"><label class="lb">Ngay thuc hien</label><input type="date" class="in" id="evdate"></div>
-<div class="gp"><label class="lb">San pham/Thuoc su dung</label><input class="in" id="evprod" placeholder="Ten san phm, ten thuoc..."></div>
-<div class="gp"><label class="lb">So luong/Lieu</label><input class="in" id="evqty"></div>
-<div class="gp"><label class="lb">Don vi</label><select class="sel" id="evunit"><option value="kg">kg</option><option value="l">Lit</option><option value="ml">ml</option><option value="g">gam</option><option value="bao">Bao</option><option value="chai">Chai</option></select></div>
-<div class="gp"><label class="lb">Nha cung cap</label><input class="in" id="evsup"></div>
-<div class="gp"><label class="lb">Nguoi thuc hien</label><input class="in" id="evuser"></div>
-<div class="gp"><label class="lb">Thoi gian chay (phut)</label><input type="number" class="in" id="evdur" placeholder="Cho may bom, he thong tuoi"></div>
-<div class="gp"><label class="lb">Ghi chu</label><textarea class="tx" id="evnote"></textarea></div>
-<button class="bt" onclick="saveEvent()">Luu</button>
-</div></div>
-
-<!-- INVENTORY -->
-<div id="invF" class="modal"><div class="box">
-<div class="h"><span>Hang ton kho</span><button class="cl" onclick="closeF()">&times;</button></div>
-<input type="hidden" id="iid">
-<div class="gp"><label class="lb">Ten hang (*)</label><input class="in" id="iname"></div>
-<div class="gp"><label class="lb">Loai</label><select class="sel" id="itype"><option value="seed">Hat giong</option><option value="fertilizer">Phan bon</option><option value="pesticide">Thuoc</option><option value="feed">Thuc an</option><option value="egg">Trung (qua)</option><option value="fruit">Qua</option><option value="product">San pham</option></select></div>
-<div class="gp"><label class="lb">So luong</label><input type="number" class="in" id="iqty"></div>
-<div class="gp"><label class="lb">Don vi</label><select class="sel" id="iunit"><option value="kg">kg</option><option value="bao">Bao</option><option value="chai">Chai</option><option value="cay">Cay</option><option value="qua">Qua</option><option value="trung">Trung</option></select></div>
-<div class="gp"><label class="lb">Ghi chu</label><textarea class="tx" id="inote"></textarea></div>
-<button class="bt" onclick="saveInv()">Luu</button>
-</div></div>
-
-<!-- SUPPLIER -->
-<div id="supplierF" class="modal"><div class="box">
-<div class="h"><span>Nha cung cap</span><button class="cl" onclick="closeF()">&times;</button></div>
-<input type="hidden" id="sid">
-<div class="gp"><label class="lb">Ten (*)</label><input class="in" id="sname"></div>
-<div class="gp"><label class="lb">Loai</label><select class="sel" id="stype"><option value="seed">Hat giong</option><option value="fertilizer">Phan bon</option><option value="pesticide">Thuoc BVTV</option><option value="feed">Thuc an</option><option value="pack">Bao bi</option><option value="equipment">Thiet bi</option></select></div>
-<div class="gp"><label class="lb">Dien thoai</label><input class="in" id="sphone"></div>
-<div class="gp"><label class="lb">Dia chi</label><input class="in" id="saddr"></div>
-<div class="gp"><label class="lb">Email</label><input class="in" id="semail"></div>
-<div class="gp"><label class="lb">Ghi chu</label><textarea class="tx" id="snote"></textarea></div>
-<button class="bt" onclick="saveSupplier()">Luu</button>
-</div></div>
-
-<!-- TRANSPORT -->
-<div id="transportF" class="modal"><div class="box">
-<div class="h"><span>Van chuyen</span><button class="cl" onclick="closeF()">&times;</button></div>
-<input type="hidden" id="trid">
-<div class="gp"><label class="lb">Ten (*)</label><input class="in" id="trname"></div>
-<div class="gp"><label class="lb">Loai</label><select class="sel" id="trtype"><option value="air">May bay</option><option value="ship">Tau</option><option value="truck">Xe tai</option><option value="bike">Xe may</option></select></div>
-<div class="gp"><label class="lb">Bien so/ID</label><input class="in" id="trplate"></div>
-<div class="gp"><label class="lb">Tai xe</label><input class="in" id="trdriver"></div>
-<div class="gp"><label class="lb">Dien thoai</label><input class="in" id="trphone"></div>
-<div class="gp"><label class="lb">Ghi chu</label><textarea class="tx" id="trnote"></textarea></div>
-<button class="bt" onclick="saveTransport()">Luu</button>
-</div></div>
-
-<!-- CUSTOMER -->
-<div id="customerF" class="modal"><div class="box">
-<div class="h"><span>Khach hang</span><button class="cl" onclick="closeF()">&times;</button></div>
-<input type="hidden" id="cid">
-<div class="gp"><label class="lb">Ten (*)</label><input class="in" id="cname"></div>
-<div class="gp"><label class="lb">Loai</label><select class="sel" id="ctype"><option value="retail">Ban le</option><option value="wholesale">Ban si</option><option value="export">Xuat khau</option><option value="restaurant">Nha hang</option><option value="supermarket">Sieu thi</option></select></div>
-<div class="gp"><label class="lb">Dien thoai</label><input class="in" id="cphone"></div>
-<div class="gp"><label class="lb">Dia chi</label><input class="in" id="caddr"></div>
-<div class="gp"><label class="lb">Email</label><input class="in" id="cemail"></div>
-<div class="gp"><label class="lb">Ghi chu</label><textarea class="tx" id="cnote"></textarea></div>
-<button class="bt" onclick="saveCustomer()">Luu</button>
-</div></div>
-
-<!-- INC -->
-<div id="incF" class="modal"><div class="box">
-<div class="h"><span>Thu tien</span><button class="cl" onclick="closeF()">&times;</button></div>
-<div class="gp"><label class="lb">Mo ta</label><input class="in" id="idesc"></div>
-<div class="gp"><label class="lb">So tien</label><input type="number" class="in" id="iamt"></div>
-<button class="bt" onclick="saveInc()">Luu</button>
-</div></div>
-
-<!-- EXP -->
-<div id="expF" class="modal"><div class="box">
-<div class="h"><span>Chi tien</span><button class="cl" onclick="closeF()">&times;</button></div>
-<div class="gp"><label class="lb">Mo ta</label><input class="in" id="edesc"></div>
-<div class="gp"><label class="lb">So tien</label><input type="number" class="in" id="eamt"></div>
-<button class="bt" onclick="saveExp()">Luu</button>
-</div></div>
-
-<div class="ts" id="ts">Da luu!</div>
-
-<script>
-var API = 'http://10.0.2.2:3000';
-var STK = 'est_v9';
-
-var dt = {crops:[], devices:[], rules:[], scheds:[], zones:[], traces:[], events:[], inv:[], finance:{inc:0,exp:0,tx:[]}, sensors:{}, suppliers:[], transports:[], customers:[]};
-var condCount = 0;
-
-(function(){
-  try{var x=localStorage.getItem(STK);if(x)dt=JSON.parse(x);}catch(e){}
-  document.getElementById('srv').textContent = API;
-  init();
-})();
-
-function sv(){localStorage.setItem(STK,JSON.stringify(dt));}
-
-function go(n){
-  for(var i=0;i<10;i++){
-    var b = document.getElementById('b'+i);
-    if(b) b.classList.toggle('on',i===n);
-    var t = document.getElementById('t'+i);
-    if(t) t.classList.toggle('on',i===n);
-  }
-  render();
-}
-
-function toggleNav(el){
-  el.classList.toggle('open');
-  el.nextElementSibling.classList.toggle('open');
-}
-
-function closeF(){document.querySelectorAll('.modal').forEach(function(m){m.classList.remove('on');});document.getElementById('conds').innerHTML='';condCount=0;}
-function openF(id){closeF();document.getElementById(id+'F').classList.add('on');document.getElementById(id+'id').value='';if(id==='rule')addCond();}
-
-function init(){
-  render();
-  checkOnline();
-}
-
-function checkOnline(){
-  if(navigator.onLine){
-    document.getElementById('dot').classList.add('on');
-    document.getElementById('sctxt').textContent = 'Online';
-  }else{
-    document.getElementById('dot').classList.remove('on');
-    document.getElementById('sctxt').textContent = 'Offline';
-  }
-}
-window.addEventListener('online',checkOnline);
-window.addEventListener('offline',checkOnline);
-
-function render(){
-  document.getElementById('tmp').innerHTML = (dt.sensors.temperature||'--')+'<span class="u">°C</span>';
-  document.getElementById('hum').innerHTML = (dt.sensors.humidity||'--')+'<span class="u">%</span>';
-  document.getElementById('ccnt').textContent = dt.crops.length;
-  document.getElementById('dcnt').textContent = dt.devices.length;
-  document.getElementById('rcnt').textContent = dt.rules.length;
-  document.getElementById('tcnt').textContent = dt.traces.length;
-  
-  document.getElementById('inc').innerText = dt.finance.inc.toLocaleString();
-  document.getElementById('exp').innerText = dt.finance.exp.toLocaleString();
-  document.getElementById('pf').innerText = (dt.finance.inc - dt.finance.exp).toLocaleString();
-  
-  // Finance transactions table
-  var tx = '<tr><th>Ngay</th><th>Mo ta</th><th>Tien</th></tr>';
-  dt.finance.tx.slice(-10).reverse().forEach(function(t){
-    var cl = t.type==='inc'?'inc':'exp';
-    tx += '<tr><td>'+(t.date?t.date.substring(5):'')+'</td><td>'+(t.desc||'')+'</td><td class="tag '+cl+'">'+(t.type==='inc'?'+':'-')+t.amt.toLocaleString()+'</td></tr>';
-  });
-  document.getElementById('txlst').innerHTML = tx;
-  
-  // Devices
-  var h = dt.devices.length?'':'<div class="emp">Chua co</div>';
-  dt.devices.forEach(function(d,i){h += '<div class="r"><div class="l"><div class="nm">'+d.name+'</div><div class="ds">'+d.type+' | '+(d.zone||'--')+'</div></div><div><button class="be" onclick="edDev('+i+')">E</button><button class="bx" onclick="dl('+i+',\'dev\')">X</button></div></div>';});
-  document.getElementById('devlst').innerHTML = h;
-  document.getElementById('dlst').innerHTML = h;
-  
-  // Crops
-  h = dt.crops.length?'':'<div class="emp">Chua co</div>';
-  dt.crops.forEach(function(c,i){h += '<div class="r"><div class="l"><div class="nm">'+c.name+'</div><div class="ds">'+c.type+' | '+c.stage+'</div></div><button class="bx" onclick="dl('+i+',\'crop\')">X</button></div>';});
-  document.getElementById('clst').innerHTML = h;
-  
-  // Rules
-  h = dt.rules.length?'':'<div class="emp">Chua co</div>';
-  dt.rules.forEach(function(r,i){
-    var conds = r.conds && r.conds.length ? r.conds.map(function(c){return c.sen+' '+c.op+' '+c.val;}).join(r.logic||' AND ') : (r.sen+' '+r.op+' '+r.val);
-    var extra = [];
-    if(r.duration) extra.push(r.duration+'p');
-    if(r.cooldown) extra.push('CD:'+r.cooldown+'p');
-    if(r.hysteresis) extra.push('Hys:'+r.hysteresis);
-    h += '<div class="r"><div class="l"><div class="nm">'+r.name+'</div><div class="ds">'+conds+(extra.length?' ('+extra.join(', ')+')':'')+'</div></div><div><button class="be" onclick="edRule('+i+')">E</button><button class="bx" onclick="dl('+i+',\'rule\')">X</button></div></div>';
-  });
-  document.getElementById('rlst').innerHTML = h;
-  
-  // Scheds
-  h = dt.scheds.length?'':'<div class="emp">Chua co</div>';
-  dt.scheds.forEach(function(s,i){h += '<div class="r"><div class="l"><div class="nm">'+s.name+'</div><div class="ds">'+s.time+' | '+s.repeat+'</div></div><button class="bx" onclick="dl('+i+',\'sched\')">X</button></div>';});
-  document.getElementById('slst').innerHTML = h;
-  
-  // Zones
-  h = dt.zones.length?'':'<div class="emp">Chua co</div>';
-  dt.zones.forEach(function(z,i){h += '<div class="r"><div class="l"><div class="nm">'+z.name+'</div><div class="ds">'+z.type+'</div></div><button class="bx" onclick="dl('+i+',\'zone\')">X</button></div>';});
-  document.getElementById('zlst').innerHTML = h;
-  
-  // Traces
-  h = dt.traces.length?'':'<div class="emp">Chua co</div>';
-  dt.traces.forEach(function(t,i){h += '<div class="r"><div class="l"><div class="nm">'+(t.name||t.code)+'</div><div class="ds">'+(t.crop||'')+' | '+(t.weight||0)+'kg</div></div><div><button class="be" onclick="edTrace('+i+')">E</button><button class="bx" onclick="dl('+i+',\'trace\')">X</button></div></div>';});
-  document.getElementById('tlst').innerHTML = h;
-  
-  // Events accordion
-  var ac = '';
-  var codes = [...new Set(dt.events.map(function(e){return e.code;}))];
-  if(codes.length === 0){
-    ac = '<div class="emp">Chua co su kien</div>';
-  }else{
-    codes.forEach(function(code){
-      var evs = dt.events.filter(function(e){return e.code === code;});
-      var evHtml = '';
-      evs.forEach(function(e,i){
-        var idx = dt.events.indexOf(e);
-        var prod = e.prod ? ' | '+e.prod : '';
-        evHtml += '<div class="r"><div class="l"><div class="nm">'+e.type+'</div><div class="ds">'+(e.date||'')+prod+'</div></div><div><button class="be" onclick="edEvent('+idx+')">E</button><button class="bx" onclick="dl('+idx+',\'event\')">X</button></div></div>';
-      });
-      ac += '<div class="accordion"><div class="acc-h" onclick="toggleAcc(this)">'+code+' ('+evs.length+' su kien)</div><div class="acc-c">'+evHtml+'</div></div>';
+  <script>
+    const API_BASE = localStorage.getItem('serverUrl') || 'http://localhost:3000';
+    const TOKEN_KEY = 'authToken';
+    const USER_KEY = 'authUser';
+    
+    const app = {
+      token: null,
+      user: null,
+      
+      init() {
+        // Check auth
+        this.token = localStorage.getItem(TOKEN_KEY);
+        this.user = JSON.parse(localStorage.getItem(USER_KEY) || 'null');
+        
+        if (this.token && this.user) {
+          this.showDashboard();
+          this.fetchDashboard();
+        } else {
+          this.showLogin();
+        }
+        
+        // Auto refresh
+        setInterval(() => {
+          if (this.token) this.fetchDashboard();
+        }, 30000);
+      },
+      
+      showPage(pageId) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + pageId).classList.add('active');
+      },
+      
+      showLogin() { this.showPage('login'); },
+      showRegister() { this.showPage('register'); },
+      showDashboard() { 
+        this.showPage('dashboard'); 
+        document.getElementById('header-user').textContent = this.user?.name || '';
+      },
+      
+      navigate(page) {
+        this.showPage(page);
+        this.fetchDataForPage(page);
+      },
+      
+      async fetchDataForPage(page) {
+        if (!this.token) return;
+        
+        try {
+          const headers = { 'Authorization': 'Bearer ' + this.token };
+          
+          if (page === 'dashboard') {
+            const res = await fetch(API_BASE + '/api/dashboard/overview', { headers });
+            const data = await res.json();
+            if (data.data) {
+              document.getElementById('metric-devices').textContent = data.data.devices?.total || 0;
+              document.getElementById('metric-alerts').textContent = data.data.alerts?.pending || 0;
+              document.getElementById('metric-crops').textContent = data.data.crops?.total || 0;
+            }
+          } else if (page === 'inventory') {
+            const res = await fetch(API_BASE + '/api/inventory/', { headers });
+            const data = await res.json();
+            if (data.data) {
+              document.getElementById('inv-total').textContent = data.data.length || 0;
+              const lowStock = data.data.filter(i => i.quantity <= i.min_quantity).length;
+              document.getElementById('inv-low').textContent = lowStock;
+            }
+          } else if (page === 'finance') {
+            const res = await fetch(API_BASE + '/api/finance/', { headers });
+            const data = await res.json();
+            if (data.data) {
+              const income = data.data.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+              const expense = data.data.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+              document.getElementById('fin-income').textContent = this.formatCurrency(income);
+              document.getElementById('fin-expense').textContent = this.formatCurrency(expense);
+              document.getElementById('fin-profit').textContent = this.formatCurrency(income - expense);
+            }
+          } else if (page === 'labor') {
+            const res = await fetch(API_BASE + '/api/labor/workers', { headers });
+            const data = await res.json();
+            if (data.data) {
+              document.getElementById('worker-total').textContent = data.data.length || 0;
+            }
+          } else if (page === 'crops') {
+            const res = await fetch(API_BASE + '/api/crops/plantings', { headers });
+            const data = await res.json();
+            if (data.data) {
+              document.getElementById('crop-list').innerHTML = data.data.length ? 
+                data.data.map(c => '<div class="data-item"><span class="data-name">' + (c.name || 'Cây trồng') + '</span><span class="data-badge ' + (c.status || 'active') + '">' + (c.status || 'active') + '</span></div>').join('') :
+                '<div class="empty-state">Không có cây trồng</div>';
+            }
+          }
+        } catch (err) {
+          console.error('Fetch error:', err);
+        }
+      },
+      
+      async fetchDashboard() {
+        if (!this.token) return;
+        
+        try {
+          const headers = { 'Authorization': 'Bearer ' + this.token };
+          
+          // Overview
+          const overview = await fetch(API_BASE + '/api/dashboard/overview', { headers });
+          const overviewData = await overview.json();
+          
+          if (overviewData.data) {
+            document.getElementById('metric-devices').textContent = overviewData.data.devices?.total || 0;
+            document.getElementById('metric-alerts').textContent = overviewData.data.alerts?.pending || 0;
+            document.getElementById('metric-crops').textContent = overviewData.data.crops?.total || 0;
+            document.getElementById('connectionStatus').classList.remove('offline');
+          }
+          
+          // Weather
+          const weather = await fetch(API_BASE + '/api/dashboard/weather', { headers });
+          const weatherData = await weather.json();
+          if (weatherData.data?.current) {
+            document.getElementById('weather-temp').textContent = weatherData.data.current.temp + '°C';
+            document.getElementById('weather-humidity').textContent = weatherData.data.current.humidity + '%';
+          }
+        } catch (err) {
+          console.error('Dashboard error:', err);
+          document.getElementById('connectionStatus').classList.add('offline');
+        }
+      },
+      
+      async login(email, password) {
+        try {
+          const res = await fetch(API_BASE + '/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+          
+          const data = await res.json();
+          
+          if (res.ok && data.token) {
+            this.token = data.token;
+            this.user = data.user;
+            localStorage.setItem(TOKEN_KEY, data.token);
+            localStorage.setItem(USER_KEY, JSON.stringify(data.user));
+            this.showDashboard();
+            this.fetchDashboard();
+            return { success: true };
+          } else {
+            return { success: false, error: data.error || 'Đăng nhập thất bại' };
+          }
+        } catch (err) {
+          return { success: false, error: 'Lỗi kết nối' };
+        }
+      },
+      
+      async register(name, email, password) {
+        try {
+          const res = await fetch(API_BASE + '/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+          });
+          
+          const data = await res.json();
+          
+          if (res.ok || data.token) {
+            return this.login(email, password);
+          } else {
+            return { success: false, error: data.error || 'Đăng ký thất bại' };
+          }
+        } catch (err) {
+          return { success: false, error: 'Lỗi kết nối' };
+        }
+      },
+      
+      logout() {
+        this.token = null;
+        this.user = null;
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+        this.showLogin();
+      },
+      
+      lookupBatch() {
+        const code = document.getElementById('trace-code').value;
+        if (!code) return;
+        
+        fetch(API_BASE + '/api/traceability/batch/' + code)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              document.getElementById('batch-result').innerHTML = `
+                <div class="card" style="margin-top: 16px;">
+                  <div class="card-title">${data.batch.product_name}</div>
+                  <div>Mã lô: ${data.batch.batch_code}</div>
+                  <div>Trạng thái: ${data.batch.status}</div>
+                  <div>Số giai đoạn: ${data.stages?.length || 0}</div>
+                </div>
+              `;
+            } else {
+              document.getElementById('batch-result').innerHTML = '<div class="error">Không tìm thấy lô</div>';
+            }
+          })
+          .catch(err => {
+            document.getElementById('batch-result').innerHTML = '<div class="error">Lỗi kết nối</div>';
+          });
+      },
+      
+      scanQR() {
+        // Placeholder for QR scanning - would use Capacitor Camera plugin
+        alert('Tính năng quét QR cần cài đặt Capacitor Camera plugin');
+      },
+      
+      clockIn() {
+        if (!this.token) return;
+        alert('Đã chấm vào ca!');
+      },
+      
+      clockOut() {
+        if (!this.token) return;
+        alert('Đã chấm ra ca!');
+      },
+      
+      addTransaction(type) {
+        const amount = prompt('Nhập số tiền:');
+        const desc = prompt('Nhập mô tả:');
+        if (amount && desc) {
+          alert('Đã thêm giao dịch ' + type);
+          this.fetchDataForPage('finance');
+        }
+      },
+      
+      saveSettings() {
+        const url = document.getElementById('server-url').value;
+        localStorage.setItem('serverUrl', url);
+        alert('Đã lưu cài đặt');
+      },
+      
+      formatCurrency(amount) {
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount || 0);
+      }
+    };
+    
+    // Login form
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const btn = document.getElementById('login-btn');
+      
+      btn.textContent = '⏳ Đang đăng nhập...';
+      btn.disabled = true;
+      
+      const result = await app.login(email, password);
+      
+      btn.textContent = 'Đăng nhập';
+      btn.disabled = false;
+      
+      if (!result.success) {
+        document.getElementById('login-error').textContent = result.error;
+        document.getElementById('login-error').style.display = 'block';
+      }
     });
-  }
-  document.getElementById('evaccordion').innerHTML = ac;
-  
-  // Inventory
-  h = dt.inv.length?'':'<div class="emp">Chua co</div>';
-  dt.inv.forEach(function(i,it){h += '<div class="r"><div class="l"><div class="nm">'+it.name+'</div><div class="ds">'+it.qty+' '+it.unit+' | '+it.type+'</div></div><button class="bx" onclick="dl('+it+',\'inv\')">X</button></div>';});
-  document.getElementById('invlst').innerHTML = h;
-  
-  // Suppliers
-  h = dt.suppliers.length?'':'<div class="emp">Chua co</div>';
-  dt.suppliers.forEach(function(s,i){h += '<div class="r"><div class="l"><div class="nm">'+s.name+'</div><div class="ds">'+s.type+' | '+(s.phone||'--')+'</div></div><div><button class="be" onclick="edSupplier('+i+')">E</button><button class="bx" onclick="dl('+i+',\'supplier\')">X</button></div></div>';});
-  document.getElementById('suplst').innerHTML = h;
-  
-  // Transports
-  h = dt.transports.length?'':'<div class="emp">Chua co</div>';
-  dt.transports.forEach(function(t,i){h += '<div class="r"><div class="l"><div class="nm">'+t.name+'</div><div class="ds">'+t.type+' | '+(t.plate||'--')+'</div></div><div><button class="be" onclick="edTransport('+i+')">E</button><button class="bx" onclick="dl('+i+',\'transport\')">X</button></div></div>';});
-  document.getElementById('tranlst').innerHTML = h;
-  
-  // Customers
-  h = dt.customers.length?'':'<div class="emp">Chua co</div>';
-  dt.customers.forEach(function(c,i){h += '<div class="r"><div class="l"><div class="nm">'+c.name+'</div><div class="ds">'+c.type+' | '+(c.phone||'--')+'</div></div><div><button class="be" onclick="edCustomer('+i+')">E</button><button class="bx" onclick="dl('+i+',\'customer\')">X</button></div></div>';});
-  document.getElementById('custlst').innerHTML = h;
-}
-
-function edDev(i){
-  var d = dt.devices[i];
-  document.getElementById('did').value = i;
-  document.getElementById('dname').value = d.name;
-  document.getElementById('dtype').value = d.type;
-  document.getElementById('dmac').value = d.mac||'';
-  document.getElementById('dzone').value = d.zone||'';
-  openF('device');
-}
-
-function addCond(){
-  var c = document.getElementById('conds');
-  var id = condCount++;
-  c.innerHTML += '<div class="cond-row" id="cond'+id+'"><select class="sel" style="width:40%"><option value="temperature">Nhiet do</option><option value="humidity">Do am</option><option value="soil">Do am dat</option><option value="light">Anh sang</option></select><select class="sel" style="width:20%"><option value=">">&gt;</option><option value="<">&lt;</option><option value="=">=</option></select><input type="number" class="in" placeholder="Gtri"><button type="button" class="rm-cond" onclick="this.parentElement.remove()">×</button></div>';
-}
-
-function edRule(i){
-  var r = dt.rules[i];
-  document.getElementById('rid').value = i;
-  document.getElementById('rname').value = r.name;
-  document.getElementById('rlogic').value = r.logic||'AND';
-  document.getElementById('ract').value = r.action;
-  document.getElementById('rdur').value = r.duration||'';
-  document.getElementById('rcool').value = r.cooldown||'';
-  document.getElementById('rhys').value = r.hysteresis||'';
-  document.getElementById('rtime').value = r.timeapply||'always';
-  var c = document.getElementById('conds');
-  c.innerHTML = '';
-  condCount = 0;
-  if(r.conds && r.conds.length){
-    r.conds.forEach(function(cond){
-      var id = condCount++;
-      c.innerHTML += '<div class="cond-row" id="cond'+id+'"><select class="sel" style="width:40%"><option value="temperature">Nhiet do</option><option value="humidity">Do am</option><option value="soil">Do am dat</option><option value="light">Anh sang</option></select><select class="sel" style="width:20%"><option value=">">&gt;</option><option value="<">&lt;</option><option value="=">=</option></select><input type="number" class="in" placeholder="Gtri"><button type="button" class="rm-cond" onclick="this.parentElement.remove()">×</button></div>';
-      var row = c.lastElementChild;
-      row.querySelector('select').value = cond.sen;
-      row.querySelectorAll('select')[1].value = cond.op;
-      row.querySelector('input').value = cond.val;
+    
+    // Register form
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('register-name').value;
+      const email = document.getElementById('register-email').value;
+      const password = document.getElementById('register-password').value;
+      
+      const result = await app.register(name, email, password);
+      
+      if (!result.success) {
+        alert(result.error);
+      }
     });
-  }else if(r.sen){
-    addCond();
-    var row = document.getElementById('conds').lastElementChild;
-    row.querySelector('select').value = r.sen;
-    row.querySelectorAll('select')[1].value = r.op;
-    row.querySelector('input').value = r.val;
-  }else{
-    addCond();
-  }
-  openF('rule');
-}
-
-function edTrace(i){
-  var t = dt.traces[i];
-  document.getElementById('tid').value = i;
-  document.getElementById('tcode').value = t.code;
-  document.getElementById('tname').value = t.name||'';
-  document.getElementById('tcrop').value = t.crop||'';
-  document.getElementById('twgt').value = t.weight||'';
-  document.getElementById('tunit').value = t.unit||'kg';
-  document.getElementById('thv').value = t.harvest||'';
-  document.getElementById('tsrc').value = t.source||'';
-  document.getElementById('tsup').value = t.supplier||'';
-  document.getElementById('tmf').value = t.mfg||'';
-  document.getElementById('texp').value = t.exp||'';
-  document.getElementById('tprice').value = t.price||'';
-  document.getElementById('tnote').value = t.note||'';
-  openF('trace');
-}
-
-function edEvent(i){
-  var e = dt.events[i];
-  document.getElementById('eid').value = i;
-  document.getElementById('evtype').value = e.type;
-  document.getElementById('evcode').value = e.code||'';
-  document.getElementById('evdate').value = e.date||'';
-  document.getElementById('evprod').value = e.prod||'';
-  document.getElementById('evqty').value = e.qty||'';
-  document.getElementById('evunit').value = e.unit||'kg';
-  document.getElementById('evsup').value = e.supplier||'';
-  document.getElementById('evuser').value = e.user||'';
-  document.getElementById('evdur').value = e.duration||'';
-  document.getElementById('evnote').value = e.note||'';
-  openF('event');
-}
-
-function toggleAcc(el){
-  el.classList.toggle('open');
-  el.nextElementSibling.classList.toggle('open');
-}
-
-function dl(i,typ){
-  if(!confirm('Xoa?')) return;
-  var map = {dev:'devices',crop:'crops',rule:'rules',sched:'scheds',zone:'zones',trace:'traces',event:'events',inv:'inv',supplier:'suppliers',transport:'transports',customer:'customers'};
-  dt[map[typ]].splice(i,1);
-  sv(); render();
-  msg('Da xoa');
-}
-
-function edSupplier(i){
-  var s = dt.suppliers[i];
-  document.getElementById('sid').value = i;
-  document.getElementById('sname').value = s.name;
-  document.getElementById('stype').value = s.type;
-  document.getElementById('sphone').value = s.phone||'';
-  document.getElementById('saddr').value = s.addr||'';
-  document.getElementById('semail').value = s.email||'';
-  document.getElementById('snote').value = s.note||'';
-  openF('supplier');
-}
-
-function edTransport(i){
-  var t = dt.transports[i];
-  document.getElementById('trid').value = i;
-  document.getElementById('trname').value = t.name;
-  document.getElementById('trtype').value = t.type;
-  document.getElementById('trplate').value = t.plate||'';
-  document.getElementById('trdriver').value = t.driver||'';
-  document.getElementById('trphone').value = t.phone||'';
-  document.getElementById('trnote').value = t.note||'';
-  openF('transport');
-}
-
-function edCustomer(i){
-  var c = dt.customers[i];
-  document.getElementById('cid').value = i;
-  document.getElementById('cname').value = c.name;
-  document.getElementById('ctype').value = c.type;
-  document.getElementById('cphone').value = c.phone||'';
-  document.getElementById('caddr').value = c.addr||'';
-  document.getElementById('cemail').value = c.email||'';
-  document.getElementById('cnote').value = c.note||'';
-  openF('customer');
-}
-
-// SAVE
-function saveCrop(){
-  var nm = document.getElementById('cname').value;
-  if(!nm) return msg('Nhap ten','err');
-  var it = {name:nm, type:document.getElementById('ctype').value, stage:document.getElementById('cstage').value, zone:document.getElementById('czone').value, planted:document.getElementById('cplanted').value, area:document.getElementById('carea').value};
-  var id = document.getElementById('cid').value;
-  if(id!==''){dt.crops[id]=it;}else{dt.crops.push(it);}
-  sv(); closeF(); render(); msg('Da luu!');
-}
-
-function saveDevice(){
-  var nm = document.getElementById('dname').value;
-  if(!nm) return msg('Nhap ten','err');
-  var it = {name:nm, type:document.getElementById('dtype').value, mac:document.getElementById('dmac').value, zone:document.getElementById('dzone').value, status:'online'};
-  var id = document.getElementById('did').value;
-  if(id!==''){dt.devices[id]=it;}else{dt.devices.push(it);}
-  sv(); closeF(); render(); msg('Da luu!');
-}
-
-function saveRule(){
-  var nm = document.getElementById('rname').value;
-  if(!nm) return msg('Nhap ten','err');
-  var conds = [];
-  document.querySelectorAll('#conds .cond-row').forEach(function(row){
-    conds.push({sen:row.querySelectorAll('select')[0].value,op:row.querySelectorAll('select')[1].value,val:row.querySelector('input').value});
-  });
-  var it = {name:nm, logic:document.getElementById('rlogic').value, conds:conds, action:document.getElementById('ract').value, duration:parseInt(document.getElementById('rdur').value)||0, cooldown:parseInt(document.getElementById('rcool').value)||0, hysteresis:parseFloat(document.getElementById('rhys').value)||0, timeapply:document.getElementById('rtime').value};
-  var id = document.getElementById('rid').value;
-  if(id!==''){dt.rules[id]=it;}else{dt.rules.push(it);}
-  sv(); closeF(); render(); msg('Da luu!');
-}
-
-function saveSched(){
-  var nm = document.getElementById('sname').value;
-  if(!nm) return msg('Nhap ten','err');
-  var it = {name:nm, time:document.getElementById('stime').value, repeat:document.getElementById('srep').value};
-  var id = document.getElementById('sid').value;
-  if(id!==''){dt.scheds[id]=it;}else{dt.scheds.push(it);}
-  sv(); closeF(); render(); msg('Da luu!');
-}
-
-function saveZone(){
-  var nm = document.getElementById('zname').value;
-  if(!nm) return msg('Nhap ten','err');
-  var it = {name:nm, type:document.getElementById('ztype').value};
-  var id = document.getElementById('zid').value;
-  if(id!==''){dt.zones[id]=it;}else{dt.zones.push(it);}
-  sv(); closeF(); render(); msg('Da luu!');
-}
-
-function saveTrace(){
-  var cd = document.getElementById('tcode').value;
-  if(!cd) return msg('Nhap ma','err');
-  var it = {code:cd, name:document.getElementById('tname').value, crop:document.getElementById('tcrop').value, weight:document.getElementById('twgt').value, unit:document.getElementById('tunit').value, harvest:document.getElementById('thv').value, source:document.getElementById('tsrc').value, supplier:document.getElementById('tsup').value, mfg:document.getElementById('tmf').value, exp:document.getElementById('texp').value, price:document.getElementById('tprice').value, note:document.getElementById('tnote').value};
-  var id = document.getElementById('tid').value;
-  if(id!==''){dt.traces[id]=it;}else{dt.traces.push(it);}
-  sv(); closeF(); render(); msg('Da luu!');
-}
-
-function saveEvent(){
-  var it = {type:document.getElementById('evtype').value, code:document.getElementById('evcode').value, date:document.getElementById('evdate').value, prod:document.getElementById('evprod').value, qty:document.getElementById('evqty').value, unit:document.getElementById('evunit').value, supplier:document.getElementById('evsup').value, user:document.getElementById('evuser').value, duration:document.getElementById('evdur').value, note:document.getElementById('evnote').value};
-  if(!it.type) return msg('Chon loai','err');
-  var id = document.getElementById('eid').value;
-  if(id!==''){dt.events[id]=it;}else{dt.events.push(it);}
-  sv(); closeF(); render(); msg('Da luu!');
-}
-
-function saveInv(){
-  var nm = document.getElementById('iname').value;
-  if(!nm) return msg('Nhap ten','err');
-  var it = {name:nm, type:document.getElementById('itype').value, qty:parseInt(document.getElementById('iqty').value)||0, unit:document.getElementById('iunit').value, note:document.getElementById('inote').value};
-  var id = document.getElementById('iid').value;
-  if(id!==''){dt.inv[id]=it;}else{dt.inv.push(it);}
-  sv(); closeF(); render(); msg('Da luu!');
-}
-
-function saveInc(){
-  var a = parseInt(document.getElementById('iamt').value)||0;
-  if(a<=0) return msg('Nhap tien','err');
-  dt.finance.inc += a;
-  dt.finance.tx.push({type:'inc',desc:document.getElementById('idesc').value,amt:a,date:new Date().toISOString()});
-  sv(); closeF(); render(); msg('Da luu!');
-}
-
-function saveExp(){
-  var a = parseInt(document.getElementById('eamt').value)||0;
-  if(a<=0) return msg('Nhap tien','err');
-  dt.finance.exp += a;
-  dt.finance.tx.push({type:'exp',desc:document.getElementById('edesc').value,amt:a,date:new Date().toISOString()});
-  sv(); closeF(); render(); msg('Da luu!');
-}
-
-function saveSupplier(){
-  var nm = document.getElementById('sname').value;
-  if(!nm) return msg('Nhap ten','err');
-  var it = {name:nm, type:document.getElementById('stype').value, phone:document.getElementById('sphone').value, addr:document.getElementById('saddr').value, email:document.getElementById('semail').value, note:document.getElementById('snote').value};
-  var id = document.getElementById('sid').value;
-  if(id!==''){dt.suppliers[id]=it;}else{dt.suppliers.push(it);}
-  sv(); closeF(); render(); msg('Da luu!');
-}
-
-function saveTransport(){
-  var nm = document.getElementById('trname').value;
-  if(!nm) return msg('Nhap ten','err');
-  var it = {name:nm, type:document.getElementById('trtype').value, plate:document.getElementById('trplate').value, driver:document.getElementById('trdriver').value, phone:document.getElementById('trphone').value, note:document.getElementById('trnote').value};
-  var id = document.getElementById('trid').value;
-  if(id!==''){dt.transports[id]=it;}else{dt.transports.push(it);}
-  sv(); closeF(); render(); msg('Da luu!');
-}
-
-function saveCustomer(){
-  var nm = document.getElementById('cname').value;
-  if(!nm) return msg('Nhap ten','err');
-  var it = {name:nm, type:document.getElementById('ctype').value, phone:document.getElementById('cphone').value, addr:document.getElementById('caddr').value, email:document.getElementById('cemail').value, note:document.getElementById('cnote').value};
-  var id = document.getElementById('cid').value;
-  if(id!==''){dt.customers[id]=it;}else{dt.customers.push(it);}
-  sv(); closeF(); render(); msg('Da luu!');
-}
-
-function chkQR(){
-  var cd = document.getElementById('qr').value;
-  var t = dt.traces.find(function(x){return x.code === cd;});
-  var ev = dt.events.filter(function(e){return e.code === cd;});
-  var r = document.getElementById('qrres');
-  if(t){
-    r.innerHTML = '<div class="c"><div class="nm">'+t.code+'</div><div class="ds">'+t.crop+' | '+t.weight+'kg</div></div>';
-    if(ev.length>0){
-      r.innerHTML += '<div class="c"><div class="tt"><span>Su kien</span></div>';
-      ev.forEach(function(e){
-        r.innerHTML += '<div class="r"><div class="nm">'+e.type+'</div><div class="ds">'+e.date+'</div></div>';
-      });
-      r.innerHTML += '</div>';
-    }
-  }else{
-    r.innerHTML = '<div class="emp">Khong tim thay</div>';
-  }
-}
-
-function sync(){
-  msg('Dang doi...','ok');
-  fetch(API+'/api/sensors/latest').then(function(r){return r.json();}).then(function(d){
-    if(d.temperature){dt.sensors.temperature = d.temperature; dt.sensors.humidity = d.humidity;}
-    sv(); render();
-    document.getElementById('dot').classList.add('on');
-    document.getElementById('sctxt').textContent = 'Online';
-    msg('Da sync!');
-  }).catch(function(e){
-    document.getElementById('dot').classList.remove('on');
-    document.getElementById('sctxt').textContent = 'Offline';
-    msg('Offline','err');
-  });
-  document.getElementById('last').textContent = new Date().toLocaleString('vi-VN');
-}
-
-function clearAll(){if(confirm('Xoa ALL?')){localStorage.clear();location.reload();}}
-
-function msg(t,ty){
-  var ts = document.getElementById('ts');
-  ts.textContent = t;
-  ts.className = 'ts d '+(ty==='err'?'tser':'tsok');
-  setTimeout(function(){ts.className='ts';},2500);
-}
-</script>
+    
+    // Init app
+    app.init();
+  </script>
 </body>
 </html>

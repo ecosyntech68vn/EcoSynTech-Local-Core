@@ -1,17 +1,10 @@
-interface SkillResult {
-  ok: boolean;
-  action: string;
-  note: string;
-  timestamp: string;
-}
-
-const skill = {
+export default {
   id: 'clear-cache',
   name: 'Clear Cache',
   triggers: ['event:cache.stale', 'event:watchdog.tick'],
-  riskLevel: 'low',
+  riskLevel: 'low' as const,
   canAutoFix: true,
-  async run(): Promise<SkillResult> {
+  async run(): Promise<{ ok: boolean; action: string; note: string; timestamp: string }> {
     return {
       ok: true,
       action: 'clear-cache',
@@ -20,5 +13,3 @@ const skill = {
     };
   }
 };
-
-export = skill;

@@ -1,26 +1,11 @@
-interface SkillContext {
-  event?: {
-    channel?: string;
-    type?: string;
-  };
-}
-
-interface SkillResult {
-  ok: boolean;
-  channel: string;
-  action: string;
-  recommendation: string;
-  timestamp: string;
-}
-
-const skill = {
+export default {
   id: 'reconnect-bridge',
   name: 'Reconnect Bridge',
   triggers: ['event:mqtt.disconnect', 'event:websocket.disconnect', 'event:watchdog.tick'],
-  riskLevel: 'medium',
+  riskLevel: 'medium' as const,
   canAutoFix: true,
-  async run(ctx: SkillContext): Promise<SkillResult> {
-    const channel = ctx.event?.channel || (ctx.event?.type?.includes('mqtt') ? 'mqtt' : 'websocket');
+  async run(ctx: { event: { channel?: string; type?: string } }): Promise<{ ok: boolean; channel: string; action: string; recommendation: string; timestamp: string }> {
+    const channel = ctx.event.channel || (ctx.event.type?.includes('mqtt') ? 'mqtt' : 'websocket');
 
     return {
       ok: true,
@@ -31,5 +16,3 @@ const skill = {
     };
   }
 };
-
-export = skill;

@@ -1,9 +1,23 @@
-const { getAll, getOne } = require('../config/database');
+import express, { Router, Request, Response } from 'express';
+import { getAll, getOne } from '../config/database';
 
-router.get('/latest', (req, res) => {
+const router: Router = express.Router();
+
+export interface SensorDataRow {
+  id: number;
+  device_id: string;
+  type: string;
+  value: number;
+  unit: string;
+  timestamp: string;
+  device_name?: string;
+  label?: string;
+}
+
+router.get('/latest', (req: Request, res: Response): void => {
   try {
-    const limit = parseInt(req.query.limit) || 20;
-    const deviceId = req.query.deviceId;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const deviceId = req.query.deviceId as string;
     
     let query = `
       SELECT 
@@ -19,11 +33,13 @@ router.get('/latest', (req, res) => {
       LEFT JOIN devices d ON sd.device_id = d.device_id
     `;
     
-    let rows;
+    let rows: SensorDataRow[];
     if (deviceId) {
-      rows = getAll(`${query} WHERE sd.device_id = "${deviceId}" ORDER BY sd.timestamp DESC LIMIT ${limit}`);
+      const condition = `WHERE sd.device_id = "${deviceId}"`;
+      query += ` ${condition}`;
+      rows = getAll(`${query} ORDER BY sd.timestamp DESC LIMIT ${limit}`) as SensorDataRow[];
     } else {
-      rows = getAll(`${query} ORDER BY sd.timestamp DESC LIMIT ${limit}`);
+      rows = getAll(`${query} ORDER BY sd.timestamp DESC LIMIT ${limit}`) as SensorDataRow[];
     }
     
     const sensors = rows.map(r => ({
@@ -38,16 +54,16 @@ router.get('/latest', (req, res) => {
     }));
     
     res.json(sensors);
-  } catch (err) {
+  } catch (err: any) {
     console.error('[Sensor-Data] Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-router.get('/device/:deviceId', (req, res) => {
+router.get('/device/:deviceId', (req: Request, res: Response): void => {
   try {
     const { deviceId } = req.params;
-    const limit = parseInt(req.query.limit) || 50;
+    const limit = parseInt(req.query.limit as string) || 50;
     
     const rows = getAll(`
       SELECT id, sensor_type as type, value, unit, timestamp
@@ -58,12 +74,12 @@ router.get('/device/:deviceId', (req, res) => {
     `);
     
     res.json(rows);
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.get('/stats', (req, res) => {
+router.get('/stats', (req: Request, res: Response): void => {
   try {
     const rows = getAll(`
       SELECT 
@@ -79,9 +95,9 @@ router.get('/stats', (req, res) => {
     `);
     
     res.json(rows);
-  } catch (err) {
+  } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
 });
 
-module.exports = router;
+export default router;

@@ -1,15 +1,22 @@
-const express = require('express');
-const path = require('path');
-const fs = require('fs');
+import express, { Router, Request, Response } from 'express';
+import path from 'path';
+import fs from 'fs';
 
-const router = express.Router();
+const router: Router = express.Router();
+
 const TEMP_DIR = path.join(__dirname, '..', '..', 'temp');
 
 if (!fs.existsSync(TEMP_DIR)) {
   fs.mkdirSync(TEMP_DIR, { recursive: true });
 }
 
-router.get('/:filename', (req, res) => {
+export interface TempFile {
+  name: string;
+  size: number;
+  created: Date;
+}
+
+router.get('/:filename', (req: Request, res: Response): void => {
   const filename = req.params.filename;
   const filePath = path.join(TEMP_DIR, filename);
   
@@ -22,7 +29,7 @@ router.get('/:filename', (req, res) => {
   res.sendFile(filePath);
 });
 
-router.delete('/:filename', (req, res) => {
+router.delete('/:filename', (req: Request, res: Response): void => {
   const filename = req.params.filename;
   const filePath = path.join(TEMP_DIR, filename);
   
@@ -34,7 +41,7 @@ router.delete('/:filename', (req, res) => {
   res.status(404).json({ error: 'File not found' });
 });
 
-router.get('/', (req, res) => {
+router.get('/', (req: Request, res: Response): void => {
   if (!fs.existsSync(TEMP_DIR)) {
     return res.json([]);
   }
@@ -48,4 +55,4 @@ router.get('/', (req, res) => {
   res.json(files);
 });
 
-module.exports = router;
+export default router;

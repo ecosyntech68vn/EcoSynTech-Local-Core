@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/database');
+const { getAll, getOne } = require('../config/database');
 
 router.get('/latest', async (req, res) => {
   try {
@@ -21,16 +21,14 @@ router.get('/latest', async (req, res) => {
       LEFT JOIN devices d ON sd.device_id = d.device_id
     `;
     
-    const params = [];
+    let rows;
     if (deviceId) {
-      query += ' WHERE sd.device_id = ?';
-      params.push(deviceId);
+      const condition = `WHERE sd.device_id = "${deviceId}"`;
+      query += ` ${condition}`;
+      rows = getAll(`${query} ORDER BY sd.timestamp DESC LIMIT ${limit}`);
+    } else {
+      rows = getAll(`${query} ORDER BY sd.timestamp DESC LIMIT ${limit}`);
     }
-    
-    query += ' ORDER BY sd.timestamp DESC LIMIT ?';
-    params.push(limit);
-    
-    const rows = await db.query(query, params);
     
     const sensors = rows.map(r => ({
       id: r.id,
@@ -39,7 +37,7 @@ router.get('/latest', async (req, res) => {
       value: r.value,
       unit: r.unit,
       timestamp: r.timestamp,
-      name: r.device_name || r.label || r.sensor_type,
+      name: r.device_name || r.label || r.type,
       label: r.label
     }));
     
@@ -55,14 +53,13 @@ router.get('/device/:deviceId', async (req, res) => {
     const { deviceId } = req.params;
     const limit = parseInt(req.query.limit) || 50;
     
-    const rows = await db.query(
-      `SELECT id, sensor_type as type, value, unit, timestamp
-       FROM sensor_data 
-       WHERE device_id = ?
-       ORDER BY timestamp DESC
-       LIMIT ?`,
-      [deviceId, limit]
-    );
+    const rows = getAll(`
+      SELECT id, sensor_type as type, value, unit, timestamp
+      FROM sensor_data 
+      WHERE device_id = "${deviceId}"
+      ORDER BY timestamp DESC
+      LIMIT ${limit}
+    `);
     
     res.json(rows);
   } catch (err) {
@@ -72,7 +69,7 @@ router.get('/device/:deviceId', async (req, res) => {
 
 router.get('/stats', async (req, res) => {
   try {
-    const rows = await db.query(`
+    const rows = getAll(`
       SELECT 
         sensor_type as type,
         COUNT(*) as count,

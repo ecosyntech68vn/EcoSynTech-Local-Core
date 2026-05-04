@@ -1,0 +1,404 @@
+hướng dẫn tích hợp 3 mục cải thiện vào dự án EcoSynTech-Local-Core, đảm bảo đồng bộ với dữ liệu và cấu trúc hiện có (Express + thư mục public/). Mỗi mục đều kèm code cụ thể và các bước thực hiện.
+1. Triển khai PWA + Service Worker (Offline‑first cho mobile)
+Bước 1.1: Thêm manifest.json
+Tạo file public/manifest.json:
+
+json
+{
+  "name": "EcoSynTech - Quản lý nông trại",
+  "short_name": "EcoSynTech",
+  "description": "Hệ thống quản lý nông nghiệp thông minh - Hoạt động ngoại tuyến",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#2e7d32",
+  "background_color": "#ffffff",
+  "icons": [
+    { "src": "/icons/icon-72x72.png", "sizes": "72x72", "type": "image/png" },
+    { "src": "/icons/icon-96x96.png", "sizes": "96x96", "type": "image/png" },
+    { "src": "/icons/icon-128x128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "/icons/icon-144x144.png", "sizes": "144x144", "type": "image/png" },
+    { "src": "/icons/icon-152x152.png", "sizes": "152x152", "type": "image/png" },
+    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-384x384.png", "sizes": "384x384", "type": "image/png" },
+    { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
+Tạo thư mục public/icons/ và đặt các icon tương ứng (có thể tạm dùng ảnh mặc định hoặc tạo bằng công cụ như PWA Asset Generator).
+
+Bước 1.2: Thêm Service Worker (public/sw.js)
+javascript
+const CACHE_NAME = 'ecosyntech-v1';
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/css/app.css',
+  '/js/app.js',
+  '/manifest.json',
+  '/icons/icon-192x192.png'
+  // Thêm các file CSS/JS quan trọng khác
+];
+
+// Install: cache tài nguyên tĩnh
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS))
+  );
+  self.skipWaiting();
+});
+
+// Activate: xóa cache cũ
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
+    ))
+  );
+  self.clients.claim();
+});
+
+// Fetch: stale-while-revalidate cho API, cache-first cho tài nguyên
+self.addEventListener('fetch', event => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // API calls: ưu tiên mạng, fallback cache
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          const responseCopy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, responseCopy));
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+    return;
+  }
+
+  // Tài nguyên tĩnh: cache first
+  event.respondWith(
+    caches.match(request).then(cached => cached || fetch(request))
+  );
+});
+Bước 1.3: Đăng ký Service Worker trong file public/js/app.js (hoặc thẻ script trong index.html)
+javascript
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('Service Worker registered:', reg))
+      .catch(err => console.log('SW registration failed:', err));
+  });
+}
+Bước 1.4: Thêm thẻ link manifest vào public/index.html
+html
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#2e7d32">
+Bước 1.5: Cấu hình Express để phục vụ service worker với đúng MIME type (Express tự động làm, nhưng cần đảm bảo tĩnh)
+Không cần thay đổi gì ở backend nếu thư mục public đã được serve qua express.static.
+
+2. Hoàn thiện cảnh báo Zalo & giọng nói
+Bước 2.1: Tích hợp Zalo Official Account API
+Giả sử bạn đã có access_token và oa_id. Tạo module services/zaloService.js:
+
+javascript
+const axios = require('axios');
+
+class ZaloService {
+  constructor(accessToken, oaId) {
+    this.accessToken = accessToken;
+    this.oaId = oaId;
+    this.apiUrl = 'https://openapi.zalo.me/v2.0/oa/message';
+  }
+
+  async sendText(userId, message) {
+    try {
+      const response = await axios.post(this.apiUrl, {
+        recipient: { user_id: userId },
+        message: { text: message }
+      }, {
+        headers: {
+          'access_token': this.accessToken,
+          'Content-Type': 'application/json'
+        }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Zalo send error:', error.response?.data || error.message);
+      return null;
+    }
+  }
+
+  // Gửi cảnh báo giọng nói (Zalo hỗ trợ gửi file âm thanh)
+  async sendVoice(userId, voiceUrl) {
+    try {
+      const response = await axios.post(this.apiUrl, {
+        recipient: { user_id: userId },
+        message: {
+          type: 'voice',
+          voice: { url: voiceUrl, duration: 15 } // URL file .mp3
+        }
+      }, {
+        headers: { 'access_token': this.accessToken }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Zalo voice error:', error);
+      return null;
+    }
+  }
+}
+
+module.exports = ZaloService;
+Bước 2.2: Tạo hàm chuyển văn bản thành giọng nói (sử dụng Google Text-to-Speech miễn phí hoặc VietTTS)
+Cài đặt gói google-tts-api:
+
+bash
+npm install google-tts-api
+Tạo services/ttsService.js:
+
+javascript
+const gtts = require('google-tts-api');
+const fs = require('fs');
+const path = require('path');
+
+async function textToSpeech(text, lang = 'vi') {
+  const url = gtts.getAudioUrl(text, { lang, slow: false });
+  // Tải file âm thanh tạm thời
+  const response = await fetch(url);
+  const buffer = await response.arrayBuffer();
+  const tempPath = path.join(__dirname, '../temp', `alert_${Date.now()}.mp3`);
+  fs.writeFileSync(tempPath, Buffer.from(buffer));
+  return tempPath;
+}
+
+module.exports = { textToSpeech };
+Bước 2.3: Tích hợp vào luồng cảnh báo hiện có (ví dụ trong skills/monitoring-alert.js)
+Mở file skills/monitoring-alert.js (hoặc nơi xử lý cảnh báo). Thêm code sau:
+
+javascript
+const ZaloService = require('../services/zaloService');
+const { textToSpeech } = require('../services/ttsService');
+
+const zalo = new ZaloService(process.env.ZALO_ACCESS_TOKEN, process.env.ZALO_OA_ID);
+
+async function sendAlert(deviceId, message, userIds) {
+  // Gửi Telegram (đã có)
+  // Gửi Zalo text
+  for (const userId of userIds) {
+    await zalo.sendText(userId, message);
+    // Nếu cảnh báo nghiêm trọng, gửi thêm giọng nói
+    if (message.includes('khẩn') || message.includes('báo động')) {
+      const voicePath = await textToSpeech(message);
+      // Upload voicePath lên cloud (hoặc serve từ local) và gửi URL
+      const voiceUrl = `https://your-domain.com/temp/${path.basename(voicePath)}`;
+      await zalo.sendVoice(userId, voiceUrl);
+    }
+  }
+}
+Thêm biến môi trường trong .env:
+
+text
+ZALO_ACCESS_TOKEN=your_zalo_oa_token
+ZALO_OA_ID=your_oa_id
+Bước 2.4: Tạo API endpoint để upload file âm thanh tạm (nếu cần)
+javascript
+// routes/temp.js
+const express = require('express');
+const router = express.Router();
+const path = require('path');
+
+router.get('/:filename', (req, res) => {
+  const file = path.join(__dirname, '../temp', req.params.filename);
+  res.sendFile(file);
+});
+module.exports = router;
+Đăng ký route trong app.js:
+
+javascript
+app.use('/temp', require('./routes/temp'));
+3. Chế độ giao diện "siêu đơn giản" cho mobile
+Tạo một giao diện mới với các số lớn, màu sắc tương phản, ít thao tác.
+
+Bước 3.1: Tạo file public/simple.html
+html
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>EcoSynTech - Chế độ đơn giản</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+    body {
+      background: #1a3c2c;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      padding: 20px;
+      color: white;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .sensor-card {
+      background: rgba(255,255,255,0.15);
+      border-radius: 30px;
+      padding: 25px;
+      margin-bottom: 25px;
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
+    .sensor-name {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+    .sensor-value {
+      font-size: 72px;
+      font-weight: bold;
+      line-height: 1.2;
+    }
+    .sensor-unit {
+      font-size: 28px;
+      margin-left: 10px;
+    }
+    .alert {
+      background: #d32f2f;
+      border-radius: 30px;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 25px;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+    button {
+      background: #ff9800;
+      border: none;
+      border-radius: 50px;
+      padding: 15px 30px;
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      width: 100%;
+      margin-top: 10px;
+      cursor: pointer;
+    }
+    .status {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 18px;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div id="alertBox" style="display: none;" class="alert">⚠️ Cảnh báo! ⚠️</div>
+  <div id="sensors"></div>
+  <button onclick="location.reload()">🔄 Làm mới</button>
+  <button onclick="toggleMode()">📱 Chế độ chuyên nghiệp</button>
+  <div class="status" id="status">Đang tải dữ liệu...</div>
+</div>
+
+<script>
+  let interval = null;
+
+  async function fetchSimpleData() {
+    try {
+      const res = await fetch('/api/sensor-data/latest?limit=10');
+      const data = await res.json();
+      renderSensors(data);
+      document.getElementById('status').innerHTML = `Cập nhật lúc: ${new Date().toLocaleTimeString()}`;
+    } catch (err) {
+      document.getElementById('status').innerHTML = 'Mất kết nối, đang dùng dữ liệu cũ';
+    }
+  }
+
+  function renderSensors(sensors) {
+    const container = document.getElementById('sensors');
+    if (!sensors || sensors.length === 0) {
+      container.innerHTML = '<div class="sensor-card">Chưa có dữ liệu cảm biến</div>';
+      return;
+    }
+    let html = '';
+    sensors.forEach(s => {
+      let valueHtml = '';
+      if (s.type === 'temperature') valueHtml = `${s.value}<span class="sensor-unit">°C</span>`;
+      else if (s.type === 'humidity') valueHtml = `${s.value}<span class="sensor-unit">%</span>`;
+      else if (s.type === 'soil_moisture') valueHtml = `${s.value}<span class="sensor-unit">%</span>`;
+      else valueHtml = `${s.value}`;
+      
+      // Cảnh báo nếu vượt ngưỡng
+      let alertClass = '';
+      if ((s.type === 'soil_moisture' && s.value < 30) || (s.type === 'temperature' && s.value > 35)) {
+        alertClass = 'alert-border';
+        document.getElementById('alertBox').style.display = 'block';
+      }
+      html += `
+        <div class="sensor-card ${alertClass}">
+          <div class="sensor-name">${s.name || s.type}</div>
+          <div class="sensor-value">${valueHtml}</div>
+        </div>
+      `;
+    });
+    container.innerHTML = html;
+  }
+
+  function toggleMode() {
+    localStorage.setItem('ecosyntech_mode', 'professional');
+    window.location.href = '/';
+  }
+
+  fetchSimpleData();
+  interval = setInterval(fetchSimpleData, 30000);
+</script>
+</body>
+</html>
+Bước 3.2: Sửa file public/js/app.js để thêm nút chuyển chế độ
+javascript
+// Thêm vào đầu file
+function checkSimpleMode() {
+  const mode = localStorage.getItem('ecosyntech_mode');
+  if (mode === 'simple') {
+    window.location.href = '/simple.html';
+  }
+}
+checkSimpleMode();
+
+// Tạo một nút chuyển sang chế độ đơn giản trong giao diện chính
+const simpleModeBtn = document.createElement('button');
+simpleModeBtn.innerText = '📱 Chế độ đơn giản';
+simpleModeBtn.onclick = () => {
+  localStorage.setItem('ecosyntech_mode', 'simple');
+  window.location.href = '/simple.html';
+};
+document.body.appendChild(simpleModeBtn); // Đặt vị trí phù hợp
+Bước 3.3: Cấu hình route cho file tĩnh (Express đã serve thư mục public, nên không cần thêm)
+Kiểm tra đồng bộ với dữ liệu hiện có
+API endpoint /api/sensor-data/latest phải tồn tại trong dự án. Nếu chưa có, bạn tạo thêm route:
+
+javascript
+// routes/sensor-data.js
+router.get('/latest', async (req, res) => {
+  try {
+    const data = await sensorDataService.getLatest(req.query.limit || 20);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+Đảm bảo sensorDataService.getLatest trả về mảng các object có type, value, name.
+
+Dữ liệu từ ESP32 vẫn được lưu vào SQLite bình thường, PWA và chế độ đơn giản chỉ đọc từ API có sẵn.
+
+Tổng kết các bước tích hợp
+Mục	Việc cần làm
+PWA	Tạo manifest.json, sw.js, đăng ký SW, thêm link manifest vào HTML, tạo icon.
+Zalo + Voice	Cài đặt axios, google-tts-api; tạo zaloService.js, ttsService.js; tích hợp vào monitoring-alert; thêm biến môi trường.
+Chế độ đơn giản	Tạo simple.html, sửa app.js để chuyển chế độ, đảm bảo API /api/sensor-data/latest hoạt động.
+Sau khi thực hiện, hệ thống sẽ có khả năng offline-first, cảnh báo giọng nói qua Zalo, và giao diện siêu đơn giản cho người lớn tuổi. Tất cả đều đồng bộ hoàn toàn với dữ liệu và logic hiện tại.

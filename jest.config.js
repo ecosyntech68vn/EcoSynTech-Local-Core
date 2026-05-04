@@ -3,7 +3,6 @@ module.exports = {
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'src/**/*.js',
-    'src/**/*.ts',
     '!src/skills/**',
     '!src/ml/**'
   ],
@@ -14,6 +13,6 @@ module.exports = {
   testTimeout: 10000,
   collectCoverage: false,
   setupFiles: [
-    '<rootDir>/jest.setupEnv.js'
+    '<rootDir>/__tests__/test-setup.js'
   ]
 };

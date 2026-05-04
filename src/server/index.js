@@ -31,7 +31,10 @@ const compression = require('compression');
 const path = require('path');
 
 const config = require('../config');
-const logger = require('../config/logger');
+let logger = require('../config/logger');
+if (!logger || !logger.error) {
+  logger = { error: () => {}, warn: () => {}, info: () => {}, debug: () => {} };
+}
 const envValidator = require('../config/envValidator');
 const { initDatabase, closeDatabase } = require('../config/database');
 const { applyProfile, getMemoryEstimate, getConfig } = require('../config/features');

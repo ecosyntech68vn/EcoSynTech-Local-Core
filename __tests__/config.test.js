@@ -8,7 +8,8 @@ describe('Config Module', () => {
   
   beforeAll(() => {
     jest.resetModules();
-    config = require('../src/config');
+    let rawConfig = require('../src/config');
+    config = rawConfig.default || rawConfig;
   });
   
   describe('Config structure', () => {

@@ -3,7 +3,9 @@ module.exports = {
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'src/**/*.js',
-    '!src/skills/**'
+    'src/**/*.ts',
+    '!src/skills/**',
+    '!src/ml/**'
   ],
   testMatch: [
     '**/__tests__/**/*.test.js'

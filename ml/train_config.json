@@ -1,6 +1,6 @@
 {
-  "db_path": "/tmp/EcoSynTech-Local-Core/data/ecosyntech.db",
-  "output_model_path": "/tmp/EcoSynTech-Local-Core/models/lightgbm_yield.onnx",
+  "db_path": "/repo/EcoSynTech-Local-Core/data/ecosyntech.db",
+  "output_model_path": "/repo/EcoSynTech-Local-Core/models/lightgbm_yield.onnx",
   "feature_cols": [
     "temperature_avg",
     "rainfall_mm",

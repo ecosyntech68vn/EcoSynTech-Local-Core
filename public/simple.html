@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>EcoSynTech - Chế độ đơn giản</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body {
+      background: #1a3c2c;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      padding: 15px;
+      color: white;
+      min-height: 100vh;
+    }
+    .container { max-width: 600px; margin: 0 auto; }
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+    }
+    .header h1 { font-size: 32px; margin-bottom: 5px; }
+    .header p { font-size: 18px; opacity: 0.8; }
+    .sensor-card {
+      background: rgba(255,255,255,0.15);
+      border-radius: 30px;
+      padding: 25px;
+      margin-bottom: 20px;
+      text-align: center;
+      backdrop-filter: blur(4px);
+      border: 3px solid transparent;
+      transition: all 0.3s ease;
+    }
+    .sensor-card.alert {
+      border-color: #ff5722;
+      animation: pulse 1s infinite;
+    }
+    .sensor-name { font-size: 28px; font-weight: bold; margin-bottom: 15px; }
+    .sensor-value { font-size: 72px; font-weight: bold; line-height: 1.2; }
+    .sensor-unit { font-size: 28px; margin-left: 10px; }
+    .alert-box {
+      background: #d32f2f;
+      border-radius: 30px;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      animation: pulse 1s infinite;
+      display: none;
+    }
+    .alert-box.show { display: block; }
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(0.98); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    button {
+      background: #ff9800;
+      border: none;
+      border-radius: 50px;
+      padding: 20px 30px;
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      width: 100%;
+      margin-top: 15px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    button:active { transform: scale(0.95); }
+    button.secondary {
+      background: #4caf50;
+    }
+    button.danger {
+      background: #f44336;
+    }
+    .status {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 18px;
+      opacity: 0.8;
+      padding: 15px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 15px;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 24px;
+    }
+    .error {
+      background: #b71c1c;
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🌱 EcoSynTech</h1>
+      <p>Chế độ đơn giản</p>
+    </div>
+
+    <div id="alertBox" class="alert-box">⚠️ CẢNH BÁO! ⚠️</div>
+    
+    <div id="errorBox" class="error" style="display: none;"></div>
+    
+    <div id="sensors">
+      <div class="loading">Đang tải dữ liệu...</div>
+    </div>
+
+    <button onclick="refreshData()" class="secondary">🔄 Làm mới</button>
+    <button onclick="switchToProfessional()">📱 Chế độ chuyên nghiệp</button>
+    
+    <div class="status" id="status">Đang kết nối...</div>
+  </div>
+
+  <script>
+    const API_URL = '/api/sensor-data/latest';
+    const REFRESH_INTERVAL = 30000;
+    let refreshTimer = null;
+
+    async function fetchSimpleData() {
+      try {
+        const res = await fetch(`${API_URL}?limit=10`);
+        if (!res.ok) throw new Error('Lỗi kết nối');
+        
+        const data = await res.json();
+        renderSensors(data);
+        updateStatus('Cập nhật: ' + new Date().toLocaleTimeString('vi-VN'), false);
+      } catch (err) {
+        document.getElementById('errorBox').style.display = 'block';
+        document.getElementById('errorBox').textContent = 'Mất kết nối server';
+        updateStatus('Đang dùng dữ liệu cũ', true);
+      }
+    }
+
+    function renderSensors(sensors) {
+      const container = document.getElementById('sensors');
+      document.getElementById('errorBox').style.display = 'none';
+      
+      if (!sensors || sensors.length === 0) {
+        container.innerHTML = '<div class="sensor-card">Chưa có dữ liệu cảm biến</div>';
+        return;
+      }
+
+      let hasAlert = false;
+      let html = '';
+
+      sensors.forEach(s => {
+        let valueHtml = '';
+        let isAlert = false;
+        
+        if (s.type === 'temperature') {
+          valueHtml = `${s.value}<span class="sensor-unit">°C</span>`;
+          if (s.value > 35) isAlert = true;
+        } else if (s.type === 'humidity') {
+          valueHtml = `${s.value}<span class="sensor-unit">%</span>`;
+        } else if (s.type === 'soil_moisture') {
+          valueHtml = `${s.value}<span class="sensor-unit">%</span>`;
+          if (s.value < 30) isAlert = true;
+        } else {
+          valueHtml = `${s.value}`;
+        }
+
+        if (isAlert) hasAlert = true;
+
+        const displayName = s.name || s.label || s.type || 'Cảm biến';
+        
+        html += `
+          <div class="sensor-card ${isAlert ? 'alert' : ''}">
+            <div class="sensor-name">${displayName}</div>
+            <div class="sensor-value">${valueHtml}</div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      
+      const alertBox = document.getElementById('alertBox');
+      if (hasAlert) {
+        alertBox.classList.add('show');
+        alertBox.textContent = '⚠️ CẢNH BÁO! ⚠️';
+      } else {
+        alertBox.classList.remove('show');
+      }
+    }
+
+    function updateStatus(text, isError) {
+      const status = document.getElementById('status');
+      status.textContent = text;
+      status.style.background = isError ? 'rgba(255,0,0,0.3)' : 'rgba(0,0,0,0.2)';
+    }
+
+    function refreshData() {
+      updateStatus('Đang tải...', false);
+      fetchSimpleData();
+    }
+
+    function switchToProfessional() {
+      localStorage.setItem('ecosyntech_mode', 'professional');
+      window.location.href = '/dashboard.html';
+    }
+
+    function checkMode() {
+      const mode = localStorage.getItem('ecosyntech_mode');
+      if (mode === 'professional') {
+        window.location.href = '/dashboard.html';
+      }
+    }
+
+    fetchSimpleData();
+    refreshTimer = setInterval(fetchSimpleData, REFRESH_INTERVAL);
+    
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        fetchSimpleData();
+      }
+    });
+  </script>
+</body>
+</html>

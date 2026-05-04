@@ -133,6 +133,8 @@ function registerRoutes(app) {
   app.use('/api/checkout', require('../routes/checkout'));
   app.use('/api/compliance', require('../routes/compliance'));
   app.use('/api/farmos-core', require('../routes/farmos-core'));
+  app.use('/api/sensor-data', require('../routes/sensor-data'));
+  app.use('/temp', require('../routes/temp'));
 
   // Bootstrap APIs (nếu có)
   try {

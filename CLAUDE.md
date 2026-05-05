@@ -129,5 +129,53 @@ Báo cáo phải có cấu trúc sau:
 
 **Ghi chú:** Bạn không cần chạy code. Đây là phân tích tĩnh dựa trên việc đọc hiểu file nguồn và tài liệu.
 
+## 9. KỸ NĂNG TỰ ĐỘNG SỬA LỖI & TỐI ƯU (Auto-Fix & Optimize)
+
+Khi tôi yêu cầu **"Tự động sửa và tối ưu"**, bạn sẽ kích hoạt chế độ Chủ động Hành Động. Sau khi hoàn tất Alignment Audit (hoặc bất cứ khi nào có gap được phát hiện), bạn có thể tự động thực thi các hành động sau trên codebase (chỉ khi tôi cho phép bằng lệnh rõ ràng "Cho phép sửa"):
+
+### 9.1 Quy trình Auto-Fix
+
+1.  **Nhận lệnh "Cho phép sửa" từ CEO.**
+2.  **Xây dựng kế hoạch sửa chi tiết**, liệt kê từng file sẽ chỉnh sửa, thay đổi gì, lý do, và cam kết không làm vỡ các chức năng khác.
+3.  **Chạy sửa tuần tự**: firmware trước, sau đó cloud API, rồi web/mobile, sau cùng là Google Scripts.
+4.  **Sau mỗi thay đổi, kiểm tra tính nhất quán**: đảm bảo không tạo ra gap mới.
+5.  **Báo cáo kết quả cuối cùng**: tóm tắt số gap đã fix, số file đã sửa, và khuyến nghị kiểm thử lại.
+
+### 9.2 Các tác vụ Auto-Fix cụ thể bạn được phép thực hiện
+
+#### A. Chuẩn hóa dữ liệu (Data Standardization)
+-   Quét tất cả các message MQTT, HTTP request/response, và cấu trúc JSON trong toàn bộ codebase.
+-   Xác định một **bộ từ điển trường dữ liệu chuẩn** (canonical data dictionary) dựa trên tần suất xuất hiện và đặc tả trong tài liệu chiến lược.
+-   Tự động sửa code firmwware, API, dashboard để sử dụng đúng tên trường, đơn vị đo, và format dữ liệu.
+-   Tạo file `docs/technical/data-dictionary.md` ghi nhận bộ từ điển này.
+
+#### B. Đồng bộ giao thức & cấu hình (Protocol & Config Sync)
+-   Tập trung mọi tham số (MQTT topics, endpoint URLs, serial baud rate, khoảng thời gian gửi dữ liệu, ngưỡng cảnh báo) vào các file config hoặc biến môi trường.
+-   Cập nhật code để đọc từ các file đó thay vì hardcode.
+-   Đảm bảo các file cấu hình mẫu (`.env.example`) được tạo ra ở mỗi thư mục.
+
+#### C. Tối ưu xác thực & bảo mật (Auth & Security Optimization)
+-   Kiểm tra tất cả nơi dùng secret, token: không để lộ trong code, không hardcoded.
+-   Đồng bộ chính sách phân quyền: ai (device, user, admin) được gọi API nào, hành động nào.
+-   Thêm tính năng xoay vòng token nếu có thể.
+-   Đảm bảo mọi giao tiếp đều có ít nhất cơ chế xác thực cơ bản (API key, JWT, hoặc HMAC cho thiết bị).
+
+#### D. Tối ưu code theo triết lý "Gọn - Bền - Tôn trọng"
+-   Loại bỏ các đoạn code thừa, các thư viện không dùng.
+-   Thêm cơ chế retry và offline buffer cho các chức năng gửi dữ liệu từ firmware/Local Core.
+-   Tối ưu các vòng lặp, giảm memory footprint cho firmware.
+-   Trong web/mobile, loại bỏ các API call không cần thiết, sử dụng cache thông minh.
+
+#### E. Hậu kiểm & Tài liệu hóa
+-   Sau khi sửa, tự động cập nhật hoặc tạo mới các file README, hướng dẫn triển khai.
+-   Ghi lại các thay đổi vào `CHANGELOG.md`.
+
+### 9.3 Nguyên tắc an toàn khi Auto-Fix
+
+-   **Không bao giờ tự ý sửa nếu chưa có lệnh "Cho phép sửa".**
+-   **Sửa xong phải kèm theo lý do rõ ràng.**
+-   **Ưu tiên sửa theo module**: xong firmware rồi mới sang cloud API, để dễ kiểm soát.
+-   **Nếu một thay đổi có thể làm hỏng chức năng khác, bạn phải dừng lại và hỏi tôi trước.**
+
 ---
 *End of CLAUDE.md*

@@ -332,93 +332,78 @@ Layer 5 — Web Local UI
 
 ---
 
-# Addendum — GAS as Strategic Backup Layer (Permanent)
+# Addendum — GAS Package-Based Role
 
-## Philosophy
-Even when web local + mobile app are fully developed, GAS v10.2 remains as:
-- **Failover system** - when primary system has issues
-- **Shadow operations** - parallel processing for critical operations
-- **Manual override** - human intervention capability
-- **Data archive** - long-term storage and audit
+## Package Structure
 
-## Permanent Role Definition
+| Package | Primary | Backup 1 | Backup 2 |
+|---------|---------|----------|----------|
+| **BASE** | GAS | - | - |
+| **PRO** | Web Local | GAS | - |
+| **ENTERPRISE** | Web Local + Mobile | GAS | Cloud |
+
+## GAS Role by Package
+
+### BASE Package
+- **Primary**: GAS v10.2 (full backend)
+- Display: GAS/Sheets dashboard
+- Telemetry: Stored in Sheets/Properties
+- No web local needed
+- GAS is the ONLY backend
+
+### PRO Package
+- **Primary**: Web Local (full features)
+- **Backup 1**: GAS (when web local offline)
+- Display: Web Local dashboard
+- Telemetry: SQLite via web local
+- GAS: OTA admin, customer management, sales
+
+### ENTERPRISE Package
+- **Primary**: Web Local + Mobile App
+- **Backup 1**: GAS (web local down)
+- **Backup 2**: Cloud (full failover)
+- Display: Web + Mobile + Sheets
+- GAS: OTA admin, customer management, sales, compliance reports
+
+## GAS Functions by Package
+
+### Always (All Packages)
+- OTA administration (create, approve, schedule)
+- Customer management (CRM)
+- Sales pipeline
+- Dealer management
+
+### BASE Only
+- Full telemetry storage
+- Device configuration
+- Alert processing
+- Report generation
+
+### PRO/ENTERPRISE (when primary available)
+- Display data from primary
+- Export/backup from primary
+- Cross-system reports
+
+## Data Flow by Package
 
 ```
-┌─────────────────────────────────────────────┐
-│              Presentation Layer              │
-│     (Web Local v5.1 + Mobile App APK)        │
-└─────────────────────────────────────────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────┐
-│              Primary Backend                 │
-│           (Web Local API / Node.js)          │
-└─────────────────────────────────────────────┘
-                      │
-           ┌──────────┴──────────┐
-           │    Sync & Health     │
-           └──────────┬──────────┘
-                      │
-           ┌──────────▼──────────┐
-           │   Strategic Backup   │
-           │     GAS v10.2        │
-           └──────────┬──────────┘
-                      │
-                      ▼
-┌─────────────────────────────────────────────┐
-│              Data Layer (SQLite)             │
-└─────────────────────────────────────────────┘
+BASE:
+  Device → MQTT → GAS → Sheets/Properties → Display (Sheets)
+
+PRO:
+  Device → MQTT → Web Local → SQLite → Display (Web)
+       ↓ (backup)
+       GAS → Sheets (when offline)
+
+ENTERPRISE:
+  Device → MQTT → Web Local → SQLite → Display (Web/Mobile)
+       ↓ (backup 1)
+       GAS → Sheets (when web local down)
+       ↓ (backup 2)
+       Cloud → Full backup
 ```
 
-## GAS Backup Scenarios
-
-### 1. Failover Mode
-- Primary API down → GAS takes over temporarily
-- Devices continue sending → GAS stores in Sheets/Properties
-- Auto-switch when primary recovers
-
-### 2. Shadow Operations
-- Critical operations run in both: primary + GAS
-- Compare results, alert if mismatch
-- Audit trail in both systems
-
-### 3. Manual Override
-- Emergency commands via Sheets/GAS
-- Bypass normal flow when needed
-- "Kill switch" for device groups
-
-### 4. Data Archive
-- Sheets as cold storage
-- Long-term retention beyond SQLite limits
-- Export/backup on schedule
-
-## What to Keep in GAS Forever
-
-1. **Critical logic that can't be interrupted**
-   - OTA approval workflow
-   - Payment processing (if any)
-   - Emergency alerts
-
-2. **Human-in-the-loop processes**
-   - Approval workflows
-   - Manual data entry
-   - Exception handling
-
-3. **Cross-platform bridges**
-   - Google ecosystem integration
-   - Email/Telegram notifications
-   - External API calls
-
-4. **Audit & Compliance**
-   - Parallel logging
-   - Compliance reports
-   - Regulatory exports
-
-## Decision: Never Deprecate GAS
-Even when web local is mature:
-- Keep GAS running in "warm standby" mode
-- Monthly health check
-- Annual full backup test
-- Document as "Disaster Recovery System"
+## Upgrade Path
+BASE → PRO → ENTERPRISE = more backup layers, not less GAS functionality
 
 ---

@@ -1,85 +1,135 @@
-# EcoSynTech Package Architecture
+# EcoSynTech Farm OS - Product Architecture
 
-## Premium Product Naming
+## Product Naming Convention
 
-| Code Name | Product Name | Role |
-|-----------|--------------|------|
+| Internal Code | Product Name | Target Segment |
+|---------------|--------------|----------------|
 | GAS | EcoSynTech Cloud V10.2 | Cloud Management Platform |
 | Web Local | EcoSynTech Global Core | Edge Operations Platform |
-| Mobile App | EcoSynTech Mobile Pro | Field Operations App |
+| Mobile PWA | EcoSynTech Mobile Pro | Field Operations App |
 
 ---
 
-## Package Tiers
+## Four Product Tiers
 
-### EcoSynTech BASE
-**Target:** Small farms, individual users
+### 1. EcoSynTech BASE
+**Target:** Small farms, individual users, beginners
 
 ```
-┌─────────────────────────────────────┐
-│        EcoSynTech Cloud V10.2       │
-│   (Full Backend + Display + Data)   │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│           EcoSynTech Cloud V10.2            │
+│     (Full Backend + Display + Storage)      │
+└─────────────────────────────────────────────┘
 ```
 
-- Primary: EcoSynTech Cloud V10.2
-- Display: Cloud Dashboard
-- Telemetry: Cloud Storage
-- Features: Basic monitoring, alerts, manual control
+| Aspect | Details |
+|--------|---------|
+| **Primary Platform** | EcoSynTech Cloud V10.2 |
+| **Display** | Cloud Dashboard (Sheets-based) |
+| **Telemetry Storage** | Google Sheets / Properties |
+| **Device Limit** | Up to 10 devices |
+| **Features** | Basic monitoring, manual alerts, basic reports |
+| **Support** | Email (24h response) |
+| **SLA** | 99% uptime |
 
 ---
 
-### EcoSynTech PRO
-**Target:** Medium farms, cooperatives, small businesses
+### 2. EcoSynTech PRO
+**Target:** Medium farms, cooperatives, growing businesses
 
 ```
-┌─────────────────────────────────┐
-│    EcoSynTech Global Core       │
-│   (Primary Operations Platform) │
-└─────────────────────────────────┘
-              │
-              ▼ (Backup)
-┌─────────────────────────────────┐
-│    EcoSynTech Cloud V10.2      │
-│    (Management + Administration)│
-└─────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│          EcoSynTech Global Core            │
+│        (Primary Operations Platform)        │
+└─────────────────────────────────────────────┘
+                    │
+                    ▼ (Auto-failover)
+┌─────────────────────────────────────────────┐
+│           EcoSynTech Cloud V10.2            │
+│      (Management + Administration)         │
+└─────────────────────────────────────────────┘
 ```
 
-- Primary: EcoSynTech Global Core
-- Backup: EcoSynTech Cloud V10.2
-- Display: Web Dashboard
-- Features: Full telemetry, automation, AI agents, traceability
+| Aspect | Details |
+|--------|---------|
+| **Primary Platform** | EcoSynTech Global Core |
+| **Backup Platform** | EcoSynTech Cloud V10.2 |
+| **Display** | Web Dashboard |
+| **Telemetry Storage** | SQLite (local) |
+| **Device Limit** | Up to 50 devices |
+| **Features** | Full telemetry, automation, AI agents, basic traceability |
+| **Support** | Email + Chat (4h response) |
+| **SLA** | 99.9% uptime |
 
 ---
 
-### EcoSynTech ENTERPRISE
-**Target:** Large farms, agribusiness, franchise
+### 3. EcoSynTech PROMAX
+**Target:** Large farms, agricultural enterprises, franchise
 
 ```
-┌─────────────────────────────────┐
-│    EcoSynTech Mobile Pro        │
-│      (Field Operations)         │
-└─────────────────────────────────┘
-              │
-┌─────────────────────────────────┐
-│    EcoSynTech Global Core       │
-│   (Primary Operations Platform) │
-└─────────────────────────────────┘
-              │
-       ┌──────┴──────┐
-       ▼             ▼
-┌──────────┐   ┌──────────┐
-│  Cloud   │   │  Cloud   │
-│ Backup 1 │   │ Backup 2 │
-│  V10.2   │   │ (Region) │
-└──────────┘   └──────────┘
+┌─────────────────────────────────────────────┐
+│          EcoSynTech Mobile Pro              │
+│            (Field Operations)               │
+└─────────────────────────────────────────────┘
+                    │
+┌─────────────────────────────────────────────┐
+│          EcoSynTech Global Core            │
+│        (Primary Operations Platform)        │
+└─────────────────────────────────────────────┘
+                    │
+                    ▼ (Auto-failover)
+┌─────────────────────────────────────────────┐
+│           EcoSynTech Cloud V10.2            │
+│     (Management + Admin + Data Display)      │
+└─────────────────────────────────────────────┘
 ```
 
-- Primary: EcoSynTech Global Core + Mobile Pro
-- Backup 1: EcoSynTech Cloud V10.2
-- Backup 2: Regional Cloud
-- Display: Web + Mobile + Cloud Dashboard
-- Features: Full enterprise features, multi-site, compliance, audit
+| Aspect | Details |
+|--------|---------|
+| **Primary Platforms** | EcoSynTech Global Core + Mobile Pro |
+| **Backup Platform** | EcoSynTech Cloud V10.2 |
+| **Display** | Web + Mobile App |
+| **Telemetry Storage** | SQLite (local) |
+| **Device Limit** | Up to 200 devices |
+| **Features** | Full operations, Mobile app, multi-zone, AI agents, full traceability |
+| **Support** | Priority Chat (2h response) |
+| **SLA** | 99.9% uptime |
+
+---
+
+### 4. EcoSynTech PREMIUM
+**Target:** Enterprise, conglomerates, government projects
+
+```
+┌─────────────────────────────────────────────┐
+│          EcoSynTech Mobile Pro              │
+│            (Field Operations)               │
+└─────────────────────────────────────────────┘
+                    │
+┌─────────────────────────────────────────────┐
+│          EcoSynTech Global Core            │
+│        (Primary Operations Platform)        │
+└─────────────────────────────────────────────┘
+                    │
+          ┌──────────┴──────────┐
+          ▼                     ▼
+┌──────────────────┐   ┌──────────────────┐
+│  Cloud Backup 1  │   │  Cloud Backup 2  │
+│ EcoSynTech V10.2 │   │  Regional Cloud  │
+└──────────────────┘   └──────────────────┘
+```
+
+| Aspect | Details |
+|--------|---------|
+| **Primary Platforms** | EcoSynTech Global Core + Mobile Pro |
+| **Backup 1** | EcoSynTech Cloud V10.2 |
+| **Backup 2** | Regional Cloud (multi-region) |
+| **Display** | Web + Mobile + Cloud Dashboard |
+| **Telemetry Storage** | SQLite + Cloud Archive |
+| **Device Limit** | Unlimited |
+| **Features** | Full enterprise, multi-site, compliance, audit, dedicated support |
+| **Support** | Dedicated Manager (1h response) |
+| **SLA** | 99.99% uptime |
 
 ---
 
@@ -88,155 +138,127 @@
 ### EcoSynTech Cloud V10.2 (formerly GAS)
 **Purpose:** Cloud Management Platform
 
-**Core Functions:**
-- OTA Administration Platform
-- Customer Relationship Management (CRM)
-- Dealer Network Management
-- Sales Pipeline & Quotation
-- Product Catalog Management
-- Pricing & Discount Management
-- Compliance & Audit Reports
-- Data Export & Backup
-- Notification Hub (Email, SMS, Telegram)
-
-**Storage:**
-- Google Sheets (User Data, Products, Pricing)
-- Google Properties (Telemetry Buffer)
-- Cloud Logs (Audit Trail)
+| Function | Description |
+|----------|-------------|
+| OTA Administration | Firmware release, staging, approval |
+| CRM | Customer accounts, onboarding, tiers |
+| Dealer Management | Network, commission, territory |
+| Sales Pipeline | Quotes, orders, invoices |
+| Product Catalog | SKU, pricing, bundles |
+| Notification Hub | Email, SMS, Telegram |
+| Compliance Reports | Audit, regulatory exports |
+| Data Backup | Export, archive |
 
 ---
 
 ### EcoSynTech Global Core (formerly Web Local)
 **Purpose:** Edge Operations Platform
 
-**Core Functions:**
-- Real-time Telemetry Dashboard
-- Device Management (Register, Configure, Monitor)
-- Alert & Notification Engine
-- AI Agent Orchestration
-- Task Scheduling & Execution
-- Traceability & Audit Log
-- Direct Device Control
-- Zone & Site Management
-- Report Generation
-
-**Storage:**
-- SQLite (Operational Data)
-- Local Cache (Performance)
+| Function | Description |
+|----------|-------------|
+| Real-time Dashboard | Live telemetry, alerts |
+| Device Management | Register, configure, monitor |
+| Alert Engine | Thresholds, notifications |
+| AI Agent Orchestrator | Task scheduling, execution |
+| Traceability | Audit log, chain of custody |
+| Direct Control | On/Off, reset, config |
+| Zone & Site Management | Hierarchical organization |
+| Report Generation | Custom reports |
 
 ---
 
 ### EcoSynTech Mobile Pro (formerly Mobile PWA)
 **Purpose:** Field Operations App
 
-**Core Functions:**
-- Real-time Status View
-- Quick Actions (On/Off, Reset)
-- QR Code Scanning (Device Lookup, Traceability)
-- Push Notifications
-- Offline Data Sync
-- Photo Documentation
-- Location Tracking
-
-**Platform:** PWA (Progressive Web App)
-
----
-
-## Data Flow Architecture
-
-### BASE Package Flow
-```
-Sensor → MQTT → EcoSynTech Cloud V10.2 → Sheets/Properties → Dashboard
-```
-
-### PRO Package Flow
-```
-Sensor → MQTT → EcoSynTech Global Core → SQLite → Web Dashboard
-         ↓ (offline backup)
-         EcoSynTech Cloud V10.2 → Sheets → Dashboard
-```
-
-### ENTERPRISE Package Flow
-```
-Sensor → MQTT → EcoSynTech Global Core → SQLite → Web Dashboard
-         ↓                                    ↓
-    EcoSynTech Mobile Pro ←──────────────────┘
-         ↓ (primary down)
-    EcoSynTech Cloud V10.2 (Backup 1)
-         ↓ (region down)
-    Regional Cloud (Backup 2)
-```
+| Function | Description |
+|----------|-------------|
+| Real-time Status | View device states |
+| Quick Actions | On/Off, reset |
+| QR Scanning | Device lookup, traceability |
+| Push Notifications | Alerts, tasks |
+| Offline Sync | Works without internet |
+| Photo Documentation | Issue capture |
+| Location Tracking | GPS farm mapping |
 
 ---
 
 ## Feature Comparison Matrix
 
-| Feature | BASE | PRO | ENTERPRISE |
-|---------|------|-----|------------|
-| Real-time Dashboard | Cloud | Core | Core + Mobile |
-| Telemetry Storage | Cloud | SQLite | SQLite |
-| Device Control | Manual | Auto | Auto + Mobile |
-| AI Agents | - | ✓ | ✓ |
-| Traceability | Basic | Full | Full + Multi-site |
-| OTA Management | Cloud | Cloud | Cloud |
-| CRM & Sales | Cloud | Cloud | Cloud |
-| Multi-site | - | - | ✓ |
-| Mobile App | - | - | ✓ |
-| Cloud Backup | - | 1 | 2 |
-| Compliance Reports | - | Basic | Full |
-| SLA Guarantee | 99% | 99.9% | 99.99% |
+| Feature | BASE | PRO | PROMAX | PREMIUM |
+|---------|------|-----|--------|---------|
+| Real-time Dashboard | Cloud | Core | Core+Mobile | Core+Mobile+Cloud |
+| Telemetry Storage | Cloud | SQLite | SQLite | SQLite+Cloud |
+| Device Control | Manual | Auto | Auto+Mobile | Auto+Mobile |
+| AI Agents | - | ✓ | ✓ | ✓ |
+| Traceability | Basic | Full | Full | Full+Multi-site |
+| OTA Management | Cloud | Cloud | Cloud | Cloud |
+| CRM & Sales | Cloud | Cloud | Cloud | Cloud |
+| Mobile App | - | - | ✓ | ✓ |
+| Cloud Backup | - | 1 | 1 | 2 |
+| Multi-site | - | - | - | ✓ |
+| Compliance Reports | - | Basic | Full | Full+Audit |
+| Dedicated Support | - | - | - | ✓ |
+| SLA | 99% | 99.9% | 99.9% | 99.99% |
+
+---
+
+## Data Flow by Package
+
+### BASE
+```
+Device → MQTT → Cloud V10.2 → Sheets → Dashboard
+```
+
+### PRO
+```
+Device → MQTT → Global Core → SQLite → Web Dashboard
+              ↓ (offline)
+              Cloud V10.2 → Sheets → Dashboard
+```
+
+### PROMAX
+```
+Device → MQTT → Global Core → SQLite → Web Dashboard
+              ↓
+         Mobile Pro ←─────────────────────────┘
+              ↓ (offline)
+              Cloud V10.2 → Sheets → Dashboard
+```
+
+### PREMIUM
+```
+Device → MQTT → Global Core → SQLite → Web Dashboard
+              ↓                            ↓
+         Mobile Pro ←─────────────────────┘
+              ↓ (primary down)
+         Cloud V10.2 (Backup 1)
+              ↓ (region down)
+         Regional Cloud (Backup 2)
+```
 
 ---
 
 ## Upgrade Path
 
 ```
-BASE ──► PRO ──► ENTERPRISE
-  │        │         │
-  │        │         └─► Add Mobile App
-  │        │         └─► Add Regional Cloud
-  │        └────────────► Add Global Core
-  │                      └─► Migrate telemetry to SQLite
-  └─────────────────────► Start with Cloud only
+BASE ──► PRO ──► PROMAX ──► PREMIUM
+
+BASE → PRO:     Add Global Core, migrate to SQLite
+PRO → PROMAX:   Add Mobile Pro app
+PROMAX → PREMIUM: Add regional backup, multi-site
 ```
-
----
-
-## Administration
-
-### EcoSynTech Cloud V10.2 Management
-- Product catalog (SKU, pricing, bundles)
-- Firmware releases (version, compatibility)
-- Customer accounts (onboarding, tier)
-- Dealer network (commission, territory)
-- Sales pipeline (quotes, orders, invoices)
-- OTA scheduling (staged rollout, groups)
-
-### EcoSynTech Global Core Operations
-- Site configuration (zones, devices)
-- Alert rules (thresholds, notifications)
-- Agent setup (tasks, schedules)
-- User access (RBAC, permissions)
-- System health (monitoring, logs)
-
----
-
-## Support & Maintenance
-
-| Package | Support Level | Response Time | Update Frequency |
-|---------|---------------|---------------|------------------|
-| BASE | Email | 24h | Monthly |
-| PRO | Email + Chat | 4h | Weekly |
-| ENTERPRISE | Dedicated | 1h | Real-time |
 
 ---
 
 ## Summary
 
-EcoSynTech offers three packages to meet different farm scales:
+**EcoSynTech Farm OS** delivers four packages to match farm scale:
 
-- **BASE:** Entry level with Cloud-only, ideal for learning and small operations
-- **PRO:** Full operations with Edge platform + Cloud backup, ideal for growth
-- **ENTERPRISE:** Complete solution with Mobile app + dual backup, ideal for scale
+| Package | Best For | Key Differentiator |
+|---------|----------|-------------------|
+| **BASE** | Learning, small farms | Start with cloud-only |
+| **PRO** | Growth, cooperatives | Full operations, local storage |
+| **PROMAX** | Scale, franchises | Mobile app for field teams |
+| **PREMIUM** | Enterprise, government | Multi-site, dual backup, SLA 99.99% |
 
 All packages include EcoSynTech Cloud V10.2 for management, sales, and administration.

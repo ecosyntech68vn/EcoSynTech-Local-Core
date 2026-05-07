@@ -332,96 +332,78 @@ Layer 5 — Web Local UI
 
 ---
 
-# Addendum — Layer Role Assignment (v2)
+# Addendum — GAS v10.2 Role (Hybrid Mode)
 
-## Role Definition
+## Current Reality
+GAS v10.2 is currently the **primary backend** because web local v5.1 is not fully developed. This is valid and should be preserved.
 
-| Layer | Role | Use Case |
-|-------|------|----------|
-| **Google Sheets** | Admin Dashboard | Product management, pricing, firmware catalog, board versions, dealer mapping, OTA schedule, operational checklists, internal approval tables |
-| **GAS v10.2** | Automation Bridge | Sync, import/export, OTA approval, notifications, report generation, form handlers, cron triggers |
-| **Web Local v5.1** | Operations Center | Real-time dashboard, telemetry, alerts, AI tasks, traceability, direct device control |
-| **SQLite** | Source of Truth | Real-time state, audit log, tasks, alerts, devices, firmware, trace events |
+## Proposed Hybrid Model
 
-## Mental Model
 ```
-Sheets = Control Panel (bảng điều hành)
-GAS = Automated Hand (tay tự động)
-SQLite = Ledger (sổ cái)
-Web Local = Command Center (trung tâm tác chiến)
+Phase 1 (Now):     GAS = Full Backend + Automation Bridge
+Phase 2 (Transition): Web Local grows, GAS starts transitioning
+Phase 3 (Target):  GAS = Automation Bridge only (when web local mature)
 ```
 
-## Google Sheets Structure (6 tabs)
-```
-Products     → product_id, name, price, status
-Firmware     → fw_version, board_id, release_status, changelog
-Boards       → board_id, model, compatible_sensors
-Devices      → device_id, board_id, site_id, zone_id
-OTA_Jobs     → job_id, device_id, fw_version_from, fw_version_to, status, initiated_by, approved_by
-Dealers      → dealer_id, name, region, contact
-```
+## GAS v10.2 Current Capabilities (Keep All)
 
-**Key rule**: Always use ID as key, never free-text names.
+### Backend Functions (currently)
+- User authentication & authorization
+- Device management
+- Telemetry storage & retrieval
+- Alert processing
+- Task orchestration
+- Data validation & rules
+- API endpoints for mobile/web
 
-## Sync Boundaries
-
-### Sheets → SQLite (Push)
-- Product catalog updates
-- Firmware release info
-- Pricing updates
-- Board/device mapping
-
-### SQLite → Sheets (Pull)
-- Report exports
-- OTA status reflection
-- Operation logs
-- Pending approval tasks
-
-### Web Local ↔ SQLite (Direct)
-- Telemetry
-- Alerts
-- Agent operations
-- Trace events
-- Real-time dashboard
-
-**Warning**: NEVER let Sheets become the core data source. GAS should only bridge, NOT process.
-
-## GAS v10.2 Boundaries
-
-**DO**:
-- Automation scripts
-- Data sync (Sheets ↔ SQLite)
-- Import/export
-- OTA job creation/approval
-- Notifications (email, Telegram)
+### Automation Functions (keep forever)
+- Google Sheets sync
 - Report generation
+- OTA job management
+- Notifications (email, Telegram, SMS)
 - Form handlers
-- Cron triggers
+- Cron jobs
+- Import/export
 
-**DON'T**:
-- Heavy telemetry processing
-- Complex orchestration
-- Large rule engine
-- Real-time dashboard backend
+## Architecture Transition Plan
 
-## OTA Job States
 ```
-draft → approved → scheduled → pushing → success | failed → rolled_back
+CURRENT:
+  [Device] → MQTT → [GAS] ↔ [SQLite]
+                      ↓
+                [Sheets]
+
+TARGET:
+  [Device] → MQTT → [Web Local] ↔ [SQLite]
+                      ↓
+                    [GAS] → [Sheets]
+                    (automation only)
 ```
 
-Each job MUST have:
-- device_id
-- board_id
-- fw_version_from
-- fw_version_to
-- initiated_by
-- approved_by
-- trace_id
+## Key Decision Points
 
-## Risk Prevention
+When to keep logic in GAS vs move to Web Local:
+- **Keep in GAS**: Sheets sync, reports, notifications, complex scheduling, form processing
+- **Move to Web Local**: Real-time telemetry, device control, alert processing, agent orchestration
 
-1. **Sheets as core data** → PREVENT: Use Sheets only for config/catalog, SQLite for operational data
-2. **GAS with too much logic** → PREVENT: Keep GAS as bridge/automation, not backend
-3. **OTA/version chaos** → PREVENT: Use version manifest, release status, board compatibility matrix, audit trail
+## Recommendation
+
+**Don't rush the transition.** Keep GAS as full backend until:
+1. Web local has complete API parity with GAS
+2. All critical realtime features work in web local
+3. Team is comfortable with the transition
+
+Until then, document what GAS handles vs what web local handles:
+- Document in docs/technical/gas-api-spec.md
+- Track which endpoints are GAS-only vs shared
+- Maintain GAS even as web local grows
+
+## Risk Mitigation
+
+To prevent GAS from becoming "spaghetti":
+1. **Module isolation**: Keep GAS functions in separate .gs files
+2. **API contract**: Define clear interface between GAS and other layers
+3. **Gradual migration**: Move one feature at a time, not all at once
+4. **Parallel running**: Keep GAS as fallback during transition
 
 ---

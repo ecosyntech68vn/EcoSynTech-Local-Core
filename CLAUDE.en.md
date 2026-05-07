@@ -332,78 +332,48 @@ Layer 5 — Web Local UI
 
 ---
 
-# Addendum — GAS Package-Based Role
+# Addendum — EcoSynTech Farm OS Product Tiers
 
-## Package Structure
+## System Name
+**EcoSynTech Farm OS** - The complete operating system for smart agriculture
 
-| Package | Primary | Backup 1 | Backup 2 |
-|---------|---------|----------|----------|
-| **BASE** | GAS | - | - |
-| **PRO** | Web Local | GAS | - |
-| **ENTERPRISE** | Web Local + Mobile | GAS | Cloud |
+## Four Product Packages
 
-## GAS Role by Package
+| Package | Primary | Backup | Device Limit | SLA |
+|---------|---------|--------|--------------|-----|
+| **BASE** | Cloud V10.2 | - | 10 | 99% |
+| **PRO** | Global Core | Cloud V10.2 | 50 | 99.9% |
+| **PROMAX** | Global Core + Mobile | Cloud V10.2 | 200 | 99.9% |
+| **PREMIUM** | Global Core + Mobile | Cloud V10.2 + Regional | Unlimited | 99.99% |
 
-### BASE Package
-- **Primary**: GAS v10.2 (full backend)
-- Display: GAS/Sheets dashboard
-- Telemetry: Stored in Sheets/Properties
-- No web local needed
-- GAS is the ONLY backend
+## Package Roles
 
-### PRO Package
-- **Primary**: Web Local (full features)
-- **Backup 1**: GAS (when web local offline)
-- Display: Web Local dashboard
-- Telemetry: SQLite via web local
-- GAS: OTA admin, customer management, sales
+### BASE
+- Cloud V10.2 is everything: backend, display, storage
+- Ideal for learning and small operations
+- No local processing
 
-### ENTERPRISE Package
-- **Primary**: Web Local + Mobile App
-- **Backup 1**: GAS (web local down)
-- **Backup 2**: Cloud (full failover)
-- Display: Web + Mobile + Sheets
-- GAS: OTA admin, customer management, sales, compliance reports
+### PRO
+- Global Core = primary operations
+- Cloud V10.2 = management + backup
+- Full telemetry, automation, AI agents
 
-## GAS Functions by Package
+### PROMAX
+- Mobile Pro added for field operations
+- Everything in PRO plus mobile app
+- Multi-zone support
 
-### Always (All Packages)
-- OTA administration (create, approve, schedule)
-- Customer management (CRM)
-- Sales pipeline
-- Dealer management
+### PREMIUM
+- Dual cloud backup
+- Multi-site capability
+- Dedicated support
+- Full compliance & audit
 
-### BASE Only
-- Full telemetry storage
-- Device configuration
-- Alert processing
-- Report generation
-
-### PRO/ENTERPRISE (when primary available)
-- Display data from primary
-- Export/backup from primary
-- Cross-system reports
-
-## Data Flow by Package
-
+## Product Family
 ```
-BASE:
-  Device → MQTT → GAS → Sheets/Properties → Display (Sheets)
-
-PRO:
-  Device → MQTT → Web Local → SQLite → Display (Web)
-       ↓ (backup)
-       GAS → Sheets (when offline)
-
-ENTERPRISE:
-  Device → MQTT → Web Local → SQLite → Display (Web/Mobile)
-       ↓ (backup 1)
-       GAS → Sheets (when web local down)
-       ↓ (backup 2)
-       Cloud → Full backup
+EcoSynTech Farm OS
+├── BASE      (Entry)
+├── PRO       (Growth)
+├── PROMAX    (Scale)
+└── PREMIUM   (Enterprise)
 ```
-
-## Upgrade Path
-BASE → PRO → ENTERPRISE = more backup layers, not less GAS functionality
-
----

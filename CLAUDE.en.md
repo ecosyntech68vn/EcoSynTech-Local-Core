@@ -332,179 +332,24 @@ Layer 5 — Web Local UI
 
 ---
 
-# Addendum — Feature Entitlement & Automated OTA
+# Addendum — Automation Features Checklist
 
-## Feature Entitlement System
+Refer to `automation-checklist.md` for comprehensive verification of automation features.
 
-All three layers check package info, but GAS is the authoritative source:
+**Status Legend:**
+- ✅ EXISTS: Feature verified and working
+- ⚠️ EXISTS: Files found, verify capability
+- ❓ CHECK: Need verification
+- ❌ MISSING: Not implemented
 
-```
-┌────────────────────────────────────────────────────────────┐
-│                    Feature Entitlement                     │
-│  Package: BASE | PRO | PROMAX | PREMIUM                   │
-└────────────────────────────────────────────────────────────┘
-         │                    │                    │
-         ▼                    ▼                    ▼
-    ┌─────────┐          ┌──────────┐          ┌──────────┐
-    │Firmware │          │   GAS    │          │Web Local │
-    │ (Poll)  │◄─────────│(Master)  │─────────►│(When online)│
-    └─────────┘   sync   └──────────┘   sync   └──────────┘
-```
+**Checklist Sections:**
+- A: Device Automation (IoT)
+- B: AI & Intelligence
+- C: Alert & Notification
+- D: Data & Sync
+- E: Reporting
+- F: Sales & CRM
+- G: OTA & Firmware
+- H: Enterprise (Premium)
 
-### Feature Matrix by Package
-
-| Feature | BASE | PRO | PROMAX | PREMIUM |
-|---------|------|-----|--------|---------|
-| Basic Telemetry | ✓ | ✓ | ✓ | ✓ |
-| Manual Control | ✓ | ✓ | ✓ | ✓ |
-| Auto Rules | - | ✓ | ✓ | ✓ |
-| AI Agents | - | ✓ | ✓ | ✓ |
-| Full Traceability | - | ✓ | ✓ | ✓ |
-| Mobile App | - | - | ✓ | ✓ |
-| Multi-site | - | - | - | ✓ |
-| Priority Support | - | - | - | ✓ |
-
-### Entitlement Data Structure
-
-```json
-{
-  "device_id": "esp32_014",
-  "package": "PRO",
-  "features": ["telemetry", "auto_rules", "ai_agents", "traceability"],
-  "limits": {
-    "devices": 50,
-    "zones": 10,
-    "api_calls_per_day": 10000
-  },
-  "upgrade_code": null,
-  "expires_at": null,
-  "last_sync": "2026-05-07T10:00:00+07:00"
-}
-```
-
----
-
-## Automated OTA Flow
-
-### Current Implementation (Daily Cycle)
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     GAS (Daily Cycle)                        │
-│  1. Check new firmware releases                              │
-│  2. Generate signed download URLs                           │
-│  3. Store in OTA queue                                      │
-│  4. Wait for device poll                                     │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│                  ESP32 Firmware (Poll)                       │
-│  1. Poll GAS daily (configurable interval)                  │
-│  2. Receive signed URL                                       │
-│  3. Verify URL integrity (hash check)                        │
-│  4. Download firmware                                        │
-│  5. Verify integrity (SHA256)                                │
-│  6. Apply update                                             │
-│  7. Reboot                                                   │
-└─────────────────────────────────────────────────────────────┘
-```
-
-### Security Verification Steps
-
-```
-1. URL Integrity Check
-   - Verify signed URL signature
-   - Check token expiration
-   - Validate device_id match
-
-2. Firmware Integrity Check
-   - SHA256 hash verification
-   - Image signature verification
-   - Version comparison (prevent downgrade)
-
-3. Rollback Capability
-   - Keep previous firmware in partition B
-   - If boot fails 3x → auto rollback to partition A
-```
-
-### OTA Flow Details
-
-```
-Daily Poll Request:
-{
-  "device_id": "esp32_014",
-  "current_fw": "9.2.1",
-  "board_id": "pcb_v6_3",
-  "package": "PRO"
-}
-
-Response (if update available):
-{
-  "update_available": true,
-  "fw_version": "9.2.2",
-  "download_url": "https://...",
-  "signature": "sha256:abc123...",
-  "changelog": "Fixed sensor drift, improved OTA stability",
-  "force_update": false
-}
-```
-
----
-
-## Automated Operations Philosophy
-
-Goal: **Self-operating system with minimal human intervention**
-
-### Automation Layers
-
-| Layer | Automation Level | Human Intervention |
-|-------|------------------|-------------------|
-| **Telemetry** | 100% automatic | None needed |
-| **Alerts** | Auto-detect, auto-notify | Acknowledge only |
-| **AI Agents** | Auto-schedule, auto-execute | Override if needed |
-| **OTA** | Auto-check, auto-download, auto-apply | Approve major versions |
-| **Entitlements** | Auto-unlock on package upgrade | None needed |
-| **Reports** | Auto-generate, auto-export | Review only |
-| **Backups** | Auto-sync, auto-archive | None needed |
-
-### Reduce Human Intervention
-
-**Current → Target:**
-- Manual device registration → Auto-provision with QR
-- Manual OTA approval → Auto for patch, approval for major
-- Manual feature unlock → Auto on package upgrade
-- Manual report generation → Scheduled auto-export
-- Manual data sync → Background auto-sync
-
-### Key Automations to Implement
-
-1. **Auto-Provisioning**
-   - Scan QR code → auto-register device
-   - Assign to site/zone based on QR data
-   - Apply package entitlements automatically
-
-2. **Smart OTA**
-   - Patch (x.x.1): Auto-apply
-   - Minor (x.1.0): Auto after 24h in staging
-   - Major (1.0.0): Require approval, then auto-apply
-
-3. **Auto Entitlements**
-   - Package upgrade → Firmware poll → Auto-unlock
-   - No manual feature enable needed
-
-4. **Self-Healing**
-   - Device offline > 1h → Auto-alert
-   - Device offline > 24h → Auto-reboot command
-   - Sensor stuck → Auto-calibration trigger
-
----
-
-## Summary
-
-The system should operate with minimal human intervention:
-
-- **Feature entitlements**: Auto-unlock based on package
-- **OTA**: Daily poll, verified download, auto-apply
-- **Operations**: Self-healing, auto-notifications
-- **Human role**: Approve major changes, review reports, handle exceptions only
+**For Claude:** Start by reading files listed in each section to verify functionality.

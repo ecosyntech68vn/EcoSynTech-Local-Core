@@ -332,78 +332,93 @@ Layer 5 — Web Local UI
 
 ---
 
-# Addendum — GAS v10.2 Role (Hybrid Mode)
+# Addendum — GAS as Strategic Backup Layer (Permanent)
 
-## Current Reality
-GAS v10.2 is currently the **primary backend** because web local v5.1 is not fully developed. This is valid and should be preserved.
+## Philosophy
+Even when web local + mobile app are fully developed, GAS v10.2 remains as:
+- **Failover system** - when primary system has issues
+- **Shadow operations** - parallel processing for critical operations
+- **Manual override** - human intervention capability
+- **Data archive** - long-term storage and audit
 
-## Proposed Hybrid Model
-
-```
-Phase 1 (Now):     GAS = Full Backend + Automation Bridge
-Phase 2 (Transition): Web Local grows, GAS starts transitioning
-Phase 3 (Target):  GAS = Automation Bridge only (when web local mature)
-```
-
-## GAS v10.2 Current Capabilities (Keep All)
-
-### Backend Functions (currently)
-- User authentication & authorization
-- Device management
-- Telemetry storage & retrieval
-- Alert processing
-- Task orchestration
-- Data validation & rules
-- API endpoints for mobile/web
-
-### Automation Functions (keep forever)
-- Google Sheets sync
-- Report generation
-- OTA job management
-- Notifications (email, Telegram, SMS)
-- Form handlers
-- Cron jobs
-- Import/export
-
-## Architecture Transition Plan
+## Permanent Role Definition
 
 ```
-CURRENT:
-  [Device] → MQTT → [GAS] ↔ [SQLite]
-                      ↓
-                [Sheets]
-
-TARGET:
-  [Device] → MQTT → [Web Local] ↔ [SQLite]
-                      ↓
-                    [GAS] → [Sheets]
-                    (automation only)
+┌─────────────────────────────────────────────┐
+│              Presentation Layer              │
+│     (Web Local v5.1 + Mobile App APK)        │
+└─────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────┐
+│              Primary Backend                 │
+│           (Web Local API / Node.js)          │
+└─────────────────────────────────────────────┘
+                      │
+           ┌──────────┴──────────┐
+           │    Sync & Health     │
+           └──────────┬──────────┘
+                      │
+           ┌──────────▼──────────┐
+           │   Strategic Backup   │
+           │     GAS v10.2        │
+           └──────────┬──────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────┐
+│              Data Layer (SQLite)             │
+└─────────────────────────────────────────────┘
 ```
 
-## Key Decision Points
+## GAS Backup Scenarios
 
-When to keep logic in GAS vs move to Web Local:
-- **Keep in GAS**: Sheets sync, reports, notifications, complex scheduling, form processing
-- **Move to Web Local**: Real-time telemetry, device control, alert processing, agent orchestration
+### 1. Failover Mode
+- Primary API down → GAS takes over temporarily
+- Devices continue sending → GAS stores in Sheets/Properties
+- Auto-switch when primary recovers
 
-## Recommendation
+### 2. Shadow Operations
+- Critical operations run in both: primary + GAS
+- Compare results, alert if mismatch
+- Audit trail in both systems
 
-**Don't rush the transition.** Keep GAS as full backend until:
-1. Web local has complete API parity with GAS
-2. All critical realtime features work in web local
-3. Team is comfortable with the transition
+### 3. Manual Override
+- Emergency commands via Sheets/GAS
+- Bypass normal flow when needed
+- "Kill switch" for device groups
 
-Until then, document what GAS handles vs what web local handles:
-- Document in docs/technical/gas-api-spec.md
-- Track which endpoints are GAS-only vs shared
-- Maintain GAS even as web local grows
+### 4. Data Archive
+- Sheets as cold storage
+- Long-term retention beyond SQLite limits
+- Export/backup on schedule
 
-## Risk Mitigation
+## What to Keep in GAS Forever
 
-To prevent GAS from becoming "spaghetti":
-1. **Module isolation**: Keep GAS functions in separate .gs files
-2. **API contract**: Define clear interface between GAS and other layers
-3. **Gradual migration**: Move one feature at a time, not all at once
-4. **Parallel running**: Keep GAS as fallback during transition
+1. **Critical logic that can't be interrupted**
+   - OTA approval workflow
+   - Payment processing (if any)
+   - Emergency alerts
+
+2. **Human-in-the-loop processes**
+   - Approval workflows
+   - Manual data entry
+   - Exception handling
+
+3. **Cross-platform bridges**
+   - Google ecosystem integration
+   - Email/Telegram notifications
+   - External API calls
+
+4. **Audit & Compliance**
+   - Parallel logging
+   - Compliance reports
+   - Regulatory exports
+
+## Decision: Never Deprecate GAS
+Even when web local is mature:
+- Keep GAS running in "warm standby" mode
+- Monthly health check
+- Annual full backup test
+- Document as "Disaster Recovery System"
 
 ---

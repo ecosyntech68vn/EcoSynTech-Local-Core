@@ -329,3 +329,99 @@ Layer 5 — Web Local UI
 2. identifying real architecture
 3. pointing out the biggest misalignments
 4. proposing the shortest but most effective standardization roadmap
+
+---
+
+# Addendum — Layer Role Assignment (v2)
+
+## Role Definition
+
+| Layer | Role | Use Case |
+|-------|------|----------|
+| **Google Sheets** | Admin Dashboard | Product management, pricing, firmware catalog, board versions, dealer mapping, OTA schedule, operational checklists, internal approval tables |
+| **GAS v10.2** | Automation Bridge | Sync, import/export, OTA approval, notifications, report generation, form handlers, cron triggers |
+| **Web Local v5.1** | Operations Center | Real-time dashboard, telemetry, alerts, AI tasks, traceability, direct device control |
+| **SQLite** | Source of Truth | Real-time state, audit log, tasks, alerts, devices, firmware, trace events |
+
+## Mental Model
+```
+Sheets = Control Panel (bảng điều hành)
+GAS = Automated Hand (tay tự động)
+SQLite = Ledger (sổ cái)
+Web Local = Command Center (trung tâm tác chiến)
+```
+
+## Google Sheets Structure (6 tabs)
+```
+Products     → product_id, name, price, status
+Firmware     → fw_version, board_id, release_status, changelog
+Boards       → board_id, model, compatible_sensors
+Devices      → device_id, board_id, site_id, zone_id
+OTA_Jobs     → job_id, device_id, fw_version_from, fw_version_to, status, initiated_by, approved_by
+Dealers      → dealer_id, name, region, contact
+```
+
+**Key rule**: Always use ID as key, never free-text names.
+
+## Sync Boundaries
+
+### Sheets → SQLite (Push)
+- Product catalog updates
+- Firmware release info
+- Pricing updates
+- Board/device mapping
+
+### SQLite → Sheets (Pull)
+- Report exports
+- OTA status reflection
+- Operation logs
+- Pending approval tasks
+
+### Web Local ↔ SQLite (Direct)
+- Telemetry
+- Alerts
+- Agent operations
+- Trace events
+- Real-time dashboard
+
+**Warning**: NEVER let Sheets become the core data source. GAS should only bridge, NOT process.
+
+## GAS v10.2 Boundaries
+
+**DO**:
+- Automation scripts
+- Data sync (Sheets ↔ SQLite)
+- Import/export
+- OTA job creation/approval
+- Notifications (email, Telegram)
+- Report generation
+- Form handlers
+- Cron triggers
+
+**DON'T**:
+- Heavy telemetry processing
+- Complex orchestration
+- Large rule engine
+- Real-time dashboard backend
+
+## OTA Job States
+```
+draft → approved → scheduled → pushing → success | failed → rolled_back
+```
+
+Each job MUST have:
+- device_id
+- board_id
+- fw_version_from
+- fw_version_to
+- initiated_by
+- approved_by
+- trace_id
+
+## Risk Prevention
+
+1. **Sheets as core data** → PREVENT: Use Sheets only for config/catalog, SQLite for operational data
+2. **GAS with too much logic** → PREVENT: Keep GAS as bridge/automation, not backend
+3. **OTA/version chaos** → PREVENT: Use version manifest, release status, board compatibility matrix, audit trail
+
+---

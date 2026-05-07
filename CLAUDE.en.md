@@ -174,6 +174,148 @@ Transform entire system into a platform that is:
 
 ---
 
+# Addendum — Platform Contract (Data Standards)
+
+## 6.1 Core Entities
+Standardize all modules around these entities:
+- **site** - farm/location
+- **device** - gateway/sensor node
+- **zone** - area within site
+- **telemetry** - sensor data
+- **alert** - warning/notification
+- **task** - operation job
+- **firmware** - software version
+- **pcb** - hardware board
+- **trace_event** - audit log
+- **report** - generated output
+- **sop** - standard operating procedure
+
+Every entity MUST have:
+- id (unique)
+- site_id (foreign key)
+- created_at
+- updated_at
+- status
+- trace_id (for audit)
+
+
+## 6.2 Standard ID Convention
+```
+site_id: site_{region}_{number}
+  Example: site_hcm_01, site_dn_02
+
+device_id: {type}_{number}
+  Example: esp32_014, relay_001, pump_003
+
+zone_id: zone_{letter} or zone_{name}
+  Example: zone_a, zone_greenhouse_1
+
+trace_id: {entity}_{timestamp}_{random}
+  Example: device_20260507_abc123
+```
+
+
+## 6.3 Standard Payload - Telemetry
+```json
+{
+  "device_id": "esp32_014",
+  "site_id": "site_hcm_01",
+  "zone_id": "zone_a",
+  "ts": "2026-05-07T10:15:00+07:00",
+  "metrics": {
+    "temp": 31.2,
+    "humidity": 68.4,
+    "soil_moisture": 41,
+    "ec": 1.8,
+    "ph": 6.4
+  },
+  "fw_version": "9.2.1",
+  "signal": {
+    "rssi": -61,
+    "battery": 84
+  }
+}
+```
+
+**Firmware must send this format. Use adapter at backend if needed, don't rewrite UI.**
+
+
+## 6.4 Hardware Profile (PCB v6.3)
+```json
+{
+  "board_id": "pcb_v6_3",
+  "mcu": "esp32",
+  "sensors": [
+    {"type": "temp_humid", "pin_sda": 21, "pin_scl": 22},
+    {"type": "soil_moisture", "pin": 34}
+  ],
+  "actuators": [
+    {"type": "relay_pump_1", "pin": 26}
+  ],
+  "power": {
+    "voltage": 5,
+    "brownout_threshold": 3.2
+  }
+}
+```
+
+**Firmware must read this profile, NOT hardcode.**
+
+
+## 6.5 Standard States
+```
+device: online | offline | degraded | maintenance
+task: queued | running | completed | failed | cancelled
+alert: open | acknowledged | resolved
+firmware: draft | testing | candidate | released | deprecated
+```
+
+
+## 6.6 Standard Events
+- device_connected
+- device_disconnected
+- telemetry_received
+- alert_raised
+- task_created
+- task_completed
+- firmware_uploaded
+- ota_started
+- ota_failed
+- ota_completed
+- sop_published
+- sync_completed
+
+
+## 6.7 Sync Architecture
+- **Web Local v5.1** = Master (core operations)
+- **GAS v10.2** = Satellite (sync only, reports, triggers)
+- **SQLite** = Source of truth with 3 layers:
+  - Operational DB: users, devices, telemetry, alerts, tasks
+  - Config DB: rules, firmware versions, hardware profiles
+  - Audit DB: trace_event, audit_log, sync_log, error_log
+
+
+## 6.8 Layer Architecture
+```
+Layer 1 — Device Layer
+  PCB v6.3 + Firmware 9.2.1 + ESP32/sensor/actuator
+
+Layer 2 — Ingest & Sync Layer
+  MQTT ingest + GAS sync + webhook + file import/export
+
+Layer 3 — Core Platform
+  NodeJS API + SQLite + auth + device management + telemetry + alerts
+
+Layer 4 — Agent Layer
+  orchestrator + firmware agent + farm ops agent + QA/SOP agent + traceability agent
+
+Layer 5 — Web Local UI
+  dashboard + devices + alerts + firmware + reports + settings
+```
+
+
+---
+
 # Practical Conclusion
 
 - Use ISO as discipline framework for process, audit, traceability, and change control.

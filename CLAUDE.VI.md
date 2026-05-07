@@ -100,7 +100,7 @@ Biến toàn bộ hệ thống thành một nền tảng:
 
 ---
 
-# Phụ lục: Operating Principles (Nguyên tắc vận hành)
+# Phụ lục — Nguyên tắc vận hành (Operating Principles)
 
 ## 1) One Source of Truth
 - Mọi logic, schema, protocol, trạng thái và quy ước tên phải quy về một nguồn chuẩn.
@@ -174,16 +174,238 @@ Biến toàn bộ hệ thống thành một nền tảng:
 
 ---
 
-# Practical Conclusion (Kết luận thực tiễn)
+# Phụ lục — Platform Contract (Tiêu chuẩn dữ liệu)
+
+## 6.1 Các thực thể cốt lõi (Core Entities)
+Chuẩn hóa tất cả module quanh các thực thể:
+- **site** - trang trại/địa điểm
+- **device** - gateway/node cảm biến
+- **zone** - khu vực trong site
+- **telemetry** - dữ liệu cảm biến
+- **alert** - cảnh báo/thông báo
+- **task** - công việc vận hành
+- **firmware** - phiên bản phần mềm
+- **pcb** - board phần cứng
+- **trace_event** - log kiểm toán
+- **report** - báo cáo đầu ra
+- **sop** - quy trình vận hành chuẩn
+
+Mọi thực thể PHẢI có:
+- id (duy nhất)
+- site_id (foreign key)
+- created_at
+- updated_at
+- status
+- trace_id (cho audit)
+
+
+## 6.2 Quy ước ID chuẩn
+```
+site_id: site_{region}_{number}
+  Ví dụ: site_hcm_01, site_dn_02
+
+device_id: {type}_{number}
+  Ví dụ: esp32_014, relay_001, pump_003
+
+zone_id: zone_{letter} hoặc zone_{name}
+  Ví dụ: zone_a, zone_greenhouse_1
+
+trace_id: {entity}_{timestamp}_{random}
+  Ví dụ: device_20260507_abc123
+```
+
+
+## 6.3 Payload chuẩn — Telemetry
+```json
+{
+  "device_id": "esp32_014",
+  "site_id": "site_hcm_01",
+  "zone_id": "zone_a",
+  "ts": "2026-05-07T10:15:00+07:00",
+  "metrics": {
+    "temp": 31.2,
+    "humidity": 68.4,
+    "soil_moisture": 41,
+    "ec": 1.8,
+    "ph": 6.4
+  },
+  "fw_version": "9.2.1",
+  "signal": {
+    "rssi": -61,
+    "battery": 84
+  }
+}
+```
+
+**Firmware phải gửi định dạng này. Dùng adapter ở backend nếu cần, không rewrite UI.**
+
+
+## 6.4 Hardware Profile (PCB v6.3)
+```json
+{
+  "board_id": "pcb_v6_3",
+  "mcu": "esp32",
+  "sensors": [
+    {"type": "temp_humid", "pin_sda": 21, "pin_scl": 22},
+    {"type": "soil_moisture", "pin": 34}
+  ],
+  "actuators": [
+    {"type": "relay_pump_1", "pin": 26}
+  ],
+  "power": {
+    "voltage": 5,
+    "brownout_threshold": 3.2
+  }
+}
+```
+
+**Firmware phải đọc profile này, KHÔNG hardcode.**
+
+
+## 6.5 Trạng thái chuẩn
+```
+device: online | offline | degraded | maintenance
+task: queued | running | completed | failed | cancelled
+alert: open | acknowledged | resolved
+firmware: draft | testing | candidate | released | deprecated
+```
+
+
+## 6.6 Sự kiện chuẩn
+- device_connected
+- device_disconnected
+- telemetry_received
+- alert_raised
+- task_created
+- task_completed
+- firmware_uploaded
+- ota_started
+- ota_failed
+- ota_completed
+- sop_published
+- sync_completed
+
+
+## 6.7 Kiến trúc đồng bộ
+- **Web Local v5.1** = Master (vận hành lõi)
+- **GAS v10.2** = Satellite (sync chỉ, reports, triggers)
+- **SQLite** = Nguồn chuẩn với 3 lớp:
+  - Operational DB: users, devices, telemetry, alerts, tasks
+  - Config DB: rules, firmware versions, hardware profiles
+  - Audit DB: trace_event, audit_log, sync_log, error_log
+
+
+## 6.8 Kiến trúc 5 lớp
+```
+Lớp 1 — Device Layer
+  PCB v6.3 + Firmware 9.2.1 + ESP32/cảm biến/actuator
+
+Lớp 2 — Ingest & Sync Layer
+  MQTT ingest + GAS sync + webhook + file import/export
+
+Lớp 3 — Core Platform
+  NodeJS API + SQLite + auth + device management + telemetry + alerts
+
+Lớp 4 — Agent Layer
+  orchestrator + firmware agent + farm ops agent + QA/SOP agent + traceability agent
+
+Lớp 5 — Web Local UI
+  dashboard + devices + alerts + firmware + reports + settings
+```
+
+
+---
+
+## 4 gói sản phẩm (Product Tiers)
+
+| Gói | Nền tảng chính | Backup | Thiết bị | SLA |
+|-----|----------------|--------|----------|-----|
+| **BASE** | Cloud V10.2 | - | 10 | 99% |
+| **PRO** | Global Core | Cloud V10.2 | 50 | 99.9% |
+| **PROMAX** | Global Core + Mobile | Cloud V10.2 | 200 | 99.9% |
+| **PREMIUM** | Global Core + Mobile | Cloud V10.2 + Regional | Không giới hạn | 99.99% |
+
+---
+
+## Feature Entitlement & OTA Tự động
+
+### Feature Entitlement
+- GAS = Master lưu package info
+- Firmware poll định kỳ → unlock features
+- Web Local sync khi online → enable UI
+
+### Automated OTA (Daily Cycle)
+```
+GAS: Tạo signed URL → Firmware: Verify → Download → Apply → Rollback nếu fail
+```
+
+- Daily poll (configurable: 1h, 6h, 12h, 24h)
+- URL integrity check (signature, expiration)
+- Firmware integrity (SHA256)
+- Dual-partition rollback (partition A/B)
+
+### Package Upgrade Flow
+1. Khách nâng cấp package (trong GAS)
+2. GAS tạo upgrade_code cho device_id
+3. Firmware poll → nhận upgrade_code → unlock features
+4. Web Local online → sync package → enable UI features
+
+---
+
+## Tự động hóa tối thiểu can thiệp
+
+| Hoạt động | Mức độ tự động | Can thiệp |
+|-----------|----------------|------------|
+| Telemetry | 100% tự động | Không |
+| Alerts | Auto-detect, auto-notify | Chỉ acknowledge |
+| AI Agents | Auto-schedule, auto-execute | Override nếu cần |
+| OTA | Auto-check, auto-download, auto-apply | Approve major |
+| Entitlements | Auto-unlock on upgrade | Không |
+| Reports | Auto-generate, auto-export | Chỉ review |
+| Backups | Auto-sync, auto-archive | Không |
+
+### Self-Healing
+- Offline > 1h → auto-alert
+- Offline > 24h → auto-reboot command
+- Sensor stuck → auto-calibration trigger
+
+---
+
+# Kết luận thực tiễn
 
 - Dùng ISO như khung kỷ luật cho quy trình, audit, traceability và change control.
 - Dùng contract-first cho kỹ thuật.
 - Dùng offline-first cho vận hành.
 - Dùng human + AI readable cho sản phẩm.
-- Mục tiêu cuối cùng: hệ thống đơn giản, đồng bộ, tin cậy, dễ vận hành, dễ mở rộng, và đủ chuẩn để thương mại hóa bền vững.
+- Mục tiêu cuối: hệ thống đơn giản, đồng bộ, tin cậy, dễ vận hành, dễ mở rộng, và đủ chuẩn để thương mại hóa bền vững.
 
-**Bắt đầu bằng việc:**
+**Bắt đầu bằng:**
 1. đọc cấu trúc repo
 2. xác định kiến trúc thật
 3. chỉ ra các lệch chuẩn lớn nhất
 4. đề xuất lộ trình chuẩn hóa ngắn nhất nhưng hiệu quả nhất
+
+
+---
+
+# Phụ lụy — Checklist tính năng tự động
+
+Tham khảo `automation-checklist.md` để xác minh đầy đủ các tính năng tự động.
+
+**Ký hiệu:**
+- ✅ EXISTS: Đã verify hoạt động
+- ⚠️ EXISTS: Có file, cần verify capability
+- ❓ CHECK: Cần xác minh
+- ❌ MISSING: Chưa implement
+
+**Các phần:**
+- A: Tự động hóa thiết bị (IoT)
+- B: AI & Trí tuệ
+- C: Alert & Thông báo
+- D: Dữ liệu & Đồng bộ
+- E: Báo cáo
+- F: Bán hàng & CRM
+- G: OTA & Firmware
+- H: Enterprise (Premium)
+
+**Cho Claude:** Bắt đầu bằng việc đọc các file trong mỗi phần để verify chức năng.
